@@ -30,4 +30,5 @@ resource "digitalocean_record" "lon-vpn" {
   type   = "A"
   name   = "lon-vpn"
   value  = "${digitalocean_droplet.lon-vpn.ipv4_address}"
+  ttl    = 60
 }
