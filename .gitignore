@@ -49,6 +49,7 @@ flycheck_*.el
 
 *.tfstate.backup
 .terraform
+*.tfvars
 
 # OpenVPN
 index.txt
