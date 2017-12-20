@@ -1,0 +1,47 @@
+- name: Enable ip_forward
+  shell: "bash -c 'echo 1 > /proc/sys/net/ipv4/ip_forward'"
+
+- name: Install OpenVPN
+  apt:
+    name: openvpn
+    update_cache: yes
+    state: present
+
+- name: Install easy-rsa
+  apt:
+    name: easy-rsa
+    update_cache: yes
+    state: present
+
+- name: Enable ip_forward in sysctl.conf
+  lineinfile:
+    dest: /etc/sysctl.conf
+    regexp: '#net.ipv4.ip_forward=1'
+    line: 'net.ipv4.ip_forward = 1'
+    state: present
+
+- name: AUTOSTART in /etc/default/openvpn
+  lineinfile:
+    dest: /etc/default/openvpn
+    regexp: '#AUTOSTART="all"'
+    line: 'AUTOSTART="all"'
+    state: present
+    
+- name: Reload changes for systemd
+  shell: systemctl daemon-reload
+  
+- name: Copy OpenVPN config
+  copy:
+    src: files/vpnserver/etc/openvpn/
+    dest: /etc/openvpn/
+
+- name: Copy iptables rules
+  copy:
+    src: files/vpnserver/iptables.rules
+    dest: /etc/iptables.rules
+
+- name: Apply iptables rules
+  shell: iptables-restore < /etc/iptables.rules
+
+- name: Reload OpenVPN server
+  shell: systemctl restart openvpn

@@ -1,0 +1,20 @@
+- name: Create my user
+  user:
+    name: "{{ myusername }}"
+    group: sudo
+    shell: /bin/bash
+    append: yes
+
+- name: Set authorized_keys for user
+  authorized_key:
+    user: "{{ myusername }}"
+    state: present
+    key: "{{ lookup('file', 'files/common/id_rsa.pub') }}"
+
+- name: Allow 'sudo' group to have passwordless sudo
+  lineinfile:
+    dest: /etc/sudoers
+    state: present
+    regexp: '^%sudo'
+    line: '%sudo ALL=(ALL) NOPASSWD: ALL'
+    validate: 'visudo -cf %s'    
