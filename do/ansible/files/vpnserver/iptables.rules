@@ -29,6 +29,7 @@ COMMIT
 -A FORWARD -j REJECT --reject-with icmp-host-unreachable
 -A TCP -p tcp -m tcp --dport 22 -j ACCEPT
 -A UDP -p udp -m udp --dport 1194 -j ACCEPT
+-A UDP -i tun0 -p udp -m udp --dport 53 -j ACCEPT
 -A fw-interfaces -i tun0 -j ACCEPT
 -A fw-interfaces -i tun1 -j ACCEPT
 COMMIT
