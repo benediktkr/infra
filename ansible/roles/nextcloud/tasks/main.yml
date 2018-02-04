@@ -24,7 +24,7 @@
       version: '2'
       services:
         app:
-          image: "nextcloud:11"
+          image: "nextcloud:12"
           ports:
             - "8091:80"
           environment:
