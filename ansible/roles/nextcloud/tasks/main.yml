@@ -33,19 +33,16 @@
             - "{{ nextcloud_root }}/data:/data"
             - "{{ nextcloud_root }}/html:/var/www/html"
 
-# - assert:
-#     that:
-#       - "nextcloud_app_1.state.running"
-
 - name: Template the nginx file
   template:
     src: nginx-site.conf
     dest: "{{ nginx_root }}/sites-enabled/01-nextcloud"
 
+- name: Add uploadsize.conf
+  copy:
+    src: nginx-uploadsize.conf
+    dest: "{{ nginx_root }}/conf.d/uploadsize.conf"
   
-# - name: Reload nginx
-#   command: "service nginx reload"
-
 - name: Get or update LetsEncrypt certs
   shell: "certbot -n --nginx -d {{ nextcloud_url }}"
   
