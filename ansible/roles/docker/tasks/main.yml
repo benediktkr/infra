@@ -1,0 +1,26 @@
+- name: Get the ubuntu codename
+  shell: lsb_release -cs
+  register: lsb_release
+
+- name: Add docker repo to apt
+  apt_repository:
+    repo: "deb https://apt.dockerproject.org/repo ubuntu-{{  lsb_release.stdout  }} main"
+    state: present
+    filename: 'docker'
+
+- name: Add apt key for docker repo
+  apt_key:
+    keyserver: hkp://p80.pool.sks-keyservers.net:80
+    id: 58118E89F3A912897C070ADBF76221572C52609D
+    state: present
+
+- name: Install Docker
+  apt:
+    name: docker-engine
+    update_cache: yes
+    state: present
+
+- name: Check if this node already has joined a swarm
+  shell: "docker node ls"
+  ignore_errors: yes
+  register: docker_node_ls

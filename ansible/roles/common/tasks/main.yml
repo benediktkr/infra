@@ -1,8 +1,20 @@
+- name: Update apt cache
+  apt:
+    update_cache: yes
+
+- name: Install packages
+  apt:
+    state: present
+    name: "{{ item }}"
+  with_items:
+    - zsh
+    - molly-guard
+
 - name: Create my user
   user:
     name: "{{ myusername }}"
     group: sudo
-    shell: /bin/bash
+    shell: /bin/zsh
     append: yes
 
 - name: Set authorized_keys for user
