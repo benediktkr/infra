@@ -45,6 +45,8 @@
   
 - name: Get or update LetsEncrypt certs
   shell: "certbot -n --nginx -d {{ nextcloud_url }}"
+  args:
+    creates: "/etc/letsencrypt/live/{{ nextcloud_url }}"
   
 - name: Reload nginx
   command: "service nginx reload"
