@@ -1,0 +1,3 @@
+nginx_root: "/etc/nginx"
+
+nextcloud_exposed_port: "8091"
