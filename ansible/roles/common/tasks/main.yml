@@ -16,6 +16,7 @@
     - htop
     - curl
     - ncdu
+    - openssh-server
   tags:
     - packages
 
@@ -25,6 +26,8 @@
     group: sudo
     shell: /bin/zsh
     append: yes
+  tags:
+    - users
 
 - name: move homedir for user
   user:
@@ -32,6 +35,8 @@
     move_home: yes
     home: "{{ myhomedir }}"
   when: myhomedir is defined
+  tags:
+    - users
 
 - name: set root shell to zsh
   user:
@@ -43,6 +48,8 @@
     user: "{{ myusername }}"
     state: present
     key: "{{ lookup('file', 'roles/common/files/id_rsa.pub') }}"
+  tags:
+    - ssh
 
 - name: allow 'sudo' group to have passwordless sudo
   lineinfile:
@@ -51,4 +58,22 @@
     regexp: '^%sudo'
     line: '%sudo ALL=(ALL) NOPASSWD: ALL'
     validate: 'visudo -cf %s'
-  when: is_local is not defined 
+  when: is_local is not defined
+  tags:
+    - users
+
+- name: disallow ssh password logins
+  replace:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?PasswordAuthentication(?: yes| no)$'
+    replace: 'PasswordAuthentication no'
+  tags:
+    - ssh
+
+- name: reloading ssh
+  service:
+    name: ssh
+    state: reloaded
+  tags:
+    - ssh
+    
