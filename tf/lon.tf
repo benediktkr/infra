@@ -32,3 +32,11 @@ resource "digitalocean_record" "lon-vpn" {
   value  = "${digitalocean_droplet.lon-vpn.ipv4_address}"
   ttl    = 60
 }
+
+resource "digitalocean_record" "lon-vpn-sudo" {
+  domain = "${digitalocean_domain.sudo-is.name}"
+  type   = "A"
+  name   = "lon-vpn"
+  value  = "${digitalocean_droplet.lon-vpn.ipv4_address}"
+  ttl    = 60
+}

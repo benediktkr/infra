@@ -29,7 +29,7 @@ resource "digitalocean_record" "lokun-is-mx-0" {
   type     = "MX"
   name     = "@"
   priority = "10"
-  value    = "ASPMX.L.GOOGLE.COM."
+  value    = "aspmx.l.google.com."
   ttl      = 60
 }
 
@@ -39,7 +39,7 @@ resource "digitalocean_record" "lokun-is-mx-1" {
   type     = "MX"
   name     = "@"
   priority = "20"
-  value    = "ALT1.ASPMX.L.GOOGLE.COM."
+  value    = "alt1.aspmx.l.google.com."
   ttl      = 60
 }
 
@@ -49,7 +49,7 @@ resource "digitalocean_record" "lokun-is-mx-2" {
   type     = "MX"
   name     = "@"
   priority = "20"
-  value    = "ALT2.ASPMX.L.GOOGLE.COM."
+  value    = "alt2.aspmx.l.google.com."
   ttl      = 60
 }
 
@@ -59,7 +59,7 @@ resource "digitalocean_record" "lokun-is-mx-3" {
   type     = "MX"
   name     = "@"
   priority = "30"
-  value    = "ASPMX2.GOOGLEMAIL.COM."
+  value    = "aspmx2.googlemail.com."
   ttl      = 60
 }
 
@@ -69,7 +69,7 @@ resource "digitalocean_record" "lokun-is-mx-4" {
   type     = "MX"
   name     = "@"
   priority = "30"
-  value    = "ASPMX3.GOOGLEMAIL.COM."
+  value    = "aspmx3.googlemail.com."
   ttl      = 60
 }
 
@@ -82,3 +82,12 @@ resource "digitalocean_record" "lokun-is-txt" {
   ttl    = 60
 }
 
+
+# dns0.lokun.is
+resource "digitalocean_record" "dns0-lokun-is" {
+  domain = "${digitalocean_domain.lokun-is.name}"
+  type   = "A"
+  name   = "dns0"
+  value  = "188.226.170.178"
+  ttl    = 60
+}
