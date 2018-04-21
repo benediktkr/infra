@@ -19,7 +19,7 @@ resource "digitalocean_record" "sudo-is-txt" {
   domain = "${digitalocean_domain.sudo-is.name}"
   type   = "TXT"
   name   = "@"
-  value  = "v=spf1 mx a ptr ip4:${local.freespace_ip}/32 include=_spf.investici.org"
+  value  = "v=spf1 mx a ptr ip4:${local.freespace_ip}/32 ip4:${local.endor_ip} include=_spf.investici.org"
   ttl    = 60
 }
 
@@ -49,7 +49,6 @@ resource "digitalocean_record" "endor-sudo-is" {
   value  = "${local.endor_ip}"
   ttl    = 60
 }
-
 
 # CNAMEs to freespace
 locals {
@@ -108,8 +107,3 @@ resource "digitalocean_record" "nl-vpn-sudo-is" {
   value  = "dns0.lokun.is."
   ttl    = 60
 }
-
-
-
-
-
