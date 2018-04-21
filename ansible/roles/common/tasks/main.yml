@@ -12,6 +12,8 @@
     - cbm
     - tmux
     - htop
+    - curl
+    - ncdu
 
 - name: create my user
   user:
