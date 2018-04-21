@@ -14,8 +14,9 @@ server {
             proxy_set_header   X-Forwarded-Host $server_name;
 	}
 
-	client_max_body_size 2000M;
-	proxy_max_temp_file_size 2000M;
+	client_max_body_size 2G;
+	proxy_max_temp_file_size 2G;
+    fastcgi_buffers 64 4K;
         
 	ssl_session_timeout 5m;
 

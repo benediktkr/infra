@@ -1,4 +1,4 @@
-- name: Create dir structure (html)
+- name: create dir structure (html)
   file:
     path: "{{ nextcloud_root }}/html"
     state: directory
@@ -6,7 +6,7 @@
     owner: www-data
     group: www-data
 
-- name: Create dir structure (data)
+- name: create dir structure (data)
   file:
     path: "{{ nextcloud_root }}/data"
     state: directory
@@ -15,7 +15,7 @@
     group: www-data
 
 # Make sure it can be used to update this thing
-- name: Start the compose services
+- name: start the compose services
   docker_service:
     pull: yes      # Always `docker-compose pull` before `up`
     state: present # docker-compose up
@@ -26,28 +26,28 @@
         app:
           image: "nextcloud:12"
           ports:
-            - "8091:80"
+            - "{{ nextcloud_exposed_port }}:80"
           environment:
             - NEXTCLOUD_DATA_DIR=/data
           volumes:
             - "{{ nextcloud_root }}/data:/data"
             - "{{ nextcloud_root }}/html:/var/www/html"
 
-- name: Template the nginx file
+- name: template the nginx file
   template:
-    src: nginx-site.conf
+    src: nginx-site.conf.j2
     dest: "{{ nginx_root }}/sites-enabled/01-nextcloud"
 
-- name: Add uploadsize.conf
-  copy:
-    src: nginx-uploadsize.conf
+- name: add uploadsize.conf
+  template:
+    src: nginx-uploadsize.conf.j2
     dest: "{{ nginx_root }}/conf.d/uploadsize.conf"
   
-- name: Get or update LetsEncrypt certs
+- name: get or update LetsEncrypt certs
   shell: "certbot -n --nginx -d {{ nextcloud_url }}"
   args:
     creates: "/etc/letsencrypt/live/{{ nextcloud_url }}"
   
-- name: Reload nginx
+- name: reload nginx
   command: "service nginx reload"
 

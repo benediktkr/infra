@@ -5,7 +5,7 @@
     - myusername: benedikt
     - nextcloud_root: "/srv/nextcloud"
     - nextcloud_url: "nextcloud.sudo.is"
-    - nginx_root: "/etc/nginx/"
   roles:
     - common
+    - docker
     - nextcloud
