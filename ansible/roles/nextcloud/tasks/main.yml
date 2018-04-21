@@ -1,18 +1,15 @@
-- name: create dir structure (html)
-  file:
-    path: "{{ nextcloud_root }}/html"
-    state: directory
-    mode: 0750
-    owner: www-data
-    group: www-data
-
-- name: create dir structure (data)
+- name: create dir structure 
   file:
     path: "{{ nextcloud_root }}/data"
     state: directory
     mode: 0750
     owner: www-data
     group: www-data
+  with_items:
+    - html
+    - data
+  tags:
+    -nextcloud
 
 # Make sure it can be used to update this thing
 - name: docker-compose nextcloud
@@ -34,22 +31,41 @@
             - "{{ nextcloud_root }}/html:/var/www/html"
   tags:
     - compose
+    - nextcloud
 
 - name: template the nginx file
   template:
     src: nginx-site.conf.j2
     dest: "{{ nginx_root }}/sites-enabled/01-nextcloud"
+  tags:
+    - nextcloud
+    - nginx
 
 - name: add uploadsize.conf
   template:
     src: nginx-uploadsize.conf.j2
     dest: "{{ nginx_root }}/conf.d/uploadsize.conf"
+  tags:
+    - nextcloud
+    - nginx
   
 - name: get or update LetsEncrypt certs
   shell: "certbot -n --nginx -d {{ nextcloud_url }}"
   args:
     creates: "/etc/letsencrypt/live/{{ nextcloud_url }}"
+  tags:
+    - nextcloud
+    - letencrypt
+
+- name: test nginx config
+  command: nginx -t
+  tags:
+    - nextcloud
+    - nginx
   
 - name: reload nginx
   command: "service nginx reload"
+  tags:
+    - nextcloud
+    - nginx
 
