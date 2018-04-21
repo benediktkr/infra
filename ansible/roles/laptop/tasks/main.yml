@@ -4,7 +4,7 @@
     repo: ppa:nextcloud-devs/client
     update_cache: yes
 
-- name: Install packages
+- name: install packages
   apt:
     state: present
     name: "{{ item }}"
@@ -24,3 +24,16 @@
 
 - name: install slack with snap
   command: snap install slack --classic
+
+- name: create directory structure in ~
+  file:
+    path: "~/{{ item }}"
+    state: directory
+    owner: "{{ myusername }}"
+    group: "{{ myusername }}"
+    recurse: yes
+  become_user: "{{ myusername }}"
+  with_items:
+    - projects
+    - video
+

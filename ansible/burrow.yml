@@ -6,6 +6,8 @@
   vars:
     - is_local: true
     - myusername: lehmann
+    - dotfiles_path: "~/projects/dotfiles"
   roles:
     - common
     - laptop
+    - dotfiles

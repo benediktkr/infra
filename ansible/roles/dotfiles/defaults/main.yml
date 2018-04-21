@@ -1,0 +1,2 @@
+dotfiles_path: "~/dotfiles"
+dotfiles_repo: "ssh://git@bitbucket.org/benedikt/dotfiles.git"
