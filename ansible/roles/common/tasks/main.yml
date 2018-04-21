@@ -29,6 +29,11 @@
     home: "{{ myhomedir }}"
   when: myhomedir is defined
 
+- name: set root shell to zsh
+  user:
+    name: root
+    shell: /bin/zsh
+
 - name: set authorized_keys for user
   authorized_key:
     user: "{{ myusername }}"
