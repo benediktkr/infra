@@ -1,3 +1,8 @@
+- debug:
+    var: item
+  with_items:
+    - dotfiles
+
 - name: clone my dotfiles from bitbucket
   git:
     repo: "{{ dotfiles_repo }}"
@@ -6,13 +11,23 @@
     clone: yes
     update: yes
   become_user: "{{ myusername }}"
+  ignore_errors: yes
 
-- name: link the most important dotfiles (sort of the same as push-config.py)
+- name: link the most important dotfiles for me
   file:
     src: "{{ dotfiles_path }}/{{ item.src }}"
     dest: "~/{{ item.dest }}"
     state: link
   with_items:
-    - { src: 'zsh/.zshrc', dest: '.zshrc' }
-    - { src: 'emacs/.emacs', dest: '.emacs' }
+    - "{{ dotfiles }}"
   become_user: "{{ myusername }}"
+
+- name: link the most important dotfiles for root
+  file:
+    src: "{{ dotfiles_path }}/{{ item.src }}"
+    dest: "/root/{{ item.dest }}"
+    state: link
+  with_items:
+    - "{{ dotfiles }}"
+
+
