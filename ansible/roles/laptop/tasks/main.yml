@@ -21,7 +21,11 @@
     - telegram-desktop
     - gnupg
     - nextcloud-client
-
+    - firefox
+    - chromium-browser
+  tags:
+    - packages
+    
 - name: install slack with snap
   command: snap install slack --classic
 

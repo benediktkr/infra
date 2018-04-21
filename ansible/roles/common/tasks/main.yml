@@ -1,6 +1,8 @@
 - name: update apt cache
   apt:
     update_cache: yes
+  tags:
+    - packages
 
 - name: install packages
   apt:
@@ -14,6 +16,8 @@
     - htop
     - curl
     - ncdu
+  tags:
+    - packages
 
 - name: create my user
   user:
