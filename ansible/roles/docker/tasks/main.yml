@@ -1,26 +1,31 @@
-- name: Get the ubuntu codename
-  shell: lsb_release -cs
-  register: lsb_release
+## This is for debian
+## Would be easy to adapt for ubuntu if needed
+## difference is the distro name in the apt repo
 
-- name: Add docker repo to apt
+- name: get dist
+  shell: lsb_release -is
+  register: dist
+
+- name: get dist codename
+  shell: lsb_release -cs
+  register: codename
+
+- name: add docker repo to apt
   apt_repository:
-    repo: "deb https://apt.dockerproject.org/repo ubuntu-{{  lsb_release.stdout  }} main"
+    ### FIX THIS FIX THIS
+    repo: "deb https://apt.dockerproject.org/repo {{ dist.stdout |  default('debian') }}-{{  codename.stdout | default('jessie') }} main"
     state: present
     filename: 'docker'
 
-- name: Add apt key for docker repo
+- name: add apt key for docker repo
   apt_key:
     keyserver: hkp://p80.pool.sks-keyservers.net:80
     id: 58118E89F3A912897C070ADBF76221572C52609D
     state: present
 
-- name: Install Docker
+- name: install docker
   apt:
     name: docker-engine
     update_cache: yes
     state: present
 
-- name: Check if this node already has joined a swarm
-  shell: "docker node ls"
-  ignore_errors: yes
-  register: docker_node_ls
