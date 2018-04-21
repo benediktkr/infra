@@ -9,6 +9,9 @@
   with_items:
     - zsh
     - molly-guard
+    - cbm
+    - tmux
+    - htop
 
 - name: Create my user
   user:
@@ -21,7 +24,7 @@
   authorized_key:
     user: "{{ myusername }}"
     state: present
-    key: "{{ lookup('file', 'files/common/id_rsa.pub') }}"
+    key: "{{ lookup('file', 'roles/common/files/id_rsa.pub') }}"
 
 - name: Allow 'sudo' group to have passwordless sudo
   lineinfile:
@@ -29,4 +32,5 @@
     state: present
     regexp: '^%sudo'
     line: '%sudo ALL=(ALL) NOPASSWD: ALL'
-    validate: 'visudo -cf %s'    
+    validate: 'visudo -cf %s'
+  when: is_local is not defined 
