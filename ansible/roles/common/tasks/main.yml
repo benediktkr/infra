@@ -1,8 +1,8 @@
-- name: Update apt cache
+- name: update apt cache
   apt:
     update_cache: yes
 
-- name: Install packages
+- name: install packages
   apt:
     state: present
     name: "{{ item }}"
@@ -13,20 +13,27 @@
     - tmux
     - htop
 
-- name: Create my user
+- name: create my user
   user:
     name: "{{ myusername }}"
     group: sudo
     shell: /bin/zsh
     append: yes
 
-- name: Set authorized_keys for user
+- name: move homedir for user
+  user:
+    name: "{{ myusername }}"
+    move_home: yes
+    home: "{{ myhomedir }}"
+  when: myhomedir is defined
+
+- name: set authorized_keys for user
   authorized_key:
     user: "{{ myusername }}"
     state: present
     key: "{{ lookup('file', 'roles/common/files/id_rsa.pub') }}"
 
-- name: Allow 'sudo' group to have passwordless sudo
+- name: allow 'sudo' group to have passwordless sudo
   lineinfile:
     dest: /etc/sudoers
     state: present
