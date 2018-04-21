@@ -13,7 +13,7 @@
 - name: add docker repo to apt
   apt_repository:
     ### FIX THIS FIX THIS
-    repo: "deb https://apt.dockerproject.org/repo {{ dist.stdout |  default('debian') }}-{{  codename.stdout | default('jessie') }} main"
+    repo: "deb https://apt.dockerproject.org/repo {{ dist.stdout |  lower() }}-{{  codename.stdout }} main"
     state: present
     filename: 'docker'
 

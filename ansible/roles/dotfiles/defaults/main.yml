@@ -1,4 +1,4 @@
-dotfiles_path: "~{myusername}/dotfiles"
+dotfiles_path: "~{{ myusername }}/dotfiles"
 dotfiles_repo: "ssh://git@bitbucket.org/benedikt/dotfiles.git"
 dotfiles:
   - { src: 'zsh/.zshrc', dest: '.zshrc' }

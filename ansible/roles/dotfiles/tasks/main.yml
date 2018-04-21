@@ -1,8 +1,3 @@
-- debug:
-    var: item
-  with_items:
-    - dotfiles
-
 - name: clone my dotfiles from bitbucket
   git:
     repo: "{{ dotfiles_repo }}"
@@ -12,6 +7,8 @@
     update: yes
   become_user: "{{ myusername }}"
   ignore_errors: yes
+  tags:
+    - dotfiles
 
 - name: link the most important dotfiles for me
   file:
@@ -21,6 +18,8 @@
   with_items:
     - "{{ dotfiles }}"
   become_user: "{{ myusername }}"
+  tags:
+    - dotfiles
 
 - name: link the most important dotfiles for root
   file:
@@ -29,5 +28,7 @@
     state: link
   with_items:
     - "{{ dotfiles }}"
+  tags:
+    - dotfiles
 
 

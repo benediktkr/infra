@@ -15,7 +15,7 @@
     group: www-data
 
 # Make sure it can be used to update this thing
-- name: start the compose services
+- name: docker-compose nextcloud
   docker_service:
     pull: yes      # Always `docker-compose pull` before `up`
     state: present # docker-compose up
@@ -32,6 +32,8 @@
           volumes:
             - "{{ nextcloud_root }}/data:/data"
             - "{{ nextcloud_root }}/html:/var/www/html"
+  tags:
+    - compose
 
 - name: template the nginx file
   template:
