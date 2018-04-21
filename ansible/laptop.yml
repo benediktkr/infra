@@ -1,0 +1,11 @@
+# Run this playbook with -K to ask for sudo pass
+
+- hosts: laptop
+  become: true
+  connection: local
+  vars:
+    - is_local: true
+    - myusername: lehmann
+  roles:
+    - common
+    - laptop
