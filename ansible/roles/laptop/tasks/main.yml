@@ -23,6 +23,10 @@
     - nextcloud-client
     - firefox
     - chromium-browser
+    - android-tools-adb
+    - android-tools-fastboot
+    - gnome-raw-thumbnailer
+    - ufraw-batch
   tags:
     - packages
 

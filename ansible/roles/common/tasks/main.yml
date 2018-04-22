@@ -17,6 +17,9 @@
     - curl
     - ncdu
     - openssh-server
+    - iotop
+    - nethogs
+    - whois
   tags:
     - packages
 
