@@ -27,6 +27,7 @@
     - android-tools-fastboot
     - gnome-raw-thumbnailer
     - ufraw-batch
+    - python-pyflakes
   tags:
     - packages
 
