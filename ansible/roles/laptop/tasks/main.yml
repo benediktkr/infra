@@ -15,6 +15,7 @@
     - ssh
     - enigmail
     - python-pip
+    - python3-pip
     - git
     - filezilla
     - vlc
