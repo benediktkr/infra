@@ -3,6 +3,8 @@
   apt_repository:
     repo: ppa:nextcloud-devs/client
     update_cache: yes
+  tags:
+    - packages
 
 - name: install apt packages
   apt:
@@ -29,6 +31,7 @@
     - gnome-raw-thumbnailer
     - ufraw-batch
     - python-pyflakes
+    - virtualbox
   tags:
     - packages
 
@@ -37,7 +40,7 @@
 - name: install snap packages
   command: snap install {{ item }}
   with_items:
-    - slack --classic 
+    - slack --classic
     - skype --classic
     - signal-desktop
     - spotify
@@ -55,4 +58,3 @@
   with_items:
     - projects
     - video
-
