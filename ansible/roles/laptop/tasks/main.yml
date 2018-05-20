@@ -32,6 +32,9 @@
     - ufraw-batch
     - python-pyflakes
     - virtualbox
+    - openvpn
+    - network-manager-openvpn
+    - network-manager-openvpn-gnome
   tags:
     - packages
 

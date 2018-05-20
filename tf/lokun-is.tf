@@ -91,3 +91,12 @@ resource "digitalocean_record" "dns0-lokun-is" {
   value  = "188.226.170.178"
   ttl    = 60
 }
+
+# dns0.lokun.is
+resource "digitalocean_record" "dns1-lokun-is" {
+  domain = "${digitalocean_domain.lokun-is.name}"
+  type   = "A"
+  name   = "dns1"
+  value  = "128.199.128.179"
+  ttl    = 60
+}
