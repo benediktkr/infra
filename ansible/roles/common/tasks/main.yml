@@ -32,7 +32,7 @@
   tags:
     - users
 
-- name: move homedir for user
+- name: move homedir for user if non-standard location
   user:
     name: "{{ myusername }}"
     move_home: yes

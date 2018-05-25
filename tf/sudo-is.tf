@@ -107,3 +107,12 @@ resource "digitalocean_record" "nl-vpn-sudo-is" {
   value  = "dns0.lokun.is."
   ttl    = 60
 }
+
+# CNAME vpn.sudo.is
+resource "digitalocean_record" "HH19-sudo-is" {
+  domain = "${digitalocean_domain.sudo-is.name}"
+  type   = "CNAME"
+  name   = "HH19"
+  value  = "HH19.ignorelist.com."
+  ttl    = 60
+}
