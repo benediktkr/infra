@@ -56,7 +56,7 @@
     state: directory
     owner: "{{ myusername }}"
     group: "{{ myusername }}"
-    recurse: yes
+    recurse: no
   become_user: "{{ myusername }}"
   with_items:
     - projects
