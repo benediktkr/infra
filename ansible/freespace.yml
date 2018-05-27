@@ -5,6 +5,7 @@
     - myusername: benedikt
     - nextcloud_root: "/srv/nextcloud"
     - nextcloud_url: "nextcloud.sudo.is"
+    - hostname: freespace 
   roles:
     - common
     - docker

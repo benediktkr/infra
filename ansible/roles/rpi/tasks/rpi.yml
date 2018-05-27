@@ -1,0 +1,8 @@
+---
+
+- name: remove pi user
+  user:
+    name: pi
+    state: absent
+  tags:
+    - users

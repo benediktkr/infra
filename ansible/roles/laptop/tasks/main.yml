@@ -11,31 +11,31 @@
     state: present
     name: "{{ item }}"
   with_items:
-    - emacs25 # Move to common later
-    - keepassx
-    - texlive-full
-    - ssh
-    - enigmail
-    - python-pip
-    - python3-pip
-    - git
-    - filezilla
-    - vlc
-    - telegram-desktop
-    - gnupg
-    - nextcloud-client
-    - firefox
-    - chromium-browser
     - android-tools-adb
     - android-tools-fastboot
+    - chromium-browser
+    - emacs25 # Move to common later
+    - enigmail
+    - filezilla
+    - firefox
+    - git
     - gnome-raw-thumbnailer
-    - ufraw-batch
-    - python-pyflakes
-    - virtualbox
-    - openvpn
+    - gnupg
+    - gparted
+    - keepassx
     - network-manager-openvpn
     - network-manager-openvpn-gnome
-    - gparted
+    - nextcloud-client
+    - openvpn
+    - python-pip
+    - python-pyflakes
+    - python3-pip
+    - ssh
+    - telegram-desktop
+    - texlive-full
+    - ufraw-batch
+    - virtualbox
+    - vlc
   tags:
     - packages
 

@@ -1,34 +1,4 @@
-- name: clone my dotfiles from bitbucket
-  git:
-    repo: "{{ dotfiles_repo }}"
-    dest: "{{ dotfiles_path }}"
-    version: master
-    clone: yes
-    update: yes
-  become_user: "{{ myusername }}"
-  ignore_errors: yes
-  tags:
-    - dotfiles
-
-- name: link the most important dotfiles for me
-  file:
-    src: "{{ dotfiles_path }}/{{ item.src }}"
-    dest: "~/{{ item.dest }}"
-    state: link
-  with_items:
-    - "{{ dotfiles }}"
-  become_user: "{{ myusername }}"
-  tags:
-    - dotfiles
-
-- name: link the most important dotfiles for root
-  file:
-    src: "{{ dotfiles_path }}/{{ item.src }}"
-    dest: "/root/{{ item.dest }}"
-    state: link
-  with_items:
-    - "{{ dotfiles }}"
-  tags:
-    - dotfiles
-
-
+---
+# file: roles/dotfiles/tasks/main.yml
+- include: dotfiles.yml
+  tags: dotfiles

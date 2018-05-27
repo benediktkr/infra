@@ -1,0 +1,39 @@
+---
+- name: add ssh hostkey known hosts for git
+  lineinfile:
+    path: /etc/ssh/ssh_known_hosts"
+    line: "{{ bitbucket_hostkey }}"
+    create: yes
+  with_items:
+    - "{{ github_hostkey }}"
+    - "{{ bitbucket_hostkey }}"
+
+- name: clone my dotfiles repo
+  git:
+    repo: "{{ dotfiles_repo }}"
+    dest: "{{ dotfiles_path }}"
+    version: master
+    clone: yes
+    update: yes
+  become_user: "{{ myusername }}"
+  ignore_errors: yes
+
+
+- name: link the most important dotfiles for me
+  file:
+    src: "{{ dotfiles_path }}/{{ item.src }}"
+    dest: "~/{{ item.dest }}"
+    state: link
+  with_items:
+    - "{{ dotfiles }}"
+  become_user: "{{ myusername }}"
+
+- name: link the most important dotfiles for root
+  file:
+    src: "{{ dotfiles_path }}/{{ item.src }}"
+    dest: "/root/{{ item.dest }}"
+    state: link
+  with_items:
+    - "{{ dotfiles }}"
+
+
