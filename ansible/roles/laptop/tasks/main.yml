@@ -35,6 +35,7 @@
     - openvpn
     - network-manager-openvpn
     - network-manager-openvpn-gnome
+    - gparted
   tags:
     - packages
 

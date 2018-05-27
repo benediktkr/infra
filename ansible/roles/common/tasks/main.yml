@@ -20,6 +20,7 @@
     - iotop
     - nethogs
     - whois
+    - nmap
   tags:
     - packages
 

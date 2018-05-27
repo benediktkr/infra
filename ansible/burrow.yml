@@ -1,6 +1,6 @@
 # Run this playbook with -K to ask for sudo pass
 
-- hosts: laptop
+- hosts: burrow
   become: true
   connection: local
   vars:
