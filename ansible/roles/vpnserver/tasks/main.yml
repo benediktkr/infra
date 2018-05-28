@@ -29,15 +29,26 @@
     
 - name: Reload changes for systemd
   shell: systemctl daemon-reload
-  
+
+# This is a new step, after attemping the private split.
+# dont spend too much time trying to figure out "why this did work". it never
+# has worked in this form. 
+
 - name: Copy OpenVPN config
   copy:
-    src: files/vpnserver/etc/openvpn/
+    src: openvpn/
     dest: /etc/openvpn/
 
+- name: copy openvpn secerts
+  copy:
+    src: private/vpnserver/openvpn/*
+    dest: /etc/openvpn/
+
+##
+  
 - name: Copy iptables rules
   copy:
-    src: files/vpnserver/iptables.rules
+    src: iptables.rules
     dest: /etc/iptables.rules
 
 - name: Apply iptables rules
