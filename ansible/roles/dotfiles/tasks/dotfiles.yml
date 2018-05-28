@@ -23,6 +23,7 @@
   file:
     src: "{{ dotfiles_path }}/{{ item.src }}"
     dest: "~/{{ item.dest }}"
+    mode: "{{ mode | default('0755') }}"
     state: link
   with_items:
     - "{{ dotfiles }}"
@@ -32,6 +33,7 @@
   file:
     src: "{{ dotfiles_path }}/{{ item.src }}"
     dest: "/root/{{ item.dest }}"
+    mode: "{{ mode | default('0755') }}"
     state: link
   with_items:
     - "{{ dotfiles }}"
