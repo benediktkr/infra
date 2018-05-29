@@ -23,6 +23,7 @@
     - gnupg
     - gparted
     - keepassx
+    - network-manager-openconnect
     - network-manager-openvpn
     - network-manager-openvpn-gnome
     - nextcloud-client

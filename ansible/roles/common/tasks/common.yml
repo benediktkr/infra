@@ -74,11 +74,19 @@
   tags:
     - users
 
-- name: disallow ssh password logins
+- name: disable password authentication 
   replace:
     path: /etc/ssh/sshd_config
     regexp: '^#?PasswordAuthentication(?: yes| no)$'
     replace: 'PasswordAuthentication no'
+  tags:
+    - ssh
+
+- name: disable challengeresponse authentication
+  replace:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?ChallengeResponseAuthentication(?: yes| no)$'
+    replace: 'ChallengeResponseAuthentication no'
   tags:
     - ssh
 
