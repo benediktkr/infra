@@ -24,6 +24,7 @@
     - gparted
     - keepassx
     - network-manager-openconnect
+    - network-manager-openconnect-gnome
     - network-manager-openvpn
     - network-manager-openvpn-gnome
     - nextcloud-client
