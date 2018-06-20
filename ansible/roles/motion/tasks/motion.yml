@@ -1,0 +1,9 @@
+---
+
+- debug:
+    msg: "{{ ansible_distribution_major_version }}"
+
+- name: install motion from github
+  apt:
+    deb: "https://github.com/Motion-Project/motion/releases/download/release-4.1.1/pi_stretch_motion_4.1.1-1_armhf.deb"
+
