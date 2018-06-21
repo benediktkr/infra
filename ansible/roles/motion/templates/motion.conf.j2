@@ -22,7 +22,7 @@ setup_mode off
 
 
 # Use a file to save logs messages, if not defined stderr and syslog is used. (default: not defined)
-;logfile /tmp/motion.log
+logfile /tmp/motion.log
 
 # Level of log messages [1..9] (EMG, ALR, CRT, ERR, WRN, NTC, INF, DBG, ALL). (default: 6 / NTC)
 log_level 6
@@ -76,14 +76,16 @@ rotate 0
 flip_axis none
 
 # Image width (pixels). Valid range: Camera dependent, default: 320
-width 320
+width 1920
+#width 320
 
 # Image height (pixels). Valid range: Camera dependent, default: 240
-height 240
+height 1080
+#height 240
 
 # Maximum number of frames to be captured per second.
 # Valid range: 2-100. Default: 100 (almost no limit).
-framerate 2
+framerate 3
 
 # Minimum time in seconds between capturing picture frames from the camera.
 # Default: 0 = disabled - the capture rate is given by the camera framerate.
@@ -118,7 +120,7 @@ rtsp_uses_tcp on
 
 # Name of camera to use if you are using a camera accessed through OpenMax/MMAL
 # Default: Not defined
-; mmalcam_name vc.ril.camera
+mmalcam_name vc.ril.camera
 
 # Camera control parameters (see raspivid/raspistill tool documentation)
 # Default: Not defined
@@ -230,7 +232,7 @@ post_capture 0
 # events causing all Motion to be written to one single movie file and no pre_capture.
 # If set to 0, motion is running in gapless mode. Movies don't have gaps anymore. An
 # event ends right after no more motion is detected and post_capture is over.
-event_gap 60
+event_gap 10
 
 # Maximum length in seconds of a movie
 # When value is exceeded a new movie file is created. (Default: 0 = infinite)
@@ -250,7 +252,7 @@ emulate_motion off
 # Picture with most motion of an event is saved when set to 'best'.
 # Picture with motion nearest center of picture is saved when set to 'center'.
 # Can be used as preview shot for the corresponding movie.
-output_pictures off
+output_pictures best
 
 # Output pictures with only the pixels moving object (ghost images) (default: off)
 output_debug_pictures off
@@ -265,7 +267,7 @@ picture_type jpeg
 ############################################################
 
 # Use ffmpeg to encode videos of motion (default: off)
-ffmpeg_output_movies on
+ffmpeg_output_movies off
 
 # Use ffmpeg to make videos showing the moving pixels (ghost images) (default: off)
 ffmpeg_output_debug_movies off
@@ -401,7 +403,7 @@ text_double off
 
 # Target base directory for pictures and films
 # Recommended to use absolute path. (Default: current working directory)
-#target_dir /tmp/motion
+target_dir /tmp/motion
 
 # File path for snapshots (jpeg, ppm or webp) relative to target_dir
 # Default: %v-%Y%m%d%H%M%S-snapshot
@@ -458,7 +460,7 @@ stream_motion off
 stream_maxrate 1
 
 # Restrict stream connections to localhost only (default: on)
-stream_localhost on
+stream_localhost off
 
 # Limits the number of images per connection (default: 0 = unlimited)
 # Number can be defined by multiplying actual stream rate by desired number of seconds
@@ -492,7 +494,8 @@ stream_auth_method 0
 webcontrol_port 8080
 
 # Restrict control connections to localhost only (default: on)
-webcontrol_localhost on
+# NOTE: nginx will be added at some point
+webcontrol_localhost off
 
 # Output for http server, select off to choose raw text plain (default: on)
 webcontrol_html_output on

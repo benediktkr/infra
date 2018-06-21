@@ -17,10 +17,12 @@
     name: "{{ item }}"
   with_items:
     - cbm
+    - cryptsetup
     - curl
     - git
     - htop
     - iotop
+    - lvm2
     - molly-guard
     - ncdu
     - nethogs

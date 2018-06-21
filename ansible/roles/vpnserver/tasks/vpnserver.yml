@@ -1,0 +1,107 @@
+- name: enable ip_forward
+  shell: "bash -c 'echo 1 > /proc/sys/net/ipv4/ip_forward'"
+
+- name: install openvpn, easy-rsa, dnsmasq
+  apt:
+    name: "{{ item }}"
+    update_cache: yes
+    state: present
+  with_items:
+    - openvpn
+    - easy-rsa
+    - dnsmasq
+  ignore_errors: yes # TEMP
+
+- name: make dnsmasq listen on tun0
+  lineinfile:
+    dest: /etc/dnsmasq.conf
+    regexp: '#interface='
+    line: "interface=tun0"
+    state: present
+  notify: restart dnsmasq
+  tags:
+    - lineinfile
+
+- name: enable ip_forward in sysctl.conf
+  lineinfile:
+    dest: /etc/sysctl.conf
+    regexp: '^#net.ipv4.ip_forward'
+    line: 'net.ipv4.ip_forward=1'
+    state: present
+  tags:
+    - lineinfile
+
+- name: set AUTOSTART in /etc/default/openvpn
+  lineinfile:
+    dest: /etc/default/openvpn
+    regexp: '^#AUTOSTART\="all"'
+    line: 'AUTOSTART="all"'
+    state: present
+  tags:
+    - lineinfile
+    
+- name: reload changes for systemd
+  shell: systemctl daemon-reload
+
+# This is a new step, after attemping the private split.
+# dont spend too much time trying to figure out "why this did work". it never
+# has worked in this form. 
+
+- name: copy openvpn config
+  copy:
+    src: openvpn/
+    dest: /etc/openvpn/
+  notify: reload openvpn
+  tags:
+    - ccd
+
+- name: copy server.key
+  copy:
+    src: private/openvpn/server.key
+    dest: /etc/openvpn/server.key
+  notify: reload openvpn
+
+- name: copy dh2048.pem
+  copy:
+    src: private/openvpn/dh2048.pem
+    dest: /etc/openvpn/dh2048.pem
+  notify: reload openvpn
+
+- name: copy dh2048.pem
+  copy:
+    src: private/openvpn/dh2048.pem
+    dest: /etc/openvpn/dh2048.pem
+  notify: reload openvpn
+
+- name: copy ta.key
+  copy:
+    src: private/openvpn/ta.key
+    dest: /etc/openvpn/ta.key
+  notify: reload openvpn
+
+- name: create ccd dir
+  file:
+    path: /etc/openvpn/ccd/
+    state: directory
+  tags:
+    - ccd
+
+- name: client networks ccd files
+  copy:
+    dest: "/etc/openvpn/ccd/{{ item.client }}"
+    content: "iroute {{ item.net }} {{ item.mask }}"
+  with_items: " {{ client_vpn_networks }}"
+  tags:
+    - ccd
+  
+- name: copy iptables rules -- might override
+  copy:
+    src: iptables.rules
+    dest: /etc/iptables.rules
+  notify: apply iptables rules
+
+#- name: Reload OpenVPN server
+#  shell: systemctl restart openvpn
+
+
+    

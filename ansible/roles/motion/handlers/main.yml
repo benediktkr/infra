@@ -1,0 +1,6 @@
+---
+
+- name: reload motion
+  service:
+    name: motion
+    state: reloaded
