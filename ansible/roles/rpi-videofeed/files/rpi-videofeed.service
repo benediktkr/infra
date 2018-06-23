@@ -1,0 +1,15 @@
+[Unit]
+Description=auto start stream
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/srv/rpi-videofeed.sh
+User=pi
+WorkingDirectory=/tmp
+Restart=on-failure
+User=vlc
+Group=video
+
+[Install]
+WantedBy=multi-user.target

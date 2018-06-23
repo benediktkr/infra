@@ -1,1 +1,6 @@
-videodevice: /dev/vchiq
+rtsp_stream_url: "rtsp://192.168.79.3:8554/"
+motion_target_dir: "/srv/motion"
+rtps_height: "576"
+rtps_width: "1000"
+rtps_fps: "20"
+

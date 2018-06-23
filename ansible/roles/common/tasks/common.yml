@@ -31,6 +31,7 @@
     - tmux
     - whois
     - zsh
+    - lsof
   tags:
     - packages
 

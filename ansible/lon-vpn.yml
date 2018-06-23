@@ -4,7 +4,7 @@
     - myusername: bk
     - hostname: lon-vpn.sudo.is
     - client_vpn_networks:
-       - { client: "wifi002", net: "192.168.19.0", mask: "255.255.255.0" }
+       - { client: "benedikt", net: "192.168.79.0", mask: "255.255.255.0" }
   roles:
     - common
     - vpnserver

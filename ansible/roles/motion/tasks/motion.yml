@@ -7,7 +7,8 @@
 
 - name: install motion from github
   apt:
-    deb: "https://github.com/Motion-Project/motion/releases/download/release-4.1.1/pi_stretch_motion_4.1.1-1_armhf.deb"
+    #deb: "https://github.com/Motion-Project/motion/releases/download/release-4.1.1/pi_stretch_motion_4.1.1-1_armhf.deb"
+    deb: "https://github.com/Motion-Project/motion/releases/download/release-4.1.1/artful_motion_4.1.1-1_amd64.deb"
   when: mdotcexist == False
 
 - name: enable motion in /etc/default
@@ -19,9 +20,20 @@
     - conf
   notify: reload motion
 
+- name: create motion target dir
+  file:
+    state: directory
+    path: "{{ motion_target_dir }}"
+    owner: motion
+
 - name: motion.conf
   template:
     src: motion.conf.j2
     dest: /etc/motion/motion.conf
   notify: reload motion
 
+- name: adding my user to motion group
+  user:
+    name: "{{ myusername }}"
+    groups: motion
+    append: yes

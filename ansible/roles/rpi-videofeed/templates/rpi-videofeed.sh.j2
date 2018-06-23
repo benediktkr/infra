@@ -1,0 +1,2 @@
+#!/bin/sh
+raspivid -o - -t 0 -w {{ rtps_width }} -h {{ rtps_height }} -fps {{ rtps_fps }} -b 250000 | cvlc -vvv stream:///dev/stdin --sout '#rtp{access=udp,sdp=rtsp://:{{ rtsp_port }}/}' :demux=h264

@@ -1,0 +1,38 @@
+---
+
+- name: install vlc
+  apt:
+    name: vlc
+    state: present
+
+- name: create vlc user for streaming
+  user:
+    name: vlc
+    group: video
+    shell: /bin/nologin
+    append: yes
+  tags:
+    - users
+
+- name: template wrapper script
+  template:
+    src: rpi-videofeed.sh.j2
+    dest: /srv/rpi-videofeed.sh
+    owner: vlc
+    group: video
+    mode: 0755
+  notify: restart rpi-videofeed
+  
+- name: copy rpi-videofeed.service
+  copy:
+    src: rpi-videofeed.service
+    dest: /etc/systemd/system/
+    owner: root
+    group: root
+  notify: restart rpi-videofeed
+
+- name: autostart rpi-videofeed.service
+  service:
+    name: rpi-videofeed.service
+    enabled: yes
+

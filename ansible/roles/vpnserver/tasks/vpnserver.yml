@@ -47,10 +47,16 @@
 # dont spend too much time trying to figure out "why this did work". it never
 # has worked in this form. 
 
-- name: copy openvpn config
+- name: copy openvpn config dir
   copy:
     src: openvpn/
     dest: /etc/openvpn/
+  notify: reload openvpn
+
+- name: copy server.conf
+  copy:
+    src: openvpn/server.conf
+    dest: /etc/openvpn/server.conf
   notify: reload openvpn
   tags:
     - ccd
@@ -89,7 +95,9 @@
 - name: client networks ccd files
   copy:
     dest: "/etc/openvpn/ccd/{{ item.client }}"
-    content: "iroute {{ item.net }} {{ item.mask }}"
+    content: |
+      iroute {{ item.net }} {{ item.mask }}
+      push "route 10.104.37.0 255.255.255.0"
   with_items: " {{ client_vpn_networks }}"
   tags:
     - ccd

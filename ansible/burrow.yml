@@ -2,7 +2,8 @@
 
 - hosts: burrow
   become: true
-  connection: local
+  #connection: local
+  remote_user: root
   vars:
     - is_local: true
     - myusername: lehmann
@@ -12,3 +13,4 @@
     - common
     - laptop
     - dotfiles
+    - motion
