@@ -1,12 +1,12 @@
 # Plan
 
 * 1 util node (`mathom`)
-  * Volume for `/home` for persistence
+    - volume for `/home` for persistence
 * 1 docker node
-  * nextcloud (with volume `docker-nextcloud`)
-  * bitcoin-lnd
-  * cv
-  * sudo.is webpage
+    - nextcloud (with volume `docker-nextcloud`)
+    - bitcoin-lnd
+    - cv
+    - sudo.is webpage
 * 1 mail node
 * 1 vpn node
 
@@ -40,5 +40,7 @@ Guide to resizing LUKS encrypted volumes
 The zone `sudo.local` is hosted in the DigitalOcean DNS manager. Each droplet has a `$name.sudo.local` record pointing to it's internal IP address.
 
 Questions:
+
 1. Does this internal IP ever change?
+
 2. What if another account tries to resolve this domain?
