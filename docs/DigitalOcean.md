@@ -68,6 +68,8 @@ Enter passphrase:
 #
 ```
 
+See also: https://wiki.archlinux.org/index.php/Resizing_LVM-on-LUKS
+
 # Internal dns
 
 The zone `sudo.local` is hosted in the DigitalOcean DNS manager. Each droplet has a `$name.sudo.local` record pointing to it's internal IP address.
