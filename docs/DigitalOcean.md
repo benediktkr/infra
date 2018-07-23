@@ -39,12 +39,12 @@ Guide to resizing LUKS volumes
 
 This is how the LUKS volumes are created
 
-```shell
+```console
 # TF_NAME=mathom-home
 # DO_DEVICE=/dev/disk/by-id/scsi-0DO_Volume_$TF_NAME
 ```
 
-```shell
+```console
 # cryptsetup luksFormat --cipher aes-xts-plain64 -s 256 --iter-time 6000 $DO_DEVICE
 Enter passphrase:
 # cryptsetup luksOpen $DO_DEVICE mathom-home
@@ -57,7 +57,7 @@ Enter passphrase:
 
 First, resize in the DO web interface. Currently it does not seem to work in terraform, it wants to recreate the volume.
 
-```shell
+```console
 # cryptsetup luksClose /dev/mapper/$TF_NAME
 # cryptsetup luksOpen /dev/disk/by-id/$DO_DEVICE mathom-home
 Enter passphrase:
