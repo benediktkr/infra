@@ -29,11 +29,44 @@ Then it's resized to a `s1-1vcpu-2gb` to get 2gb of ram and still keep 25gb disk
 
 # Rebuilding nodes
 
-Should tolerate being rebuilt every now and then (e.g. OS updates). All persistent data will be on LUKS encrypted volumes. This section will document that process.
+Design choice: Should tolerate being rebuilt every now and then (e.g. OS updates). All persistent data will be on LUKS encrypted volumes. This section will document that process.
 
-# Expanding Volumes
+# LUKS Volumes (without LVM)
 
-Guide to resizing LUKS encrypted volumes
+Guide to resizing LUKS volumes
+
+## Creating
+
+This is how the LUKS volumes are created
+
+```shell
+# TF_NAME=mathom-home
+# DO_DEVICE=/dev/disk/by-id/scsi-0DO_Volume_$TF_NAME
+```
+
+```shell
+# cryptsetup luksFormat --cipher aes-xts-plain64 -s 256 --iter-time 6000 $DO_DEVICE
+Enter passphrase:
+# cryptsetup luksOpen $DO_DEVICE mathom-home
+Enter passphrase:
+# mkfs.ext4 /dev/mapper/mathom-home
+#
+```
+
+## Resizing
+
+First, resize in the DO web interface. Currently it does not seem to work in terraform, it wants to recreate the volume.
+
+```shell
+# cryptsetup luksClose /dev/mapper/$TF_NAME
+# cryptsetup luksOpen /dev/disk/by-id/$DO_DEVICE mathom-home
+Enter passphrase:
+# lsblk
+  [ See new size ? ]
+# e2fsck -f /dev/mapper/mathom-home
+# resize2fs /dev/mapper/mathom-home
+#
+```
 
 # Internal dns
 

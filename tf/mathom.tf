@@ -1,7 +1,7 @@
 resource "digitalocean_volume" "mathom-home" {
   region = "ams3" # "${digitalocean_droplet.mathom.region}"
   name   = "mathom-home"
-  size   = 10
+  size   = 11
 
   /*
    * ADD LIFECYCLE PROTECTION
@@ -46,6 +46,12 @@ resource "digitalocean_record" "mathom-local" {
   value  = "${digitalocean_droplet.mathom.ipv4_address_private}"
 }
 
-output "mathom-ip1" {
+
+
+output "mathom-ip" {
   value = "${digitalocean_droplet.mathom.ipv4_address}"
+}
+
+output "mathom-home" {
+  value = "${digitalocean_volume.mathom-home.id}"
 }

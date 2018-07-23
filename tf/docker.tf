@@ -13,7 +13,7 @@ resource "digitalocean_droplet" "docker" {
   image              = "ubuntu-18-04-x64"
   name               = "docker"
   region             = "ams3"
-  size               = "s-1vcpu-2gb"
+  size               = "s-1vcpu-1gb"
   monitoring         = true
   ipv6               = true
   private_networking = true
