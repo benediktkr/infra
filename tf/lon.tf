@@ -19,6 +19,8 @@ resource "digitalocean_droplet" "lon-vpn" {
     command = "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -u root -i '${self.ipv4_address},' ./ansible/lon-vpn.yml"
   }
 
+  private_networking = true
+
 }
 
 output "lon-vpn" {
