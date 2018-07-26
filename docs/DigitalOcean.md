@@ -101,9 +101,6 @@ Enter passphrase:
 # lsblk
   [ See new size ? ]
 # e2fsck -f /dev/mapper/mathom-home
-
-
-
 # resize2fs /dev/mapper/mathom-home
 #
 ```
