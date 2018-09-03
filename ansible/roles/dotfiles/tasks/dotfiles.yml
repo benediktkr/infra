@@ -28,6 +28,7 @@
   with_items:
     - "{{ dotfiles }}"
   become_user: "{{ myusername }}"
+  ignore_errors: yes
 
 - name: link the most important dotfiles for root
   file:
@@ -37,5 +38,6 @@
     state: link
   with_items:
     - "{{ dotfiles }}"
+  ignore_errors: yes
 
 

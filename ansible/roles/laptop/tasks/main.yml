@@ -67,3 +67,4 @@
   with_items:
     - projects
     - video
+  ignore_errors: yes

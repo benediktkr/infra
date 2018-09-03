@@ -68,7 +68,7 @@ resource "digitalocean_record" "freespace-cnames" {
   count  = "${length(local.freespace_cnames)}"
   value  = "freespace.sudo.is."
   ttl    = 60
-  
+
 }
 
 # eyjabakki.sudo.is
@@ -81,14 +81,14 @@ resource "digitalocean_record" "eyjabakki-sudo-is" {
   ttl    = 60
 }
 
-# mathom.sudo.is
-resource "digitalocean_record" "mathom-sudo-is" {
-  domain = "${digitalocean_domain.sudo-is.name}"
-  type   = "A"
-  name   = "mathom"
-  value  = "89.17.135.222"
-  ttl    = 60
-}
+# # mathom.sudo.is
+# resource "digitalocean_record" "mathom-sudo-is" {
+#   domain = "${digitalocean_domain.sudo-is.name}"
+#   type   = "A"
+#   name   = "mathom"
+#   value  = "89.17.135.222"
+#   ttl    = 60
+# }
 
 # CNAME vpn.sudo.is
 resource "digitalocean_record" "vpn-sudo-is" {
@@ -105,14 +105,5 @@ resource "digitalocean_record" "nl-vpn-sudo-is" {
   type   = "CNAME"
   name   = "nl-vpn"
   value  = "dns0.lokun.is."
-  ttl    = 60
-}
-
-# CNAME vpn.sudo.is
-resource "digitalocean_record" "HH19-sudo-is" {
-  domain = "${digitalocean_domain.sudo-is.name}"
-  type   = "CNAME"
-  name   = "HH19"
-  value  = "HH19.ignorelist.com."
   ttl    = 60
 }
