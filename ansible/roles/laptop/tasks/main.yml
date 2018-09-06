@@ -1,8 +1,11 @@
 ## apt-get update is already run in the common role
-- name: add nextcloud ppa
+- name: ppas
   apt_repository:
-    repo: ppa:nextcloud-devs/client
+    repo: "{{ item }}"
     update_cache: yes
+  with_items:
+    - ppa:nextcloud-devs/client
+    - ppa:kelleyk/emacs
   tags:
     - packages
 
@@ -14,7 +17,7 @@
     - android-tools-adb
     - android-tools-fastboot
     - chromium-browser
-    - emacs25 # Move to common later
+    - emacs26 # Move to common later
     - enigmail
     - filezilla
     - firefox
