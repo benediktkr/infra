@@ -39,6 +39,7 @@
     - virtualbox
     - vlc
     - rawtherapee
+    - darktable
   tags:
     - packages
 
@@ -51,6 +52,7 @@
     - skype --classic
     - signal-desktop
     - spotify
+    - telegram-desktop
   tags:
     - packages
 
