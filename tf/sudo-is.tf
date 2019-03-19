@@ -32,6 +32,17 @@ resource "digitalocean_record" "www-sudo-is" {
   ttl    = 60
 }
 
+# f.sudo.is (firstroot)
+resource "digitalocean_record" "f-sudo-is" {
+  domain = "${digitalocean_domain.sudo-is.name}"
+  type   = "A"
+  name   = "f"
+  value  = "${local.f_ip}"
+  ttl    = 60
+}
+
+
+
 # freespace.sudo.is
 resource "digitalocean_record" "freespace-sudo-is" {
   domain = "${digitalocean_domain.sudo-is.name}"
