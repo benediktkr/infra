@@ -1,0 +1,5 @@
+- hosts: f.sudo.is
+  become: true
+  roles:
+    - common
+    - dotfiles

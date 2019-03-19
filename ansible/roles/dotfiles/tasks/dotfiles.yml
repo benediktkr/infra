@@ -2,13 +2,10 @@
 - name: add ssh hostkey known hosts for git
   lineinfile:
     path: /etc/ssh/ssh_known_hosts"
-    line: "{{ bitbucket_hostkey }}"
+    line: "{{ github_hostkey }}"
     create: yes
-  with_items:
-    - "{{ github_hostkey }}"
-    - "{{ bitbucket_hostkey }}"
 
-- name: clone my dotfiles repo
+- name: pull my dotfiles repo
   git:
     repo: "{{ dotfiles_repo }}"
     dest: "{{ dotfiles_path }}"
@@ -39,5 +36,3 @@
   with_items:
     - "{{ dotfiles }}"
   ignore_errors: yes
-
-

@@ -1,8 +1,7 @@
+f.sudo.is
+
 [vpn]
 lon-vpn.sudo.is
 
-[vpn:vars]
+[all:vars]
 ansible_user=root
-
-[hetzner]
-freespace.sudo.is
