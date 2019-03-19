@@ -39,13 +39,6 @@
     - server.conf
     - ca.crt
     - server.crt
-    - udpate-resolve-conf
-  notify: reload openvpn
-
-- name: copy server.conf
-  copy:
-    src: openvpn/server.conf
-    dest: /etc/openvpn/server.conf
   notify: reload openvpn
 
 - name: copy openvpn secrets
@@ -65,3 +58,12 @@
     src: iptables.rules
     dest: /etc/iptables.rules
   notify: apply iptables rules
+
+- name: cron to reload iptables rules 3 minutes after reboot
+  cron:
+    name: iptables load
+    special_time: reboot
+    job: "sleep 180 && /sbin/iptables-restore < /etc/iptables.rules"
+    user: root
+  tags:
+    - cron

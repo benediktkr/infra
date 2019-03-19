@@ -1,0 +1,4 @@
+@reboot 180 && /sbin/iptables-restore < /etc/iptables.rules
+
+
+#
