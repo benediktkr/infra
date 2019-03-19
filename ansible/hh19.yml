@@ -3,10 +3,8 @@
   become: true
   vars:
     - hostname: hh19.sudo.is
-    - myusername: bk
   roles:
     - common
     - rpi
     - dotfiles
     - rpi-videofeed
-

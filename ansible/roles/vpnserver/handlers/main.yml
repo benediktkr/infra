@@ -13,3 +13,5 @@
     state: restarted
     daemon_reload: yes
 
+- name: systemctl daemon reload
+  shell: systemctl daemon-reload

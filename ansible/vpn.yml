@@ -1,0 +1,6 @@
+- hosts: vpn
+  become: true
+  roles:
+    - common
+    - dotfiles
+    - vpnserver

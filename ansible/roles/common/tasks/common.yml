@@ -1,7 +1,7 @@
 ---
 - name: set hostname
   hostname:
-    name: "{{ hostname }}"
+    name: "{{ ansible_hostname }}"
   tags:
     - hostname
 
@@ -44,7 +44,7 @@
   tags:
     - users
 
-- name: move homedir for user if non-standard location
+- name: move homedir for my user if non-standard location
   user:
     name: "{{ myusername }}"
     move_home: yes
@@ -77,13 +77,15 @@
   tags:
     - users
 
-- name: disable password authentication 
+- name: disable password authentication
   replace:
     path: /etc/ssh/sshd_config
     regexp: '^#?PasswordAuthentication(?: yes| no)$'
     replace: 'PasswordAuthentication no'
   tags:
     - ssh
+  notify:
+    - reload sshd
 
 - name: disable challengeresponse authentication
   replace:
@@ -92,11 +94,5 @@
     replace: 'ChallengeResponseAuthentication no'
   tags:
     - ssh
-
-- name: reloading ssh
-  service:
-    name: ssh
-    state: reloaded
-  tags:
-    - ssh
-    
+  notify:
+    - reload sshd

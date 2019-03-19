@@ -14,6 +14,11 @@
   tags:
     - users
 
+- name: load v4l driver for raspbi camera
+  modprobe:
+    name: bcm2835-v4l2
+    state: present
+    
 - name: template wrapper script
   template:
     src: rpi-videofeed.sh.j2

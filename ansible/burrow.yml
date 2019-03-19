@@ -13,4 +13,5 @@
     - common
     - laptop
     - dotfiles
-    - motion
+    #- docker
+    #- motion

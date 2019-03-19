@@ -1,8 +1,8 @@
 resource "digitalocean_droplet" "lon-vpn" {
-  image  = "ubuntu-17-04-x64"
+  image  = "ubuntu-18-04-x64"
   region = "lon1"
   size   = "512mb"
-  name   = "lon-vpn.${var.domain}"
+  name   = "lon-vpn.${digitalocean_domain.sudo-is.name}"
   ssh_keys = ["cb:79:d0:73:55:b1:79:60:a4:a9:d5:48:53:e2:67:13"]
 
   # A remote-exec wait untils the instance is ready
@@ -15,9 +15,9 @@ resource "digitalocean_droplet" "lon-vpn" {
     ]
   }
 
-  provisioner "local-exec" {
-    command = "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -u root -i '${self.ipv4_address},' ./ansible/lon-vpn.yml"
-  }
+  # provisioner "local-exec" {
+  #   command = "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -u root -i '${self.ipv4_address},' ../ansible/lon-vpn.yml"
+  # }
 
   private_networking = true
 
@@ -28,14 +28,6 @@ output "lon-vpn" {
 }
 
 resource "digitalocean_record" "lon-vpn" {
-  domain = "${digitalocean_domain.do-sudo-is.name}"
-  type   = "A"
-  name   = "lon-vpn"
-  value  = "${digitalocean_droplet.lon-vpn.ipv4_address}"
-  ttl    = 60
-}
-
-resource "digitalocean_record" "lon-vpn-sudo" {
   domain = "${digitalocean_domain.sudo-is.name}"
   type   = "A"
   name   = "lon-vpn"
