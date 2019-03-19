@@ -31,10 +31,15 @@
     regexp: '^#AUTOSTART\="all"'
     replace: 'AUTOSTART="all"'
 
-- name: copy openvpn config dir
+- name: copy openvpn config
   copy:
-    src: openvpn/
-    dest: /etc/openvpn/
+    src: "{{ item }}"
+    dest: "/etc/openvpn/{{ item }}"
+  with_items:
+    - server.conf
+    - ca.crt
+    - server.crt
+    - udpate-resolve-conf
   notify: reload openvpn
 
 - name: copy server.conf

@@ -99,6 +99,15 @@ resource "digitalocean_record" "vpn-sudo-is" {
   ttl    = 60
 }
 
+# CNAME lychener-vpn.sudo.is
+resource "digitalocean_record" "wifi001-vpn-sudo-is" {
+  domain = "${digitalocean_domain.sudo-is.name}"
+  type   = "CNAME"
+  name   = "wifi001-vpn"
+  value  = "lon-vpn.sudo.is."
+  ttl    = 60
+}
+
 # CNAME nl-vpn.sudo.is
 resource "digitalocean_record" "nl-vpn-sudo-is" {
   domain = "${digitalocean_domain.sudo-is.name}"
