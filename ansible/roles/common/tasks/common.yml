@@ -36,6 +36,14 @@
   tags:
     - packages
 
+- name: remove packages
+  apt:
+    name: "{{ item }}"
+    state: absent
+  with_items:
+    - update-motd
+  tags: packages
+
 - name: create my user
   user:
     name: "{{ myusername }}"
@@ -97,3 +105,9 @@
     - ssh
   notify:
     - reload sshd
+
+- name: empty /etc/motd
+  copy:
+    content: ""
+    dest: /etc/motd
+    force: yes
