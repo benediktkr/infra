@@ -15,6 +15,8 @@
   apt:
     state: present
     name: "{{ item }}"
+  environment:
+    PATH: "{{ ansible_env.PATH }}:/sbin:/usr/sbin"
   with_items:
     - cbm
     - cryptsetup
@@ -33,6 +35,7 @@
     - zsh
     - lsof
     - sudo
+    - unattended-upgrades
   tags:
     - packages
 
@@ -42,6 +45,8 @@
     state: absent
   with_items:
     - update-motd
+    - landscape-client
+    - landscape-common
   tags: packages
 
 - name: create my user
@@ -111,3 +116,10 @@
     content: ""
     dest: /etc/motd
     force: yes
+
+- name: disable update-motd on ubuntu
+  file:
+    dest: /etc/update-motd.d/
+    mode: 0600
+    recurse: yes
+  when: ansible_distribution == "Ubuntu"
