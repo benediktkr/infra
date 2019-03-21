@@ -35,7 +35,6 @@
     - zsh
     - lsof
     - sudo
-    - unattended-upgrades
   tags:
     - packages
 
@@ -123,3 +122,25 @@
     mode: 0600
     recurse: yes
   when: ansible_distribution == "Ubuntu"
+
+- name: install unattended-upgrades
+  apt:
+    name: unattended-upgrades
+    state: present
+    update_cache: yes
+  when: unatt_enabled
+  tags:
+    - unatt
+    - packages
+
+# TODO: Decide on which way...
+- name: enable unattended-upgrades (debian follows stable, ubuntu follows codename)
+  template:
+    src: "{{ item }}.j2"
+    dest: "/etc/apt/apt.conf.d/{{ item }}"
+  with_items:
+    - 50unattended-upgrades
+    - 20auto-upgrades
+  when: unatt_enabled
+  tags:
+    - unatt
