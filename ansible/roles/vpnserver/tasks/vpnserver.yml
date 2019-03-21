@@ -16,7 +16,14 @@
   notify: restart dnsmasq
 
 - name: enable ip_forward in proc
-  shell: "bash -c 'echo 1 > /proc/sys/net/ipv4/ip_forward'"
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: 1
+    sysctl_set: yes
+    state: present
+    reload: yes
+
+  #shell: "bash -c 'echo 1 > /proc/sys/net/ipv4/ip_forward'"
 
 - name: enable ip_forward in sysctl.conf
   replace:
@@ -73,14 +80,6 @@
     src: iptables.rules
     dest: /etc/iptables.rules
   notify: apply iptables rules
-
-- name: cron to update /etc/motd with openvpn-status.log
-  cron:
-    name: openvpn status motd
-    minute: "*/1"
-    job: "cat /etc/openvpn/openvpn-status.log > /etc/motd"
-    user: root
-  tags: cron
 
 - name: cron to reload iptables rules 3 minutes after reboot
   cron:
