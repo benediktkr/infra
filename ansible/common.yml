@@ -3,4 +3,5 @@
   vars:
     myusername: "ben"
   roles:
+    - common
     - dotfiles
