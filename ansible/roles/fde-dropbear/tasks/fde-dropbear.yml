@@ -1,0 +1,32 @@
+---
+
+- name: install busybox and dropbear
+  apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: yes
+  with_items:
+    - busybox
+    - dropbear
+
+- name: enable busybox in initramfs
+  replace:
+    path: /etc/initramfs-tools/initramfs.conf
+    regexp: '^#?BUSYBOX=.*$'
+    replace: "BUSYBOX=y"
+
+- name: enable dropbear
+  replace:
+    path: /etc/default/dropbear
+    regexp: "^NO_START=.*$"
+    replace: "NO_START=0"
+
+- name: copy authorized_keys for dropbear
+  copy:
+    src: authorized_keys
+    dest: /etc/dropbear-initramfs/authorized_keys
+    mode: 700
+    force: yes
+
+- name: update initramfs
+  command: update-initramfs -u

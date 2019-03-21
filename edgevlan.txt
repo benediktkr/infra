@@ -1,0 +1,22 @@
+set interfaces switch switch0 vif 10 address 192.168.2.1/24
+
+set service dhcp-server shared-network-name vlan10 subnet 192.168.2.0/24 start 192.168.2.11 stop 192.168.2.200
+set service dhcp-server shared-network-name vlan10 subnet 192.168.2.0/24 default-router 192.168.2.1
+set service dhcp-server shared-network-name vlan10 subnet 192.168.2.0/24 dns-server 192.168.2.1
+
+set interfaces switch switch0 switch-port vlan-aware enable
+set interfaces switch switch0 switch-port interface eth1 vlan vid 10
+
+# Don't mess with the untagged/physical part since we're not using a dedicated vlan for the rest
+# set interfaces switch switch0 switch-port interface eth1 vlan pvid 1
+
+set interfaces openvpn vtun0 config-file /config/wifi002.conf
+
+set firewall modify SOURCE_ROUTE rule 1 action modify
+set firewall modify SOURCE_ROUTE rule 1 description "traffic from vlan goes to vpn"
+set firewall modify SOURCE_ROUTE rule 1 modify table 1
+set firewall modify SOURCE_ROUTE rule 1 source address 192.168.2.0/24
+
+set protocols static table 1 interface-route 0.0.0.0/0 next-hop-interface vtun0
+
+set interfaces switch switch0 vif 10 firewall in modify SOURCE_ROUTE
