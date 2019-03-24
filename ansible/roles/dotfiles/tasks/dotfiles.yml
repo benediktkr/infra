@@ -19,25 +19,26 @@
     version: master
     clone: yes
     update: yes
+    force: yes
   become_user: "{{ myusername }}"
   ignore_errors: yes
 
 
-- name: hard link the most important dotfiles for me
+- name: put my dotfiles in place
   file:
     src: "{{ dotfiles_path }}/{{ item.src }}"
     dest: "~/{{ item.dest }}"
     mode: "{{ mode | default(755) }}"
-    state: hard
+    state: file
   with_items:
     - "{{ dotfiles }}"
   become_user: "{{ myusername }}"
 
-- name: hard link the most important dotfiles for root
+- name: put dotfiles for root in place
   file:
     src: "{{ dotfiles_path }}/{{ item.src }}"
     dest: "/root/{{ item.dest }}"
     mode: "{{ mode | default(755) }}"
-    state: hard
+    state: file
   with_items:
     - "{{ dotfiles }}"
