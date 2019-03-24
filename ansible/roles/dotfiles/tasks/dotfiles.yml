@@ -5,6 +5,13 @@
     line: "{{ github_hostkey }}"
     create: yes
 
+- name: create dir structure
+  file:
+    path: "{{ dotfiles_path }}"
+    state: directory
+    mode: 0750
+    owner: "{{ myusername }}"
+
 - name: pull my dotfiles repo
   git:
     repo: "{{ dotfiles_repo }}"
@@ -16,23 +23,21 @@
   ignore_errors: yes
 
 
-- name: link the most important dotfiles for me
+- name: hard link the most important dotfiles for me
   file:
     src: "{{ dotfiles_path }}/{{ item.src }}"
     dest: "~/{{ item.dest }}"
     mode: "{{ mode | default(755) }}"
-    state: link
+    state: hard
   with_items:
     - "{{ dotfiles }}"
   become_user: "{{ myusername }}"
-  ignore_errors: yes
 
-- name: link the most important dotfiles for root
+- name: hard link the most important dotfiles for root
   file:
     src: "{{ dotfiles_path }}/{{ item.src }}"
     dest: "/root/{{ item.dest }}"
     mode: "{{ mode | default(755) }}"
-    state: link
+    state: hard
   with_items:
     - "{{ dotfiles }}"
-  ignore_errors: yes
