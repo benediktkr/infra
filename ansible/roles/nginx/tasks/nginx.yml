@@ -56,13 +56,13 @@
 
 - name: lets encrypt
   command: "/usr/local/bin/certbot -n --nginx -d {{ item }}"
-  #args:
-  #  creates: "/etc/letsencrypt/live/{{ item }}/fullchain.pem"
+  args:
+    creates: "/etc/letsencrypt/live/{{ item }}/fullchain.pem"
   environment:
     PATH: "{{ ansible_env.PATH }}:/sbin:/usr/sbin"
   with_items:
     #- benedikt.sudo.is
-    - www.sudo.is
+    - www.sudo.is -d sudo.is --expand
   tags:
     - letsencrypt
 
