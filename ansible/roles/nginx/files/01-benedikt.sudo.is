@@ -1,16 +1,14 @@
 # ansible managed
 server {
-    listen 80;
+    listen 443 ssl;
+    listen   [::]:443 ssl; # listen for ipv6
+
     server_name static.sudo.is benedikt.sudo.is;
 
     root /srv/www/benedikt.sudo.is/;
     location / {
         autoindex on;
     }
-
-    access_log /var/log/nginx/static.log;
-
-    listen 443 ssl; # managed by Certbot
     ssl_certificate /etc/letsencrypt/live/benedikt.sudo.is/fullchain.pem; # managed by Certbot
     ssl_certificate_key /etc/letsencrypt/live/benedikt.sudo.is/privkey.pem; # managed by Certbot
     include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
@@ -20,5 +18,6 @@ server {
     if ($scheme != "https") {
         return 301 https://$host$request_uri;
     } # managed by Certbot
+
 
 }

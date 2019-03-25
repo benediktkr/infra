@@ -54,26 +54,28 @@
     - hardening.conf
   notify: reload nginx
 
-- name: lets encrypt
-  command: "/usr/local/bin/certbot -n --nginx -d {{ item }}"
-  args:
-    creates: "/etc/letsencrypt/live/{{ item }}/fullchain.pem"
-  environment:
-    PATH: "{{ ansible_env.PATH }}:/sbin:/usr/sbin"
-  with_items:
-    #- benedikt.sudo.is
-    - www.sudo.is -d sudo.is --expand
-  tags:
-    - letsencrypt
-
 - name: copy vhosts (specific roles copy/template their own)
   copy:
     src: "{{ item }}"
     dest: "/etc/nginx/sites-enabled/{{ item }}"
   with_items:
     - 00-www.sudo.is
-    #- 01-benedikt.sudo.is
+    - 01-benedikt.sudo.is
   notify: reload nginx
+
+- meta: flush_handlers
+
+- name: lets encrypt
+  command: "/usr/local/bin/certbot -n --nginx -d {{ item }}"
+  args:
+    creates: "/etc/letsencrypt/live/{{ item.split(' ')[0] }}/fullchain.pem"
+  environment:
+    PATH: "{{ ansible_env.PATH }}:/sbin:/usr/sbin"
+  with_items:
+    - benedikt.sudo.is
+    - www.sudo.is -d sudo.is
+  tags:
+    - letsencrypt
 
 - name: remove default vhost boilerplate
   file:
