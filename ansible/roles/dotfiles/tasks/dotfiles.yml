@@ -26,9 +26,8 @@
 
 - name: put my dotfiles in place
   file:
-    src: "{{ dotfiles_path }}/{{ item.src }}"
+    remote_src: "{{ dotfiles_path }}/{{ item.src }}"
     dest: "~/{{ item.dest }}"
-    mode: "{{ mode | default(755) }}"
     state: file
   with_items:
     - "{{ dotfiles }}"
@@ -36,9 +35,10 @@
 
 - name: put dotfiles for root in place
   file:
-    src: "{{ dotfiles_path }}/{{ item.src }}"
+    remote_src: "{{ dotfiles_path }}/{{ item.src }}"
     dest: "/root/{{ item.dest }}"
-    mode: "{{ mode | default(755) }}"
+    owner: root
+    group: root
     state: file
   with_items:
     - "{{ dotfiles }}"

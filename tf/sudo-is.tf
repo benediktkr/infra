@@ -1,7 +1,7 @@
 ### sudo.is
 resource "digitalocean_domain" "sudo-is" {
   name = "sudo.is"
-  ip_address = "${local.freespace_ip}"
+  ip_address = "${local.f_ip}"
 }
 
 # MX sudo.is

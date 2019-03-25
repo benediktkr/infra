@@ -5,47 +5,47 @@
   tags:
     - hostname
 
-- name: update apt cache
-  apt:
-    update_cache: yes
-  tags:
-    - packages
-
 - name: install packages
   apt:
-    state: present
-    name: "{{ item }}"
+    state: latest
+    update_cache: yes
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - cbm
+      - cryptsetup
+      - curl
+      - dig
+      - git
+      - gnupg2
+      - htop
+      - iotop
+      - lsof
+      - lvm2
+      - molly-guard
+      - mtr
+      - ncdu
+      - nethogs
+      - nmap
+      - openssh-server
+      - openssl
+      - python-pip
+      - sudo
+      - tmux
+      - whois
+      - zsh
   environment:
     PATH: "{{ ansible_env.PATH }}:/sbin:/usr/sbin"
-  with_items:
-    - cbm
-    - cryptsetup
-    - curl
-    - git
-    - htop
-    - iotop
-    - lvm2
-    - molly-guard
-    - ncdu
-    - nethogs
-    - nmap
-    - openssh-server
-    - tmux
-    - whois
-    - zsh
-    - lsof
-    - sudo
   tags:
     - packages
 
 - name: remove packages
   apt:
-    name: "{{ item }}"
+    name:
+      - update-motd
+      - landscape-client
+      - landscape-common
     state: absent
-  with_items:
-    - update-motd
-    - landscape-client
-    - landscape-common
   tags: packages
 
 - name: create my user

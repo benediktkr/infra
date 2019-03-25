@@ -1,30 +1,3 @@
-## This is for debian
-## Would be easy to adapt for ubuntu if needed
-## difference is the distro name in the apt repo
-
-- name: get dist
-  shell: lsb_release -is
-  register: dist
-
-- name: get dist codename
-  shell: lsb_release -cs
-  register: codename
-
-- name: FIX FIX FIX  add docker repo to apt
-  apt_repository:
-    repo: "deb https://apt.dockerproject.org/repo {{ dist.stdout |  lower() }}-{{  codename.stdout }} main"
-    state: present
-    filename: 'docker'
-
-- name: add apt key for docker repo
-  apt_key:
-    keyserver: hkp://p80.pool.sks-keyservers.net:80
-    id: 58118E89F3A912897C070ADBF76221572C52609D
-    state: present
-
-- name: install docker
-  apt:
-    name: docker-engine
-    update_cache: yes
-    state: present
-
+---
+- include: docker.yml
+  tags: docker

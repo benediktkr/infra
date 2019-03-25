@@ -4,3 +4,6 @@
     - common
     - dotfiles
     - fde-dropbear
+    - docker
+    - nginx
+    #- nextcloud

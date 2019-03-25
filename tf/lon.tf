@@ -1,5 +1,5 @@
 resource "digitalocean_droplet" "lon-vpn" {
-  image  = "ubuntu-18-04-x64"
+  image  = "43657026" # ubuntu-18.04.x64 (terraform got angry if this name was used)
   region = "lon1"
   size   = "512mb"
   name   = "lon-vpn.${digitalocean_domain.sudo-is.name}"

@@ -1,0 +1,92 @@
+---
+
+- name: add apt key
+  apt_key:
+    url: https://nginx.org/keys/nginx_signing.key
+    state: present
+  when: ansible_distribution == "Debian"
+  tags:
+    - packages
+
+- name: add repo for debian
+  apt_repository:
+    repo: "deb http://nginx.org/packages/mainline/debian {{ ansible_distribution_release }} nginx"
+    state: present
+  when: ansible_distribution == "Debian"
+  tags:
+    - packages
+
+- name: install nginx
+  apt:
+    name: nginx
+    update_cache: yes
+    state: latest
+  environment:
+    PATH: "{{ ansible_env.PATH }}:/sbin:/usr/sbin"
+  tags:
+    - packages
+
+- name: install certbot from pip (currently the easiest way to get certbot-nginx)
+  pip:
+    name:
+      - certbot
+      - certbot-nginx
+  tags:
+    - letsencrypt
+    - packages
+
+- name: create dh file
+  command: openssl dhparam -out /etc/nginx/dhparam.pem 4096
+  args:
+    creates: /etc/nginx/dhparam.pem
+
+- name: copy nginx.conf
+  copy:
+    src: nginx.conf
+    dest: /etc/nginx/nginx.conf
+  notify: reload nginx
+
+- name: copy conf.d files
+  copy:
+    src: "{{ item }}"
+    dest: "/etc/nginx/conf.d/{{ item }}"
+  with_items:
+    - hardening.conf
+  notify: reload nginx
+
+- name: lets encrypt
+  command: "/usr/local/bin/certbot -n --nginx -d {{ item }}"
+  #args:
+  #  creates: "/etc/letsencrypt/live/{{ item }}/fullchain.pem"
+  environment:
+    PATH: "{{ ansible_env.PATH }}:/sbin:/usr/sbin"
+  with_items:
+    #- benedikt.sudo.is
+    - www.sudo.is
+  tags:
+    - letsencrypt
+
+- name: copy vhosts (specific roles copy/template their own)
+  copy:
+    src: "{{ item }}"
+    dest: "/etc/nginx/sites-enabled/{{ item }}"
+  with_items:
+    - 00-www.sudo.is
+    #- 01-benedikt.sudo.is
+  notify: reload nginx
+
+- name: remove default vhost boilerplate
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: reload nginx
+
+- name: test nginx config
+  command: /usr/sbin/nginx -t
+
+- name: letsencrypt renewal cron job
+  cron:
+    name: letsencrypt_renewal
+    special_time: weekly
+    job: "/usr/local/bin/certbot renew -n" # send via telegram
+  tags: letsencrypt

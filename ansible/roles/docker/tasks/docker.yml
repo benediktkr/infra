@@ -1,0 +1,28 @@
+---
+
+- name: add apt key
+  apt_key:
+    url: https://download.docker.com/linux/debian/gpg
+    state: present
+  when: ansible_distribution == "Debian"
+  tags:
+    - packages
+
+- name: add repo for debian
+  apt_repository:
+    repo: "deb [arch=amd64] https://download.docker.com/linux/debian {{ ansible_distribution_release }} stable"
+    state: present
+  when: ansible_distribution == "Debian"
+  tags:
+    - packages
+
+- name: install docker package
+  apt:
+    name: docker-ce
+    update_cache: yes
+    state: latest
+  environment:
+    PATH: "{{ ansible_env.PATH }}:/sbin:/usr/sbin"
+  notify: restart docker
+  tags:
+    - packages
