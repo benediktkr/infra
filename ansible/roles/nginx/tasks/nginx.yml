@@ -26,19 +26,16 @@
   tags:
     - packages
 
-- name: install certbot from pip (currently the easiest way to get certbot-nginx)
-  pip:
-    name:
-      - certbot
-      - certbot-nginx
-  tags:
-    - letsencrypt
-    - packages
-
 - name: create dh file
   command: openssl dhparam -out /etc/nginx/dhparam.pem 4096
   args:
     creates: /etc/nginx/dhparam.pem
+
+- name: remove default vhost boilerplate
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: reload nginx
 
 - name: copy nginx.conf
   copy:
@@ -65,6 +62,20 @@
 
 - meta: flush_handlers
 
+- name: test nginx config
+  command: /usr/sbin/nginx -t
+  register: nginx_test
+  changed_when: nginx_test.rc != 0
+
+- name: install certbot from pip (currently the easiest way to get certbot-nginx)
+  pip:
+    name:
+      - certbot
+      - certbot-nginx
+  tags:
+    - letsencrypt
+    - packages
+
 - name: lets encrypt
   command: "/usr/local/bin/certbot -n --nginx -d {{ item }}"
   args:
@@ -76,15 +87,6 @@
     - www.sudo.is -d sudo.is
   tags:
     - letsencrypt
-
-- name: remove default vhost boilerplate
-  file:
-    path: /etc/nginx/sites-enabled/default
-    state: absent
-  notify: reload nginx
-
-- name: test nginx config
-  command: /usr/sbin/nginx -t
 
 - name: letsencrypt renewal cron job
   cron:
