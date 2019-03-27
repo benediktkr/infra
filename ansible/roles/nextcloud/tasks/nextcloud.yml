@@ -1,0 +1,55 @@
+---
+
+- name: create dir structure
+  file:
+    path: "{{ nextcloud_root }}/{{ item['dir'] }}"
+    state: directory
+    mode: 0750
+    owner: "{{ item['owner'] | default('www-data') }}"
+    group: "{{ item['group'] | default('www-data') }}"
+  with_items:
+    - { dir: html }
+    - { dir: data }
+
+- name: start docker container
+  docker_container:
+    name: "nextcloud_apache"
+    image: "nextcloud:{{ nextcloud_version }}"
+    auto_remove: yes
+    detach: yes
+    pull: yes
+    # recreate: yes # maybe for updates?
+    env:
+      NEXTCLOUD_DATA_DIR: "/data"
+    ports:
+      - "{{ nextcloud_exposed_port }}:80"
+    volumes:
+      - "{{ nextcloud_root }}/data:/data"
+      - "{{ nextcloud_root }}/html:/var/www/html"
+  tags:
+    - docker
+
+- name: lets encrypt
+  command: "/usr/local/bin/certbot -n --standalone --preferred-challenges tls-sni -d {{ nextcloud_url }}"
+  args:
+    creates: "/etc/letsencrypt/live/{{ nextcloud_url }}/fullchain.pem"
+  environment:
+    PATH: "{{ ansible_env.PATH }}:/sbin:/usr/sbin"
+  tags:
+    - letsencrypt
+
+- name: template nginx vhost
+  template:
+    src: nginx-site.conf.j2
+    dest: "/etc/nginx/sites-enabled/01-nextcloud.sudo.is"
+  tags:
+    - nginx
+  notify: reload nginx
+
+- name: template uploadsize.conf
+  template:
+    src: nginx-uploadsize.conf.j2
+    dest: "/etc/nginx/conf.d/uploadsize.conf"
+  tags:
+    - nginx
+  notify: reload nginx

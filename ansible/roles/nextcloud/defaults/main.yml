@@ -1,3 +1,6 @@
 nginx_root: "/etc/nginx"
 
 nextcloud_exposed_port: "8091"
+nextcloud_version: "13" # slowly bump to 15 is probably smartest
+nextcloud_root: "/srv/nextcloud"
+nextcloud_url: "nextcloud.sudo.is"

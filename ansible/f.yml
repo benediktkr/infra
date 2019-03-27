@@ -6,4 +6,4 @@
     - fde-dropbear
     - docker
     - nginx
-    #- nextcloud
+    - nextcloud

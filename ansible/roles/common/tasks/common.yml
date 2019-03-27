@@ -15,7 +15,7 @@
       - cbm
       - cryptsetup
       - curl
-      - dig
+      - dnsutils
       - git
       - gnupg2
       - htop

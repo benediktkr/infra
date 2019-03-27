@@ -26,3 +26,7 @@
   notify: restart docker
   tags:
     - packages
+
+- name: install pip module for ansible tasks
+  pip:
+    name: docker

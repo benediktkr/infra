@@ -62,11 +62,6 @@
 
 - meta: flush_handlers
 
-- name: test nginx config
-  command: /usr/sbin/nginx -t
-  register: nginx_test
-  changed_when: nginx_test.rc != 0
-
 - name: install certbot from pip (currently the easiest way to get certbot-nginx)
   pip:
     name:
@@ -76,6 +71,8 @@
     - letsencrypt
     - packages
 
+
+# The command in the nextcloud role might be better than this
 - name: lets encrypt
   command: "/usr/local/bin/certbot -n --nginx -d {{ item }}"
   args:

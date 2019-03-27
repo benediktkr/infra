@@ -2,12 +2,13 @@
 
 - name: install busybox and dropbear
   apt:
-    name: "{{ item }}"
+    name:
+      - busybox
+      - dropbear
     state: present
     update_cache: yes
-  with_items:
-    - busybox
-    - dropbear
+  tags:
+    - packages
 
 - name: enable busybox in initramfs
   replace:
