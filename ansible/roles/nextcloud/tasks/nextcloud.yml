@@ -8,17 +8,16 @@
     owner: "{{ item['owner'] | default('www-data') }}"
     group: "{{ item['group'] | default('www-data') }}"
   with_items:
-    - { dir: html }
+    - { dir: html, group: "root" }
     - { dir: data }
 
 - name: start docker container
   docker_container:
-    name: "nextcloud_apache"
+    name: "{{ nextcloud_container_name }}"
     image: "nextcloud:{{ nextcloud_version }}"
     auto_remove: yes
     detach: yes
     pull: yes
-    # recreate: yes # maybe for updates?
     env:
       NEXTCLOUD_DATA_DIR: "/data"
     ports:
@@ -53,3 +52,9 @@
   tags:
     - nginx
   notify: reload nginx
+
+- name: nextcloud cron
+  cron:
+    name: nextcloud
+    minute: "*/15"
+    job: "/usr/bin/docker exec --user www-data {{ nextcloud_container_name }} php cron.php"

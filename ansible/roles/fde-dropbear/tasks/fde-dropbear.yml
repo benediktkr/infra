@@ -16,11 +16,11 @@
     regexp: '^#?BUSYBOX=.*$'
     replace: "BUSYBOX=y"
 
-- name: enable dropbear
+- name: set NO_START because we want to use openssh
   replace:
     path: /etc/default/dropbear
     regexp: "^NO_START=.*$"
-    replace: "NO_START=0"
+    replace: "NO_START=1"
 
 - name: copy authorized_keys for dropbear
   copy:
