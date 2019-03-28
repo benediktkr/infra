@@ -10,9 +10,50 @@ resource "digitalocean_record" "sudo-is-mx-0" {
   type     = "MX"
   name     = "@"
   priority = "10"
-  value    = "freespace.sudo.is."
+  value    = "aspmx.l.google.com."
   ttl      = 60
 }
+
+# MX sudo.is
+resource "digitalocean_record" "sudo-is-mx-1" {
+  domain   = "${digitalocean_domain.sudo-is.name}"
+  type     = "MX"
+  name     = "@"
+  priority = "20"
+  value    = "alt1.aspmx.l.google.com."
+  ttl      = 60
+}
+
+# MX sudo.is
+resource "digitalocean_record" "sudo-is-mx-2" {
+  domain   = "${digitalocean_domain.sudo-is.name}"
+  type     = "MX"
+  name     = "@"
+  priority = "20"
+  value    = "alt2.aspmx.l.google.com."
+  ttl      = 60
+}
+
+# MX sudo.is
+resource "digitalocean_record" "sudo-is-mx-3" {
+  domain   = "${digitalocean_domain.sudo-is.name}"
+  type     = "MX"
+  name     = "@"
+  priority = "30"
+  value    = "aspmx2.googlemail.com."
+  ttl      = 60
+}
+
+# MX sudo.is
+resource "digitalocean_record" "sudo-is-mx-4" {
+  domain   = "${digitalocean_domain.sudo-is.name}"
+  type     = "MX"
+  name     = "@"
+  priority = "30"
+  value    = "aspmx3.googlemail.com."
+  ttl      = 60
+}
+
 
 # TXT
 resource "digitalocean_record" "sudo-is-txt" {
@@ -20,6 +61,14 @@ resource "digitalocean_record" "sudo-is-txt" {
   type   = "TXT"
   name   = "@"
   value  = "v=spf1 mx a ptr ip4:${local.freespace_ip}/32 ip4:${local.endor_ip} include=_spf.investici.org"
+  ttl    = 60
+}
+
+resource "digitalocean_record" "sudo-is-google-txt" {
+  domain = "${digitalocean_domain.sudo-is.name}"
+  type   = "TXT"
+  name   = "@"
+  value  = "google-site-verification=anu1tuByz3JmonTIET79s6uokfXMvqi8tdemUsS1EWI"
   ttl    = 60
 }
 
@@ -61,9 +110,9 @@ resource "digitalocean_record" "endor-sudo-is" {
   ttl    = 60
 }
 
-# CNAMEs to freespace
+# CNAMEs to f
 locals {
-  freespace_cnames = [
+  f_cnames = [
     "benedikt",
     "static",
     "notes",
@@ -72,12 +121,12 @@ locals {
   ]
 }
 
-resource "digitalocean_record" "freespace-cnames" {
+resource "digitalocean_record" "f-cnames" {
   domain = "${digitalocean_domain.sudo-is.name}"
   type   = "CNAME"
-  name   = "${element(local.freespace_cnames, count.index)}"
-  count  = "${length(local.freespace_cnames)}"
-  value  = "freespace.sudo.is."
+  name   = "${element(local.f_cnames, count.index)}"
+  count  = "${length(local.f_cnames)}"
+  value  = "f.sudo.is."
   ttl    = 60
 
 }
@@ -124,6 +173,6 @@ resource "digitalocean_record" "nl-vpn-sudo-is" {
   domain = "${digitalocean_domain.sudo-is.name}"
   type   = "CNAME"
   name   = "nl-vpn"
-  value  = "dns0.lokun.is."
+  value  = "dns0.sudo.is."
   ttl    = 60
 }

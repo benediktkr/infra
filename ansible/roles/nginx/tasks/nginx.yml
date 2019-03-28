@@ -82,6 +82,7 @@
   with_items:
     - benedikt.sudo.is
     - www.sudo.is -d sudo.is
+    - "{{ ansible_fqdn }}"
   tags:
     - letsencrypt
 
