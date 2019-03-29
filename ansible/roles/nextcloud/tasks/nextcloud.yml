@@ -58,3 +58,9 @@
     name: nextcloud
     minute: "*/15"
     job: "/usr/bin/docker exec --user www-data {{ nextcloud_container_name }} php cron.php"
+
+- name: thumbnails cron
+  cron:
+    name: nextcloud_thumbnails
+    minute: "*/15"
+    job: "/usr/bin/docker exec --user www-data {{ nextcloud_container_name }} php occ preview:pre-generate"
