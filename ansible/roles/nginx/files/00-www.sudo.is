@@ -1,5 +1,6 @@
 # ansible-managed
 server {
+    listen   80;
     listen   443 ssl;
     listen   [::]:443 ssl; # listen for ipv6
 
