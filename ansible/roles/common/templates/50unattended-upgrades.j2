@@ -58,8 +58,8 @@ Unattended-Upgrade::Origins-Pattern {
         // Note that this will silently match a different release after
         // migration to the specified archive (e.g. testing becomes the
         // new stable).
-        "o=Debian,a=stable";
-        "o=Debian,a=stable-updates";
+        "o=Debian,a={{ ansible_distribution_release }}";
+        "o=Debian,a={{ ansible_distribution_release }}-updates";
 //      "o=Debian,a=proposed-updates";
         "origin=Debian,codename=${distro_codename},label=Debian-Security";
 };

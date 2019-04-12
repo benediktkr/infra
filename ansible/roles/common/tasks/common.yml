@@ -30,6 +30,7 @@
       - openssh-server
       - openssl
       - python-pip
+      - python-netaddr
       - sudo
       - tmux
       - whois
@@ -134,7 +135,7 @@
     - packages
 
 # TODO: Decide on which way...
-- name: enable unattended-upgrades (debian follows stable, ubuntu follows codename)
+- name: enable unattended-upgrades (following codenames)
   template:
     src: "{{ item }}.j2"
     dest: "/etc/apt/apt.conf.d/{{ item }}"
