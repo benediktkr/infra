@@ -8,4 +8,4 @@
 - name: install with pip from github (ugh)
   pip:
     name: git+https://github.com/benediktkr/sudoisbot.git
-    state: present
+    state: latest
