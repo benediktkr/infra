@@ -15,7 +15,7 @@
   docker_container:
     name: "{{ nextcloud_container_name }}"
     image: "nextcloud:{{ nextcloud_version }}"
-    auto_remove: yes
+    auto_remove: no
     detach: yes
     pull: yes
     env:
