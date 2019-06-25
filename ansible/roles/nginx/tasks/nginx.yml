@@ -89,6 +89,6 @@
 - name: letsencrypt renewal cron job
   cron:
     name: letsencrypt_renewal
-    special_time: weekly
+    day: "*/1"
     job: "/usr/local/bin/certbot renew -n" # send via telegram
   tags: letsencrypt
