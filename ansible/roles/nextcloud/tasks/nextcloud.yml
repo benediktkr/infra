@@ -11,6 +11,12 @@
     - { dir: html, group: "root" }
     - { dir: data }
 
+
+# Had to copy ssl_match_hostname from
+#   /usr/local/lib/python2.7/dist-pacakges/backports
+# to
+#  /usr/lib/python2.7/dist-packages/backports
+# after upgrading debian
 - name: start docker container
   docker_container:
     name: "{{ nextcloud_container_name }}"
@@ -18,6 +24,7 @@
     auto_remove: no
     detach: yes
     pull: yes
+    state: started
     env:
       NEXTCLOUD_DATA_DIR: "/data"
     ports:

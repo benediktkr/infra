@@ -30,6 +30,7 @@
       - openssh-server
       - openssl
       - python-pip
+      - python3-pip
       - python-netaddr
       - sudo
       - tmux
@@ -129,7 +130,7 @@
     name: unattended-upgrades
     state: present
     update_cache: yes
-  when: unatt_enabled
+  when: unatt_enabled|bool
   tags:
     - unatt
     - packages
@@ -142,6 +143,6 @@
   with_items:
     - 50unattended-upgrades
     - 20auto-upgrades
-  when: unatt_enabled
+  when: unatt_enabled|bool
   tags:
     - unatt
