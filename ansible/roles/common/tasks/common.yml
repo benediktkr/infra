@@ -1,7 +1,7 @@
 ---
 - name: set hostname
   hostname:
-    name: "{{ ansible_hostname }}"
+    name: "{{ inventory_hostname }}"
   tags:
     - hostname
 
@@ -11,6 +11,7 @@
     update_cache: yes
     name:
       - apt-transport-https
+      - aptitude
       - ca-certificates
       - cbm
       - cryptsetup
@@ -29,8 +30,8 @@
       - nmap
       - openssh-server
       - openssl
-      - python-pip
       - python-netaddr
+      - python-pip
       - sudo
       - tmux
       - whois
@@ -129,7 +130,7 @@
     name: unattended-upgrades
     state: present
     update_cache: yes
-  when: unatt_enabled
+  when: unatt_enabled|bool
   tags:
     - unatt
     - packages
@@ -142,6 +143,6 @@
   with_items:
     - 50unattended-upgrades
     - 20auto-upgrades
-  when: unatt_enabled
+  when: unatt_enabled|bool
   tags:
     - unatt

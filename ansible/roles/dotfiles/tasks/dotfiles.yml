@@ -1,7 +1,7 @@
 ---
 - name: add ssh hostkey known hosts for git
   lineinfile:
-    path: /etc/ssh/ssh_known_hosts"
+    path: /etc/ssh/ssh_known_hosts
     line: "{{ github_hostkey }}"
     create: yes
 
@@ -25,20 +25,20 @@
 
 
 - name: put my dotfiles in place
-  file:
-    remote_src: "{{ dotfiles_path }}/{{ item.src }}"
+  copy:
+    remote_src: yes
+    src: "{{ dotfiles_path }}/{{ item.src }}"
     dest: "~/{{ item.dest }}"
-    state: file
   with_items:
     - "{{ dotfiles }}"
   become_user: "{{ myusername }}"
 
 - name: put dotfiles for root in place
-  file:
-    remote_src: "{{ dotfiles_path }}/{{ item.src }}"
+  copy:
+    remote_src: yes
+    src: "{{ dotfiles_path }}/{{ item.src }}"
     dest: "/root/{{ item.dest }}"
     owner: root
     group: root
-    state: file
   with_items:
     - "{{ dotfiles }}"

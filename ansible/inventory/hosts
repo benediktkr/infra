@@ -1,4 +1,5 @@
 f.sudo.is
+pi0.sudo.is ansible_host=192.168.1.2
 
 [vpn]
 lon-vpn.sudo.is

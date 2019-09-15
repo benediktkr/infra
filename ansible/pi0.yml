@@ -1,0 +1,7 @@
+- hosts: pi0.sudo.is
+  remote_user: root
+  become: true
+  roles:
+    - common
+    - rpi
+    - dotfiles
