@@ -36,7 +36,6 @@
 - name: put dotfiles for root in place
   copy:
     remote_src: yes
-    remote_src: true
     src: "{{ dotfiles_path }}/{{ item.src }}"
     dest: "/root/{{ item.dest }}"
     owner: root
