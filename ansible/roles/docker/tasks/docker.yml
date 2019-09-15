@@ -30,3 +30,6 @@
 - name: install pip module for ansible tasks
   pip:
     name: docker
+  tags:
+    - packages
+    - pip

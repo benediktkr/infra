@@ -30,6 +30,8 @@
       - nmap
       - openssh-server
       - openssl
+      - python-pip
+      - python3-pip
       - python-netaddr
       - python-pip
       - sudo
