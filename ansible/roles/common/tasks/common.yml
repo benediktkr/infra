@@ -10,6 +10,7 @@
     state: latest
     update_cache: yes
     name:
+      - at
       - apt-transport-https
       - aptitude
       - ca-certificates
