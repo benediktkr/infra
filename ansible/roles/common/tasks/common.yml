@@ -88,6 +88,16 @@
   tags:
     - ssh
 
+- name: set authorized_keys for backup user
+  authorized_key:
+    user: root
+    state: present
+    key: "{{ lookup('file', 'endor.pub') }}"
+    manage_dir: yes
+  tags:
+    - ssh
+
+
 - name: allow 'sudo' group to have passwordless sudo
   lineinfile:
     dest: /etc/sudoers
