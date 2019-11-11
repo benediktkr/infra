@@ -37,7 +37,9 @@ mydomain = {{ ansible_domain }}
 alias_maps = hash:/etc/aliases
 alias_database = hash:/etc/aliases
 myorigin = /etc/mailname
-mydestination =
+# This needs to be filled out so that postfix knows mail is intended for
+# itself, and actually use /etc/aliases
+mydestination = {{ ansible_fqdn }}, {{ ansible_domain }}
 relayhost =
 {% if ansible_docker0 is defined %}
 mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128 {{ ansible_docker0.ipv4.network }}/{{ docker_cidr_mask }}
@@ -49,5 +51,5 @@ inet_interfaces = loopback-only
 mailbox_size_limit = 0
 recipient_delimiter = +
 inet_protocols = all
-luser_relay = ben@lokun.is
+luser_relay = {{ myemail }}
 local_recipient_maps =

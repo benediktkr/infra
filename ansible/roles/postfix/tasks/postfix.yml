@@ -15,9 +15,14 @@
     ip: "{{ ansible_docker0.ipv4.network }}/{{ ansible_docker0.ipv4.netmask }}"
   when: ansible_docker0 is defined
 
-
-- name: tempalate config
+- name: template config
   template:
     src: main.cf.j2
     dest: /etc/postfix/main.cf
   notify: restart postfix
+
+- name: template aliases
+  template:
+    src: aliases.j2
+    dest: /etc/aliases
+  notify: newaliases
