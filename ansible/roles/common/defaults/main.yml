@@ -1,7 +1,4 @@
 ---
-myusername: "ben"
-myemail: "benedikt@sudo.is"
-
 unatt_enabled: true
 unatt_mail_only_on_error: "false"
 unatt_remove_unused_kernel_packages: "true"

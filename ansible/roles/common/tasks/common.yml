@@ -79,7 +79,11 @@
   authorized_key:
     user: "{{ myusername }}"
     state: present
-    key: "{{ lookup('file', 'roles/common/files/id_rsa.pub') }}"
+    key: "{{ lookup('file', item + '.pub') }}"
+    manage_dir: yes
+  with_items:
+    - mathom
+    - ber-bkristinsson
   tags:
     - ssh
 

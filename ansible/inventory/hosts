@@ -6,3 +6,5 @@ lon-vpn.sudo.is
 
 [all:vars]
 ansible_user=root
+myemail=benedikt@lokun.is
+myusername=ben
