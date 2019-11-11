@@ -142,6 +142,13 @@
     - unatt
     - packages
 
+- name: install ansible
+  pip:
+    name: ansible
+    executable: pip3
+  tags:
+    - packages
+
 # TODO: Decide on which way...
 - name: enable unattended-upgrades (following codenames)
   template:
