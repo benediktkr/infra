@@ -88,6 +88,16 @@
   tags:
     - ssh
 
+- name: set authorized_keys for backup user
+  authorized_key:
+    user: root
+    state: present
+    key: "{{ lookup('file', 'endor.pub') }}"
+    manage_dir: yes
+  tags:
+    - ssh
+
+
 - name: allow 'sudo' group to have passwordless sudo
   lineinfile:
     dest: /etc/sudoers
@@ -140,6 +150,13 @@
   when: unatt_enabled|bool
   tags:
     - unatt
+    - packages
+
+- name: install ansible
+  pip:
+    name: ansible
+    executable: pip3
+  tags:
     - packages
 
 # TODO: Decide on which way...

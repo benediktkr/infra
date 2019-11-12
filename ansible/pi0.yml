@@ -5,4 +5,5 @@
     - common
     - rpi
     - dotfiles
+    - postfix
     - rsmon
