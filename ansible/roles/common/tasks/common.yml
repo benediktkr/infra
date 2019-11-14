@@ -13,6 +13,7 @@
       - at
       - apt-transport-https
       - aptitude
+      - build-essential
       - ca-certificates
       - cbm
       - cryptsetup
