@@ -1,0 +1,9 @@
+---
+
+- name: include private vars
+  include_vars: private/vars.yml
+
+- name: template cron job for afraid.org
+  template:
+    src: afraidorg.cron.j2
+    dest: /etc/cron.d/afraidorg.cron

@@ -1,0 +1,4 @@
+---
+# file: roles/afraidorg/tasks/main.yml
+- include: afraidorg.yml
+  tags: afraidorg

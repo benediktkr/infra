@@ -1,8 +1,10 @@
 f.sudo.is
-pi0.sudo.is ansible_host=192.168.1.2
 
 [vpn]
 lon-vpn.sudo.is
+
+[pi]
+pi0.sudo.is ansible_host=192.168.1.2 afraidorg_record="pi0.strangled.net"
 
 [all:vars]
 ansible_user=root
