@@ -9,7 +9,8 @@
   tags:
     - packages
 
-- set_fact:
+- name: get docker network cidr (if installed)
+  set_fact:
     docker_cidr_mask: "{{ ip | ipaddr('prefix') }}"
   vars:
     ip: "{{ ansible_docker0.ipv4.network }}/{{ ansible_docker0.ipv4.netmask }}"
