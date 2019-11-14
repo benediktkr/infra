@@ -185,3 +185,21 @@ resource "digitalocean_record" "nl-vpn-sudo-is" {
   value  = "dns0.sudo.is."
   ttl    = 60
 }
+
+# CNAME pi0.sudo.is (via afraid.org)
+resource "digitalocean_record" "pi0-sudo-is" {
+  domain = "${digitalocean_domain.sudo-is.name}"
+  type   = "CNAME"
+  name   = "pi0"
+  value  = "pi0.strangled.net."
+  ttl    = 60
+}
+
+# CNAME hh19.sudo.is (via afraid.org)
+resource "digitalocean_record" "hh19-sudo-is" {
+  domain = "${digitalocean_domain.sudo-is.name}"
+  type   = "CNAME"
+  name   = "hh19"
+  value  = "pi0.strangled.net."
+  ttl    = 60
+}
