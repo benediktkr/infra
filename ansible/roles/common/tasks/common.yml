@@ -36,6 +36,7 @@
       - python3-pip
       - python-netaddr
       - python-pip
+      - rsync
       - sudo
       - tmux
       - whois

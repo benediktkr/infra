@@ -1,0 +1,49 @@
+---
+
+- name: include private vars
+  include_vars: private/vars.yml
+  tags: docker
+
+- name: create dir structure
+  file:
+    path: "{{ pihole_root }}/{{ item['dir'] }}"
+    state: directory
+    mode: 0750
+    owner: "{{ item['owner'] | default('999') }}"
+    group: "{{ item['group'] | default('999') }}"
+  with_items:
+    - { dir: "etc/pihole" }
+    - { dir: "etc/dnsmasq.d" }
+  tags: docker
+
+# If you get the error about ssl_match_hostname, see the comment in the
+# nextcloud role for the docker_container task.
+- name: start docker container
+  docker_container:
+    name: "pihole"
+    image: "pihole/pihole:{{ pihole_version }}"
+    auto_remove: no
+    detach: yes
+    pull: yes
+    restart_policy: "unless-stopped"
+    state: started
+    env:
+      TZ: "Europe/Berlin"
+      WEBPASSWORD: "{{ pihole_web_password }}"
+      DNS1: "{{ pihole_dns_1 }}"
+      DNS2: "{{ pihole_dns_2 }}"
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "67:67/udp"
+      - "80:80/tcp"
+      - "443:443/tcp"
+    dns_servers:
+      - 127.0.0.1
+      - pihole_dns_1
+      - pihole_dns_2
+    volumes:
+      - "{{ pihole_root }}/etc/pihole:/etc/pihole"
+      - "{{ pihole_root }}/etc/dnsmasq.d:/etc/dnsmasq.d"
+  tags:
+    - docker

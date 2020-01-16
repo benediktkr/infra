@@ -1,5 +1,23 @@
 ---
 
+- name: set arch to armhf for raspi
+  set_fact:
+    arch: armhf
+  when: ansible_lsb.id == "Raspbian"
+
+- name: set arch to amd64 for anything else
+  set_fact:
+    arch: amd64
+  when: ansible_lsb.id != "Raspbian"
+
+- name: install docker dependencies for raspbian
+  apt:
+    name:
+      - raspberrypi-kernel
+      - raspberrypi-kernel-headers
+    state: present
+  when: ansible_lsb.id == "Raspbian"
+
 - name: add apt key
   apt_key:
     url: https://download.docker.com/linux/debian/gpg
@@ -10,7 +28,7 @@
 
 - name: add repo for debian
   apt_repository:
-    repo: "deb [arch=amd64] https://download.docker.com/linux/debian {{ ansible_distribution_release }} stable"
+    repo: "deb [arch={{ arch }}] https://download.docker.com/linux/{{ ansible_lsb.id | lower }} {{ ansible_distribution_release }} stable"
     state: present
   when: ansible_distribution == "Debian"
   tags:
