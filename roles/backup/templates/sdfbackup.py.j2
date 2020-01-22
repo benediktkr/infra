@@ -9,7 +9,7 @@ import subprocess
 from influxdb import InfluxDBClient
 from loguru import logger
 
-
+import sudoisinflux
 
 
 class SdfSshMount(object):
@@ -30,7 +30,7 @@ class SdfSshMount(object):
                            check=True)
 
         assert os.file.exists(self.present)
-        logger.debug(f"mounted '{self.sshfs_dir}' as '{self.ssh'}")
+        logger.debug(f"mounted '{self.sshfs_dir}' as '{self.ssh}'")
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -80,10 +80,24 @@ class SdfLuksOpen(object):
 def sdfbackup(ssh, sshfs_dir, sdfpath, luks_file, luks_key_file, backup_src):
     with SdfSshMount(ssh, sshfs) as sshfs:
         with SdfLuksOpen(sdfpath, luks_file, luks_key_file):
-            # do the rsync
+            pass # do the rsync
 
 
-def main():
+def main(args):
+    tags = {
+        'host': socket.gethostname(),
+        'script': 'sdfbackup.py',
+        'args': vars(args),
+    }
+
+    datapoints = [{
+        "measurement": "backups",
+        "tags": tags,
+        "time": datetime.now(timezone.utc).isoformat(),
+    }]
+
+if __name__ == "__main__":
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--ssh", required=True)
     parser.add_argument("--sshfs-dir", required=True)
@@ -92,27 +106,13 @@ def main():
     parser.add_argument("--luks-key-file", required=True)
     parser.add_argument("--backup-src", required=True)
 
+    parser.add_argument("--force-yes-i-know-what-im-doing", action="store_true")
+
 
     args = parser.parse_args()
 
-    tags = {
-        'host': socket.gethostname(),
-        'script': 'sdfbackup.py',
-        'args': vars(args),
-    }
+    if "{{ inventory_hostname }}" != "{{ sdfbackup_primary }}" and not args.force_yes_i_know_what_im_doing:
+        logger.error(f"this is probably the wrong host, otherwise '--force-yes-i-know-what-im-doing'")
+        raise SystemExit(13)
 
-    client = InfluxDBClient(
-        host='{{ influxdb_url }}',
-        port=443,
-        username='metrics',
-        password="{{ influxdb_pass.metrics }}",
-        ssl=True,
-        verify_ssl=True,
-        database='metrics'
-    )
-
-    datapoints = [{
-        "measurement": "backups",
-        "tags": tags,
-        "time": datetime.now(timezone.utc).isoformat(),
-    }]
+    main(args)

@@ -14,6 +14,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--interval", default="alpha")
 parser.add_argument("--debug", action="store_true")
 parser.add_argument("--dry-run", action="store_true", help="dont run rsnapshot")
+parser.add_argument("--force-yes-i-know-what-im-doing", action="store_true")
 args = parser.parse_args()
 
 if not args.debug and not args.dry_run:
@@ -98,9 +99,13 @@ def read_all_host_markers():
             continue
 
 if __name__ == "__main__":
+    if "{{ inventory_hostname }}" != "{{ rsnapshot_primary }}" and not args.force_yes_i_know_what_im_doing:
+        logger.error(f"this is probably the wrong host, otherwise '--force-yes-i-know-what-im-doing'")
+        raise SystemExit(13)
     if not path.exists(latest_path):
         logger.error(f"path '{latest_path}' doesnt exist")
         raise SystemExit(1)
+
 
     diff, size = rsnapshot()
 

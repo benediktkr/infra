@@ -3,4 +3,6 @@
 # m h dom mon dow
 {% if inventory_hostname == rsnapshot_primary %}
 31 22 * * * root /usr/local/bin/sudoisrsnapshot.py
+{% else %}
+31 10 * * * root /usr/bin/rsync -a root@{{ rsnapshot_primrary }}:{{ rsnapshot_root }}/alpha.0 {{ rsnapshot_mirror_root }} --delete &> /root/rsnapshot-mirror.log
 {% endif %}

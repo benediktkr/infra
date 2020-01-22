@@ -27,6 +27,7 @@
     group: root
   with_items:
     - sdfbackup.sh
+    - sdfbackup.py
     - sdfcleanup.sh
     - sudoisrsnapshot.py
   tags: backup_scripts
@@ -39,3 +40,12 @@
     group: root
     mode: 0700
   when: sdfbackup
+
+- name: make rsnapshot mirror dir
+  file:
+    path: "{{ rsnapshot_mirror_root }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0700
+  when: inventory_hostname != rsnapshot_primary
