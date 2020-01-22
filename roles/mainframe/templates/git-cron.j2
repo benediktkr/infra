@@ -5,7 +5,7 @@
 # sync master copies to {{ git_cron.base_path }}
 15 */1 * * * root /usr/local/sbin/git-cron.sh
 
-# sync github
+# sync github (hides errors, needs some monitoring/checking)
 18 8 * * * root /usr/local/bin/ghsync.sh &> /dev/null
 
 # run convergence
