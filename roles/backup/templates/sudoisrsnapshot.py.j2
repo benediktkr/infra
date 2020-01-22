@@ -31,8 +31,8 @@ marker_name = ".backup_age_marker"
 latest_path = path.join("{{ rsnapshot_root }}", f"{args.interval}.0")
 marker_path = path.join(latest_path, marker_name)
 
-mb = lambda bytes: bytes//1024
-gb = lambda bytes: mb(bytes)//1024
+mb = lambda bytes: int(bytes//1024)
+gb = lambda bytes: int(mb(bytes)//1024)
 
 def tags(host=None):
     return {'host': '{{ inventory_hostname }}' if host is None else host,
@@ -49,8 +49,7 @@ def utc_isoformat():
 def du(path):
     du = run([du_bin, "-s", path], capture_output=True)
 
-    bytes = int(du.stdout.decode().split('\t')[0])
-    return bytes
+    return int(du.stdout.decode().split('\t')[0])
 
 def update_marker():
     with open(marker_path, 'w') as f:
@@ -75,7 +74,7 @@ def rsnapshot():
         after = du(latest_path)
         logger.debug(f"rsnapshot done, current size: {gb(after)}G")
 
-        return after - before
+        return after - before, after
 
     except CalledProcessError:
         raise
@@ -86,22 +85,32 @@ def read_all_host_markers():
         try:
             marker = read_host_marker(host)
             age = now - marker
-            size_mb = mb(du(path.join(latest_path, host)))
-            yield host, marker, age, size_mb
+            size = du(path.join(latest_path, host))
+            yield host, marker, age, size
         except (FileNotFoundError, ValueError) as e:
             logger.error(f"backup age marker missing/broken for {host}: {e}")
             continue
 
-
 if __name__ == "__main__":
 
-    diff_mb = rsnapshot()
-    logger.info(f"diff: {mb(diff_mb)}M")
+    diff, size = rsnapshot()
+
+    logger.info(f"diff: {mb(diff)}M")
 
     for item in read_all_host_markers():
-        mins = item[2].seconds//60
-        days = item[2].days
+        days = int(item[2].days)
+        secs = int(item[2].seconds)
+        mins = int(secs//60)
+        host_size_mb = int(mb(item[3]))
         host = item[0]
+
+        sudoisinflux.write({'tags': tags(host),
+                            'measurement': 'rsnapshot',
+                            'time': utc_isoformat(),
+                            'fields': {'age_seconds': secs,
+                                       'host_size_mb': host_size_mb }},
+                           dry_run=args.dry_run)
+
         if days > 0:
             if days == 1:
                 level = "WARNING"
@@ -112,11 +121,12 @@ if __name__ == "__main__":
             logger.info(f"{host}: {mins} mins")
 
 
-
+    sudoisinflux.write({'tags': tags(),
+                        'measurement': 'rsnapshot',
+                        'time': utc_isoformat(),
+                        'fields': {'total_size_mb': int(mb(size)) }},
+                       dry_run=args.dry_run)
 
 
     # only update the marker if the full backup was succesful
     update_marker()
-
-        #fields = {'size_mb': after,
-        #'marker_date': stat(marker_path).mtime}

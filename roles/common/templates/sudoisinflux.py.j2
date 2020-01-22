@@ -23,7 +23,7 @@ def write_datapoint(measurement, tags, fields, db="metrics", precision="m"):
     return write(datapoint(measurement, tags, fields), db=db, precision=precision)
 
 
-def write(datapoints, db="metrics", precision='m', debug_mode=False):
+def write(datapoints, db="metrics", precision='m', dry_run=False):
     client = InfluxDBClient(
         host='{{ influxdb_url }}',
         port=443,
@@ -36,8 +36,8 @@ def write(datapoints, db="metrics", precision='m', debug_mode=False):
     if not isinstance(datapoints, list):
         datapoints = [datapoints]
 
-    if debug_mode:
+    if dry_run:
         import pprint
         pprint.pprint(datapoints)
     else:
-        client.write_points(datapoints, time_precision=precision)
+        return client.write_points(datapoints, time_precision=precision)
