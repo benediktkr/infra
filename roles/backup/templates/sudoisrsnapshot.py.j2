@@ -47,9 +47,15 @@ def utc_isoformat():
     return utc_now().isoformat()
 
 def du(path):
-    du = run([du_bin, "-s", path], capture_output=True)
+    du_cmd = [du_bin, "-s", path]
+    du = run(du_cmd, capture_output=True)
 
-    return int(du.stdout.decode().split('\t')[0])
+    try:
+        return int(du.stdout.decode().split('\t')[0])
+    except ValueError as e:
+        logger.error(" ".join(du_cmd))
+        logger.error(du.stdout)
+        raise e
 
 def update_marker():
     with open(marker_path, 'w') as f:
@@ -92,6 +98,9 @@ def read_all_host_markers():
             continue
 
 if __name__ == "__main__":
+    if not path.exists(latest_path):
+        logger.error(f"path '{latest_path}' doesnt exist")
+        raise SystemExit(1)
 
     diff, size = rsnapshot()
 
