@@ -4,27 +4,34 @@
 
 set -e
 
-eval $(cat ~/.ssh-agent) > /dev/null
+LOCKFILE="/tmp/ghsync.lock"
+
 workdir="/tmp/ghsync"
 
-mkdir $workdir || exit
+lockfile -r 0 $LOCKFILE
+
+rm -rf $workdir || true
+mkdir $workdir
 
 (
 
     cd $workdir
-    repos="{% for repo in ghsync_repos %}{{ repo }}{%endfor%}"
-    for repo in $repos; do
-        git clone ssh://git@git.sudo.is:7999/ben/${repo}.git > /dev/null
-        (
-            set -e
+{%  for repo in ghsync_repos %}
+    echo {{ repo }}
+    git clone ssh://git@git.sudo.is:7999/ben/{{ repo }}.git
 
-            cd ${workdir}/${repo}
-            git pull origin master
-            git remote add github git@github.com:benediktkr/${repo}.git
-            git push github master | egrep "\.\.|To"
-        )
-        rm -rf ${workdir}/${repo}/
-    done
+    (
+        cd ${workdir}/{{ repo }}
+        git pull origin master
+        git remote add github git@github.com:benediktkr/{{ repo }}.git
+        git push github master #| egrep "\.\.|To"
+
+        echo {{ repo }}
+
+    )
+    rm -rf ${workdir}/{{ repo }}/
+{%  endfor %}
 )
 
 rmdir /tmp/ghsync
+rm -f $LOCKFILE

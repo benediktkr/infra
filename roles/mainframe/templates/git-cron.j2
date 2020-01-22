@@ -1,11 +1,16 @@
 # distributed from ansible
 
 # m h dom mon dow
+
+# sync master copies to {{ git_cron.base_path }}
 15 */1 * * * root /usr/local/sbin/git-cron.sh
 
+# sync github
+18 8 * * * root /usr/local/bin/ghsync.sh &> /dev/null
+
+# run convergence
 #13 * * * * root /usr/local/sbin/ansible-convergence.sh
 #13 3 * * * root /usr/local/sbin/ansible-convergence.sh sensors
-
 17 */6 * * * root /usr/local/sbin/tf-convergence.sh
 
 

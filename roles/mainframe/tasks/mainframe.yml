@@ -58,6 +58,8 @@
     owner: root
     group: root
     mode: "{{ item.mode }}"
+  loop_control:
+    label: "{{ item.src }}"
   tags:
     - unatt
   with_items:
