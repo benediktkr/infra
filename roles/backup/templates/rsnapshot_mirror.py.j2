@@ -1,0 +1,49 @@
+#!/usr/bin/env python3
+
+import argparse
+from subprocess import run, CalledProcessError
+from os import path
+from loguru import logger
+
+import sudoisinflux
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--interval", default="alpha")
+    parser.add_argument("--debug", action="store_true")
+    parser.add_argument("--force-yes-i-know-what-im-doing", action="store_true")
+    args = parser.parse_args()
+
+    if not args.debug and not args.dry_run:
+        logger.remove()
+        logger.add(sys.stderr, level="WARNING")
+    else:
+        logger.success("verbose output")
+
+    if "{{ inventory_hostname }}" == "{{ rsnapshot_primary }}" and not args.force_yes_i_know_what_im_doing:
+        logger.error(f"this is probably the wrong host, otherwise '--force-yes-i-know-what-im-doing'")
+        raise SystemExit(13)
+
+    if not path.exists("{{ rsnapshot_mirror_root }}"):
+        logger.error(f"{{ rsnapshot_mirror_root }} desnt exist")
+        raise SystemExit(1)
+
+
+    rsync_bin = "/usr/bin/rsync"
+    src = path.join("root@{{ rsnapshot_primary }}:{{ rsnapshot_root }}/",
+                    f"{args.interval}.0")
+    dest = "{{ rsnapshot_mirror_root }}"
+
+
+    rsync_cmd = [rsync_bin, "-a", src, dest, "--delete"]
+    logger.debug(" ".join(rsync_cmd))
+    run(rsync_cmd)
+
+    with open("{{ rsnapshot_mirror_root }}/{args.interval}.0/.backup_age_marker", 'r') as f:
+        last_mirrored_backup = f.read().strip()
+
+    sudoisinflux.write({'tags': {'host': "{{ inventory_hostname }}",
+                                 'path': "{{ rsnapshot_mirror_root }}" },
+                        'measurement': 'rsnapshot-mirror',
+                        'time': sudoisinflux.now_isoformat(),
+                        'fields': {'last_mirrored_backup': last_mirrored_backup}})

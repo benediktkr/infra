@@ -29,6 +29,7 @@
     - sdfbackup.sh
     - sdfbackup.py
     - sdfcleanup.sh
+    - rsnapshot_mirror.py
     - sudoisrsnapshot.py
   tags: backup_scripts
 
