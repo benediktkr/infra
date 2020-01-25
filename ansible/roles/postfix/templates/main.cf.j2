@@ -39,7 +39,8 @@ alias_database = hash:/etc/aliases
 myorigin = /etc/mailname
 # This needs to be filled out so that postfix knows mail is intended for
 # itself, and actually use /etc/aliases
-mydestination = {{ ansible_fqdn }}, {{ ansible_domain }}
+mydestination = {{ ansible_fqdn }}, {{ ansible_domain }}{% if 'vpn' in group_names %}, {{ ansible_hostname }}.do.{{ ansible_domain }} {% endif %}
+
 relayhost =
 {% if ansible_docker0 is defined %}
 mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128 {{ ansible_docker0.ipv4.network }}/{{ docker_cidr_mask }}
