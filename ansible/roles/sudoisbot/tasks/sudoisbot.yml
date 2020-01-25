@@ -9,3 +9,7 @@
   pip:
     name: git+https://github.com/benediktkr/sudoisbot.git
     state: latest
+    executable: "{{ item }}"
+  with_items:
+    - pip
+    - pip3

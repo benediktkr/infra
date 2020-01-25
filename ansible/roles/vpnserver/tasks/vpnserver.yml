@@ -89,3 +89,23 @@
     user: root
   tags:
     - cron
+
+- name: copy checkclients.py
+  copy:
+    src: checkclients.py
+    dest: /usr/local/bin/checkclients.py
+    mode: 755
+    owner: root
+    group: root
+  tags:
+    - checkclients
+
+- name: cron for checkclients
+  cron:
+    name: checkclients.py
+    minute: "*/5"
+    job: "/usr/local/bin/checkclients.py"
+    user: root
+  tags:
+    - checkclients
+    - cron
