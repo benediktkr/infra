@@ -1,0 +1,28 @@
+---
+
+- name: install packages for timecapsule
+  apt:
+    name:
+     - netatalk
+     - hfsprogs
+     - hfsplus
+    state: present
+  tags:
+    - packages
+
+- name: make dirs for avahi (timecapsule)
+  file:
+    state: directory
+    path: /etc/avahi/services
+
+- name: tempalte config files for time machine
+  template:
+    src: "{{ item }}.j2"
+    dest: "/etc/{{ item }}"
+  with_items:
+    - nsswitch.conf
+    - netatalk/afp.conf
+    # - avahi/services/afpd.service
+  notify:
+    - restart avahi
+    - restart netatalk

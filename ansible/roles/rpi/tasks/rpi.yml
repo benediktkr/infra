@@ -15,4 +15,3 @@
 - name: dpkg-reconfigure locales
   debconf:
     name: locales
-
