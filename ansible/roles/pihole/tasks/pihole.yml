@@ -8,7 +8,7 @@
   file:
     path: "{{ pihole_root }}/{{ item['dir'] }}"
     state: directory
-    mode: 0750
+    mode: 0755
     owner: "{{ item['owner'] | default('999') }}"
     group: "{{ item['group'] | default('999') }}"
   with_items:
@@ -32,6 +32,9 @@
       WEBPASSWORD: "{{ pihole_web_password }}"
       DNS1: "{{ pihole_dns_1 }}"
       DNS2: "{{ pihole_dns_2 }}"
+      CONDITIONAL_FORWARDING: "{{ pihole_cond|string }}"
+      CONDITIONAL_FORWARDING_IP: "{{ pihole_cond_ip }}"
+      CONDITIONAL_FORWARDING_DOMAIN: "{{ pihole_cond_domain }}"
     ports:
       - "53:53/tcp"
       - "53:53/udp"

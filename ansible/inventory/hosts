@@ -1,11 +1,14 @@
+# change this to yaml asap!
+
 f.sudo.is
 
 [vpn]
 lon-vpn.sudo.is
 
 [pi]
-pi0.sudo.is ansible_host=192.168.1.20 afraidorg_record="pi0.strangled.net"
+#pi0.sudo.is ansible_host=192.168.1.20 afraidorg_record="pi0.strangled.net"
 pi1.sudo.is ansible_host=192.168.1.2 afraidorg_record="pi1.strangled.net"
+#pi1.sudo.is afraidorg_record="pi1.strangled.net"
 
 [all:vars]
 ansible_user=root

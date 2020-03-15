@@ -154,9 +154,11 @@
     - unatt
     - packages
 
-- name: install ansible
+- name: install ansible and pipenv
   pip:
-    name: ansible
+    name:
+      - ansible
+      - pipenv
     executable: pip3
   tags:
     - packages
