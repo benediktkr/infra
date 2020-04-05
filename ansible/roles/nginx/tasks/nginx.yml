@@ -86,11 +86,19 @@
   tags:
     - letsencrypt
 
-- name: letsencrypt renewal cron job
+- name: remove letsencrypt renewal cron job from the cron module
   cron:
     name: letsencrypt_renewal
     weekday: "0"
     minute: "0"
     hour: "16"
     job: "/usr/local/bin/certbot renew -n" # send via telegram
+    state: absent
   tags: letsencrypt
+
+- name: template certbot cron renewal job
+  template:
+    src: letsencrypt.cron
+    dest: /etc/cron.d/letsencrypt.cron
+  tags:
+    letsencrypt

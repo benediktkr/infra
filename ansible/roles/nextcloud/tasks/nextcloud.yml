@@ -35,7 +35,7 @@
   tags:
     - docker
 
-- name: lets encrypt
+- name: add to certbot
   command: "/usr/local/bin/certbot -n --standalone --preferred-challenges tls-sni -d {{ nextcloud_url }}"
   args:
     creates: "/etc/letsencrypt/live/{{ nextcloud_url }}/fullchain.pem"

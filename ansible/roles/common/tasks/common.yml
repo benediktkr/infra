@@ -10,9 +10,9 @@
     state: latest
     update_cache: yes
     name:
-      - at
       - apt-transport-https
       - aptitude
+      - at
       - build-essential
       - ca-certificates
       - cbm
@@ -23,6 +23,8 @@
       - gnupg2
       - htop
       - iotop
+      - libffi-dev
+      - libssl-dev
       - lsof
       - lvm2
       - molly-guard
@@ -32,10 +34,12 @@
       - nmap
       - openssh-server
       - openssl
-      - python-pip
-      - python3-pip
+      - python-dev
       - python-netaddr
       - python-pip
+      - python-pip
+      - python3-pip
+      - python3-venv
       - rsync
       - sudo
       - tmux
@@ -154,11 +158,12 @@
     - unatt
     - packages
 
-- name: install ansible and pipenv
+- name: install pip packages
   pip:
     name:
       - ansible
       - pipenv
+      - poetry
     executable: pip3
   tags:
     - packages
