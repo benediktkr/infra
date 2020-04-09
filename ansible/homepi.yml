@@ -9,5 +9,5 @@
     - docker
     - pihole
     - postfix
-    - rsmon
     - afraidorg
+    - sudoisbot

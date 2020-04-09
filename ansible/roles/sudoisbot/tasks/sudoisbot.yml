@@ -1,5 +1,10 @@
 ---
 
+- name: include temper stuff
+  import_tasks: temper.yml
+  tags: temper
+  when: temper_enabled == True
+
 - name: copy config
   copy:
     src: private/sudoisbot.yml
@@ -13,12 +18,18 @@
   with_items:
     - pip
     - pip3
+  when: inventory_hostname != "pi1.sudo.is"
+
+- name: packages for various bot scripts
+  apt:
+    name:
+      - mplayer
+    state: present
+  tags:
+    - packages
 
 - name: install from pypi
   pip:
     name: sudoisbot
     state: latest
-    executable: "{{ item }}"
-  with_items:
-    - pip
-    - pip3
+    executable: pip3

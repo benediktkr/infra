@@ -1,0 +1,65 @@
+- name: packages for temper
+  apt:
+    name:
+      - python3-serial
+      - libatlas-base-dev # numpy
+    state: present
+  tags:
+    - packages
+
+- name: pip packages for temper stuff
+  pip:
+    name:
+      - numpy
+      - matplotlib
+    state: present
+    executable: /usr/bin/pip3
+  tags:
+    - packages
+
+- name: get site-packages path
+  command: /usr/bin/python3 -c "import site; print(site.getsitepackages()[0])"
+  register: site_packages
+  changed_when: False
+  tags: temper
+
+- name: create dir for temper
+  file:
+    path: /srv/temper
+    state: directory
+
+# this isnt in the form of a package and i didnt want to
+# just copy the code to my repo
+- name: clone temper lib from github
+  git:
+    repo: https://github.com/urwen/temper.git
+    dest: /srv/temper/
+    version: master
+    update: yes
+    clone: yes
+    force: yes
+
+- name: copy temper.py to site-packages
+  copy:
+    remote_src: yes
+    src: /srv/temper/temper.py
+    dest: "{{ site_packages.stdout }}"
+
+- name: copy temper_read.py
+  copy:
+    src: temper_read.py
+    dest: /usr/local/sbin/temper_read.py
+    mode: 0755
+
+# this needs a user other than root to run as
+- name: copy graphing script
+  copy:
+    src: graphtemps.py
+    dest: /usr/local/bin/graphtemps.py
+    mode: 0755
+
+# raspbian ingores cron files with a dot in the name
+- name: install crontab for temperature stuff
+  copy:
+    src: temper.cron
+    dest: /etc/cron.d/temper

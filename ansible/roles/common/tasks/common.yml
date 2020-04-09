@@ -23,6 +23,7 @@
       - gnupg2
       - htop
       - iotop
+      - jq
       - libffi-dev
       - libssl-dev
       - lsof
