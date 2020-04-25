@@ -44,6 +44,7 @@
       - rsync
       - sudo
       - tmux
+      - vnstat
       - whois
       - zsh
   environment:
@@ -63,7 +64,9 @@
 - name: create my user
   user:
     name: "{{ myusername }}"
-    group: sudo
+    group: "{{ myusername }}"
+    groups:
+      - sudo
     shell: /bin/zsh
     append: yes
   tags:

@@ -57,9 +57,12 @@
     src: graphtemps.py
     dest: /usr/local/bin/graphtemps.py
     mode: 0755
+  tags: graphtemps
 
 # raspbian ingores cron files with a dot in the name
 - name: install crontab for temperature stuff
   copy:
     src: temper.cron
     dest: /etc/cron.d/temper
+  tags:
+    - graphtemps

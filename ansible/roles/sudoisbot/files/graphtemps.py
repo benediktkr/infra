@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from collections import deque
 import argparse
 import sys
 
@@ -12,9 +13,11 @@ def fmt_time(time):
     #return time.isoformat().split("T")[1][:5]
     return time
 
-def read_data(fname):
+def read_data(fname, count):
     with open(fname, 'r') as f:
-        return f.read().split()
+        #return f.read().split()
+        return [a.strip('\x00') for a in deque(f, count)]
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -26,7 +29,7 @@ if __name__ == "__main__":
 
     no_datapoints = (args.hours*60*60) // args.interval
     #no_datapoints = 700
-    data = read_data(args.data)
+    data = read_data(args.data, no_datapoints)
     data = [float(a) for a in data[-no_datapoints:]]
 
     now = datetime.now()
@@ -41,6 +44,7 @@ if __name__ == "__main__":
 
     fig, ax = plt.subplots()
 
+    plt.autumn()
     plt.plot(x, y)
 
     x_labels = ax.xaxis.get_ticklabels()
@@ -49,4 +53,5 @@ if __name__ == "__main__":
             label.set_visible(False)
 
     plt.title("Temperature {}h".format(args.hours))
+    plt.ylabel("Celcius")
     plt.savefig(args.output_file)
