@@ -9,24 +9,27 @@
   copy:
     src: private/sudoisbot.yml
     dest: /etc/sudoisbot.yml
-
-- name: temp task to uninstall first
-  pip:
-    name: sudoisbot
-    state: absent
-    executable: "{{ item }}"
-  with_items:
-    - pip
-    - pip3
-  when: inventory_hostname != "pi1.sudo.is"
-
-- name: packages for various bot scripts
-  apt:
-    name:
-      - mplayer
-    state: present
   tags:
-    - packages
+    - checkclients
+    - vpnserver
+
+# - name: temp task to uninstall first
+#   pip:
+#     name: sudoisbot
+#     state: absent
+#     executable: "{{ item }}"
+#   with_items:
+#     - pip
+#     - pip3
+#   when: inventory_hostname != "pi1.sudo.is"
+
+# - name: packages for various bot scripts
+#   apt:
+#     name:
+#       - mplayer
+#     state: present
+#   tags:
+#     - packages
 
 - name: install from pypi
   pip:

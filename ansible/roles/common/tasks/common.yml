@@ -38,9 +38,6 @@
       - python-dev
       - python-netaddr
       - python-pip
-      - python-pip
-      - python3-pip
-      - python3-venv
       - rsync
       - sudo
       - tmux
@@ -51,6 +48,33 @@
     PATH: "{{ ansible_env.PATH }}:/sbin:/usr/sbin"
   tags:
     - packages
+
+- name: install python 3.8 on ubuntu
+  apt:
+    name:
+      - python3.8
+      - python3-pip
+  tags: packages
+  when: ansible_distribution == "Ubuntu"
+
+- name: correct python3 version selected on ubuntu
+  alternatives:
+    name: python3
+    path: /usr/bin/python3.8
+    link: /usr/bin/python3
+  tags:
+    - packages
+    - alternatives
+  when: ansible_distribution == "Ubuntu"
+
+
+- name: install python3 (3.7 currently) on debian
+  apt:
+    name:
+      - python3
+      - python3-pip
+  tags: packages
+  when: ansible_lsb.id == "Raspbian" or ansible_lsb.id == "Debian"
 
 - name: remove packages
   apt:
