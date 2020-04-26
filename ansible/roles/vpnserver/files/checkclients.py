@@ -3,6 +3,8 @@
 # This is a really shitty script
 # And i know it.
 
+from socket import gethostname
+
 from sudoisbot import sendmsg
 from sudoisbot.common import getconfig
 
@@ -13,12 +15,13 @@ expected_clients = config['expected_clients']
 statefile = "/tmp/vpnclients.txt"
 
 def notify(client_name, action):
+    h = gethostname().split('.')[0]
     try:
         sendto = config['notify'][client_name]
         for a in sendto:
-            sendmsg.send_msg(a, f"`{client}` has {action}")
+            sendmsg.send_msg(a, f"`{h}`: `{client}` has {action}")
     except KeyError:
-        sendmsg.send_to_me(f"new client `{client}` has `{action}`")
+        sendmsg.send_to_me(f"`{h}`: new client `{client}` has `{action}`")
 
 
 

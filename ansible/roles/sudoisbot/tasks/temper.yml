@@ -12,6 +12,7 @@
     name:
       - numpy
       - matplotlib
+      - zmq
     state: present
     executable: /usr/bin/pip3
   tags:
@@ -45,19 +46,30 @@
     src: /srv/temper/temper.py
     dest: "{{ site_packages.stdout }}"
 
-- name: copy temper_read.py
+- name: copy my scripts to /usr/local/sbin
   copy:
-    src: temper_read.py
-    dest: /usr/local/sbin/temper_read.py
+    src: "{{ item }}"
+    dest: "/usr/local/sbin/{{ item }}"
     mode: 0755
+  with_items:
+    - temper_read.py
+    - temper_pub.py
+  tags:
+    - temperscripts
+    - graphtemp
 
-# this needs a user other than root to run as
-- name: copy graphing script
+# this needs a user other than root to run as out of cron
+- name: copy my scripts to /usr/local/bin
   copy:
-    src: graphtemps.py
-    dest: /usr/local/bin/graphtemps.py
+    src: "{{ item }}"
+    dest: "/usr/local/bin/{{ item }}"
     mode: 0755
-  tags: graphtemps
+  with_items:
+    - graphtemps.py
+    - temper_sub.py
+  tags:
+    - graphtemps
+    - temperscripts
 
 # raspbian ingores cron files with a dot in the name
 - name: install crontab for temperature stuff

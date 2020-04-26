@@ -1,4 +1,5 @@
 # VPN server iptable rules
+# make template
 *nat
 :PREROUTING ACCEPT [0:0]
 :POSTROUTING ACCEPT [0:0]

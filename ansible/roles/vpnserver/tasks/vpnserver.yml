@@ -1,18 +1,18 @@
 - name: install openvpn, easy-rsa, dnsmasq
   apt:
-    name: "{{ item }}"
-    update_cache: yes
-    state: present
-  with_items:
+    name:
     - openvpn
     - easy-rsa
     - dnsmasq
+    update_cache: yes
+    state: present
 
-- name: make dnsmasq listen on tun0
-  replace:
-    path: /etc/dnsmasq.conf
-    regexp: '#interface='
-    replace: "interface=tun0"
+- name: template dnsmasq.conf
+  template:
+    src: dnsmasq.conf.j2
+    dest: /etc/dnsmasq.conf
+  tags:
+    - dnsmasq
   notify: restart dnsmasq
 
 - name: enable ip_forward in proc
@@ -71,7 +71,8 @@
   with_items:
     - wifi001
     - benedikt
-  notify: reload openvpn
+    - ernesto
+  #notify: reload openvpn
 
 # Iptables will need to manually be loaded after boot (in case a bad file is written)
 # TODO: Add a simple script that applies them 5 minutes after a reboot or something
@@ -79,6 +80,8 @@
   copy:
     src: iptables.rules
     dest: /etc/iptables.rules
+  tags:
+    - iptables
   notify: apply iptables rules
 
 - name: cron to reload iptables rules 3 minutes after reboot

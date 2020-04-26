@@ -1,10 +1,11 @@
 ---
+
 - name: reload openvpn
   service:
     name: openvpn
     state: reloaded
 
-- name: apply iptables ruless
+- name: apply iptables rules
   shell: iptables-restore < /etc/iptables.rules
 
 - name: restart dnsmasq

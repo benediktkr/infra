@@ -10,7 +10,7 @@ resource "digitalocean_record" "sudo-is-mx-0" {
   type     = "MX"
   name     = "@"
   priority = "10"
-  value    = "aspmx.l.google.com."
+  value    = "in1-smtp.messagingengine.com."
   ttl      = 60
 }
 
@@ -20,47 +20,40 @@ resource "digitalocean_record" "sudo-is-mx-1" {
   type     = "MX"
   name     = "@"
   priority = "20"
-  value    = "alt1.aspmx.l.google.com."
+  value    = "in2-smtp.messagingengine.com."
   ttl      = 60
 }
 
-# MX sudo.is
-resource "digitalocean_record" "sudo-is-mx-2" {
-  domain   = "${digitalocean_domain.sudo-is.name}"
-  type     = "MX"
-  name     = "@"
-  priority = "20"
-  value    = "alt2.aspmx.l.google.com."
-  ttl      = 60
-}
 
-# MX sudo.is
-resource "digitalocean_record" "sudo-is-mx-3" {
-  domain   = "${digitalocean_domain.sudo-is.name}"
-  type     = "MX"
-  name     = "@"
-  priority = "30"
-  value    = "aspmx2.googlemail.com."
-  ttl      = 60
+# DKIM records
+resource "digitalocean_record" "dkim-1" {
+  domain = "${digitalocean_domain.sudo-is.name}"
+  type   = "CNAME"
+  name   = "fm1._domainkey"
+  value  = "fm1.sudo.is.dkim.fmhosted.com."
+  ttl    = 43200
 }
-
-# MX sudo.is
-resource "digitalocean_record" "sudo-is-mx-4" {
-  domain   = "${digitalocean_domain.sudo-is.name}"
-  type     = "MX"
-  name     = "@"
-  priority = "30"
-  value    = "aspmx3.googlemail.com."
-  ttl      = 60
+resource "digitalocean_record" "dkim-2" {
+  domain = "${digitalocean_domain.sudo-is.name}"
+  type   = "CNAME"
+  name   = "fm2._domainkey"
+  value  = "fm2.sudo.is.dkim.fmhosted.com."
+  ttl    = 43200
 }
-
+resource "digitalocean_record" "dkim-3" {
+  domain = "${digitalocean_domain.sudo-is.name}"
+  type   = "CNAME"
+  name   = "fm3._domainkey"
+  value  = "fm3.sudo.is.dkim.fmhosted.com."
+  ttl    = 43200
+}
 
 # TXT
 resource "digitalocean_record" "sudo-is-txt" {
-  domain = "${digitalocean_domain.sudo-is.name}"
+  domain   = "${digitalocean_domain.sudo-is.name}"
   type   = "TXT"
   name   = "@"
-  value  = "v=spf1 mx a ptr ip4:${local.freespace_ip}/32 ip4:${local.endor_ip} include=_spf.investici.org"
+  value  = "v=spf1 mx a ptr ip4:176.9.152.42/32 ip4:176.9.53.236 include=_spf.investici.org include:spf.messagingengine.com ?all"
   ttl    = 60
 }
 
@@ -168,7 +161,7 @@ resource "digitalocean_record" "vpn-sudo-is" {
   ttl    = 60
 }
 
-# CNAME lychener-vpn.sudo.is
+# CNAME wifi001-vpn.sudo.is
 resource "digitalocean_record" "wifi001-vpn-sudo-is" {
   domain = "${digitalocean_domain.sudo-is.name}"
   type   = "CNAME"
@@ -196,10 +189,10 @@ resource "digitalocean_record" "pi0-sudo-is" {
 }
 
 # CNAME hh19.sudo.is (via afraid.org)
-resource "digitalocean_record" "hh19-sudo-is" {
+resource "digitalocean_record" "l54-sudo-is" {
   domain = "${digitalocean_domain.sudo-is.name}"
   type   = "CNAME"
-  name   = "hh19"
+  name   = "l54"
   value  = "pi0.strangled.net."
   ttl    = 60
 }

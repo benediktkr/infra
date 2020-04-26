@@ -1,0 +1,4 @@
+---
+
+vpnserver_interface: tun0
+vpn_ip_vpnserver: 10.104.37.1

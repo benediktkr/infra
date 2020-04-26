@@ -22,15 +22,36 @@ resource "digitalocean_droplet" "lon-vpn" {
   private_networking = true
 
 }
-
 output "lon-vpn" {
   value = "${digitalocean_droplet.lon-vpn.ipv4_address}"
 }
+resource "digitalocean_droplet" "c" {
+  image  = "ubuntu-20-04-x64"
+  region = "lon1"
+  size   = "s-1vcpu-1gb"
+  name   = "c.sudo.is"
+  ssh_keys = ["cb:79:d0:73:55:b1:79:60:a4:a9:d5:48:53:e2:67:13"]
+  private_networking = true
+  # A remote-exec wait untils the instance is ready
+  # (also, we need python for ansible)
+}
+output "c" {
+  value = "${digitalocean_droplet.c.ipv4_address}"
+}
+
 
 resource "digitalocean_record" "lon-vpn" {
   domain = "${digitalocean_domain.sudo-is.name}"
   type   = "A"
   name   = "lon-vpn"
   value  = "${digitalocean_droplet.lon-vpn.ipv4_address}"
+  ttl    = 60
+}
+
+resource "digitalocean_record" "c" {
+  domain = "${digitalocean_domain.sudo-is.name}"
+  type   = "A"
+  name   = "c"
+  value  = "${digitalocean_droplet.c.ipv4_address}"
   ttl    = 60
 }

@@ -5,10 +5,45 @@
   tags:
     - hostname
 
+- name: update apt chache
+  apt:
+    update_cache: yes
+  tags:
+    - packages
+
+- name: install python 3.8 on ubuntu
+  apt:
+    name:
+      - python3.8
+      - python3-pip
+      - python3-apt
+      - python3-setuptools
+      - python-setuptools
+  tags: packages
+  when: ansible_distribution == "Ubuntu"
+
+- name: correct python3 version selected on ubuntu
+  alternatives:
+    name: python3
+    path: /usr/bin/python3.8
+    link: /usr/bin/python3
+  tags:
+    - packages
+    - alternatives
+  when: ansible_distribution == "Ubuntu"
+
+
+- name: install python3 (3.7 currently) on debian
+  apt:
+    name:
+      - python3
+      - python3-pip
+  tags: packages
+  when: ansible_lsb.id == "Raspbian" or ansible_lsb.id == "Debian"
+
 - name: install packages
   apt:
     state: latest
-    update_cache: yes
     name:
       - apt-transport-https
       - aptitude
@@ -37,7 +72,6 @@
       - openssl
       - python-dev
       - python-netaddr
-      - python-pip
       - rsync
       - sudo
       - tmux
@@ -49,33 +83,6 @@
   tags:
     - packages
 
-- name: install python 3.8 on ubuntu
-  apt:
-    name:
-      - python3.8
-      - python3-pip
-  tags: packages
-  when: ansible_distribution == "Ubuntu"
-
-- name: correct python3 version selected on ubuntu
-  alternatives:
-    name: python3
-    path: /usr/bin/python3.8
-    link: /usr/bin/python3
-  tags:
-    - packages
-    - alternatives
-  when: ansible_distribution == "Ubuntu"
-
-
-- name: install python3 (3.7 currently) on debian
-  apt:
-    name:
-      - python3
-      - python3-pip
-  tags: packages
-  when: ansible_lsb.id == "Raspbian" or ansible_lsb.id == "Debian"
-
 - name: remove packages
   apt:
     name:
@@ -84,6 +91,12 @@
       - landscape-common
     state: absent
   tags: packages
+
+- name: create my group
+  group:
+    name: "{{ myusername }}"
+  tags:
+    - users
 
 - name: create my user
   user:
@@ -190,10 +203,11 @@
   pip:
     name:
       - ansible
-      - pipenv
       - poetry
+      - zmq
     executable: pip3
   tags:
+    - pip
     - packages
 
 # TODO: Decide on which way...

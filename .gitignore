@@ -64,5 +64,5 @@ index.txt
 private/
 
 
-terraform.tfstate
+#terraform.tfstate
 do.auto.tfvars
