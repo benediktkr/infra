@@ -235,6 +235,7 @@
     groups: "{{ item['groups'] | default([]) }}"
     shell: "{{ item['shell'] | default('/dev/null') }}"
     append: yes
+  with_items: "{{ extra_users }}"
   tags:
     - extrausers
     - users

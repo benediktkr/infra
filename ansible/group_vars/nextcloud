@@ -1,3 +1,5 @@
+---
+
 nginx_root: "/etc/nginx"
 
 nextcloud_exposed_port: "8091"
@@ -5,4 +7,3 @@ nextcloud_version: "18"
 nextcloud_root: "/srv/nextcloud"
 nextcloud_url: "nextcloud.sudo.is"
 nextcloud_container_name: "nextcloud_apache"
----

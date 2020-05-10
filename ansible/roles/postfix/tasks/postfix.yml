@@ -16,11 +16,21 @@
     ip: "{{ ansible_docker0.ipv4.network }}/{{ ansible_docker0.ipv4.netmask }}"
   when: ansible_docker0 is defined
 
+- name: include secrets
+  include_vars: private/postfix.yml
+
 - name: template config
   template:
-    src: main.cf.j2
-    dest: /etc/postfix/main.cf
-  notify: restart postfix
+    src: "{{ item['name'] }}.j2"
+    dest: "/etc/postfix/{{ item['name'] }}"
+    owner: "{{ item['owner'] }}"
+    mode: "{{ item['mode'] }}"
+  notify:
+    - restart postfix
+    - postmap sasl_passwd
+  with_items:
+    - {name: sasl_passwd, mode: '0700', owner: root}
+    - {name: main.cf, mode: '0644', owner: root}
 
 - name: template aliases
   template:

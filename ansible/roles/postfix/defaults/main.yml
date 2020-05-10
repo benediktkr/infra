@@ -1,1 +1,3 @@
-postfix_email_dest: "benedikt@lokun.is"
+---
+
+postfix_email_dest: "{{ myemail }}"
