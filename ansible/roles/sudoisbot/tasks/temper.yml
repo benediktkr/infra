@@ -57,19 +57,35 @@
   tags:
     - temperscripts
     - graphtemp
+  notify: restart services
 
-# this needs a user other than root to run as out of cron
 - name: copy my scripts to /usr/local/bin
   copy:
     src: "{{ item }}"
     dest: "/usr/local/bin/{{ item }}"
     mode: 0755
   with_items:
+    - simplestate.py
     - graphtemps.py
     - temper_sub.py
+    - screen_sub.py
+    - screen_pub.py
+    - unifi.py
   tags:
     - graphtemps
     - temperscripts
+  notify: restart services
+
+- name: include secrets
+  include_vars: private/temper.yml
+
+- name: template people.json
+  template:
+    src: people.json.j2
+    dest: /usr/local/etc/people.json
+    mode: 0755
+  tags:
+    - screen_pub
 
 # raspbian ingores cron files with a dot in the name
 - name: install crontab for temperature stuff
@@ -78,3 +94,77 @@
     dest: /etc/cron.d/temper
   tags:
     - graphtemps
+
+- name: copy proxy.py
+  copy:
+    src: proxy.py
+    dest: /usr/local/bin/proxy.py
+    mode: 0755
+  tags:
+    - zmq_proxy
+    - proxy
+  when: proxy_enabled | bool
+  notify: restart proxy
+
+- name: install systemd config file for proxy when enabled
+  template:
+    src: pythonscript.systemd.j2
+    dest: "/etc/systemd/system/proxy.service"
+  vars:
+    - name: "proxy.py"
+  tags:
+    - zmq_proxy
+    - proxy
+  when: proxy_enabled | bool
+
+- name: enable and start proxy
+  systemd:
+    name: proxy
+    state: started
+    enabled: yes
+  tags:
+    - zmq_proxy
+    - proxy
+  when: proxy_enabled | bool
+
+- name: disable and stop proxy if its not enabled for this host
+  systemd:
+    name: proxy
+    state: stopped
+    enabled: no
+  when: not proxy_enabled | bool
+  tags:
+    - zmq_proxy
+    - proxy
+
+- name: install systemd config files
+  template:
+    src: pythonscript.systemd.j2
+    dest: "/etc/systemd/system/{{ item }}.service"
+  vars:
+    - name: "{{ item }}.py"
+    - env:
+    #- stdout: "file:/var/log/{{ item }}.log"
+    #- stderr: "file:/var/log/{{ item }}.log"
+  with_items: "{{ modes_available }}"
+  tags:
+    - mysystemd
+  notify: daemon-reload
+
+- name: enabling and starting services
+  systemd:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  with_items: "{{ modes_enabled }}"
+  tags:
+    - mysystemd
+
+- name: disabling and stopping services
+  systemd:
+    name: "{{ item }}"
+    state: stopped
+    enabled: no
+  with_items: "{{ modes_disabled }}"
+  tags:
+   - mysystemd

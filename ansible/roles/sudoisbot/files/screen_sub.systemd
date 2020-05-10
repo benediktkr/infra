@@ -1,0 +1,15 @@
+[Unit]
+Description=screen_sub
+After=syslog.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/srv
+ExecStart=/usr/local/sbin/screen_sub.py
+StandardOutput=syslog
+StandardError=syslog
+
+[Install]
+WantedBy=multi-user.target

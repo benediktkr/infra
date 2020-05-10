@@ -45,9 +45,13 @@
   tags:
     - packages
 
-- name: install pip module for ansible tasks
+- name: install pip modules for ansible tasks
   pip:
-    name: docker
+    name:
+      - docker
+      - docker-compose
+    executable: pip3
   tags:
     - packages
     - pip
+    - docker-compose

@@ -1,0 +1,36 @@
+---
+
+- name: create dir structure
+  file:
+    path: "{{ unifi_root }}"
+    state: directory
+    mode: 0750
+    owner: "{{ unifi_root_owner | default('999') }}"
+    group: "{{ unifi_root_group | default('999') }}"
+
+# to adopt
+# ssh unifi-ap
+# mca-cli
+# set-inform http://<host_ip>:8080/inform
+- name: start docker container
+  docker_container:
+    name: "unifi"
+    image: "jacobalberty/unifi:arm32v7" #-beta
+    auto_remove: no
+    detach: yes
+    restart_policy: "unless-stopped"
+    state: started
+    init: yes
+    env:
+      TZ: "Europe/Berlin"
+      RUNAS_UID0: "false"
+    volumes:
+      - "{{ unifi_root }}:/unifi"
+    ports:
+      - "3478:3478/udp" # STUN
+      - "6789:6789/tcp" # Speed test
+      - "8080:8080/tcp" # Device/ controller comm.
+      - "8443:8443/tcp" # Controller GUI/API as seen in a web browser
+      - "8880:8880/tcp" # HTTP portal redirection
+      - "8843:8843/tcp" # HTTPS portal redirection
+      - "10001:10001/udp" # AP discovery

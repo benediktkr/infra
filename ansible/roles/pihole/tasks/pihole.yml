@@ -21,7 +21,7 @@
 - name: start docker container
   docker_container:
     name: "pihole"
-    image: "pihole/pihole:{{ pihole_version }}"
+    image: "pihole/pihole:{{ pihole_version | default('latest') }}"
     auto_remove: no
     detach: yes
     pull: yes

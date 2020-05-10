@@ -1,0 +1,16 @@
+---
+
+temper_enabled: True
+proxy_enabled: True
+temper_name: inside
+
+zmq_backend: "tcp://*:5560"
+zmq_frontend: "tcp://*:5559"
+
+temper_pub_sleep: 240
+modes_enabled:
+ - temper_pub
+ - temper_sub
+ - screen_pub
+modes_disabled:
+ - screen_sub

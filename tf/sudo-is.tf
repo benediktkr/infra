@@ -53,7 +53,7 @@ resource "digitalocean_record" "sudo-is-txt" {
   domain   = "${digitalocean_domain.sudo-is.name}"
   type   = "TXT"
   name   = "@"
-  value  = "v=spf1 mx a ptr ip4:176.9.152.42/32 ip4:176.9.53.236 include=_spf.investici.org include:spf.messagingengine.com ?all"
+  value  = "v=spf1 mx a ptr ip4:176.9.152.42/32 ip4:176.9.53.236/32 include:_spf.investici.org include:spf.messagingengine.com ?all"
   ttl    = 60
 }
 

@@ -1,4 +1,4 @@
-- hosts: pi
+- hosts: pi1.sudo.is
   remote_user: root
   become: true
   roles:
@@ -8,6 +8,7 @@
     - timemachine
     - docker
     - pihole
+    - unifi
     - postfix
     - afraidorg
     - sudoisbot

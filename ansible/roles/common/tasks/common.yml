@@ -5,6 +5,12 @@
   tags:
     - hostname
 
+- name: Set timezone to Europe/Berlin
+  timezone:
+    name: Europe/Berlin
+  tags:
+    - timezone
+
 - name: update apt chache
   apt:
     update_cache: yes
@@ -32,7 +38,6 @@
     - alternatives
   when: ansible_distribution == "Ubuntu"
 
-
 - name: install python3 (3.7 currently) on debian
   apt:
     name:
@@ -58,6 +63,7 @@
       - gnupg2
       - htop
       - iotop
+      - iptraf
       - jq
       - libffi-dev
       - libssl-dev
@@ -221,3 +227,14 @@
   when: unatt_enabled|bool
   tags:
     - unatt
+
+
+- name: install extra users if there are any
+  user:
+    name: "{{ item['username'] }}"
+    groups: "{{ item['groups'] | default([]) }}"
+    shell: "{{ item['shell'] | default('/dev/null') }}"
+    append: yes
+  tags:
+    - extrausers
+    - users

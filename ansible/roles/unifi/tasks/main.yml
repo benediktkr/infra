@@ -1,0 +1,3 @@
+---
+- include: unifi.yml
+  tags: unifi

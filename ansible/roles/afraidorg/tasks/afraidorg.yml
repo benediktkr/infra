@@ -6,4 +6,4 @@
 - name: template cron job for afraid.org
   template:
     src: afraidorg.cron.j2
-    dest: /etc/cron.d/afraidorg.cron
+    dest: /etc/cron.d/afraidorg

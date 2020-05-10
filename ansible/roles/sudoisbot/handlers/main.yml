@@ -1,0 +1,15 @@
+---
+
+- name: daemon-reload
+  command: systemctl --system daemon-reload
+
+- name: restart proxy
+  systemd:
+    name: proxy
+    state: restarted
+
+- name: restart services
+  systemd:
+    name: "{{ item }}"
+    state: restarted
+  with_items: "{{ modes_enabled }}"

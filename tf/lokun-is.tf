@@ -78,7 +78,7 @@ resource "digitalocean_record" "lokun-is-txt" {
   domain = "${digitalocean_domain.lokun-is.name}"
   type   = "TXT"
   name   = "@"
-  value  = "v=spf1 mx a ptr ptr:${digitalocean_domain.sudo-is.name} ip4:${local.freespace_ip}/32 include=_spf.investici.org"
+  value  = "v=spf1 mx a ptr ptr:${digitalocean_domain.sudo-is.name} ip4:${local.freespace_ip}/32 include:_spf.investici.org"
   ttl    = 60
 }
 
