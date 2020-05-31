@@ -5,7 +5,7 @@
     arch: armhf
   when: ansible_lsb.id == "Raspbian"
 
-- name: set arch to amd64 for anything else
+- name: set arch to amd64 for {{ ansible_lsb.id }} if not Raspbian
   set_fact:
     arch: amd64
   when: ansible_lsb.id != "Raspbian"

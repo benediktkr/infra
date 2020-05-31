@@ -3,6 +3,9 @@
     name:
       - python3-serial
       - libatlas-base-dev # numpy
+      - libudev-dev # python-openzwave
+      - g++ # python-openzwave
+      - libyaml-dev # python-openzwave
     state: present
   tags:
     - packages
