@@ -79,6 +79,7 @@
       - python-dev
       - python-netaddr
       - rsync
+      - smartmontools
       - sudo
       - tmux
       - vnstat
