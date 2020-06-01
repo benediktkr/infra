@@ -1,13 +1,13 @@
 ### lokun.is
 # A lokun.is
 resource "digitalocean_domain" "lokun-is" {
-  name = "lokun.is"
-  ip_address = "${local.freespace_ip}"
+  name       = "lokun.is"
+  ip_address = local.freespace_ip
 }
 
 # CNAME www.lokun.is
 resource "digitalocean_record" "www-lokun-is" {
-  domain = "${digitalocean_domain.lokun-is.name}"
+  domain = digitalocean_domain.lokun-is.name
   type   = "CNAME"
   name   = "www"
   value  = "${digitalocean_domain.lokun-is.name}."
@@ -16,7 +16,7 @@ resource "digitalocean_record" "www-lokun-is" {
 
 # api.lokun.is
 resource "digitalocean_record" "api-lokun-is" {
-  domain = "${digitalocean_domain.lokun-is.name}"
+  domain = digitalocean_domain.lokun-is.name
   type   = "A"
   name   = "api"
   value  = "178.79.148.123"
@@ -25,7 +25,7 @@ resource "digitalocean_record" "api-lokun-is" {
 
 # MX lokun.is
 resource "digitalocean_record" "lokun-is-mx-0" {
-  domain   = "${digitalocean_domain.lokun-is.name}"
+  domain   = digitalocean_domain.lokun-is.name
   type     = "MX"
   name     = "@"
   priority = "10"
@@ -35,7 +35,7 @@ resource "digitalocean_record" "lokun-is-mx-0" {
 
 # MX lokun.is
 resource "digitalocean_record" "lokun-is-mx-1" {
-  domain   = "${digitalocean_domain.lokun-is.name}"
+  domain   = digitalocean_domain.lokun-is.name
   type     = "MX"
   name     = "@"
   priority = "20"
@@ -45,7 +45,7 @@ resource "digitalocean_record" "lokun-is-mx-1" {
 
 # MX lokun.is
 resource "digitalocean_record" "lokun-is-mx-2" {
-  domain   = "${digitalocean_domain.lokun-is.name}"
+  domain   = digitalocean_domain.lokun-is.name
   type     = "MX"
   name     = "@"
   priority = "20"
@@ -55,7 +55,7 @@ resource "digitalocean_record" "lokun-is-mx-2" {
 
 # MX lokun.is
 resource "digitalocean_record" "lokun-is-mx-3" {
-  domain   = "${digitalocean_domain.lokun-is.name}"
+  domain   = digitalocean_domain.lokun-is.name
   type     = "MX"
   name     = "@"
   priority = "30"
@@ -65,7 +65,7 @@ resource "digitalocean_record" "lokun-is-mx-3" {
 
 # MX lokun.is
 resource "digitalocean_record" "lokun-is-mx-4" {
-  domain   = "${digitalocean_domain.lokun-is.name}"
+  domain   = digitalocean_domain.lokun-is.name
   type     = "MX"
   name     = "@"
   priority = "30"
@@ -75,17 +75,16 @@ resource "digitalocean_record" "lokun-is-mx-4" {
 
 # TXT lokun.is
 resource "digitalocean_record" "lokun-is-txt" {
-  domain = "${digitalocean_domain.lokun-is.name}"
+  domain = digitalocean_domain.lokun-is.name
   type   = "TXT"
   name   = "@"
   value  = "v=spf1 mx a ptr ptr:${digitalocean_domain.sudo-is.name} ip4:${local.freespace_ip}/32 include:_spf.investici.org"
   ttl    = 60
 }
 
-
 # dns0.lokun.is
 resource "digitalocean_record" "dns0-lokun-is" {
-  domain = "${digitalocean_domain.lokun-is.name}"
+  domain = digitalocean_domain.lokun-is.name
   type   = "A"
   name   = "dns0"
   value  = "188.226.170.178"
@@ -94,9 +93,10 @@ resource "digitalocean_record" "dns0-lokun-is" {
 
 # dns0.lokun.is
 resource "digitalocean_record" "dns1-lokun-is" {
-  domain = "${digitalocean_domain.lokun-is.name}"
+  domain = digitalocean_domain.lokun-is.name
   type   = "A"
   name   = "dns1"
   value  = "128.199.128.179"
   ttl    = 60
 }
+
