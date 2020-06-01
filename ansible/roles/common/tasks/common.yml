@@ -14,6 +14,7 @@
 - name: update apt chache
   apt:
     update_cache: yes
+  changed_when: False
   tags:
     - packages
 
@@ -74,6 +75,7 @@
       - ncdu
       - nethogs
       - nmap
+      - ntp
       - openssh-server
       - openssl
       - python-dev
@@ -88,6 +90,7 @@
     PATH: "{{ ansible_env.PATH }}:/sbin:/usr/sbin"
   tags:
     - packages
+    - ntp
 
 - name: remove packages
   apt:
