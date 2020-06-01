@@ -92,6 +92,7 @@
     user: root
   tags:
     - cron
+    - iptables
 
 - name: copy checkclients.py
   copy:

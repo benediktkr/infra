@@ -164,7 +164,7 @@ resource "digitalocean_record" "wifi001-vpn-sudo-is" {
   domain = digitalocean_domain.sudo-is.name
   type   = "CNAME"
   name   = "wifi001-vpn"
-  value  = "lon-vpn.sudo.is."
+  value  = "lon0.sudo.is."
   ttl    = 60
 }
 

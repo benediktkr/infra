@@ -5,6 +5,15 @@
   tags: temper
   when: temper_enabled == True
 
+
+- name: create directory for logs
+  file:
+   path: /srv/log
+   state: directory
+   mode: '0777'
+   owner: root
+   group: root
+
 - name: copy config
   copy:
     src: private/sudoisbot.yml
@@ -31,8 +40,8 @@
 #   tags:
 #     - packages
 
-- name: install from pypi
+- name: install from git
   pip:
-    name: sudoisbot
+    name: git+https://github.com/benediktkr/sudoisbot.git
     state: latest
     executable: pip3
