@@ -1,7 +1,10 @@
 ---
 - name: set hostname
   hostname:
-    name: "{{ inventory_hostname }}"
+    name: "{{ item }}"
+    use: systemd
+  with_items:
+    - "{{ inventory_hostname }}"
   tags:
     - hostname
 

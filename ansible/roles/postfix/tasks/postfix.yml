@@ -19,6 +19,15 @@
 - name: include secrets
   include_vars: private/postfix.yml
 
+- name: set /etc/mailname
+  copy:
+    content: "{{ item }}"
+    dest: /etc/mailname
+  with_items:
+    - "{{ inventory_hostname }}"
+  tags:
+    - hostname
+
 - name: template config
   template:
     src: "{{ item['name'] }}.j2"

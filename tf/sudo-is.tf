@@ -155,7 +155,7 @@ resource "digitalocean_record" "vpn-sudo-is" {
   domain = digitalocean_domain.sudo-is.name
   type   = "CNAME"
   name   = "vpn"
-  value  = "${local.main_vpn}."
+  value  = "lon0.sudo.is."
   ttl    = 60
 }
 
@@ -194,4 +194,3 @@ resource "digitalocean_record" "l54-sudo-is" {
   value  = "pi0.strangled.net."
   ttl    = 60
 }
-
