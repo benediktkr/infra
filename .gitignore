@@ -62,7 +62,7 @@ index.txt
 
 # Private repo
 private/
-
+hosts.yml
 
 #terraform.tfstate
 do.auto.tfvars
