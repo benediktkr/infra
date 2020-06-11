@@ -109,6 +109,7 @@
   user:
     name: "{{ item }}"
     state: absent
+    force: yes
   with_items:
     - pi
     - ec2user
