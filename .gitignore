@@ -59,10 +59,10 @@ index.txt
 
 # Ansible
 *.retry
-
-# Private repo
 private/
 hosts.yml
+group_vars/
+playbooks/
 
 #terraform.tfstate
 do.auto.tfvars
