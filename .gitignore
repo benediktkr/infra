@@ -70,3 +70,4 @@ playbooks/
 #terraform.tfstate
 do.auto.tfvars
 s.*.tf
+ansible.cfg
