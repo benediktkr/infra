@@ -71,3 +71,6 @@ playbooks/
 do.auto.tfvars
 s.*.tf
 ansible.cfg
+ansible/*.yml
+ansible/*.yaml
+
