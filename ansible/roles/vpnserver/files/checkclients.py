@@ -6,9 +6,10 @@
 from socket import gethostname
 
 from sudoisbot import sendmsg
-from sudoisbot.common import getconfig
+from sudoisbot.common import getconfig, init
 
-config = getconfig()['checkclients']
+#config = getconfig()['checkclients']
+config = init("checkclients")
 
 #expected_clients = ["wifi001", "wifi002"]
 expected_clients = config['expected_clients']
