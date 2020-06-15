@@ -4,11 +4,13 @@
   set_fact:
     arch: armhf
   when: ansible_lsb.id == "Raspbian"
+  tags: packages
 
 - name: set arch to amd64 for {{ ansible_lsb.id }} if not Raspbian
   set_fact:
     arch: amd64
   when: ansible_lsb.id != "Raspbian"
+  tags: packages
 
 - name: install docker dependencies for raspbian
   apt:
@@ -17,6 +19,7 @@
       - raspberrypi-kernel-headers
     state: present
   when: ansible_lsb.id == "Raspbian"
+  tags: packages
 
 - name: add apt key
   apt_key:

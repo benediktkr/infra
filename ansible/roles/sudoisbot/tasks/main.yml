@@ -1,3 +1,7 @@
 ---
+- name: test
+  debug:
+    var: temper_name
+
 - include: sudoisbot.yml
   tags: sudoisbot

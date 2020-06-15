@@ -21,6 +21,8 @@
   tags:
     - checkclients
     - vpnserver
+  when: False
+
 
 # - name: temp task to uninstall first
 #   pip:

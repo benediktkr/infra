@@ -6,3 +6,5 @@ unatt_remove_unused_dependencies: "true"
 unatt_auto_reboot: "false"
 
 extra_users: []
+
+fde_enabled: False

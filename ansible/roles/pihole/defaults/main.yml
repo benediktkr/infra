@@ -2,8 +2,6 @@
 
 pihole_root: "/srv/pihole"
 pihole_version: latest
-pihole_dns_1: 208.67.222.222
-pihole_dns_2: 208.67.220.220
 pihole_cond: "False"
 pihole_cond_ip: ""
 pihole_cond_domain: ""

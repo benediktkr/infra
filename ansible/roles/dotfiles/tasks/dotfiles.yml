@@ -22,6 +22,7 @@
     force: yes
   become_user: "{{ myusername }}"
   ignore_errors: yes
+  register: gitpull
 
 
 - name: put my dotfiles in place
@@ -32,6 +33,7 @@
   with_items:
     - "{{ dotfiles }}"
   become_user: "{{ myusername }}"
+  when: gitpull.changed
 
 - name: put dotfiles for root in place
   copy:
@@ -42,3 +44,4 @@
     group: root
   with_items:
     - "{{ dotfiles }}"
+  when: gitpull.changed

@@ -2,3 +2,4 @@
 # file: roles/rpi/tasks/main.yml
 - include: rpi.yml
   tags: rpi
+  when: ansible_lsb.id == "Raspbian"

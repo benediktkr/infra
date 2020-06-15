@@ -231,6 +231,7 @@
       - ansible
       - poetry
       - zmq
+      - netaddr
     executable: pip3
   tags:
     - pip
