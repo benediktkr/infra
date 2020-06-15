@@ -69,6 +69,7 @@
       - iotop
       - iptraf
       - jq
+      - kpcli
       - libffi-dev
       - libssl-dev
       - lsof
