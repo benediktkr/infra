@@ -42,8 +42,21 @@
 #   tags:
 #     - packages
 
+- name: pip3 upgrade
+  pip:
+    name: pip
+    extra_args: --upgrade
+    state: latest
+    executable: pip3
+  tags:
+    - sudoisbot_install
+
+
+# change state to 'latest' when thinngs are stable
 - name: install from git
   pip:
     name: git+https://github.com/benediktkr/sudoisbot.git
     state: latest
     executable: pip3
+  tags:
+    - sudoisbot_install
