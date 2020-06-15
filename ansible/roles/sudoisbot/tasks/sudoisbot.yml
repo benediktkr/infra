@@ -14,33 +14,14 @@
    owner: root
    group: root
 
-- name: copy config
-  copy:
+- name: template config
+  template:
     src: private/sudoisbot.yml
     dest: /etc/sudoisbot.yml
   tags:
     - checkclients
     - vpnserver
   when: False
-
-
-# - name: temp task to uninstall first
-#   pip:
-#     name: sudoisbot
-#     state: absent
-#     executable: "{{ item }}"
-#   with_items:
-#     - pip
-#     - pip3
-#   when: inventory_hostname != "pi1.sudo.is"
-
-# - name: packages for various bot scripts
-#   apt:
-#     name:
-#       - mplayer
-#     state: present
-#   tags:
-#     - packages
 
 - name: pip3 upgrade
   pip:
