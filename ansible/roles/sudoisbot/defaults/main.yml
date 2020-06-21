@@ -1,16 +1,5 @@
 ---
 
-temper_enabled: False
-temper_name: temper0
-
-zmq_backend: "tcp://*:5560"
-zmq_frontend: "tcp://*:5559"
-
-prox_enabled: False
-modes_available:
-  - temper_sub
-  - temper_pub
-  - screen_sub
-  - screen_pub
-modes_enabled: []
-modes_disabled: []
+sudoisbot_homeproject: False
+temp_state_file: /dev/shm/temper_sub-state.json
+services_enabled: []

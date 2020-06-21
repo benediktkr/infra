@@ -1,7 +1,10 @@
 ---
-- name: test
-  debug:
-    var: temper_name
-
 - include: sudoisbot.yml
   tags: sudoisbot
+
+- include: homeproject.yml
+  tags:
+    - sudoisbot
+    - homeproject
+    - sudoisbot_homeproject
+  when: sudoisbot_homeproject == True

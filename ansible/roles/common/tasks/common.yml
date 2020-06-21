@@ -118,7 +118,6 @@
   tags:
     - users
 
-
 - name: create my group
   group:
     name: "{{ myusername }}"

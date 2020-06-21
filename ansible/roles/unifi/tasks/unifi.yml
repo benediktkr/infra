@@ -11,7 +11,11 @@
 # to adopt
 # ssh unifi-ap
 # mca-cli
-# set-inform http://<host_ip>:8080/inform
+# set-inform http://<controller_ip>:8080/inform
+#
+#
+# if that hangs:
+#  mca-cli-op set-inform http://<controller_ip>:8080/inform
 - name: start docker container
   docker_container:
     name: "unifi"

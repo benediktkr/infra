@@ -16,12 +16,16 @@
 
 - name: template config
   template:
-    src: private/sudoisbot.yml
+    src: private/sudoisbot.yml.j2
     dest: /etc/sudoisbot.yml
   tags:
+    - sudoisbot_install
     - checkclients
+    - sudoisbot_homeproject
+    - homeproject
     - vpnserver
-  when: False
+    - sudoisbot_config
+  notify: restart all
 
 - name: pip3 upgrade
   pip:
@@ -41,3 +45,8 @@
     executable: pip3
   tags:
     - sudoisbot_install
+    - checkclients
+    - sudoisbot_homeproject
+    - homeproject
+  notify: restart all
+  when: False

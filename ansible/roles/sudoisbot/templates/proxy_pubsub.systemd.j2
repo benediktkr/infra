@@ -1,7 +1,7 @@
 # templated by ansible
 
 [Unit]
-Description=temper_pub
+Description=proxy_pubsub
 After=syslog.target
 
 [Service]
@@ -9,7 +9,7 @@ Type=simple
 User={{ temper_pub_user | default('root') }}
 Group={{ temper_pub_group | default(temper_pub_user) | default('root') }}
 WorkingDirectory=/srv
-ExecStart=/usr/local/bin/temper_pub
+ExecStart=/usr/local/bin/proxy_pubsub
 
 [Install]
 WantedBy=multi-user.target

@@ -99,6 +99,6 @@
 - name: template certbot cron renewal job
   template:
     src: letsencrypt.cron
-    dest: /etc/cron.d/letsencrypt.cron
+    dest: /etc/cron.d/letsencrypt
   tags:
-    letsencrypt
+    - letsencrypt
