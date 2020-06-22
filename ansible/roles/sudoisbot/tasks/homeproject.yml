@@ -13,11 +13,14 @@
     - temper_sub
     - temper_pub
 
-- name: adding my user to temps group
+- name: adding users to temps group
   user:
-    name: "{{ myusername }}"
+    name: "{{ item }}"
     groups: "{{ temps_user }}"
     append: yes
+  with_items:
+    - "{{ myusername }}"
+    - "{{ tglistener_user }}"
   tags:
     - users
     - temper_sub
@@ -44,54 +47,14 @@
   tags:
     - temper_sub
 
-- name: install systemd config for proxy_pubsub
+- name: install systemd configs
   template:
-    src: proxy_pubsub.systemd.j2
-    dest: "/etc/systemd/system/proxy_pubsub.service"
+    src: "{{ item }}.systemd.j2"
+    dest: "/etc/systemd/system/{{ item }}.service"
   vars:
   tags:
     - mysystemd
-    - proxy_pubsub
   notify:
     - daemon-reload
-    - restart proxy_pubsub
-  when: "'proxy_pubsub' in services_enabled"
-
-- name: install systemd config for temper_sub
-  template:
-    src: temper_sub.systemd.j2
-    dest: "/etc/systemd/system/temper_sub.service"
-  vars:
-  tags:
-    - mysystemd
-    - temper_sub
-  notify:
-    - daemon-reload
-    - restart temper_sub
-  when: "'temper_sub' in services_enabled"
-
-- name: install systemd config for temper_pub
-  template:
-    src: temper_pub.systemd.j2
-    dest: "/etc/systemd/system/temper_pub.service"
-  vars:
-  tags:
-    - mysystemd
-    - temper_pub
-  notify:
-    - daemon-reload
-    - restart temper_pub
-  when: "'temper_pub' in services_enabled"
-
-- name: install systemd config for screen_pub
-  template:
-    src: screen_pub.systemd.j2
-    dest: "/etc/systemd/system/screen_pub.service"
-  vars:
-  tags:
-    - mysystemd
-    - screen_pub
-  notify:
-    - daemon-reload
-    - restart screen_pub
-  when: "'screen_pub' in services_enabled"
+    - restart {{ item }}
+  with_items: "{{ services_enabled }}"

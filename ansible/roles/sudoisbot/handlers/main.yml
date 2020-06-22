@@ -24,6 +24,11 @@
     name: screen_pub
     state: restarted
 
+- name: restart tglistener
+  systemd:
+    name: tglistener
+    state: restarted
+
 - name: restart all
   systemd:
     name: "{{ item }}"

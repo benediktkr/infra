@@ -1,5 +1,6 @@
 ---
 
 sudoisbot_homeproject: False
+tglistener_enabled: false
 temp_state_file: /dev/shm/temper_sub-state.json
 services_enabled: []

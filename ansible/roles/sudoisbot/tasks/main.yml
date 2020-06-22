@@ -2,7 +2,8 @@
 - include: sudoisbot.yml
   tags: sudoisbot
 
-- include: homeproject.yml
+- name: including homeproject.yml
+  include: homeproject.yml
   tags:
     - sudoisbot
     - homeproject
