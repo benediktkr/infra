@@ -66,4 +66,3 @@
     - sudoisbot_homeproject
     - homeproject
   notify: restart all
-  when: False
