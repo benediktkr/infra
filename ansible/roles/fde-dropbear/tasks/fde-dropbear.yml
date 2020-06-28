@@ -5,6 +5,7 @@
     name:
       - busybox
       - dropbear
+      - cryptsetup
     state: present
     update_cache: yes
   tags:
