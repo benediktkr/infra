@@ -1,3 +1,3 @@
-37 1,13 * * * /usr/bin/curl https://freedns.afraid.org/dynamic/update.php?{{ afraidorg_keys[inventory_hostname] }} >> /tmp/afraidorg_curl.log
+37 */2 * * * root /usr/bin/curl https://freedns.afraid.org/dynamic/update.php?{{ afraidorg_keys[inventory_hostname] }} >> /tmp/afraidorg_curl.log
 
 #
