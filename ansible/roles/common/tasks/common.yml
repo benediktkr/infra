@@ -65,6 +65,7 @@
       - dnsutils
       - git
       - gnupg2
+      - haveged
       - htop
       - iotop
       - iptraf
@@ -88,6 +89,7 @@
       - smartmontools
       - sudo
       - tmux
+      - unzip
       - vnstat
       - whois
       - zsh
@@ -103,20 +105,12 @@
       - update-motd
       - landscape-client
       - landscape-common
+      - docker
+      - docker.io
+      - docker-engine
     state: absent
   tags: packages
 
-- name: remove stupid default users
-  user:
-    name: "{{ item }}"
-    state: absent
-    force: yes
-  with_items:
-    - pi
-    - ec2user
-    - ubuntu
-  tags:
-    - users
 
 - name: create my group
   group:
@@ -179,6 +173,18 @@
     line: '%sudo ALL=(ALL) NOPASSWD: ALL'
     validate: 'visudo -cf %s'
   when: is_local is not defined
+  tags:
+    - users
+
+- name: remove stupid default users
+  user:
+    name: "{{ item }}"
+    state: absent
+    force: yes
+  with_items:
+    - pi
+    - ec2user
+    - ubuntu
   tags:
     - users
 

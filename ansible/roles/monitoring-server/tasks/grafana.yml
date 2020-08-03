@@ -1,0 +1,36 @@
+---
+
+- name: template grafana config
+  template:
+    src: grafana.ini.j2
+    dest: /etc/grafana/grafana.ini
+  notify:
+    - restart grafana
+  tags:
+    - grafana-config
+
+
+- name: Create influxdb datasources
+  grafana_datasource:
+    name: "influxdb-{{ item }}"
+    grafana_url: "http://localhost:{{ grafana_port }}"
+    grafana_user: "{{ grafana_admin_user }}"
+    grafana_password: "{{ grafana_admin_password }}"
+    ds_type: "influxdb"
+    ds_url: "http://localhost:{{ influxdb_port}}"
+    database: "{{ item }}"
+    basic_auth_user: "{{ influxdb_admin_user }}"
+    basic_auth_password: "{{ influxdb_admin_password }}"
+    time_interval: ">10s"
+  with_items:
+    - sudoisbot
+    - btc
+  tags:
+    - grafana-ds
+
+
+- name: grafna image render plugin
+  grafana_plugin:
+    name: grafana-image-renderer
+    version: latest
+    state: present

@@ -1,0 +1,64 @@
+---
+
+- name: add apt key for influxdb, grafana
+  apt_key:
+    url: "{{ item }}"
+    state: present
+  with_items:
+    - https://repos.influxdata.com/influxdb.key
+    - https://packages.grafana.com/gpg.key
+  tags:
+    - packages
+    - influxdb
+    - grafana
+
+- name: add repo for influxdb, grafana
+  apt_repository:
+    repo: "deb {{ item }}"
+    state: present
+    update_cache: yes
+  with_items:
+    - https://repos.influxdata.com/{{ ansible_lsb.id | lower }} {{ ansible_lsb.codename }} stable
+    - https://packages.grafana.com/oss/deb stable main
+  tags:
+    - packages
+    - grafana
+    - influxdb
+
+- name: install influxdb, grafana
+  apt:
+    name:
+      - influxdb
+      - grafana
+    state: latest
+  tags:
+    - packages
+    - grafana
+    - influxdb
+  notify:
+    - restart influxdb
+    - restart grafana
+
+- name: enable influxdb, grafana
+  service:
+    name: "{{ item }}"
+    enabled: yes
+  with_items:
+    - influxdb
+    - grafana-server
+  tags:
+    - packages
+    - influxfb
+    - grafana
+  notify:
+    - restart influxdb
+    - restart grafana
+
+- include: influxdb.yml
+  tags:
+    #- monitoring-server
+    - influxdb
+
+- include:  grafana.yml
+  tags:
+    - grafana

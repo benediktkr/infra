@@ -1,0 +1,19 @@
+upstream sudoisapi {
+    server 127.0.0.1:3000;
+}
+
+server {
+    listen [::]:80;
+    listen 80;
+    server_name {{ sudoisapi_name }};
+    root /var/www;
+
+    location / {
+        try_files $uri @uwsgi;
+    }
+
+    location @uwsgi {
+        include uwsgi_params;
+        uwsgi_pass sudoisapi;
+    }
+}

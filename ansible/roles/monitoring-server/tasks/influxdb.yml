@@ -1,0 +1,74 @@
+---
+
+- name: template influxdb config
+  template:
+    src: influxdb.conf.j2
+    dest: /etc/influxdb/influxdb.conf
+  notify:
+    - restart influxdb
+  tags:
+    - influxdb-config
+
+- name: install pip3 package for ansible influxdb modules
+  pip:
+    name: influxdb
+    state: present
+    executable: pip3
+  tags:
+    - pip
+    - packages
+
+  # fails after the first time, since after that
+- name: create influxdb admin user
+  influxdb_user:
+    user_name: "{{ influxdb_admin_user }}"
+    user_password: "{{ influxdb_admin_password }}"
+    login_username: "{{ influxdb_admin_user }}"
+    login_password: "{{ influxdb_admin_password }}"
+    admin: yes
+  notify:
+    - restart influxdb
+  tags:
+    - influxdb-config
+
+- name: create influxdb databases
+  influxdb_database:
+    database_name: "{{ item.name }}"
+    login_username: "{{ influxdb_admin_user }}"
+    login_password: "{{ influxdb_admin_password }}"
+  with_items: "{{ influxdb_user_database }}"
+  loop_control:
+    label: "{{ item.name }}"
+  tags:
+    - influxdb-config
+
+- name: create influxdb users
+  influxdb_user:
+    user_name: "{{ item.name }}"
+    user_password: "{{ item.password }}"
+    grants:
+      - database: "{{ item.name }}"
+        privilege: ALL
+    login_username: "{{ influxdb_admin_user }}"
+    login_password: "{{ influxdb_admin_password }}"
+    admin: no
+  with_items: "{{ influxdb_user_database }}"
+  loop_control:
+    label: "{{ item.name }}"
+  tags:
+    - influxdb-config
+
+- name: create infinite retention policies
+  influxdb_retention_policy:
+    database_name: "{{ item.name }}"
+    policy_name: "{{ item.name }}-infinite"
+    duration: INF
+    default: yes
+    replication: 1
+    login_username: "{{ influxdb_admin_user }}"
+    login_password: "{{ influxdb_admin_password }}"
+  with_items: "{{ influxdb_user_database }}"
+  loop_control:
+    label: "{{ item.name }}"
+  tags:
+    - influxdb-config

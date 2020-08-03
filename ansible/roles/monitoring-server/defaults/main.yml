@@ -1,0 +1,5 @@
+---
+
+influxdb_port: 8086
+grafana_port: 3000
+influxdb_user_databse: []

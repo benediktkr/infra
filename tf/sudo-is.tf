@@ -150,6 +150,16 @@ resource "digitalocean_record" "mathom-sudo-is" {
   ttl    = 60
 }
 
+# CNAME api.sudo.is
+resource "digitalocean_record" "api-sudo-is" {
+  domain = digitalocean_domain.sudo-is.name
+  type   = "CNAME"
+  name   = "api"
+  value  = "f.sudo.is."
+  ttl    = 60
+}
+
+
 # CNAME vpn.sudo.is
 resource "digitalocean_record" "vpn-sudo-is" {
   domain = digitalocean_domain.sudo-is.name

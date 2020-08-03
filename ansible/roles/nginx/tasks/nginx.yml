@@ -12,13 +12,17 @@
   apt_repository:
     repo: "deb http://nginx.org/packages/mainline/debian {{ ansible_distribution_release }} nginx"
     state: present
+    update_cache: yes
   when: ansible_distribution == "Debian"
   tags:
     - packages
 
 - name: install nginx
   apt:
-    name: nginx
+    name:
+      - nginx
+      - uwsgi
+      - uwsgi-plugin-python3
     update_cache: yes
     state: latest
   environment:
@@ -42,6 +46,8 @@
     src: nginx.conf
     dest: /etc/nginx/nginx.conf
   notify: reload nginx
+  tags:
+    - nginx-config
 
 - name: copy conf.d files
   copy:
@@ -51,13 +57,24 @@
     - hardening.conf
   notify: reload nginx
 
+- name: template default index.html
+  template:
+    src: index.html.j2
+    dest: /var/www/html/index.html
+
+- name: template default vhost for http
+  template:
+    src: 00-default-http.j2
+    dest: "/etc/nginx/sites-enabled/00-default-http"
+  notify: reload nginx
+
 - name: copy vhosts (specific roles copy/template their own)
   copy:
     src: "{{ item }}"
     dest: "/etc/nginx/sites-enabled/{{ item }}"
-  with_items:
-    - 00-www.sudo.is
-    - 01-benedikt.sudo.is
+  with_items: "{{ nginx_vhosts }}"
+  tags:
+    - nginx-config
   notify: reload nginx
 
 - meta: flush_handlers
@@ -74,17 +91,22 @@
 
 # The command in the nextcloud role might be better than this
 - name: lets encrypt
-  command: "/usr/local/bin/certbot -n --nginx -d {{ item }}"
+  command: "/usr/local/bin/certbot -n --nginx -d {{ item }} --agree-tos --email {{ myemail }}"
   args:
     creates: "/etc/letsencrypt/live/{{ item.split(' ')[0] }}/fullchain.pem"
   environment:
     PATH: "{{ ansible_env.PATH }}:/sbin:/usr/sbin"
-  with_items:
-    - benedikt.sudo.is
-    - www.sudo.is -d sudo.is
-    - "{{ ansible_fqdn }}"
+  with_items: "{{ letsencrypt_defaults }} + ['{{ inventory_hostname }}'] "
   tags:
     - letsencrypt
+
+- name: template default vhost for https since certs and keys exist now
+  template:
+    src: 00-default-https.j2
+    dest: "/etc/nginx/sites-enabled/00-default-https"
+  notify: reload nginx
+  tags:
+  - nginx-config
 
 - name: remove letsencrypt renewal cron job from the cron module
   cron:

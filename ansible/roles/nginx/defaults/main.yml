@@ -1,0 +1,5 @@
+---
+
+letsencrypt_defaults: []
+nginx_vhosts: []
+nginx_subdirs: {}

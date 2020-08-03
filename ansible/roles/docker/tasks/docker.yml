@@ -25,7 +25,6 @@
   apt_key:
     url: https://download.docker.com/linux/debian/gpg
     state: present
-  when: ansible_distribution == "Debian"
   tags:
     - packages
 
@@ -33,13 +32,15 @@
   apt_repository:
     repo: "deb [arch={{ arch }}] https://download.docker.com/linux/{{ ansible_lsb.id | lower }} {{ ansible_distribution_release }} stable"
     state: present
-  when: ansible_distribution == "Debian"
   tags:
     - packages
 
-- name: install docker package
+- name: install docker packages
   apt:
-    name: docker-ce
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
     update_cache: yes
     state: latest
   environment:
@@ -58,3 +59,11 @@
     - packages
     - pip
     - docker-compose
+
+- name: set up bridged network with dns
+  docker_network:
+    name: bridgewithdns
+    driver: bridge
+    internal: no
+  tags:
+    - docker-network

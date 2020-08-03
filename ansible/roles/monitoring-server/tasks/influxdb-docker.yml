@@ -1,0 +1,49 @@
+---
+
+- name: create dir structure for influxdb
+  file:
+    path: "{{ influxdb_root }}/{{ item['dir'] }}"
+    state: directory
+    mode: 0775
+    owner: "{{ item['owner'] | default('root') }}"
+    group: "{{ item['group'] | default('root') }}"
+  with_items:
+    - { dir: etc }
+    - { dir: lib }
+    - { dir: initdb.d }
+
+- name: template influxdb config
+  template:
+    src: influxdb.conf.j2
+    dest: "{{ influxdb_root }}/etc/influxdb.conf"
+  # notify:
+  #   - restart influxdb
+
+
+- name: start the influxdb container
+  docker_container:
+    name: influxdb
+    image: "influxdb:{{ influxdb_version }}"
+    auto_remove: no
+    detach: yes
+    pull: yes
+    state: started
+    env:
+      INFLUXDB_ADMIN_USER: "{{ influxdb_admin_user }}"
+      INFLUXDB_ADMIN_PASSWORD: "{{ influxdb_admin_password }}"
+      INFLUXDB_USER: "{{ influxdb_user }}"
+      INFLUXDB_USER_PASSWORD: "{{ influxdb_user_password }}"
+      INFLUXDB_READ_USER: "{{ influxdb_read_user }}"
+      INFLUXDB_READ_USER_PASSWORD: "{{ influxdb_read_user_password }}"
+      INFLUXDB_WRITE_USER: "{{ influxdb_write_user }}"
+      INFLUXDB_WRITE_USER_PASSWORD: "{{ influxdb_write_user_password }}"
+    ports:
+      - "8086:8086"
+      - "8088:8088"
+    networks:
+      - name: bridgewithdns
+    networks_cli_compatible: yes
+    command: influxdb -config /etc/influxdb/influxdb.conf
+    volumes:
+      - "{{ influxdb_root }}/lib:/var/lib/influxdb"
+      - "{{ influxdb_root }}/etc/influxdb.conf:/etc/influxdb/influxdb.conf:ro"
