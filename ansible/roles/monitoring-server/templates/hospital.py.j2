@@ -1,0 +1,82 @@
+#!/usr/bin/python3
+
+from datetime import datetime, timezone
+import lxml.html
+
+import requests
+from influxdb import InfluxDBClient
+
+
+def get_metric_name(icelandic_desc):
+    mappings = {
+        'á bráða- og göngudeild Fossvogi': 'patients_er_and_walk_fossvogur',
+        'á bráðadeild Fossvogi': 'patients_icu_fossvogur',
+        'skurðaðgerð': 'operations_now',
+        'bráðamóttöku barna': 'patients_children',
+        'hafa fæðst í dag': 'births_today',
+        'útskrifast': 'discharges_today',
+        'við vinnu þessa stundina': 'at_work_now',
+        'lagst inn': 'admitted_today',
+        'blóðgjafir í Blóðbanka': 'blood_donations'
+    }
+    for mapping_hint, metric in mappings.items():
+
+        if mapping_hint in icelandic_desc:
+            return metric
+
+    raise ValueError("cant find: " + icelandic_desc)
+
+
+def landspitali():
+    url = 'https://landspitali.is'
+    r = requests.get(url)
+    r.raise_for_status()
+
+    root = lxml.html.fromstring(r.text)
+
+    worklist = root.xpath('//div[@class="work__list_numbers"]/div')
+
+
+    d = dict()
+
+    l = list()
+
+    for s in worklist:
+        value = s.xpath("span")[0].text
+        _text = s.text_content()
+
+        prefix = len(str(value))
+        icelandic_desc = _text[prefix:]
+        metric = get_metric_name(icelandic_desc)
+        d[metric] = value
+
+    return d
+
+if __name__ == "__main__":
+
+    client = InfluxDBClient(
+        host='{{ ingest }}',
+        port=443,
+        path='{{ ingest_path }}',
+        username='hospital',
+        password="{{ influxdb_user_database['hospital'] }}",
+        ssl=True,
+        verify_ssl=True,
+        database='hospital'
+    )
+
+    time = datetime.utcnow().replace(tzinfo=timezone.utc).isoformat()
+    hospital = landspitali()
+
+    datapoints = [{
+        "measurement": key,
+        "tags": {
+            "source": "landspitali.is"
+        },
+        "time": time,
+        "fields": {
+            "value": value
+        }
+    } for key, value in hospital.items()]
+
+    client.write_points(datapoints)

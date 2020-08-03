@@ -9,14 +9,17 @@
   tags:
     - influxdb-config
 
-- name: install pip3 package for ansible influxdb modules
+- name: install pip3 packages for influxdb (and scripts)
   pip:
-    name: influxdb
+    name:
+      - influxdb
+      - lxml
     state: present
     executable: pip3
   tags:
     - pip
     - packages
+    - influxdb-scripts
 
   # fails after the first time, since after that
 - name: create influxdb admin user
@@ -33,42 +36,57 @@
 
 - name: create influxdb databases
   influxdb_database:
-    database_name: "{{ item.name }}"
+    database_name: "{{ item.key }}"
     login_username: "{{ influxdb_admin_user }}"
     login_password: "{{ influxdb_admin_password }}"
-  with_items: "{{ influxdb_user_database }}"
+  with_items: "{{ influxdb_user_database | dict2items}}"
   loop_control:
-    label: "{{ item.name }}"
+    label: "{{ item.key }}"
   tags:
     - influxdb-config
 
 - name: create influxdb users
   influxdb_user:
-    user_name: "{{ item.name }}"
-    user_password: "{{ item.password }}"
+    user_name: "{{ item.key }}"
+    user_password: "{{ item.value }}"
     grants:
-      - database: "{{ item.name }}"
+      - database: "{{ item.key }}"
         privilege: ALL
     login_username: "{{ influxdb_admin_user }}"
     login_password: "{{ influxdb_admin_password }}"
     admin: no
-  with_items: "{{ influxdb_user_database }}"
+  with_items: "{{ influxdb_user_database | dict2items }}"
   loop_control:
-    label: "{{ item.name }}"
+    label: "{{ item.key }}"
   tags:
     - influxdb-config
 
 - name: create infinite retention policies
   influxdb_retention_policy:
-    database_name: "{{ item.name }}"
-    policy_name: "{{ item.name }}-infinite"
+    database_name: "{{ item.key }}"
+    policy_name: "{{ item.key }}-infinite"
     duration: INF
     default: yes
     replication: 1
     login_username: "{{ influxdb_admin_user }}"
     login_password: "{{ influxdb_admin_password }}"
-  with_items: "{{ influxdb_user_database }}"
+  with_items: "{{ influxdb_user_database | dict2items}}"
   loop_control:
-    label: "{{ item.name }}"
+    label: "{{ item.key }}"
   tags:
     - influxdb-config
+
+- name: template data collection scripts
+  template:
+    src: hospital.py.j2
+    dest: /usr/local/bin/hospital.py
+    mode: 0775
+  tags:
+    - influxdb-scripts
+
+- name: template cronjobs fr data collection scripts
+  template:
+    src: influxdb_collectors_cron.j2
+    dest: /etc/cron.d/influxdb_collectors
+  tags:
+    - influxdb-scripts
