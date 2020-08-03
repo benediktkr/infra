@@ -5,6 +5,8 @@
     name:
       - busybox
       - dropbear
+      - dropbear-initramfs
+      - cryptsetup
     state: present
     update_cache: yes
   tags:
