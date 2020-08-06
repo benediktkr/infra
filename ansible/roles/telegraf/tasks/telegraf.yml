@@ -1,0 +1,39 @@
+---
+
+- name: add apt key for influxdata to install telegraf
+  apt_key:
+    url: https://repos.influxdata.com/influxdb.key
+    state: present
+  tags:
+    - packages
+
+- name: add repo for influxdata to install telegraf
+  apt_repository:
+    repo: deb https://repos.influxdata.com/{{ ansible_lsb.id | lower }} {{ ansible_lsb.codename }} stable
+    state: present
+    update_cache: yes
+  tags:
+    - packages
+
+- name: install telegraf
+  apt:
+    name: telegraf
+    state: latest
+  tags:
+    - packages
+  notify: restart telegraf
+
+- name: enable telegraf
+  service:
+    name: telegraf
+    enabled: yes
+  notify: restart telegraf
+
+- name: template telegraf config
+  template:
+    src: telegraf.conf.j2
+    dest: /etc/telegraf/telegraf.conf
+  notify:
+    - restart telegraf
+  tags:
+    - telegraf-config

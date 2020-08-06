@@ -1,12 +1,5 @@
 ---
 
-- name: install nginx if api server
-  include_role:
-    name: nginx
-  when: sudoisapi_server == True
-  tags:
-    - nginx
-
 - name: template config
   template:
     src: private/sudoisapi.ini.j2

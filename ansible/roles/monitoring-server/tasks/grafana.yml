@@ -36,7 +36,8 @@
 - name: Create influxdb datasources
   grafana_datasource:
     name: "influxdb-{{ item.key }}"
-    grafana_url: "http://localhost:{{ grafana_port }}"
+    #grafana_url: "http://localhost:{{ grafana_port }}"
+    grafana_url: "https://{{ grafana_url }}"
     grafana_user: "{{ grafana_admin_user }}"
     grafana_password: "{{ grafana_admin_password }}"
     ds_type: "influxdb"
