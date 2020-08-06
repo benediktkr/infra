@@ -4,7 +4,7 @@
 # change
 
 # possible values : production, development
-app_mode = production
+;app_mode = production
 
 # instance name, defaults to HOSTNAME environment variable value or hostname if HOSTNAME var is empty
 ;instance_name = ${HOSTNAME}
@@ -18,7 +18,7 @@ app_mode = production
 ;temp_data_lifetime = 24h
 
 # Directory where grafana can store logs
-logs = /var/log/grafana
+;logs = /var/log/grafana
 
 # Directory where grafana will automatically scan and look for plugins
 ;plugins = /var/lib/grafana/plugins
@@ -35,19 +35,18 @@ logs = /var/log/grafana
 http_addr = 127.0.0.1
 
 # The http port  to use
-;http_port = 3000
+http_port = {{ grafana_port }}
 
 # The public facing domain name used to access grafana from a browser
-domain = {{ inventory_hostname }}
+domain = {{ grafana_url }}
 
 # Redirect to correct domain if host header does not match domain
 # Prevents DNS rebinding attacks
-;enforce_domain = false
+enforce_domain = true
 
 # The full public facing url you use in browser, used for redirects and emails
 # If you use reverse proxy and sub path specify full url (with sub path)
-root_url = https://%(domain)s/grafana/
-
+root_url = https://%(domain)s/
 
 # Serve Grafana from subpath specified in `root_url` setting. By default it is set to `false` for compatibility reasons.
 serve_from_sub_path = false
@@ -73,7 +72,7 @@ serve_from_sub_path = false
 # You can configure the database connection by specifying type, host, name, user and password
 # as separate properties or as on string using the url properties.
 
-# Either "mysql", "postgres" or "sqlite3", it's your choice
+# Either "mysql", "postgres" or "sqlite3", its your choice
 ;type = sqlite3
 ;host = 127.0.0.1:3306
 ;name = grafana
@@ -240,7 +239,7 @@ reporting_enabled = false
 #################################### Users ###############################
 [users]
 # disable user signup / registration
-allow_sign_up = false
+;allow_sign_up = true
 
 # Allow non admin users to create organizations
 ;allow_org_create = true
@@ -262,7 +261,7 @@ allow_sign_up = false
 ;password_hint = password
 
 # Default UI theme ("dark" or "light")
-;default_theme = dark
+default_theme = dark
 
 # External user management, these options affect the organization users view
 ;external_manage_link_url =
@@ -310,7 +309,7 @@ allow_sign_up = false
 #################################### Anonymous Auth ######################
 [auth.anonymous]
 # enable anonymous access
-;enabled = false
+enabled = false
 
 # specify organization name that should be used for unauthenticated users
 ;org_name = Main Org.
@@ -449,8 +448,8 @@ allow_sign_up = false
 
 #################################### SMTP / Emailing ##########################
 [smtp]
-# postfix is set to forward
-enabled = false
+;enabled = false
+# postfix is then configured to send on to fastmail
 host = localhost:25
 ;user =
 # If the password contains # or ; you have to wrap it with triple quotes. Ex """#password;"""
@@ -458,7 +457,7 @@ host = localhost:25
 ;cert_file =
 ;key_file =
 ;skip_verify = false
-;from_address = admin@grafana.localhost
+from_address = {{ systems_email }}
 ;from_name = Grafana
 # EHLO identity in SMTP dialog (defaults to instance_name)
 ;ehlo_identity = dashboard.example.com

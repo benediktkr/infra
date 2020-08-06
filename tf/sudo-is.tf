@@ -204,3 +204,21 @@ resource "digitalocean_record" "l54-sudo-is" {
   value  = "pi0.strangled.net."
   ttl    = 60
 }
+
+# CNAME ingress.sudo.is
+resource "digitalocean_record" "ingest" {
+  domain = digitalocean_domain.sudo-is.name
+  type   = "CNAME"
+  name   = "ingest"
+  value  = "${digitalocean_droplet.fra0.name}."
+  ttl    = 60
+}
+
+# CNAME ingress.sudo.is
+resource "digitalocean_record" "grafana" {
+  domain = digitalocean_domain.sudo-is.name
+  type   = "CNAME"
+  name   = "grafana"
+  value  = "${digitalocean_droplet.fra0.name}."
+  ttl    = 60
+}

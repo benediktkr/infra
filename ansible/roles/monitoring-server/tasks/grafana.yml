@@ -9,6 +9,29 @@
   tags:
     - grafana-config
 
+# renewal cron job is set in the nginx role (not the best place)
+
+- name: get letsencrypt cert
+  command: "/usr/local/bin/certbot certonly -n --nginx -d {{ grafana_url }} --agree-tos --email {{ myemail }}"
+  args:
+    creates: "/etc/letsencrypt/live/{{ grafana_url }}/fullchain.pem"
+  environment:
+    PATH: "{{ ansible_env.PATH }}:/sbin:/usr/sbin"
+  tags:
+    - letsencrypt
+    - influxdb-letsencrypt
+
+- name: nginx vhost
+  template:
+    src: 01-grafana.j2
+    dest: /etc/nginx/sites-enabled/01-grafana
+  notify: reload nginx
+
+- name: nginx vhost
+  template:
+    src: 01-influxdb.j2
+    dest: /etc/nginx/sites-enabled/01-influxdb
+  notify: reload nginx
 
 - name: Create influxdb datasources
   grafana_datasource:
@@ -29,8 +52,8 @@
     - grafana-ds
 
 
-- name: grafna image render plugin
+- name: remove grafna image render plugin
   grafana_plugin:
     name: grafana-image-renderer
     version: latest
-    state: present
+    state: absent

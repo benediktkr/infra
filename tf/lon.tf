@@ -47,7 +47,7 @@ resource "digitalocean_droplet" "fra0" {
   image              = "ubuntu-20-04-x64"
   region             = "fra1"
   size               = "s-1vcpu-1gb"
-  name               = "lon0.sudo.is"
+  name               = "fra0.sudo.is"
   ssh_keys           = ["cb:79:d0:73:55:b1:79:60:a4:a9:d5:48:53:e2:67:13"]
   private_networking = true
   ipv6               = true

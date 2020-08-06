@@ -2,6 +2,8 @@
 
 from datetime import datetime, timezone
 import lxml.html
+import sys
+import json
 
 import requests
 from influxdb import InfluxDBClient
@@ -17,7 +19,7 @@ def get_metric_name(icelandic_desc):
         'útskrifast': 'discharges_today',
         'við vinnu þessa stundina': 'at_work_now',
         'lagst inn': 'admitted_today',
-        'blóðgjafir í Blóðbanka': 'blood_donations'
+        'Blóðbanka': 'blood_donations'
     }
     for mapping_hint, metric in mappings.items():
 
@@ -45,8 +47,11 @@ def landspitali():
         value = s.xpath("span")[0].text
         _text = s.text_content()
 
+
         prefix = len(str(value))
         icelandic_desc = _text[prefix:]
+        if "-v" in sys.argv:
+            print("{} {}".format(value, icelandic_desc))
         metric = get_metric_name(icelandic_desc)
         d[metric] = int(value)
 
@@ -55,9 +60,8 @@ def landspitali():
 if __name__ == "__main__":
 
     client = InfluxDBClient(
-        host='{{ ingest }}',
+        host='{{ influxdb_url }}',
         port=443,
-        path='{{ ingest_path }}',
         username='hospital',
         password="{{ influxdb_user_database['hospital'] }}",
         ssl=True,
@@ -67,6 +71,7 @@ if __name__ == "__main__":
 
     time = datetime.utcnow().replace(tzinfo=timezone.utc).isoformat()
     hospital = landspitali()
+
 
     datapoints = [{
         "measurement": key,
@@ -80,3 +85,7 @@ if __name__ == "__main__":
     } for key, value in hospital.items()]
 
     client.write_points(datapoints)
+
+    if "-v" in sys.argv:
+        #print(json.dumps(datapoints, indent=2))
+        print(json.dumps(hospital, indent=2))
