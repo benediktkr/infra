@@ -35,13 +35,24 @@ def landspitali():
     r.raise_for_status()
 
     root = lxml.html.fromstring(r.text)
-
-    worklist = root.xpath('//div[@class="work__list_numbers"]/div')
-
-
     d = dict()
 
-    l = list()
+    # theres one value that is highligted and isnt in the normal list
+    # its rotated randomly
+    # parsing it works sort of in reverse to the rest...
+    list2 = root.xpath('/html/body/div[2]/div[2]/div[5]/div/div/strong')
+    for onlyitem in list2:
+        icelandic_desc = onlyitem.xpath("div")[0].text
+        _text = onlyitem.text_content()
+
+        value = _text[:-len(icelandic_desc)]
+        metric = get_metric_name(icelandic_desc)
+
+        d[metric] = int(value)
+
+
+
+    worklist = root.xpath('//div[@class="work__list_numbers"]/div')
 
     for s in worklist:
         value = s.xpath("span")[0].text
