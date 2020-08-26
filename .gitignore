@@ -68,9 +68,12 @@ group_vars/
 host_vars/
 playbooks/
 #terraform.tfstate
-do.auto.tfvars
-s.*.tf
 ansible.cfg
 ansible/*.yml
 ansible/*.yaml
 
+tf/*.plan
+tf/cloudflare.tf
+tf/*.auto.tfvars
+tf/terraform.tfstate*
+tf/s.*.tf
