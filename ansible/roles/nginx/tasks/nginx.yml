@@ -118,6 +118,19 @@
     state: absent
   tags: letsencrypt
 
+- name: get letsencrypt cert for hostname (can be used by other roles as well)
+  command: "/usr/local/bin/certbot -n certonly --standalone -d {{ inventory_hostname }} --agree-tos --email {{ myemail }}"
+  args:
+    creates: "/etc/letsencrypt/live/{{ inventory_hostname }}/fullchain.pem"
+  environment:
+    PATH: "{{ ansible_env.PATH }}:/sbin:/usr/sbin"
+  tags:
+    - letsencrypt
+    - postfix
+    - nginx
+  when:
+    - "letsencrypt_hostname|default(True)"
+
 - name: template certbot cron renewal job
   template:
     src: letsencrypt.cron
