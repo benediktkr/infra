@@ -58,3 +58,4 @@
     name: grafana-image-renderer
     version: latest
     state: absent
+  ignore_errors: yes

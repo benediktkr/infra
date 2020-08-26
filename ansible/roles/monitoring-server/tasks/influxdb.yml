@@ -97,11 +97,15 @@
 
 - name: template data collection scripts
   template:
-    src: hospital.py.j2
-    dest: /usr/local/bin/hospital.py
+    src: "{{ item }}.j2"
+    dest: /usr/local/bin/{{ item }}
     mode: 0775
   tags:
     - influxdb-scripts
+  with_items:
+    - hospital.py
+    - berlinrona.py
+    - nextcloud-influx.py
 
 - name: template cronjobs fr data collection scripts
   template:

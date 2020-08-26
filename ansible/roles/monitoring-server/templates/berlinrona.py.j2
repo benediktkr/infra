@@ -1,0 +1,54 @@
+#!/usr/bin/python3
+
+"""data from: https://daten.berlin.de/datensaetze/covid-19-berlin-verteilung-den-bezirken
+"""
+
+from datetime import datetime, timezone
+import sys
+import json
+
+import requests
+from influxdb import InfluxDBClient
+
+url = "https://www.berlin.de/lageso/gesundheit/infektionsepidemiologie-infektionsschutz/corona/tabelle-bezirke/index.php/index/all.json?q="
+
+if __name__ == "__main__":
+
+
+    time = datetime.utcnow().replace(tzinfo=timezone.utc).isoformat()
+
+    r = requests.get(url)
+    r.raise_for_status()
+    j = r.json()
+
+    points = []
+    for item in j['index']:
+        points.append({
+            'measurement': 'coronavirus',
+            'tags': {
+                'bezirk': item['bezirk']
+            },
+            'time': time,
+            'fields': {
+                'recovered': int(item['genesen']),
+                'cases':  int(item['fallzahl']),
+                'incidence': float(item['inzidenz']),
+                'diff': float(item['differenz'])
+            }
+        })
+
+
+    client = InfluxDBClient(
+        host='{{ influxdb_url }}',
+        port=443,
+        username='berlinrona',
+        password="{{ influxdb_user_database['berlinrona'] }}",
+        ssl=True,
+        verify_ssl=True,
+        database='berlinrona')
+
+    if "-v" in sys.argv:
+        for item in points:
+            print(item['tags']['bezirk'], item['fields'])
+
+    client.write_points(points, time_precision='h')
