@@ -5,3 +5,7 @@ pihole_version: latest
 pihole_cond: "False"
 pihole_cond_ip: ""
 pihole_cond_domain: ""
+pihole_dns_overrides: []
+pihole_http_port: 8081
+pihole_https_port: 4431
+pihole_dhcp: false

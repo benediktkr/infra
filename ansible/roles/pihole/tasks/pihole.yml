@@ -8,13 +8,51 @@
   file:
     path: "{{ pihole_root }}/{{ item['dir'] }}"
     state: directory
-    mode: 0755
+    mode: 0775
     owner: "{{ item['owner'] | default('999') }}"
     group: "{{ item['group'] | default('999') }}"
   with_items:
     - { dir: "etc/pihole" }
     - { dir: "etc/dnsmasq.d" }
   tags: docker
+
+- name: install dhcp server
+  apt:
+    name: isc-dhcp-server
+    state: present
+  when: pihole_dhcp
+
+- name: template dhcpd.conf
+  template:
+    src: dhcpd.conf.j2
+    dest: /etc/dhcp/dhcpd.conf
+  notify: restart dhcpd
+  when: pihole_dhcp
+
+# - name: disable and stop dhcp client
+#   service:
+#     name: dhcpcd
+#     enabled: no
+#     state: stopped
+#   when: pihole_dhcp
+
+- name: enable dhcp server (disable now)
+  service:
+    name: isc-dhcp-server
+    enabled: no
+  notify: restart dhcpd
+  when: pihole_dhcp
+
+
+- name: template dns overrides
+  template:
+    src: custom.list.j2
+    dest: "{{ pihole_root }}/etc/pihole/custom.list"
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - pihole-config
 
 # If you get the error about ssl_match_hostname, see the comment in the
 # nextcloud role for the docker_container task.
@@ -30,8 +68,8 @@
     env:
       TZ: "Europe/Berlin"
       WEBPASSWORD: "{{ pihole_web_password }}"
-      DNS1: "{{ pihole_dns_1 }}"
-      DNS2: "{{ pihole_dns_2 }}"
+      DNS1: "{{ upstream_dns_1 }}"
+      DNS2: "{{ upstream_dns_2 }}"
       CONDITIONAL_FORWARDING: "{{ pihole_cond|string }}"
       CONDITIONAL_FORWARDING_IP: "{{ pihole_cond_ip }}"
       CONDITIONAL_FORWARDING_DOMAIN: "{{ pihole_cond_domain }}"
@@ -39,8 +77,8 @@
       - "53:53/tcp"
       - "53:53/udp"
       - "67:67/udp"
-      - "80:80/tcp"
-      - "443:443/tcp"
+      - "{{ pihole_http_port }}:80/tcp"
+      - "{{ pihole_https_port }}:443/tcp"
     dns_servers:
       - 127.0.0.1
       - pihole_dns_1
@@ -48,5 +86,13 @@
     volumes:
       - "{{ pihole_root }}/etc/pihole:/etc/pihole"
       - "{{ pihole_root }}/etc/dnsmasq.d:/etc/dnsmasq.d"
+  tags:
+    - docker
+
+- name: wait for tcp/53 (pihole listens there as well as udp)
+  wait_for:
+    port: 53
+    host: localhost
+    sleep: 2
   tags:
     - docker
