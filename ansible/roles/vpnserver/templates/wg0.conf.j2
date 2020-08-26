@@ -1,0 +1,13 @@
+[Interface]
+Address = {{ wireguard_server }}
+ListenPort = {{ wireguard_port }}
+PrivateKey = {{ lookup('file', 'private/wireguard/server' ) }}
+#SaveConfig = true
+
+{% for client, d in wireguard_clients.items() %}
+# {{ client }}
+[Peer]
+PublicKey = {{ lookup('file', 'private/wireguard/' + client + '.pub' ) }}
+AllowedIPs = {{ d['ip'] }}/32
+
+{% endfor %}

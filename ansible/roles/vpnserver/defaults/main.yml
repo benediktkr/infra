@@ -1,4 +1,12 @@
 ---
 
+openvpn_enabled: false
 vpnserver_interface: tun0
 vpn_ip_vpnserver: 10.104.37.1
+
+ipforward: true
+
+wireguard_enabled: true
+wireguard_cidr: 10.0.0.0/24
+wireguard_server: 10.0.0.1/24
+wireguard_port: 51820

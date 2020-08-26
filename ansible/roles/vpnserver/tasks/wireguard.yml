@@ -1,0 +1,41 @@
+---
+
+- name: enable ip_forward in proc
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: "1"
+    sysctl_set: yes
+    state: present
+    reload: yes
+  when: "'vpnserver' in group_names or ipforward"
+
+- name: install wireguard
+  apt:
+    name: wireguard
+    state: present
+  tags:
+    - packages
+
+- name: load kernel module
+  modprobe:
+    name: wireguard
+    state: present
+
+- name: template wg0 config
+  template:
+    src: wg0.conf.j2
+    dest: /etc/wireguard/wg0.conf
+    owner: root
+    group: root
+    mode: 0700
+  notify: restart wireguard
+  tags:
+    - wg-config
+    - wireguard_clients
+    - wireguard-clients
+
+- name: enable wireguard server with wg-quick
+  service:
+    name: wg-quick@wg0
+    enabled: yes
+  notify: restart wireguard

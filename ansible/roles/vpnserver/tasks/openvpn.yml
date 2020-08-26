@@ -1,36 +1,12 @@
-- name: install openvpn, easy-rsa, dnsmasq
+- name: install openvpn, easy-rsa
   apt:
     name:
     - openvpn
     - easy-rsa
-    - dnsmasq
     update_cache: yes
     state: present
-
-- name: template dnsmasq.conf
-  template:
-    src: dnsmasq.conf.j2
-    dest: /etc/dnsmasq.conf
   tags:
-    - dnsmasq
-  notify: restart dnsmasq
-
-- name: enable ip_forward in proc
-  sysctl:
-    name: net.ipv4.ip_forward
-    value: "1"
-    sysctl_set: yes
-    state: present
-    reload: yes
-
-  #shell: "bash -c 'echo 1 > /proc/sys/net/ipv4/ip_forward'"
-
-- name: enable ip_forward in sysctl.conf
-  replace:
-    path: /etc/sysctl.conf
-    regexp: '^#net.ipv4.ip_forward.*$'
-    replace: 'net.ipv4.ip_forward=1'
-  notify: systemctl daemon reload
+    - packages
 
 - name: set AUTOSTART in /etc/default/openvpn
   replace:
@@ -73,26 +49,6 @@
     - benedikt
     - ernesto
   #notify: reload openvpn
-
-# Iptables will need to manually be loaded after boot (in case a bad file is written)
-# TODO: Add a simple script that applies them 5 minutes after a reboot or something
-- name: copy iptables rules (as a file, will override other rules)
-  copy:
-    src: iptables.rules
-    dest: /etc/iptables.rules
-  tags:
-    - iptables
-  notify: apply iptables rules
-
-- name: cron to reload iptables rules 3 minutes after reboot
-  cron:
-    name: iptables load
-    special_time: reboot
-    job: "sleep 180 && /sbin/iptables-restore < /etc/iptables.rules"
-    user: root
-  tags:
-    - cron
-    - iptables
 
 - name: copy checkclients.py
   copy:

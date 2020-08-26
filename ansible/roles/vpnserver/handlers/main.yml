@@ -16,3 +16,8 @@
 
 - name: systemctl daemon reload
   shell: systemctl daemon-reload
+
+- name: restart wireguard
+  service:
+    name: wg-quick@wg0
+    state: restarted

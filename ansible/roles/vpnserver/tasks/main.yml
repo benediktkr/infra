@@ -1,3 +1,67 @@
 ---
-- include: vpnserver.yml
-  tags: vpnserver
+
+- block:
+  - name: install dnsmasq
+    apt:
+      name: dnsmasq
+      state: present
+    tags:
+      - packages
+
+  - name: template iptables rule file
+    template:
+      src: iptables.rules.j2
+      dest: /etc/iptables.rules
+    tags:
+      - iptables
+    #notify: apply iptables rules
+
+  - name: cron to reload iptables rules 3 minutes after reboot
+    cron:
+      name: iptables load
+      special_time: reboot
+      job: "sleep 180 && /sbin/iptables-restore < /etc/iptables.rules"
+      user: root
+    tags:
+      - cron
+      - iptables
+
+  - name: enable ip_forward in proc
+    sysctl:
+      name: net.ipv4.ip_forward
+      value: "1"
+      sysctl_set: yes
+      state: present
+      reload: yes
+
+    #shell: "bash -c 'echo 1 > /proc/sys/net/ipv4/ip_forward'"
+
+  - name: enable ip_forward in sysctl.conf
+    replace:
+      path: /etc/sysctl.conf
+      regexp: '^#net.ipv4.ip_forward.*$'
+      replace: 'net.ipv4.ip_forward=1'
+    notify: systemctl daemon reload
+
+  - name: template dnsmasq.conf
+    template:
+      src: dnsmasq.conf.j2
+      dest: /etc/dnsmasq.conf
+    tags:
+      - dnsmasq
+    notify: restart dnsmasq
+
+  tags:
+    - openvpn
+    - wireguard
+    - vpnserver
+
+- include: openvpn.yml
+  tags: openvpn
+  when: openvpn_enabled
+
+- include: wireguard.yml
+  tags:
+    - wireguard
+    - vpnserver
+  when: wireguard_enabled
