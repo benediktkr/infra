@@ -7,11 +7,21 @@
   tags:
     - packages
 
+- name: set distro to debian if raspbian
+  set_fact:
+    distro: debian
+  when: ansible_lsb.id == "Raspbian"
+
+- name: otherwise use lsb id
+  set_fact:
+    distro: "{{ ansible_lsb.id }}"
+  when: ansible_lsb.id != "Raspbian"
+
 - name: add repo for influxdata to install telegraf
   apt_repository:
-    repo: deb https://repos.influxdata.com/{{ ansible_lsb.id | lower }} {{ ansible_lsb.codename }} stable
+    repo: deb https://repos.influxdata.com/{{ distro | lower }} {{ ansible_lsb.codename }} stable
     state: present
-    update_cache: yes
+    update_cache: true
   tags:
     - packages
 
