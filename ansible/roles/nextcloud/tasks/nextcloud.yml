@@ -35,6 +35,14 @@
   tags:
     - docker
 
+- name: wait for nextcloud to be responsive
+  wait_for:
+    port: "{{ nextcloud_exposed_port }}"
+    host: localhost
+    sleep: 2
+  tags:
+    - docker
+
 - name: add to certbot
   command: "/usr/local/bin/certbot certonly -n --nginx -d {{ nextcloud_url }} --agree-tos --email {{ myemail }}"
   args:
