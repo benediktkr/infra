@@ -7,4 +7,9 @@ unatt_auto_reboot: "false"
 
 extra_users: []
 
-fde_enabled: False
+# compiles c bindings, takes a long time on slower devices
+# such as zerow
+zmq_install: false
+
+fde_enabled: false
+enable_telegraf: false

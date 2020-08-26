@@ -14,9 +14,10 @@
   tags:
     - timezone
 
-- name: update apt chache
+- name: update apt packages and cache
   apt:
     update_cache: yes
+    upgrade: dist
   changed_when: False
   tags:
     - packages
@@ -28,6 +29,7 @@
       - python3-pip
       - python3-apt
       - python3-setuptools
+      - ptyhon3-venv
       - python-setuptools
   tags: packages
   when: ansible_distribution == "Ubuntu"
@@ -47,6 +49,8 @@
     name:
       - python3
       - python3-pip
+      - python3-venv
+      - python3-dev
   tags: packages
   when: ansible_lsb.id == "Raspbian" or ansible_lsb.id == "Debian"
 
@@ -54,6 +58,12 @@
   apt:
     state: latest
     name:
+      - autoconf # emacs-build
+      - texinfo  # emacs-build
+      - gnutls-bin # emacs-build
+      - libgnutls28-dev # emacs-build
+      - pkg-config # emacs-build
+      - libncurses-dev # emacs-build
       - apt-transport-https
       - aptitude
       - at
@@ -80,7 +90,7 @@
       - ncdu
       - nethogs
       - nmap
-      - ntp
+      #- ntp
       - openssh-server
       - openssl
       - python-dev
@@ -97,7 +107,6 @@
     PATH: "{{ ansible_env.PATH }}:/sbin:/usr/sbin"
   tags:
     - packages
-    - ntp
 
 - name: remove packages
   apt:
@@ -111,6 +120,35 @@
     state: absent
   tags: packages
 
+- name: remove ntp package (systemd...)
+  apt:
+    name: ntp
+    state: absent
+    purge: yes
+  tags:
+    - ntp
+
+- name: set ntp servers
+  lineinfile:
+    path: /etc/systemd/timesyncd.conf
+    line: "NTP=0.pool.ntp.org 1.pool.ntp.org 2.pool.ntp.org 3.pool.ntp.org"
+    create: no
+  notify:
+    - systemctl daemon reload
+    - restart systemd-timesyncd
+  tags: ntp
+
+- name: enable systemd-timesyncd
+  service:
+    name: systemd-timesyncd
+    enabled: yes
+    state: started
+  tags: ntp
+
+- name: enable ntp
+  command: timedatectl set-ntp true
+  changed_when: false
+  tags: ntp
 
 - name: create my group
   group:
@@ -124,6 +162,7 @@
     group: "{{ myusername }}"
     groups:
       - sudo
+      - dialout
     shell: /bin/zsh
     append: yes
   tags:
@@ -147,7 +186,7 @@
   authorized_key:
     user: "{{ myusername }}"
     state: present
-    key: "{{ lookup('file', item + '.pub') }}"
+    key: "{{ lookup('file', 'roles/common/files/' + item + '.pub') }}"
     manage_dir: yes
   with_items:
     - mathom
@@ -236,12 +275,21 @@
     name:
       - ansible
       - poetry
-      - zmq
       - netaddr
+      - certbot
     executable: pip3
   tags:
     - pip
     - packages
+
+- name: install zmq pip package
+  pip:
+    name: zmq
+    executable: pip3
+  tags:
+    - pip
+    - packages
+  when: zmq_install
 
 # TODO: Decide on which way...
 - name: enable unattended-upgrades (following codenames)
@@ -255,10 +303,19 @@
   tags:
     - unatt
 
+- name: create user groups
+  group:
+    name: "{{ item['username'] }}"
+  with_items: "{{ extra_users }}"
+  tags:
+    - users
+    - ssh
+    - extrausers
 
 - name: install extra users if there are any
   user:
     name: "{{ item['username'] }}"
+    group: "{{ item['username'] }}"
     groups: "{{ item['groups'] | default([]) }}"
     shell: "{{ item['shell'] | default('/dev/null') }}"
     append: yes
@@ -266,3 +323,16 @@
   tags:
     - extrausers
     - users
+    - ssh
+
+- name: set authorized_keys for extra_users
+  authorized_key:
+    user: "{{ item['username'] }}"
+    state: present
+    key: "{{ lookup('file', item['username'] + '.pub') }}"
+    manage_dir: yes
+  with_items: "{{ extra_users }}"
+  tags:
+    - users
+    - extrausers
+    - ssh

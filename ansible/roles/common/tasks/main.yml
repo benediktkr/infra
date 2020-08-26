@@ -15,3 +15,8 @@
     name: fde-dropbear
   tags: fde-dropbear
   when: fde_enabled
+
+- include_role:
+    name: telegraf
+  tags: telegraf
+  when: enable_telegraf == True
