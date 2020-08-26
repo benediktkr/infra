@@ -38,3 +38,11 @@
       - "8880:8880/tcp" # HTTP portal redirection
       - "8843:8843/tcp" # HTTPS portal redirection
       - "10001:10001/udp" # AP discovery
+
+- name: wait for controller to be responsive
+  wait_for:
+    port: 8443
+    host: localhost
+    sleep: 2
+  tags:
+    - docker
