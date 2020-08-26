@@ -1,0 +1,88 @@
+---
+
+- name: enable w1 in bootloader config
+  lineinfile:
+    path: /boot/config.txt
+    line: "dtoverlay=w1-gpio"
+    create: no
+  #when: "'ds18b20' in sensors|map(attribute='type')"
+  register: bootconfig
+
+# molly-guard is usually installed, but it symlinks the real binaries
+# through /lib/molly-guard
+- name: reboot if needed
+  reboot:
+    connect_timeout: 2
+    search_paths:
+      - "/lib/molly-guard"
+      - "/usr/sbin"
+      - "/sbin"
+  when:
+    - bootconfig.changed
+    #- "'ds18b20' in sensors|map(attribute='type')"
+
+- name: install dedendencies for dht.c
+  apt:
+    name: wiringpi
+    state: present
+  when:
+    - "'dht' in sensors|map(attribute='type')"
+  tags: dht
+
+- name: copy dht.c
+  copy:
+    src: dht.c
+    dest: /root/dht.c
+  when:
+    - "'dht' in sensors|map(attribute='type')"
+  register: dht_c
+  tags:
+    - dht
+    - dht-update
+
+- name: compile and install dht.c
+  command: cc -Wall /root/dht.c -o /usr/local/bin/dht -lwiringPi
+  when:
+    - dht_c.changed
+    - "'dht' in sensors|map(attribute='type')"
+  tags:
+    - dht
+    - dht-update
+
+- name: template sudoisbot config (wrong location right now)
+  template:
+    src: sudoisbot.yml.j2
+    dest: /tmp/wrongsudoisbot.yml
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - sensor-config
+    - sensors-config
+
+- name: create sensors user group
+  group:
+    name: sensors
+  tags:
+    - users
+
+- name: create sensors user
+  user:
+    name: sensors
+    group: sensors
+    groups:
+      - dialout
+    shell: /bin/bash
+    append: yes
+  tags:
+    - users
+
+- name: set authorized_keys for sensors user
+  authorized_key:
+    user: sensors
+    state: present
+    key: "{{ lookup('file', 'roles/common/files/mathom.pub') }}"
+    manage_dir: yes
+  tags:
+    - users
+    - ssh

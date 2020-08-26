@@ -1,7 +1,7 @@
 # templated by ansible
 
 [Unit]
-Description=temp_pub
+Description=rain_pub
 After=syslog.target
 
 [Service]
@@ -9,7 +9,7 @@ Type=simple
 User=sensors
 Group=sensors
 WorkingDirectory=/home/sensors
-ExecStart=/usr/local/bin/temp_pub
+ExecStart=/usr/local/bin/rain_pub
 
 [Install]
 WantedBy=multi-user.target
