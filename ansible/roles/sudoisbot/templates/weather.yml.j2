@@ -1,0 +1,18 @@
+---
+
+broker: tcp://{{ broker }}:5559
+interval: 240
+owm_token: {{ owm_token }}
+freq: 300
+
+locations:
+  {% for location in weather %}
+
+  - name: {{ location.name }}
+    lat: {{ location.lat }}
+    lon: {{ location.lon }}
+    msl: {{ location.msl }}
+  {% endfor %}
+
+logging:
+  dir: /srv/log

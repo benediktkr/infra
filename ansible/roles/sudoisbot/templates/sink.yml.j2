@@ -1,0 +1,31 @@
+---
+
+broker: tcp://{{ broker }}:5560
+recvtimeo: 300 # 5m in seconds
+
+
+sinks:
+  state_dir: /dev/shm
+  csv: /srv/temps
+  influxdb:
+    host: {{ ingest }}
+    user: sudoisbot
+    pass: {{ influxdb_pass }}
+    db: sudoisbot
+  sql:
+    engine: sqlite
+    dir: /srv/temps/
+
+listeners:
+  weather:
+    - influxdb
+    - sql
+  temp:
+    - influxdb
+    - csv
+    - sql
+  rain:
+    - influxdb
+  unifi:
+    - csv
+    - influxdb

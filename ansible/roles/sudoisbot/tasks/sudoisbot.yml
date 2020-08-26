@@ -1,0 +1,23 @@
+---
+
+- name: create directory for logs
+  file:
+   path: /srv/log
+   state: directory
+   mode: '0777'
+   owner: root
+   group: root
+
+- name: create config dir
+  file:
+    path: /etc/sudoisbot
+    state: directory
+
+- name: template weather config
+  template:
+    src: weather.yml.j2
+    dest: /etc/sudoisbot/weather.yml
+  tags:
+    - sudoisbot-config
+    - sudoisbot-weather
+  when: weather is defined
