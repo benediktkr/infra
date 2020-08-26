@@ -46,3 +46,44 @@
     src: aliases.j2
     dest: /etc/aliases
   notify: newaliases
+
+- name: set permissions so telegraf can read if enabled
+  file:
+    dest: "/var/spool/postfix/{{ item }}"
+    group: mail
+    mode: 0750
+    recurse: yes
+  with_items:
+    - active
+    - deferred
+    - hold
+    - incoming
+  notify:
+    - restart postfix
+  tags:
+    - telegraf
+  when: enable_telegraf
+
+- name: set permissions on maildrop dir
+  file:
+    dest: /var/spool/postfix/maildrop
+    mode: u=rwx,g=rwx,+t
+    recurse: yes
+  notify: restart postfix
+  tags:
+    - telegraf
+  when: enable_telegraf
+
+
+- name: adding telegraf user to postfix related groups
+  user:
+    name: telegraf
+    append: yes
+    groups:
+      - postfix
+      - mail
+      - postdrop
+  tags:
+    - telegraf
+  when: enable_telegraf
+  notify: restart telegraf

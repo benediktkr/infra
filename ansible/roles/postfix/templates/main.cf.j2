@@ -22,18 +22,18 @@ readme_directory = no
 compatibility_level = 2
 
 # TLS parameters
-smtpd_tls_cert_file=/etc/letsencrypt/live/{{ ansible_fqdn }}/cert.pem
-smtpd_tls_key_file=/etc/letsencrypt/live/{{ ansible_fqdn }}/privkey.pem
-smtpd_use_tls=yes
-smtpd_tls_session_cache_database = btree:${data_directory}/smtpd_scache
-smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache
+#smtpd_tls_cert_file=/etc/letsencrypt/live/{{ inventory_hostname }}/cert.pem
+#smtpd_tls_key_file=/etc/letsencrypt/live/{{ inventory_hostname }}/privkey.pem
+#smtpd_use_tls=yes
+#smtpd_tls_session_cache_database = btree:${data_directory}/smtpd_scache
+#smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache
 
 # See /usr/share/doc/postfix/TLS_README.gz in the postfix-doc package for
 # information on enabling SSL in the smtp client.
 
 smtpd_relay_restrictions = permit_mynetworks permit_sasl_authenticated defer_unauth_destination
-myhostname = {{ ansible_fqdn }}
-mydomain = {{ ansible_domain }}
+myhostname = {{ inventory_hostname }}
+mydomain = {{ postfix_mydomain }}
 alias_maps = hash:/etc/aliases
 alias_database = hash:/etc/aliases
 #myorigin = /etc/mailname
@@ -42,6 +42,7 @@ myorigin = {{ inventory_hostname }}
 
 # postfix uses /etc/aliases for everything sent to these things
 #mydestination = {{ ansible_fqdn }}, {{ ansible_domain }}{% if inventory_hostname == "lon-vpn.sudo.is" %} lon-vpn.do.sudo.is {% endif %}
+
 # so only emails sent to known local mailboxes work, but everything with
 # an @ gets relayed
 mydestination = {{ inventory_hostname }}, localhost, localhost.localdomain{% if ansible_fqdn != inventory_hostname %}, {{ ansible_fqdn }}{% endif %}
