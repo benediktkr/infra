@@ -1,6 +1,7 @@
 variable "do_token" {}
 
-variable "cf_token" {}
+variable "cf_token_custom" {}
+variable "cf_token_general" {}
 variable "cf_email" {}
 
 provider "digitalocean" {
@@ -8,6 +9,7 @@ provider "digitalocean" {
 }
 
 provider "cloudflare" {
-  email     = var.cf_email
-  api_key = var.cf_token
+  email      = var.cf_email
+  api_token  = var.cf_token_custom
+ #api_key    = var.cf_token_general
 }
