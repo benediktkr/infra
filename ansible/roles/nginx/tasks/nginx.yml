@@ -56,6 +56,7 @@
   with_items:
     - hardening.conf
   notify: reload nginx
+  when: False
 
 - name: template default index.html
   template:

@@ -4,7 +4,7 @@ server {
     listen 443 ssl;
     listen   [::]:443 ssl; # listen for ipv6
 
-    server_name static.sudo.is benedikt.sudo.is;
+    server_name static.sudo.is benedikt.sudo.is static.deadops.de;
 
     root /srv/www/benedikt.sudo.is/;
     location / {
@@ -20,5 +20,6 @@ server {
         return 301 https://$host$request_uri;
     } # managed by Certbot
 
-
+    access_log /var/log/nginx/access_benedikt.sudo.is.log main;
+    error_log /var/log/nginx/error_benedikt.sudo.is.log warn;
 }

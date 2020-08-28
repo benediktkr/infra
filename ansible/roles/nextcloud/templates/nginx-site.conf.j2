@@ -3,7 +3,7 @@ server {
    listen 80;
    listen   [::]:443 ssl; # listen for ipv6
 
-   server_name {{ nextcloud_url }};
+   server_name {{ nextcloud_url }} nextcloud.deadops.de;
 
    if ($scheme != "https") {
         return 301 https://$host$request_uri;
@@ -31,6 +31,8 @@ server {
 
     ssl_certificate /etc/letsencrypt/live/nextcloud.sudo.is/fullchain.pem; # managed by Certbot
     ssl_certificate_key /etc/letsencrypt/live/nextcloud.sudo.is/privkey.pem; # managed by Certbot
+
+    add_header "Cache-Control: private, max-age=3600";
 
     add_header Referrer-Policy "no-referrer" always;
     add_header X-Content-Type-Options "nosniff" always;
