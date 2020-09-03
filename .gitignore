@@ -69,11 +69,15 @@ host_vars/
 playbooks/
 #terraform.tfstate
 ansible.cfg
-ansible/*.yml
-ansible/*.yaml
 
-tf/*.plan
-tf/cloudflare.tf
-tf/*.auto.tfvars
-tf/terraform.tfstate*
-tf/s.*.tf
+common.yml
+homeservers.yml
+hosts-sensors.yml
+hosts.yml
+letsencrypt.yml
+lychener54.yml
+monitoring-server.yml
+nextcloud.yml
+sensors.yml
+site.yml
+vpnservers.yml
