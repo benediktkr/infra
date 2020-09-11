@@ -29,7 +29,7 @@
       - python3-pip
       - python3-apt
       - python3-setuptools
-      - ptyhon3-venv
+      - python3-venv
       - python-setuptools
   tags: packages
   when: ansible_distribution == "Ubuntu"
