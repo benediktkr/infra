@@ -44,15 +44,16 @@
     - alternatives
   when: ansible_distribution == "Ubuntu"
 
-- name: install python3 (3.7 currently) on debian
+- name: install python3 on debian
   apt:
     name:
       - python3
       - python3-pip
       - python3-venv
       - python3-dev
-  tags: packages
-  when: ansible_lsb.id == "Raspbian" or ansible_lsb.id == "Debian"
+  #tags: packages
+  #when: ansible_lsb.id == "Raspbian" or ansible_lsb.id == "Debian"
+  when: ansible_distribution == "Debian"
 
 - name: install packages
   apt:
@@ -66,6 +67,8 @@
       - libncurses-dev # emacs-build
       - apt-transport-https
       - aptitude
+      - lsb-release
+      - lsb-base
       - at
       - build-essential
       - ca-certificates
@@ -94,7 +97,7 @@
       - openssh-server
       - openssl
       - python-dev
-      - python-netaddr
+      #- python-netaddr
       - rsync
       - smartmontools
       - sudo
@@ -149,83 +152,6 @@
   command: timedatectl set-ntp true
   changed_when: false
   tags: ntp
-
-- name: create my group
-  group:
-    name: "{{ myusername }}"
-  tags:
-    - users
-
-- name: create my user
-  user:
-    name: "{{ myusername }}"
-    group: "{{ myusername }}"
-    groups:
-      - sudo
-      - dialout
-    shell: /bin/zsh
-    append: yes
-  tags:
-    - users
-
-- name: move homedir for my user if non-standard location
-  user:
-    name: "{{ myusername }}"
-    move_home: yes
-    home: "{{ myhomedir }}"
-  when: myhomedir is defined
-  tags:
-    - users
-
-- name: set root shell to zsh
-  user:
-    name: root
-    shell: /bin/zsh
-
-- name: set authorized_keys for user
-  authorized_key:
-    user: "{{ myusername }}"
-    state: present
-    key: "{{ lookup('file', 'roles/common/files/' + item + '.pub') }}"
-    manage_dir: yes
-  with_items:
-    - mathom
-    - ber-bkristinsson
-  tags:
-    - ssh
-
-- name: set authorized_keys for backup user
-  authorized_key:
-    user: root
-    state: present
-    key: "{{ lookup('file', 'endor.pub') }}"
-    manage_dir: yes
-  tags:
-    - ssh
-
-
-- name: allow 'sudo' group to have passwordless sudo
-  lineinfile:
-    dest: /etc/sudoers
-    state: present
-    regexp: '^%sudo'
-    line: '%sudo ALL=(ALL) NOPASSWD: ALL'
-    validate: 'visudo -cf %s'
-  when: is_local is not defined
-  tags:
-    - users
-
-- name: remove stupid default users
-  user:
-    name: "{{ item }}"
-    state: absent
-    force: yes
-  with_items:
-    - pi
-    - ec2user
-    - ubuntu
-  tags:
-    - users
 
 - name: disable password authentication
   replace:
@@ -302,37 +228,3 @@
   when: unatt_enabled|bool
   tags:
     - unatt
-
-- name: create user groups
-  group:
-    name: "{{ item['username'] }}"
-  with_items: "{{ extra_users }}"
-  tags:
-    - users
-    - ssh
-    - extrausers
-
-- name: install extra users if there are any
-  user:
-    name: "{{ item['username'] }}"
-    group: "{{ item['username'] }}"
-    groups: "{{ item['groups'] | default([]) }}"
-    shell: "{{ item['shell'] | default('/dev/null') }}"
-    append: yes
-  with_items: "{{ extra_users }}"
-  tags:
-    - extrausers
-    - users
-    - ssh
-
-- name: set authorized_keys for extra_users
-  authorized_key:
-    user: "{{ item['username'] }}"
-    state: present
-    key: "{{ lookup('file', item['username'] + '.pub') }}"
-    manage_dir: yes
-  with_items: "{{ extra_users }}"
-  tags:
-    - users
-    - extrausers
-    - ssh

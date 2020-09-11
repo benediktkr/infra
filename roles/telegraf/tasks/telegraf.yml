@@ -17,11 +17,24 @@
     distro: "{{ ansible_lsb.id }}"
   when: ansible_lsb.id != "Raspbian"
 
+- name: set codename to buster if bullseye
+  set_fact:
+    codename: buster
+  when: ansible_lsb.codename == "bullseye"
+
+- name: otherwise use lsb codename
+  set_fact:
+    distro: "{{ ansible_lsb.codename }}"
+  when: ansible_lsb.codename != "bullseye"
+
+
+- debug:
+    var: ansible_lsb
+
 - name: add repo for influxdata to install telegraf
   apt_repository:
-    repo: deb https://repos.influxdata.com/{{ distro | lower }} {{ ansible_lsb.codename }} stable
+    repo: deb https://repos.influxdata.com/{{ distro | lower }} {{ codename }} stable
     state: present
-    update_cache: true
   tags:
     - packages
 
@@ -29,6 +42,8 @@
   apt:
     name: telegraf
     state: latest
+    update_cache: true
+
   tags:
     - packages
   notify: restart telegraf
