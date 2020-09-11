@@ -3,6 +3,9 @@
 - include: common.yml
   tags: common
 
+- include: users.yml
+  tags: users
+
 - include_role:
     name: dotfiles
   tags: dotfiles

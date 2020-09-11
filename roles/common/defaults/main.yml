@@ -6,6 +6,7 @@ unatt_remove_unused_dependencies: "true"
 unatt_auto_reboot: "false"
 
 extra_users: []
+system_users: []
 
 # compiles c bindings, takes a long time on slower devices
 # such as zerow

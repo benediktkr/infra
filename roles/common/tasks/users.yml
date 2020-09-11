@@ -1,0 +1,133 @@
+---
+
+- name: human users
+  set_fact:
+    human_users: "{{ default_users + extra_users }}"
+
+- name: list human users
+  debug:
+    var: human_users
+
+- name: list system users
+  debug:
+    var: system_users
+
+- name: sanity check
+  fail:
+    msg: 'my user is missing'
+  when: myusername not in human_users
+
+- name: set root shell to zsh
+  user:
+    name: root
+    shell: /bin/zsh
+
+- name: set authorized_keys for root
+  authorized_key:
+    user: "root"
+    state: present
+    key: "{{ lookup('file', 'private/sshkeys/root.pub') }}"
+    manage_dir: yes
+  tags:
+    - sshkeys
+
+- name: remove stupid default users
+  user:
+    name: "{{ item }}"
+    state: absent
+    force: yes
+  with_items:
+    - pi
+    - ec2user
+    - ubuntu
+
+- name: create user groups
+  group:
+    name: "{{ userlist[item]['username'] }}"
+  with_items: "{{ human_users }}"
+
+- name: create human users
+  user:
+    name: "{{ userlist[item]['username'] }}"
+    group: "{{ userlist[item]['username'] }}"
+    groups: "{{ userlist[item]['groups'] | default([]) }}"
+    shell: "{{ userlist[item]['shell'] }}"
+    uid: "{{ userlist[item]['uid'] }}"
+    append: yes
+  with_items: "{{ human_users }}"
+
+- name: move homedirs if host uses alterantive location
+  user:
+    name: "{{ userlist[item]['username'] }}"
+    move_home: yes
+    home: "{{ alt_homedirs }}/{{ item }}"
+  when: alt_homedirs is defined
+  with_items: "{{ human_users }}"
+
+- name: allow 'sudo' group to have passwordless sudo
+  lineinfile:
+    dest: /etc/sudoers
+    state: present
+    regexp: '^%sudo'
+    line: '%sudo ALL=(ALL) NOPASSWD: ALL'
+    validate: 'visudo -cf %s'
+  when: is_local is not defined
+
+- name: set authorized_keys for users
+  authorized_key:
+    user: "{{ item }}"
+    state: present
+    key: "{{ lookup('file', 'private/sshkeys/' + item + '.pub') }}"
+    manage_dir: yes
+  with_items: "{{ human_users }}"
+  when:
+    - "userlist[item]['shell'] != '/dev/null'"
+  tags:
+    - sshkeys
+
+- name: set up system users
+  block:
+    - name: create system user groups
+      group:
+        name: "{{ systemuserlist[item]['username'] }}"
+      with_items: "{{ system_users }}"
+
+    - name: create system users
+      user:
+        name: "{{ systemuserlist[item]['username'] }}"
+        group: "{{ systemuserlist[item]['username'] }}"
+        groups: "{{ systemuserlist[item]['groups'] | default([]) }}"
+        shell: "{{ systemuserlist[item]['shell'] }}"
+        uid: "{{ systemuserlist[item]['uid'] }}"
+        append: yes
+        system: yes
+      with_items: "{{ system_users }}"
+
+  when: system_users|length>0
+
+- name: check for deadspace
+  stat:
+    path: /deadspace
+  register: deadspace
+
+- name: set up deadspace
+  block:
+    - name: create deadspace for users
+      file:
+        state: directory
+        path: "/deadspace/{{ item }}"
+        owner: "{{ userlist[item]['username'] }}"
+        group: "{{ userlist[item]['username'] }}"
+        mode: 0700
+      with_items: "{{ human_users }}"
+
+    - name: symlink deadspace
+      file:
+        src: "/deadspace/{{ item }}"
+        dest: "/home/{{ item }}/deadspace"
+        owner: "{{ userlist[item]['username'] }}"
+        group: "{{ userlist[item]['username'] }}"
+        state: link
+      with_items: "{{ human_users }}"
+
+  when: deadspace.stat.exists and deadspace.stat.isdir
