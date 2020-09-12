@@ -70,6 +70,9 @@
       - dnsutils
       - git
       - gnupg2
+      - procmail
+      - sshfs
+      - file
       - haveged
       - htop
       - iotop

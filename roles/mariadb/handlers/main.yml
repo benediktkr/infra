@@ -1,0 +1,13 @@
+---
+- name: restart mariadb
+  service:
+    name: mariadb
+    state: restarted
+
+- name: reload mariadb
+  service:
+    name: mariadb
+    state: reloaded
+
+- name: reload mariadb users
+  command: mariadb --execute "source /usr/local/etc/users.sql"

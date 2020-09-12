@@ -1,0 +1,24 @@
+---
+
+# debian package has sane defaults and listens on localhost only
+
+- name: install mariadb
+  apt:
+    name:
+      - mariadb-server
+      - mariadb-client
+    state: present
+  tags:
+    - packages
+
+- name: mariadb sever config
+  template:
+    src: 50-server.cnf.j2
+    dest: /etc/mysql/mariadb.conf.d/50-server.cnf
+  notify: restart mariadb
+
+- name: mariadb users and dbs
+  template:
+    src: users.sql.j2
+    dest: /usr/local/etc/users.sql
+  notify: reload mariadb users

@@ -1,0 +1,17 @@
+---
+
+- name: install redis
+  apt:
+    name:
+      - redis-server
+      - php-redis
+    state: present
+  tags: packages
+  notify: restart redis
+
+- name: enable unix soxket
+  replace:
+    path: /etc/redis/redis.conf
+    regexp: '^#? unixsocket /var/run/redis/redis-server.sock'
+    replace: 'unixsocket /var/run/redis/redis-server.sock'
+  notify: restart redis

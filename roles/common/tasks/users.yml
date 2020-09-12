@@ -44,6 +44,7 @@
 - name: create user groups
   group:
     name: "{{ userlist[item]['username'] }}"
+    gid: "{{ userlist[item]['gid'] | default(userlist[item]['uid']) }}"
   with_items: "{{ human_users }}"
 
 - name: create human users
@@ -51,7 +52,7 @@
     name: "{{ userlist[item]['username'] }}"
     group: "{{ userlist[item]['username'] }}"
     groups: "{{ userlist[item]['groups'] | default([]) }}"
-    shell: "{{ userlist[item]['shell'] }}"
+    shell: "{{ userlist[item]['shell'] | default('/bin/zsh') }}"
     uid: "{{ userlist[item]['uid'] }}"
     append: yes
   with_items: "{{ human_users }}"
@@ -73,15 +74,15 @@
     validate: 'visudo -cf %s'
   when: is_local is not defined
 
-- name: set authorized_keys for users
+- name: set authorized_keys for users with local pubkey files
   authorized_key:
     user: "{{ item }}"
     state: present
-    key: "{{ lookup('file', 'private/sshkeys/' + item + '.pub') }}"
+    key: "{{ lookup('file', 'private/sshkeys/' + item  + '.pub') }}"
     manage_dir: yes
   with_items: "{{ human_users }}"
   when:
-    - "userlist[item]['shell'] != '/dev/null'"
+    - userlist[item]['sshkey']
   tags:
     - sshkeys
 
@@ -90,6 +91,7 @@
     - name: create system user groups
       group:
         name: "{{ systemuserlist[item]['username'] }}"
+        gid: "{{ systemuserlist[item]['gid'] }}"
       with_items: "{{ system_users }}"
 
     - name: create system users
@@ -97,8 +99,9 @@
         name: "{{ systemuserlist[item]['username'] }}"
         group: "{{ systemuserlist[item]['username'] }}"
         groups: "{{ systemuserlist[item]['groups'] | default([]) }}"
-        shell: "{{ systemuserlist[item]['shell'] }}"
+        shell: "{{ systemuserlist[item]['shell'] | default('/dev/null') }}"
         uid: "{{ systemuserlist[item]['uid'] }}"
+        create_home: "{{ systemuserlist[item]['mkhome'] | default(False) }}"
         append: yes
         system: yes
       with_items: "{{ system_users }}"
@@ -115,7 +118,7 @@
     - name: create deadspace for users
       file:
         state: directory
-        path: "/deadspace/{{ item }}"
+        path: "/deadspace/users/{{ item }}"
         owner: "{{ userlist[item]['username'] }}"
         group: "{{ userlist[item]['username'] }}"
         mode: 0700
@@ -123,7 +126,7 @@
 
     - name: symlink deadspace
       file:
-        src: "/deadspace/{{ item }}"
+        src: "/deadspace/users/{{ item }}"
         dest: "/home/{{ item }}/deadspace"
         owner: "{{ userlist[item]['username'] }}"
         group: "{{ userlist[item]['username'] }}"
