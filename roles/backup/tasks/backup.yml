@@ -1,0 +1,24 @@
+---
+
+- name: template rsnapshot config
+  template:
+    src: rsnapshot.conf.j2
+    dest: /etc/rsnapshot.conf
+
+- name: template sdf backup scripts
+  template:
+    src: "{{ item }}.j2"
+    dest: "/usr/local/bin/{{ item }}"
+  when: sdfbackup
+  with_items:
+    - sdfbackup.sh
+    - sdfcleanup.sh
+
+- name: luks key
+  copy:
+    src: private/sdf_backup_lukskey
+    dest: /root/sdf_backup_lukskey
+    owner: root
+    group: root
+    mode: 0700
+  when: sdfbackup

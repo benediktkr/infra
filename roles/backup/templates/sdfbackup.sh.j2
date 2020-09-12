@@ -1,0 +1,95 @@
+#!/bin/bash
+
+# how to resize:
+# https://ruderich.org/simon/notes/encrypted-remote-backups
+
+lockfile -r 0 /var/run/backup.lock || exit 2
+
+NAME=backup
+SRC={{ rsnapshot_root }}/alpha.0
+KEYFILE=/root/sdf_backup_lukskey
+SDF={{ sdf_metaarray }}
+
+print () {
+    if [ "$VERBOSE" = "true" ]; then  echo `date +"%F %R:"` "$*" ; fi
+}
+
+# mount sshfs
+#mkdir /metaarray/sshfs
+#sshfs -o idmap=user $SDF:metaarray/ /metaarray/sshfs
+
+if [ ! -f /metaarray/sshfs/$NAME ]; then
+    print "luks file not found"
+    exit 1
+
+elif [ ! -f /metaarray/sshfs/.metaarray_plain ]; then
+     print "metarray not mounted, .metarray_plain not found"
+     exit 2
+
+elif [ ! -f $SRC/.metarray_allowed ]; then
+    print "$SRC/.metarray_allowed missing"
+    exit 3
+fi
+
+
+print 'opening LUKS'
+cryptsetup luksOpen /metaarray/sshfs/$NAME metaarray-$NAME --key-file=$KEYFILE
+cryptsetup_rc=$?
+
+if [ $cryptsetup_rc -ne 0 ]; then
+    exit 4
+fi
+
+if ! `mkdir /metaarray/$NAME`; then
+   exit 5
+fi
+
+mount /dev/mapper/metaarray-$NAME /metaarray/$NAME
+
+if [ ! -f /metaarray/$NAME/.metaarray_present ]; then
+    print "metaarray not decrypted or mounted"
+   exit 6
+fi
+print "starting 'rsync -a $SRC /metaarray/$NAME'"
+rsync -a $SRC /metaarray/$NAME
+rsync_rc=$?
+
+print "rsync exited, napping for 10s"
+sleep 10
+
+print "starting 'sync'"
+sync
+
+if [ $rsync_rc -ne 0]; then
+    print "rsync failed"
+    exit 7
+fi
+
+sleep 60
+
+# mark last succesful backup
+date >> /metaarray/$NAME/.metadata_present
+
+sleep 3
+
+print "unmounting /metarray/$NAME"
+umount /metaarray/$NAME
+#umount -f /metaarray/$NAME
+#umount -l /metaarray/$NAME # nuclear option
+rmdir /metaarray/$NAME
+
+# and close the encryption
+print 'closing LUKS'
+cryptsetup luksClose metaarray-$NAME
+
+# and unmount sshfs connection but we're not
+# managing the sshfs connection in this script
+#fusermount -u /metaarray/sshfs
+#umount /metaarray/sshfs
+#umount -f /metaarray/sshfs
+#rmdir /metaarray/sshfs
+
+#rmdir /metaarray
+
+print "removing lockfile"
+rm -f /var/run/backup.lock
