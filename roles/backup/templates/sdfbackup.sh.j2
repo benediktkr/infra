@@ -5,10 +5,11 @@
 
 lockfile -r 0 /var/run/backup.lock || exit 2
 
-NAME=backup
+NAME={{ inventory_hostname.split('.')[0] }}
 SRC={{ rsnapshot_root }}/alpha.0
 KEYFILE=/root/sdf_backup_lukskey
 SDF={{ sdf_metaarray }}
+VERBOSE=true
 
 print () {
     if [ "$VERBOSE" = "true" ]; then  echo `date +"%F %R:"` "$*" ; fi
@@ -19,15 +20,15 @@ print () {
 #sshfs -o idmap=user $SDF:metaarray/ /metaarray/sshfs
 
 if [ ! -f /metaarray/sshfs/$NAME ]; then
-    print "luks file not found"
+    print "luks file '/metaarray/sshfs/$NAME' not found"
     exit 1
 
 elif [ ! -f /metaarray/sshfs/.metaarray_plain ]; then
      print "metarray not mounted, .metarray_plain not found"
      exit 2
 
-elif [ ! -f $SRC/.metarray_allowed ]; then
-    print "$SRC/.metarray_allowed missing"
+elif [ ! -f $SRC/.metaarray_allowed ]; then
+    print "$SRC/.metaarray_allowed missing"
     exit 3
 fi
 

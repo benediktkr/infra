@@ -9,6 +9,9 @@
   template:
     src: "{{ item }}.j2"
     dest: "/usr/local/bin/{{ item }}"
+    mode: 0755
+    owner: root
+    group: root
   when: sdfbackup
   with_items:
     - sdfbackup.sh
