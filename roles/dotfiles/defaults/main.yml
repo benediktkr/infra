@@ -2,6 +2,7 @@ dotfiles_path: "/srv/dotfiles/dotfiles"
 dotfiles_repo: "https://git@github.com/benediktkr/dotfiles.git"
 dotfiles:
   - { src: 'zsh/.zshrc', dest: '.zshrc' }
+  - { src: 'zsh/jreese2.zsh-theme', dest: '.zsh.d/' }
   - { src: 'emacs/.emacs', dest: '.emacs' }
   - { src: 'tmux/.tmux.simple.conf', dest: '.tmux.conf' }
   - { src: 'tmux/.tmux.remote.conf', dest: '.tmux.remote.conf' }
