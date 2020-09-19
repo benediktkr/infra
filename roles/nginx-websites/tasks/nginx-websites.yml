@@ -1,0 +1,19 @@
+---
+
+- name: create directories for static websites
+  file:
+    state: directory
+    owner: "{{ myusername }}"
+    group: www-data
+    mode: 0755
+    path: "/var/www/{{ item }}"
+  with_items: "{{ static_sites }}"
+
+- name: template static website configs
+  template:
+    src: nginx-static-vhost.j2
+    dest: /etc/nginx/sites-enabled/02-{{ item }}
+    owner: www-data
+    group: www-data
+  with_items: "{{ static_sites }}"
+  notify: restart nginx

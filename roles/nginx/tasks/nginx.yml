@@ -17,6 +17,26 @@
   tags:
     - packages
 
+- name: ensure lestencrypt permissions
+  file:
+    state: directory
+    owner: root
+    group: root
+    mode: "{{ item['mode'] }}"
+    path: "{{ item['path'] }}"
+  with_items:
+    - { path: /etc/letsencrypt, mode: '0755' }
+    - { path: /etc/letsencrypt/live, mode: '0700' }
+
+- name: install current letsencrypt wildcards
+  copy:
+    src: "private/letsencrypt/{{ item }}"
+    dest: "/etc/letsencrypt/live/"
+    owner: root
+    group: root
+    mode: 0755
+  with_items: "{{ letsencrypt_domains }}"
+
 - name: install nginx
   apt:
     name:
