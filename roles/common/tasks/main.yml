@@ -7,6 +7,11 @@
   tags: users
 
 - include_role:
+    name: vpnclient
+  when: inventory_hostname in wireguard_clients
+  tags: vpnclient
+
+- include_role:
     name: dotfiles
   tags: dotfiles
 

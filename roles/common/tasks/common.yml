@@ -75,6 +75,8 @@
       - file
       - haveged
       - htop
+      - netcat
+      - tcpdump
       - iotop
       - iptraf
       - jq
