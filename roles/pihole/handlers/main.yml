@@ -1,6 +1,9 @@
 ---
 
-- name: restart dhcpd
+- name: restart dhcp-helper
   service:
-    name: isc-dhcp-server
+    name: dhcp-helper
     state: restarted
+
+- name: restart pihole
+  command: docker restart pihole

@@ -1,0 +1,3 @@
+# managed by ansible
+
+DHCPHELPER_OPTS="-b {{ ansible_docker0.device }} -i {{ ansible_eth0.device }} {% if inventory_hostname in wireguard_clients %}-e wg0{% endif %}"
