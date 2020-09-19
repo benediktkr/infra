@@ -41,18 +41,18 @@ if [ $cryptsetup_rc -ne 0 ]; then
     exit 4
 fi
 
-if ! `mkdir /metaarray/$NAME`; then
+if ! `mkdir /metaarray/backup`; then
    exit 5
 fi
 
-mount /dev/mapper/metaarray-$NAME /metaarray/$NAME
+mount /dev/mapper/metaarray-$NAME /metaarray/backup
 
-if [ ! -f /metaarray/$NAME/.metaarray_present ]; then
+if [ ! -f /metaarray/backup/.metaarray_present ]; then
     print "metaarray not decrypted or mounted"
    exit 6
 fi
-print "starting 'rsync -a $SRC /metaarray/$NAME'"
-rsync -a $SRC /metaarray/$NAME
+print "starting 'rsync -a $SRC /metaarray/backup'"
+rsync -a $SRC /metaarray/backup
 rsync_rc=$?
 
 print "rsync exited, napping for 10s"
@@ -61,7 +61,7 @@ sleep 10
 print "starting 'sync'"
 sync
 
-if [ $rsync_rc -ne 0]; then
+if [ $rsync_rc -ne 0 ]; then
     print "rsync failed"
     exit 7
 fi
@@ -69,15 +69,15 @@ fi
 sleep 60
 
 # mark last succesful backup
-date >> /metaarray/$NAME/.metadata_present
+date >> /metaarray/backup/.metadata_present
 
 sleep 3
 
-print "unmounting /metarray/$NAME"
-umount /metaarray/$NAME
-#umount -f /metaarray/$NAME
-#umount -l /metaarray/$NAME # nuclear option
-rmdir /metaarray/$NAME
+print "unmounting /metarray/backup"
+umount /metaarray/backup
+#umount -f /metaarray/backup
+#umount -l /metaarray/backup # nuclear option
+rmdir /metaarray/backup
 
 # and close the encryption
 print 'closing LUKS'
