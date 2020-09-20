@@ -1,0 +1,122 @@
+---
+
+- name: create dirs
+  file:
+    state: directory
+    path: "{{ streama_root }}/{{ item }}"
+    recurse: yes
+  with_items:
+    - docker
+    - mysql
+    - data
+
+
+- name: copy Dockerfile and etc
+  copy:
+    src: "{{ item }}"
+    dest: "{{ streama_root }}/docker/{{ item }}"
+  with_items:
+    - Dockerfile
+  tags:
+    - streama-container
+
+# docker build always return 0
+- name: build from Dockerfile
+  command:
+    cmd: docker build -t streama .
+    chdir: "{{ streama_root }}/docker"
+  register: dockerbuild
+  changed_when: false
+  tags:
+    - streama-container
+
+- debug:
+    var: dockerbuild.rc
+
+# - name: build from Dockerfile
+#   docker_image:
+#     name: streama
+#     build:
+#       path: /srv/streama-docker
+#       pull: yes
+#     source: build
+
+- name: start mysql container for streama
+  docker_container:
+    name: streama_mysql
+    image: "mysql:5.7"
+    volumes:
+      - "{{ streama_root }}/mysql:/var/lib/mysql"
+    exposed_ports:
+      - "3306"
+    env:
+      MYSQL_ROOT_PASSWORD: "{{ streama_mysql_root_pass }}"
+      MYSQL_USER: "streama"
+      MYSQL_HOST: "streama_mysql"
+      MYSQL_DATABASE: "streama"
+      MYSQL_PASSWORD: "{{ streama_mysql_pass }}"
+    dns_servers:
+      - "{{ ansible_docker0.ipv4.address }}"
+    networks_cli_compatible: no
+    networks:
+      - name: bridgewithdns
+  no_log: false
+  tags:
+    - streama-container
+
+- name: get mysql container ip
+  shell: "docker inspect streama_mysql | jq -r '.[].NetworkSettings.IPAddress'"
+  register: streama_mysql_ip
+  changed_when: no
+  tags:
+    - streama-container
+
+- name: wait for mysql container on {{ streama_mysql_ip.stdout }}
+  wait_for:
+    port: 3306
+    host: "{{ streama_mysql_ip.stdout }}"
+  tags:
+    - streama-container
+
+- name: start container
+  docker_container:
+    name: streama
+    image: streama
+    auto_remove: no
+    detach: yes
+    pull: no
+    restart_policy: "unless-stopped"
+    state: started
+    ports: "{{ streama_port }}:8080"
+    volumes:
+      - "{{ streama_root }}/data:/data"
+      - "{{ streama_root }}/video:/video:ro"
+    env:
+      ACTIVE_PROFILE: "mysql"
+      MYSQL_HOST: "streama_mysql"
+      MYSQL_PORT: "3306"
+      MYSQL_DB: streama
+      MYSQL_USER: streama
+      MYSQL_PASSWORD: "{{ streama_mysql_pass }}"
+    networks_cli_compatible: no
+    dns_servers:
+      - "{{ ansible_docker0.ipv4.address }}"
+    networks:
+      - name: bridgewithdns
+  tags:
+    - streama-container
+
+
+- name: get streama container ip
+  shell: "docker inspect streama | jq -r '.[].NetworkSettings.IPAddress'"
+  register: streama_ip
+  changed_when: no
+  tags:
+    - streama-container
+
+- name: wait for streama container on {{ streama_ip.stdout }}
+  wait_for:
+    port: 8080
+    host: "{{ streama_ip.stdout }}"
+  tags:
+    - streama-container

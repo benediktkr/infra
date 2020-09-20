@@ -28,7 +28,10 @@
   tags:
     - packages
 
-- name: add repo for debian
+- debug:
+    var: ansible_lsb
+
+- name: add repo for {{ ansible_lsb.id | lower }} {{ ansible_distribution_release }}
   apt_repository:
     repo: "deb [arch={{ arch }}] https://download.docker.com/linux/{{ ansible_lsb.id | lower }} {{ ansible_distribution_release }} stable"
     state: present
