@@ -15,5 +15,5 @@ AllowedIPs = 0.0.0.0/0
 AllowedIPs = {{ wireguard_cidr }}
 {% endif %}
 {% if 'keepalive' in wireguard_clients[inventory_hostname] %}
-PersistentKeepalive = {{ wireguard_clients[inventory_hostname]['keepalive'] }}
+PersistentKeepalive = 240
 {% endif %}
