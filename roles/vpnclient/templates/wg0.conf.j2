@@ -1,6 +1,6 @@
 [Interface]
 Address = {{ wireguard_clients[inventory_hostname]['ip'] }}/32
-{% if wireguard_clients[inventory_hostname]['vpn_dns'] | default(true) %}
+{% if wireguard_clients[inventory_hostname]['vpn_dns'] | default(false) %}
 DNS = {{ wireguard_internal_server_ip }}
 {% endif %}
 PrivateKey = {{ lookup('file', 'private/wireguard/' + inventory_hostname ) }}
@@ -14,6 +14,6 @@ AllowedIPs = 0.0.0.0/0
 {% else %}
 AllowedIPs = {{ wireguard_cidr }}
 {% endif %}
-{% if 'keepalive' in wireguard_clients[inventory_hostname] %}
+{% if True or 'keepalive' in wireguard_clients[inventory_hostname] %}
 PersistentKeepalive = 240
 {% endif %}

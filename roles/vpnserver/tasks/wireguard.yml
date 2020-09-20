@@ -9,6 +9,17 @@
     reload: yes
   when: "'vpnserver' in group_names or ipforward"
 
+- name: install openresolv if needed
+  apt:
+    name: openresolv
+  when:
+    - inventory_hostname in wireguard_clients
+    - wireguard_clients[inventory_hostname]['vpn_dns'] | default(false)
+  tags:
+    - resolvconf
+    - packages
+
+
 - name: install wireguard
   apt:
     name: wireguard
