@@ -1,0 +1,7 @@
+---
+
+- name: update initramfs
+  command: update-initramfs -u
+  environment:
+    PATH: "{{ ansible_env.PATH }}:/sbin:/usr/sbin"
+  changed_when: no

@@ -11,18 +11,21 @@
     update_cache: yes
   tags:
     - packages
+  notify: update initramfs
 
 - name: enable busybox in initramfs
   replace:
     path: /etc/initramfs-tools/initramfs.conf
     regexp: '^#?BUSYBOX=.*$'
     replace: "BUSYBOX=y"
+  notify: update initramfs
 
 - name: set NO_START because we want to use openssh
   replace:
     path: /etc/default/dropbear
     regexp: "^NO_START=.*$"
     replace: "NO_START=1"
+  notify: update initramfs
 
 - name: copy authorized_keys for dropbear
   copy:
@@ -30,9 +33,4 @@
     dest: /etc/dropbear-initramfs/authorized_keys
     mode: 700
     force: yes
-
-- name: update initramfs
-  command: update-initramfs -u
-  environment:
-    PATH: "{{ ansible_env.PATH }}:/sbin:/usr/sbin"
-  changed_when: no
+  notify: update initramfs

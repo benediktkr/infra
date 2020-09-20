@@ -38,4 +38,4 @@
   service:
     name: wg-quick@wg0
     enabled: yes
-  notify: restart wireguard
+    state: started
