@@ -24,9 +24,8 @@
 
 - name: otherwise use lsb codename
   set_fact:
-    distro: "{{ ansible_lsb.codename }}"
+    codename: "{{ ansible_lsb.codename }}"
   when: ansible_lsb.codename != "bullseye"
-
 
 - debug:
     var: ansible_lsb

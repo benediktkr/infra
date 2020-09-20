@@ -150,6 +150,21 @@
   changed_when: false
   tags: ntp
 
+- name: check if hosts file needs fixing
+  command: grep {{ inventory_hostname }} /etc/hosts
+  register: grephosts
+  tags: etchosts
+  failed_when: grephosts.rc >= 2
+  changed_when: grephosts.rc != 0
+
+- name: fix hosts file
+  lineinfile:
+    path: /etc/hosts
+    line: "127.0.0.1 {{ inventory_hostname }}"
+    create: no
+  tags: etchosts
+  when: grephosts.rc != 0
+
 - name: disable password authentication
   replace:
     path: /etc/ssh/sshd_config
