@@ -1,13 +1,34 @@
-[Interface]
-Address = {{ wireguard_server }}
-ListenPort = {{ wireguard_port }}
-PrivateKey = {{ lookup('file', 'private/wireguard/server' ) }}
-#SaveConfig = true
+{% set wg_client = wireguard_clients[inventory_hostname] %}
 
-{% for client, d in wireguard_clients.items() %}
-# {{ client }}
+
+[Interface]
+Address = {{ wg_client['ip'] }}/32
+ListenPort = {{ wireguard_port }}
+PrivateKey = {{ lookup('file', 'private/wireguard/' + inventory_hostname ) }}
+#SaveConfig = true
+PostUp = ping -c 1 {{ wireguard_clients[wireguard_main]['ip'] }}
+
+{% for cc, peer in wireguard_endpoints.items() %}
+{%   if peer != inventory_hostname %}
+# {{ peer }}
 [Peer]
-PublicKey = {{ lookup('file', 'private/wireguard/' + client + '.pub' ) }}
+{%     if peer == wireguard_main %}
+# vpn-{{ cc }}.sudo.is:{{ wireguard_port }}
+Endpoint = {{ peer }}:{{ wireguard_port }}
+{%     endif %}
+PublicKey = {{ lookup('file', 'private/wireguard/' + peer + '.pub' ) }}
+AllowedIPs = {{ wireguard_clients[peer]['allowed'] }}
+PersistentKeepalive = 240
+{%   endif %}
+{% endfor %}
+
+{% set thisendp = wg_client['endpoint_for'] %}
+{% for peer, d in wireguard_clients.items() %}
+{%   if peer != inventory_hostname and d.get('endpoint') == thisendp %}
+# {{ peer }}
+[Peer]
+PublicKey = {{ lookup('file', 'private/wireguard/' + peer + '.pub' ) }}
 AllowedIPs = {{ d['ip'] }}/32
+{%   endif %}
 
 {% endfor %}

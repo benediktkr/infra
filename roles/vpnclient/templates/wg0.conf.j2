@@ -1,19 +1,26 @@
+{% set wg_client = wireguard_clients[inventory_hostname] %}
+{% set endpoint = wireguard_endpoints[wg_client['endpoint']] %}
+{% set wg_main = wireguard_clients[wireguard_main]['ip'] %}
+
 [Interface]
-Address = {{ wireguard_clients[inventory_hostname]['ip'] }}/32
-{% if wireguard_clients[inventory_hostname]['vpn_dns'] | default(false) %}
-DNS = {{ wireguard_internal_server_ip }}
+Address = {{ wg_client['ip'] }}/32
+{% if wg_client['vpn_dns'] | default(false) %}
+DNS = {{ wireguard_dns }}
 {% endif %}
 PrivateKey = {{ lookup('file', 'private/wireguard/' + inventory_hostname ) }}
-PostUp = ping -c 1 {{ wireguard_server.split('/')[0] }}
+PostUp = ping -c 1 {{ wg_main }}
+
 
 [Peer]
-Endpoint = {{ vpn_endpoint }}:{{ wireguard_port }}
-PublicKey = {{ lookup('file', 'private/wireguard/server.pub') }}
-{% if wireguard_clients[inventory_hostname]['route_all'] | default(false) %}
+{% if 'endpoint_hostname' in wg_client %}
+Endpoint = {{ wg_client['endpoint_hostname'] }}:{{ wireguard_port }}
+{% else %}
+Endpoint = {{ endpoint }}:{{ wireguard_port }}
+{% endif %}
+PublicKey = {{ lookup('file', 'private/wireguard/' + endpoint + '.pub') }}
+{% if wg_client['route_all'] | default(false) %}
 AllowedIPs = 0.0.0.0/0
 {% else %}
 AllowedIPs = {{ wireguard_cidr }}
 {% endif %}
-{% if True or 'keepalive' in wireguard_clients[inventory_hostname] %}
 PersistentKeepalive = 240
-{% endif %}

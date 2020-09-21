@@ -32,6 +32,10 @@
     name: wireguard
     state: present
 
+- debug:
+    var: inventory_hostname
+  tags: wg-config
+
 - name: template wg0 config
   template:
     src: wg0.conf.j2

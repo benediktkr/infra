@@ -62,6 +62,7 @@
 
 - name: cron for checkclients
   cron:
+    state: absent
     name: checkclients.py
     minute: "*/5"
     job: "/usr/local/bin/checkclients.py"
