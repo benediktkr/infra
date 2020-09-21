@@ -114,9 +114,6 @@
       - update-motd
       - landscape-client
       - landscape-common
-      - docker
-      - docker.io
-      - docker-engine
     state: absent
   tags: packages
 
