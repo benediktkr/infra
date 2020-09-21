@@ -11,11 +11,14 @@
     state: directory
     mode: 0750
     owner: "{{ myusername }}"
+    group: "{{ myusername }}"
+    recurse: yes
+
 
 - name: pull my dotfiles repo
   git:
     repo: "{{ dotfiles_repo }}"
-    dest: "{{ dotfiles_path }}"
+    dest: "{{ dotfiles_path }}/dotfiles"
     version: master
     clone: yes
     update: yes
@@ -28,7 +31,7 @@
 - name: put my dotfiles in place
   copy:
     remote_src: yes
-    src: "{{ dotfiles_path }}/{{ item.src }}"
+    src: "{{ dotfiles_path }}/dotfiles/{{ item.src }}"
     dest: "~/{{ item.dest }}"
   with_items:
     - "{{ dotfiles }}"
@@ -38,7 +41,7 @@
 - name: put dotfiles for root in place
   copy:
     remote_src: yes
-    src: "{{ dotfiles_path }}/{{ item.src }}"
+    src: "{{ dotfiles_path }}/dotfiles/{{ item.src }}"
     dest: "/root/{{ item.dest }}"
     owner: root
     group: root

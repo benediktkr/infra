@@ -1,4 +1,4 @@
-dotfiles_path: "/srv/dotfiles/dotfiles"
+dotfiles_path: "/srv/dotfiles"
 dotfiles_repo: "https://git@github.com/benediktkr/dotfiles.git"
 dotfiles:
   - { src: 'zsh/.zshrc', dest: '.zshrc' }
