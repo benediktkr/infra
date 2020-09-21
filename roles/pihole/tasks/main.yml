@@ -141,5 +141,6 @@
     port: 53
     host: "{{ piholeip.stdout }}"
     sleep: 4
+  ignore_errors: yes # fails in --check
   tags:
     - docker

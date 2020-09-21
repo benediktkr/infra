@@ -93,7 +93,6 @@
       #- ntp
       - openssh-server
       - openssl
-      - python-dev
       #- python-netaddr
       - rsync
       - smartmontools
@@ -164,6 +163,7 @@
     line: "127.0.0.1 {{ inventory_hostname }}"
     create: no
   tags: etchosts
+  ignore_errors: yes  # fails in --check
   when: grephosts.rc != 0
 
 - name: disable password authentication

@@ -92,6 +92,7 @@
   with_items: "{{ influxdb_user_database | dict2items}}"
   loop_control:
     label: "{{ item.key }}"
+  changed_when: false
   tags:
     - influxdb-config
 
