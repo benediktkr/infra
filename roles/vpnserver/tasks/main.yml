@@ -28,7 +28,7 @@
   cron:
     name: iptables load
     special_time: reboot
-    job: "sleep 180 && /sbin/iptables-restore < /etc/iptables.rules"
+    job: "sleep 180 && /sbin/iptables-restore --noflush < /etc/iptables.rules"
     user: root
   tags:
     - cron
