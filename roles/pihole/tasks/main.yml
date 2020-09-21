@@ -117,8 +117,7 @@
     ports:
       - "53:53/tcp"
       - "53:53/udp"
-      - "{{ pihole_http_port }}:80/tcp"
-      - "{{ pihole_https_port }}:443/tcp"
+      - "{{ pihole_http_inet }}:{{ pihole_http_port }}:80/tcp"
     dns_servers:
       - 127.0.0.1
       - pihole_dns_1
@@ -127,14 +126,13 @@
     volumes:
       - "{{ pihole_root }}/etc/pihole:/etc/pihole"
       - "{{ pihole_root }}/etc/dnsmasq.d:/etc/dnsmasq.d"
-  tags:
-    - docker
+  tags: pihole-container
 
 - name: get container ip
   shell: "docker inspect pihole | jq -r '.[].NetworkSettings.IPAddress'"
   register: piholeip
-  tags: docker
   changed_when: no
+  tags: pihole-container
 
 - name: wait for {{ piholeip.stdout }}:53
   wait_for:
@@ -142,5 +140,4 @@
     host: "{{ piholeip.stdout }}"
     sleep: 4
   ignore_errors: yes # fails in --check
-  tags:
-    - docker
+  tags: pihole-container
