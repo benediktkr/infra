@@ -24,6 +24,7 @@
     owner: root
     group: root
     mode: 0644
+  notify: restart pihole
   tags:
     - pihole-config
 
@@ -122,6 +123,7 @@
       - 127.0.0.1
       - pihole_dns_1
       - pihole_dns_2
+    networks_cli_compatible: no
     volumes:
       - "{{ pihole_root }}/etc/pihole:/etc/pihole"
       - "{{ pihole_root }}/etc/dnsmasq.d:/etc/dnsmasq.d"
