@@ -4,16 +4,16 @@
   apt_key:
     url: https://nginx.org/keys/nginx_signing.key
     state: present
-  when: ansible_distribution == "Debian"
+  when: ansible_lsb.id == "Debian" and ansible_lsb.codename != "bullseye"
   tags:
     - packages
 
-- name: add repo for debian
+- name: add repo for debian (except bullseye)
   apt_repository:
     repo: "deb http://nginx.org/packages/mainline/debian {{ ansible_distribution_release }} nginx"
     state: present
     update_cache: yes
-  when: ansible_distribution == "Debian"
+  when: ansible_lsb.id == "Debian" and ansible_lsb.codename != "bullseye"
   tags:
     - packages
 
@@ -84,12 +84,6 @@
     src: index.html.j2
     dest: /var/www/html/index.html
 
-# - name: template default vhost for http
-#   template:
-#     src: 00-default-http.j2
-#     dest: "/etc/nginx/sites-enabled/00-default-http"
-#   notify: reload nginx
-
 - name: template default vhost
   template:
     src: 00-default.j2
@@ -115,7 +109,11 @@
     - nginx-config
   notify: reload nginx
 
-- meta: flush_handlers
+- name: start and enable nginx
+  service:
+    name: nginx
+    enabled: yes
+    state: started
 
 - name: install certbot from pip (currently the easiest way to get certbot-nginx)
   pip:
