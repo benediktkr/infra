@@ -1,3 +1,7 @@
 # distributed from ansible
-PATH=/usr/bin:/bin:/usr/sbin
-23 16 * * * /usr/local/bin/certbot renew -n
+#
+# NOTE: using wildcard certs (for now at least)
+#
+#
+# PATH=/usr/bin:/bin:/usr/sbin
+# 23 16 * * * /usr/local/bin/certbot renew -n
