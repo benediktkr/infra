@@ -41,6 +41,7 @@
   apt:
     name:
       - nginx
+      - nginx-extras
       - uwsgi
       - uwsgi-plugin-python3
     update_cache: yes
@@ -50,10 +51,10 @@
   tags:
     - packages
 
-- name: create dh file
-  command: openssl dhparam -out /etc/nginx/dhparam.pem 4096
-  args:
-    creates: /etc/nginx/dhparam.pem
+# - name: create dh file
+#   command: openssl dhparam -out /etc/nginx/dhparam.pem 4096
+#   args:
+#     creates: /etc/nginx/dhparam.pem
 
 - name: remove default vhost boilerplate
   file:
@@ -69,25 +70,41 @@
   tags:
     - nginx-config
 
-- name: copy conf.d files
-  copy:
-    src: "{{ item }}"
-    dest: "/etc/nginx/conf.d/{{ item }}"
-  with_items:
-    - hardening.conf
-  notify: reload nginx
-  when: False
+# - name: copy conf.d files
+#   copy:
+#     src: "{{ item }}"
+#     dest: "/etc/nginx/conf.d/{{ item }}"
+#   with_items:
+#     ## - hardening.conf
+#   notify: reload nginx
+#   when: False
 
 - name: template default index.html
   template:
     src: index.html.j2
     dest: /var/www/html/index.html
 
-- name: template default vhost for http
+# - name: template default vhost for http
+#   template:
+#     src: 00-default-http.j2
+#     dest: "/etc/nginx/sites-enabled/00-default-http"
+#   notify: reload nginx
+
+- name: template default vhost
   template:
-    src: 00-default-http.j2
-    dest: "/etc/nginx/sites-enabled/00-default-http"
+    src: 00-default.j2
+    dest: "/etc/nginx/sites-enabled/00-default"
   notify: reload nginx
+  tags:
+  - nginx-config
+
+- name: cleanup
+  file:
+    path: "/etc/nginx/sites-enabled/{{ item }}"
+    state: absent
+  with_items:
+    - 00-default-http
+    - 00-default-https
 
 - name: copy vhosts (specific roles copy/template their own)
   copy:
@@ -111,23 +128,16 @@
 
 
 # The command in the nextcloud role might be better than this
-- name: lets encrypt
-  command: "/usr/local/bin/certbot -n --nginx -d {{ item }} --agree-tos --email {{ myemail }}"
-  args:
-    creates: "/etc/letsencrypt/live/{{ item.split(' ')[0] }}/fullchain.pem"
-  environment:
-    PATH: "{{ ansible_env.PATH }}:/sbin:/usr/sbin"
-  with_items: "{{ letsencrypt_defaults }} + ['{{ inventory_hostname }}'] "
-  tags:
-    - letsencrypt
+# - name: lets encrypt
+#   command: "/usr/local/bin/certbot -n --nginx -d {{ item }} --agree-tos --email {{ myemail }}"
+#   args:
+#     creates: "/etc/letsencrypt/live/{{ item.split(' ')[0] }}/fullchain.pem"
+#   environment:
+#     PATH: "{{ ansible_env.PATH }}:/sbin:/usr/sbin"
+#   with_items: "{{ letsencrypt_defaults }} + ['{{ inventory_hostname }}'] "
+#   tags:
+#     - letsencrypt
 
-- name: template default vhost for https since certs and keys exist now
-  template:
-    src: 00-default-https.j2
-    dest: "/etc/nginx/sites-enabled/00-default-https"
-  notify: reload nginx
-  tags:
-  - nginx-config
 
 - name: remove letsencrypt renewal cron job from the cron module
   cron:
@@ -139,18 +149,18 @@
     state: absent
   tags: letsencrypt
 
-- name: get letsencrypt cert for hostname (can be used by other roles as well)
-  command: "/usr/local/bin/certbot -n certonly --standalone -d {{ inventory_hostname }} --agree-tos --email {{ myemail }}"
-  args:
-    creates: "/etc/letsencrypt/live/{{ inventory_hostname }}/fullchain.pem"
-  environment:
-    PATH: "{{ ansible_env.PATH }}:/sbin:/usr/sbin"
-  tags:
-    - letsencrypt
-    - postfix
-    - nginx
-  when:
-    - "letsencrypt_hostname|default(True)"
+# - name: get letsencrypt cert for hostname (can be used by other roles as well)
+#   command: "/usr/local/bin/certbot -n certonly --standalone -d {{ inventory_hostname }} --agree-tos --email {{ myemail }}"
+#   args:
+#     creates: "/etc/letsencrypt/live/{{ inventory_hostname }}/fullchain.pem"
+#   environment:
+#     PATH: "{{ ansible_env.PATH }}:/sbin:/usr/sbin"
+#   tags:
+#     - letsencrypt
+#     - postfix
+#     - nginx
+#   when:
+#     - "letsencrypt_hostname|default(True)"
 
 - name: template certbot cron renewal job
   template:
