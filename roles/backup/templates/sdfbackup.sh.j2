@@ -3,7 +3,7 @@
 # how to resize:
 # https://ruderich.org/simon/notes/encrypted-remote-backups
 
-lockfile -r 0 /var/run/backup.lock || exit 2
+lockfile -l 86400 -r 0 /var/run/backup.lock || exit 2
 
 NAME={{ inventory_hostname.split('.')[0] }}
 SRC={{ rsnapshot_root }}/alpha.0
@@ -34,7 +34,7 @@ fi
 
 
 print 'opening LUKS'
-cryptsetup luksOpen /metaarray/sshfs/$NAME metaarray-$NAME --key-file=$KEYFILE
+/usr/sbin/cryptsetup luksOpen /metaarray/sshfs/$NAME metaarray-$NAME --key-file=$KEYFILE
 cryptsetup_rc=$?
 
 if [ $cryptsetup_rc -ne 0 ]; then
@@ -69,7 +69,7 @@ fi
 sleep 60
 
 # mark last succesful backup
-date >> /metaarray/backup/.metadata_present
+/usr/bin/date >> /metaarray/backup/.metaarray_present
 
 sleep 3
 
@@ -81,7 +81,7 @@ rmdir /metaarray/backup
 
 # and close the encryption
 print 'closing LUKS'
-cryptsetup luksClose metaarray-$NAME
+/usr/sbin/cryptsetup luksClose metaarray-$NAME
 
 # and unmount sshfs connection but we're not
 # managing the sshfs connection in this script

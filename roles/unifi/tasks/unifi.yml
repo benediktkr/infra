@@ -5,8 +5,9 @@
     path: "{{ unifi_root }}"
     state: directory
     mode: 0750
-    owner: "{{ unifi_root_owner | default('999') }}"
-    group: "{{ unifi_root_group | default('999') }}"
+    owner: unifi
+    group: unifi
+    recurse: yes
 
 # to adopt
 # ssh unifi-ap
@@ -16,10 +17,18 @@
 #
 # if that hangs:
 #  mca-cli-op set-inform http://<controller_ip>:8080/inform
+#
+# check with this (sometimes it trie the docker container ip f.ex):
+# unifi-ap$ info
+# ...
+#   status:      Unknown[11] (http://172.17.0.2:8080/inform)
+#
+# use tag 'arm32v7' for raspbian
+
 - name: start docker container
   docker_container:
     name: "unifi"
-    image: "jacobalberty/unifi:arm32v7" #-beta
+    image: "jacobalberty/unifi:5.12.66"
     auto_remove: no
     detach: yes
     restart_policy: "unless-stopped"
@@ -28,16 +37,19 @@
     env:
       TZ: "Europe/Berlin"
       RUNAS_UID0: "false"
+      UNIFI_UID: "{{ systemuserlist['unifi']['uid'] }}"
+      UNIFI_GID: "{{ systemuserlist['unifi']['gid'] }}"
     volumes:
       - "{{ unifi_root }}:/unifi"
     ports:
-      - "3478:3478/udp" # STUN
-      - "6789:6789/tcp" # Speed test
-      - "8080:8080/tcp" # Device/ controller comm.
-      - "8443:8443/tcp" # Controller GUI/API as seen in a web browser
-      - "8880:8880/tcp" # HTTP portal redirection
-      - "8843:8843/tcp" # HTTPS portal redirection
-      - "10001:10001/udp" # AP discovery
+      - "3478:3478/udp"           # STUN
+      - "6789:6789/tcp"           # Speed test
+      - "8080:8080/tcp"           # Device/ controller comm.
+      - "127.0.0.1:8443:8443/tcp" # Controller GUI/API as seen in a web browser
+      - "10001:10001/udp"         # AP discovery
+    dns_servers:
+      - "{{ ansible_docker0.ipv4.address }}"
+
 
 - name: wait for controller to be responsive
   wait_for:

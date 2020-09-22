@@ -89,8 +89,7 @@
     src: 00-default.j2
     dest: "/etc/nginx/sites-enabled/00-default"
   notify: reload nginx
-  tags:
-  - nginx-config
+  tags: nginx-config
 
 - name: cleanup
   file:
@@ -100,13 +99,20 @@
     - 00-default-http
     - 00-default-https
 
+- name: template default proxy vhosts (if any)
+  template:
+    src: vhost-proxy.j2
+    dest: /etc/nginx/sites-enabled/01-proxy-vhosts
+  when: "nginx_vhost_proxies is defined"
+  tags: nginx-config
+  notify: reload nginx
+
 - name: copy vhosts (specific roles copy/template their own)
   copy:
     src: "{{ item }}"
     dest: "/etc/nginx/sites-enabled/{{ item }}"
-  with_items: "{{ nginx_vhosts }}"
-  tags:
-    - nginx-config
+  with_items: "{{ nginx_vhosts | default([])}}"
+  tags: nginx-config
   notify: reload nginx
 
 - name: start and enable nginx
