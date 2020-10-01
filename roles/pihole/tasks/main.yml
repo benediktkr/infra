@@ -27,6 +27,7 @@
   notify: restart pihole
   tags:
     - pihole-config
+    - pihole-overrides
 
 - name: template dhcp options
   template:
