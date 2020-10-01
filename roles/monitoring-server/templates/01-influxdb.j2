@@ -14,6 +14,8 @@ server {
         proxy_set_header   X-Forwarded-Host $server_name;
     }
 
+    client_body_buffer_size 50m;
+
     access_log /var/log/nginx/access_{{ influxdb_url }}.log main;
     error_log /var/log/nginx/error_{{ influxdb_url }}.log warn;
 
