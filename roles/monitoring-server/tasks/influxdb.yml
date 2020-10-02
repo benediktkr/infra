@@ -108,6 +108,7 @@
     - hospital.py
     - berlinrona.py
     - nextcloud-influx.py
+    - sdfcheck.py
 
 - name: template cronjobs fr data collection scripts
   template:

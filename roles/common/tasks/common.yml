@@ -71,6 +71,7 @@
       - git
       - gnupg2
       - procmail
+      - acl
       - sshfs
       - file
       - haveged

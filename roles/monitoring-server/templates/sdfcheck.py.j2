@@ -1,0 +1,75 @@
+#!/usr/bin/env python3
+
+from datetime import datetime, timezone
+
+import requests
+from influxdb import InfluxDBClient
+
+SDF_URL = "{{ sdf_metaarray_url }}"  # without trailing /
+
+def check():
+    r = requests.get(SDF_URL + "/stat.json")
+    r.raise_for_status()
+    j = r.json()
+
+    now = datetime.now(tz=timezone.utc)
+    dt_backup_updated = datetime.fromisoformat(j['backup_updated'])
+    dt_metric_updated = datetime.fromisoformat(j['metric_updated'])
+
+    assert now.tzname() == "UTC"
+    assert dt_backup_updated.tzname() == "UTC"
+    assert dt_metric_updated.tzname() == "UTC"
+
+    backup_age = now - dt_backup_updated
+    metric_age = now - dt_metric_updated
+    metric_age_mins = metric_age.seconds//60
+
+
+    datapoints = [{
+        "measurement": "sdfbackup",
+        "tags": {
+            "name": j['backup_name']
+        },
+        "time": now.isoformat(),
+        "fields": {
+            "age_days": backup_age.days,
+            "age_seconds": backup_age.seconds,
+            "value": dt_backup_updated.isoformat()
+        }
+    },
+    {
+        "measurement": "sdfbackup_metric",
+        "tags": {
+            "name": j['backup_name']
+        },
+        "time": now.isoformat(),
+        "fields": {
+            "age_mins": metric_age_mins,
+            "age_seconds": metric_age.seconds,
+            "metric_updated": dt_metric_updated.isoformat()
+        }
+    }]
+
+    influxdb_write(datapoints)
+
+
+def influxdb_write(datapoints):
+    client = InfluxDBClient(
+        host='{{ influxdb_url }}',
+        port=443,
+        username='metrics',
+        password="{{ influxdb_user_database['metrics'] }}",
+        ssl=True,
+        verify_ssl=True,
+        database='metrics')
+
+    client.write_points(datapoints, time_precision='m')
+
+
+
+
+
+
+
+if __name__ == "__main__":
+    check()
