@@ -1,0 +1,75 @@
+---
+
+- name: create dir structure
+  file:
+    path: "{{ jellyfin_root }}/{{ item }}"
+    state: directory
+    mode: 0750
+    owner: jellyfin
+    group: jellyfin
+  with_items:
+    - config
+    - cache
+  tags: jellyfin-dirs
+
+- name: start container
+  docker_container:
+    name: jellyfin
+    image: jellyfin/jellyfin:latest
+    auto_remove: no
+    detach: yes
+    pull: yes
+    restart_policy: "unless-stopped"
+    state: started
+    user: "{{ systemuserlist.jellyfin.uid }}:{{ systemuserlist.jellyfin.gid }}"
+    ports:
+      - 127.0.0.1:8096:8096
+    volumes:
+      - "{{ jellyfin_root }}/config:/config"
+      - "{{ jellyfin_root }}/cache:/cache"
+      - "{{ jellyfin_media }}:/media"
+    env:
+      JELLYFIN_PublishedServerUrl: "{{ jellyfin_url }}"
+  tags:
+    - jellyfin-container
+
+
+- name: get jellyfin container ip
+  shell: "docker inspect jellyfin | jq -r '.[].NetworkSettings.IPAddress'"
+  register: jellyfin_ip
+  changed_when: no
+  tags:
+    - jellyfin-container
+
+- name: template jellyfin nginx config
+  template:
+    src: 01-jellyfin.j2
+    dest: /etc/nginx/sites-enabled/01-jellyfin
+    owner: root
+    group: root
+    mode: 0775
+  tags:
+    - nginx-config
+    - jellyfin-conf
+  notify: reload nginx
+
+
+- name: template auth stuff
+  template:
+    src: "private/{{ item }}.j2"
+    dest: "/etc/nginx/{{ item }}"
+  notify: reload nginx
+  tags:
+    - jellyfin-conf
+    - jellyfin-users
+    - nginx-conf
+  with_items:
+    - users.digest
+    - jellyfin_auth.conf
+
+- name: wait for jellyfin container on {{ jellyfin_ip.stdout }}
+  wait_for:
+    port: 8096
+    host: "{{ jellyfin_ip.stdout }}"
+  tags:
+    - jellyfin-container

@@ -44,6 +44,7 @@
       - nginx-extras
       - uwsgi
       - uwsgi-plugin-python3
+      - apache2-utils
     update_cache: yes
     state: latest
   environment:
@@ -69,6 +70,7 @@
   notify: reload nginx
   tags:
     - nginx-config
+    - nginxconf
 
 # - name: copy conf.d files
 #   copy:

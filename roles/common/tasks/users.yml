@@ -46,6 +46,15 @@
     name: "{{ userlist[item]['username'] }}"
     gid: "{{ userlist[item]['gid'] | default(userlist[item]['uid']) }}"
   with_items: "{{ human_users }}"
+  tags: human
+
+- name: create common groups
+  group:
+    name: "{{ item.name }}"
+    gid: "{{ item.gid }}"
+  with_items: "{{ grouplist | default([]) }}"
+  tags: groups
+
 
 - name: create human users
   user:
@@ -56,6 +65,7 @@
     uid: "{{ userlist[item]['uid'] }}"
     append: yes
   with_items: "{{ human_users }}"
+  tags: human
 
 - name: move homedirs if host uses alterantive location
   user:
