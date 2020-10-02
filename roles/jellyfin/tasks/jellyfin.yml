@@ -10,6 +10,7 @@
   with_items:
     - config
     - cache
+    - nginx
   tags: jellyfin-dirs
 
 - name: start container
@@ -41,6 +42,44 @@
   tags:
     - jellyfin-container
 
+- name: jellyfin nginx dir
+  file:
+    path: /etc/nginx/jellyfin
+    state: directory
+    owner: www-data
+    group: www-data
+
+- name: acl exists
+  file:
+    state: touch
+    path: "/etc/nginx/jellyfin/acl.conf"
+    owner: jellyfin
+    group: jellyfin
+    mode: 0775
+  changed_when: false
+
+- name: template auth stuff
+  template:
+    src: "private/{{ item }}.j2"
+    dest: "/etc/nginx/jellyfin/{{ item }}"
+  notify: reload nginx
+  tags:
+    - jellyfin-conf
+    - jellyfin-users
+    - nginx-conf
+  with_items:
+    - users.digest
+    - jellyfin_auth.conf
+
+- name: template acl script
+  template:
+    src: private/jellyfin_auth.py.j2
+    dest: /usr/local/bin/jellyfin_auth.py
+    mode: 0755
+    owner: www-data
+    group: www-data
+
+
 - name: template jellyfin nginx config
   template:
     src: 01-jellyfin.j2
@@ -52,20 +91,6 @@
     - nginx-config
     - jellyfin-conf
   notify: reload nginx
-
-
-- name: template auth stuff
-  template:
-    src: "private/{{ item }}.j2"
-    dest: "/etc/nginx/{{ item }}"
-  notify: reload nginx
-  tags:
-    - jellyfin-conf
-    - jellyfin-users
-    - nginx-conf
-  with_items:
-    - users.digest
-    - jellyfin_auth.conf
 
 - name: wait for jellyfin container on {{ jellyfin_ip.stdout }}
   wait_for:
