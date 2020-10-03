@@ -1,8 +1,8 @@
 ---
 
-- name: human users
-  set_fact:
+- set_fact:
     human_users: "{{ default_users + extra_users }}"
+    system_users: "{{ default_system_users + system_users }}"
 
 - name: list human users
   debug:
@@ -122,7 +122,7 @@
       authorized_key:
         user: tunnel
         state: present
-        key: "{{ lookup('file', 'private/sshkeys/tunnel.pub') }}"
+        key: "{{ lookup('file', 'private/sshkeys/tunnel.authorized_keys') }}"
         manage_dir: yes
       when: '"tunnel" in system_users'
       tags:

@@ -8,7 +8,7 @@ Address = {{ wg_client['ip'] }}/32
 DNS = {{ wireguard_dns }}
 {% endif %}
 PrivateKey = {{ lookup('file', 'private/wireguard/' + inventory_hostname ) }}
-PostUp = ping -c 1 {{ wg_main }}
+PostUp = sleep 3; ping -c 1 {{ wg_main }} || yes
 
 
 [Peer]
