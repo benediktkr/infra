@@ -1,0 +1,11 @@
+[Unit]
+Description=AutoSSH tunnel service {{ item.hostname }} on {{ item.port }}
+After=network.target
+
+[Service]
+Environment="AUTOSSH_GATETIME=0"
+User={{ tunnel_user }}
+ExecStart=/usr/bin/autossh -M 0 -o "ServerAliveInterval 30" -o "ServerAliveCountMax 3" -i /home/.system/{{ tunnel_user }}/.ssh/tunnel -ND localhost:{{ item.port }} {{ tunnel_user }}@{{ item.hostname }}
+
+[Install]
+WantedBy=multi-user.target

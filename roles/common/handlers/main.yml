@@ -8,8 +8,13 @@
 - name: systemctl daemon reload
   shell: systemctl daemon-reload
 
-
 - name: restart systemd-timesyncd
   service:
     name: systemd-timesyncd
     state: restarted
+
+- name: restart autossh
+  service:
+    name: autossh-{{ item.hostname }}
+    state: restarted
+  with_items: "{{ ssh_tunnels }}"

@@ -6,6 +6,12 @@
 - include: users.yml
   tags: users
 
+- include: tunnel.yml
+  when: ssh_tunnels|length > 0
+  tags:
+    - tunnel
+    - autossh
+
 - include_role:
     name: dotfiles
   tags: dotfiles
