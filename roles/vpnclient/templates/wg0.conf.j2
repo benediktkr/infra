@@ -8,7 +8,7 @@ Address = {{ wg_client['ip'] }}/32
 DNS = {{ wireguard_dns }}
 {% endif %}
 PrivateKey = {{ lookup('file', 'private/wireguard/' + inventory_hostname ) }}
-PostUp = sleep 3; ping -c 1 {{ wg_main }} || yes
+PostUp = /usr/local/bin/wg-post-up.sh
 
 
 [Peer]
@@ -18,7 +18,7 @@ Endpoint = {{ wg_client['endpoint_hostname'] }}:{{ wireguard_port }}
 Endpoint = {{ endpoint }}:{{ wireguard_port }}
 {% endif %}
 PublicKey = {{ lookup('file', 'private/wireguard/' + endpoint + '.pub') }}
-{% if wg_client['route_all'] | default(false) %}
+{% if wireguard_local_nat %}
 AllowedIPs = 0.0.0.0/0
 {% else %}
 AllowedIPs = {{ wireguard_cidr }}

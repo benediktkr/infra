@@ -6,7 +6,7 @@ Address = {{ wg_client['ip'] }}/32
 ListenPort = {{ wireguard_port }}
 PrivateKey = {{ lookup('file', 'private/wireguard/' + inventory_hostname ) }}
 #SaveConfig = true
-PostUp = ping -c 1 {{ wireguard_clients[wireguard_main]['ip'] }}
+PostUp = /usr/local/bin/wg-post-up.sh
 
 {% for cc, peer in wireguard_endpoints.items() %}
 {%   if peer != inventory_hostname %}

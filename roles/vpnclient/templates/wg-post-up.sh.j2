@@ -1,0 +1,22 @@
+#!/bin/bash
+
+set -e
+
+sleep 5
+
+{% if 'pihole' is in group_names %}
+dgw=$(ip r | grep default | awk '{print $3}' | head -n 1)
+
+ip route del {{ upstream_dns_1 }}/32 via $dgw metric 0 || true
+ip route del {{ upstream_dns_2 }}/32 via $dgw metric 0 || true
+
+ip route add {{ upstream_dns_1 }}/32 via $dgw metric 0
+ip route add {{ upstream_dns_2 }}/32 via $dgw metric 0
+{% endif %}
+
+{% for host in wireguard_endpoints.values() %}
+{% set serverip = wireguard_clients[host]['ip'] %}
+ping -c 1 {{ serverip }} || true
+{% endfor %}
+
+exit 0

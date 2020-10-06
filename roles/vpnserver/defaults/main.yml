@@ -6,7 +6,7 @@ openvpn_enabled: false
 vpnserver_interface: tun0
 vpn_ip_vpnserver: 10.104.37.1
 
-ipforward: true
+wireguard_local_nat: true
 
 wireguard_enabled: true
 wireguard_cidr: 10.0.0.0/24

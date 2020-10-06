@@ -1,0 +1,5 @@
+#!/bin/bash
+
+dgw=$(ip r | grep default | awk '{print $3}')
+ip route add {{ upstream_dns_1 }}/32 via $dgw metric 0
+ip route add {{ upstream_dns_2 }}/32 via $dgw metric 0
