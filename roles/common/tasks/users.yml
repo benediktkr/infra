@@ -40,6 +40,7 @@
     - pi
     - ec2user
     - ubuntu
+    - opc
 
 - name: create user groups
   group:
