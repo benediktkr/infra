@@ -16,8 +16,8 @@ print () {
 }
 
 # mount sshfs
-#mkdir /metaarray/sshfs
-#sshfs -o idmap=user $SDF:metaarray/ /metaarray/sshfs
+mkdir -p /metaarray/sshfs
+sshfs -o idmap=user $SDF:metaarray/ /metaarray/sshfs
 
 if [ ! -f /metaarray/sshfs/$NAME ]; then
     print "luks file '/metaarray/sshfs/$NAME' not found"
@@ -85,12 +85,12 @@ print 'closing LUKS'
 
 # and unmount sshfs connection but we're not
 # managing the sshfs connection in this script
-#fusermount -u /metaarray/sshfs
+fusermount -u /metaarray/sshfs
 #umount /metaarray/sshfs
 #umount -f /metaarray/sshfs
-#rmdir /metaarray/sshfs
+rmdir /metaarray/sshfs
 
-#rmdir /metaarray
+rmdir /metaarray
 
 print "removing lockfile"
 rm -f /var/run/backup.lock
