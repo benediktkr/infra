@@ -27,12 +27,6 @@
     dest: /etc/nginx/sites-enabled/01-grafana
   notify: reload nginx
 
-- name: nginx vhost
-  template:
-    src: 01-influxdb.j2
-    dest: /etc/nginx/sites-enabled/01-influxdb
-  notify: reload nginx
-
 - name: Create influxdb datasources
   grafana_datasource:
     name: "influxdb-{{ item.key }}"
