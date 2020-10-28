@@ -1,13 +1,12 @@
 ---
 
-
 - name: template iptables rule file
   template:
     src: "{{ iptables_rules|default('iptables.rules.j2') }}"
     dest: /etc/iptables.rules
   tags:
     - iptables
-  when: wireguard_local_nat|bool
+  when: wireguard_local_nat is defined
   #notify: apply iptables rules
 
 - name: cron to reload iptables rules 3 minutes after reboot
@@ -16,11 +15,11 @@
     special_time: reboot
     job: "sleep 180 && /sbin/iptables-restore --noflush < /etc/iptables.rules"
     user: root
-    state: "{% if wireguard_local_nat|bool %}present{% else %} absent{%endif%}"
+    state: "{% if wireguard_local_nat is defined %}present{% else %}absent{%endif%}"
   tags:
     - cron
     - iptables
-  when: wireguard_local_nat|bool
+  when: wireguard_local_nat is defined
 
 - name: enable ip_forward in proc
   sysctl:
@@ -29,7 +28,7 @@
     sysctl_set:
     state: present
     reload: yes
-  when: wireguard_local_nat|bool
+  when: wireguard_local_nat is defined
 
   #shell: "bash -c 'echo 1 > /proc/sys/net/ipv4/ip_forward'"
 
@@ -39,7 +38,7 @@
     regexp: '^#net.ipv4.ip_forward.*$'
     replace: 'net.ipv4.ip_forward=1'
   notify: systemctl daemon reload
-  when: wireguard_local_nat|bool
+  when: wireguard_local_nat is defined
 
 - name: enable ip_forward in proc
   sysctl:
@@ -48,7 +47,7 @@
     sysctl_set: yes
     state: present
     reload: yes
-  when: wireguard_local_nat|bool
+  when: wireguard_local_nat is defined
 
 - name: install openresolv if needed
   apt:
