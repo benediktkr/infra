@@ -1,0 +1,12 @@
+[Unit]
+Description=DHCP/BOOTP relay agent
+After=network.target
+
+[Service]
+Type=forking
+EnvironmentFile=/etc/default/dhcp-helper
+ExecStart=/usr/local/bin/wait-and-start-dhcp-helper.sh -r /var/run/dhcp-helper.pid $DHCPHELPER_OPTS
+PIDFile=/var/run/dhcp-helper.pid
+
+[Install]
+WantedBy=multi-user.target

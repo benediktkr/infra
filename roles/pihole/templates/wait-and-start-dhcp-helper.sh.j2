@@ -1,0 +1,47 @@
+#!/bin/bash
+
+DHCPHELPER_OPTS="-b {{ ansible_docker0.device }} -i {{ ansible_eth0.device }} {% if inventory_hostname in wireguard_clients %}-e wg0{% endif %}"
+
+MAX=20
+
+docker0={{ ansible_docker0.device }}
+echo "waiting for $docker0"
+
+while ! /bin/ip a show $docker0; do
+    # waiting for docker0 to exist, because we're forwarding
+    # the dhcp requests to there
+
+    echo "$docker0 interface not ready yet"
+    let "i+=1"
+
+    if [ $i -gt $MAX ]; then
+        echo "no $docker0 interface, giving up"
+        exit 13
+    fi
+
+    /bin/sleep 5
+done
+
+{% if inventory_hostname in wireguard_clients %}
+echo "waiting for wg0"
+
+while ! /bin/ip a show wg0; do
+    # wg0 is in the exclusion list, so starting without
+    # excluding it might have weird consequences but
+    # probably better than leaving a home wifi broken
+    #
+    # note: counter is 'j' because we used 'i'
+
+    echo "wg0 interface not ready yet"
+    let "j+=1"
+
+    if [ $j -gt $MAX ]; then
+        echo "no $docker0 interface, giving and starting anyway"
+        /usr/sbin/dhcp-helper -r /var/run/dhcp-helper.pid $DHCPHELPER_OPTS_NOVPN
+    fi
+
+    /bin/sleep 5
+done
+{% endif %}
+
+/usr/sbin/dhcp-helper -r /var/run/dhcp-helper.pid $DHCPHELPER_OPTS

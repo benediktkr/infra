@@ -63,6 +63,35 @@
   when: pihole_dhcp
   notify: restart dhcp-helper
 
+- name: template dhcp-helper start script
+  template:
+    src: wait-and-start-dhcp-helper.sh.j2
+    dest: /usr/local/bin/wait-and-start-dhcp-helper.sh
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - dhcp-helper
+  when: pihole_dhcp
+  notify: restart dhcp-helper
+
+  # theres a tiny marginal chance this will be overwritten
+  # by the package manager but dhcp-helper hasnt been updated
+  # in years. that being said, theres probably a better way
+- name: template dhcp-helper systemd file
+  template:
+    src: dhcp-helper.service.j2
+    dest: /lib/systemd/system/dhcp-helper.service
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - dhcp-helper
+  when: pihole_dhcp
+  notify:
+    - restart dhcp-helper
+    - systemctl daemon reload
+
 - name: start and enable dhcp-helper
   service:
     name: dhcp-helper
