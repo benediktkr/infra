@@ -17,7 +17,6 @@
   when: enable_dnsmasq
 
 
-
 - include: openvpn.yml
   tags: openvpn
   when: openvpn_enabled

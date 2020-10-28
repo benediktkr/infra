@@ -105,14 +105,16 @@
 # seems to start without docker otherwise, and fail because `docker0` doesnt
 # exist yet
 - name: cron to start dhcp-helper if its noot started 3 mins after boot
-  cron:
-    name: iptables load
-    special_time: reboot
-    job: "sleep 180 && /bin/systemctl start dhcp-helper"
-    user: root
+  template:
+    src: dhcp-helper-cron.j2
+    dest: /etc/cron.d/dhcp-helper
+    owner: root
+    group: root
+    mode: 0644
   tags:
     - dhcp-helper
   when: pihole_dhcp
+  notify: restart dhcp-helper
 
 - name: disable systemd-resolved
   service:

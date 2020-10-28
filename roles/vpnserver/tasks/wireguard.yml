@@ -61,7 +61,9 @@
 
 - name: install wireguard
   apt:
-    name: wireguard
+    name:
+      - wireguard
+      - qrencode
     state: present
   tags:
     - packages

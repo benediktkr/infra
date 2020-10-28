@@ -102,7 +102,10 @@
 # specified interfaces (and the loopback) give the name of the
 # interface (eg eth0) here.
 # Repeat the line for more than one interface.
+{% if openvpn_enabled %}
+{# WTF #}
 interface={{ vpnserver_interface }}
+{% endif %}
 interface=wg0
 # Or you can specify which interface _not_ to listen on
 #except-interface=lo,eth0,eth1
