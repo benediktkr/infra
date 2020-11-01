@@ -1,0 +1,23 @@
+---
+
+- name: template config
+  template:
+    src: zflux.yml.j2
+    dest: /usr/local/etc/zflux.yml
+
+- name: start docker container
+  docker_container:
+    name: "zflux"
+    image: "benediktkr/zflux:latest"
+    auto_remove: no
+    detach: yes
+    pull: yes
+    restart_policy: "unless-stopped"
+    state: started
+    env:
+      ZFLUX_CONF: /etc/zflux.yml
+    ports:
+      - "{{ zflux_bind_port }}:{{ zflux_bind_port }}/tcp"
+    volumes:
+      - /usr/local/etc/zflux.yml:/etc/zflux.yml
+  tags: zflux-container

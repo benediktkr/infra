@@ -1,0 +1,15 @@
+---
+
+zmq:
+  topic: '{{ zflux_topic }}'
+{% if zflux_bind_port is defined %}
+  bind: 'tcp://*:{{ zflux_bind_port }}'
+{% else %}
+  connect: 'tcp://{{ broker }}:5560'
+{% endif %}
+
+influxdb:
+  host: {{ ingest }}
+  db: {{ zflux_influxdb.user }}
+  user: {{ zflux_influxdb.user }}
+  passwd: {{ zflux_influxdb.passwd }}
