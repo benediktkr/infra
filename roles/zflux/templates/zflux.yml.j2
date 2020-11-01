@@ -1,7 +1,7 @@
 ---
 
 zmq:
-  topic: '{{ zflux_topic }}'
+  topic: 'zflux:{{ zflux_topic }}'
 {% if zflux_bind_port is defined %}
   bind: 'tcp://*:{{ zflux_bind_port }}'
 {% else %}

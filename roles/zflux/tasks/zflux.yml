@@ -4,6 +4,7 @@
   template:
     src: zflux.yml.j2
     dest: /usr/local/etc/zflux.yml
+  notify: restart zflux
 
 - name: start docker container
   docker_container:

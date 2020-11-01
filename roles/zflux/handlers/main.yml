@@ -1,0 +1,5 @@
+---
+
+- name: restart zflux
+  command: docker restart zflux
+  become: yes
