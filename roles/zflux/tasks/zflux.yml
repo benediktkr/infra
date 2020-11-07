@@ -16,9 +16,10 @@
     restart_policy: "unless-stopped"
     state: started
     env:
-      ZFLUX_CONF: /etc/zflux.yml
+      ZFLUX_LOGFILE: /data/zflux.log
     ports:
-      - "{{ zflux_bind_port }}:{{ zflux_bind_port }}/tcp"
+      - "{{ zflux.zmq.bind_port }}:{{ zflux.zmq.bind_port }}/tcp"
     volumes:
       - /usr/local/etc/zflux.yml:/etc/zflux.yml
+      - /srv/zflux:/data
   tags: zflux-container

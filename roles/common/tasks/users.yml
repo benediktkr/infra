@@ -112,8 +112,8 @@
         groups: "{{ systemuserlist[item]['groups'] | default([]) }}"
         shell: "{{ systemuserlist[item]['shell'] | default('/dev/null') }}"
         uid: "{{ systemuserlist[item]['uid'] }}"
-        create_home: "{{ systemuserlist[item]['mkhome'] | default(False) }}"
-        home: "{% if systemuserlist[item]['mkhome'] %}/home/.system/{{ item }}{% endif%}"
+        create_home: "{{ 'home' in systemuserlist[item] | default(False) }}"
+        home: "{{ systemuserlist[item]['home'] | default() }}"
         move_home: yes
         append: yes
         system: yes

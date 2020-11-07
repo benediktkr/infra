@@ -1,0 +1,4 @@
+---
+
+zmq_proxy_frontend_port: 5559
+zmq_proxy_backend_port: 5560

@@ -1,23 +1,35 @@
 ---
 
-- name: create directory for logs
+- name: create directory for data
   file:
-   path: /srv/log
+   path: /srv/sudoisbot/{{ item }}
    state: directory
-   mode: '0777'
-   owner: root
-   group: root
+   mode: '0755'
+   owner: sudoisbot
+   group: sudoisbot
+   recurse: yes
+  with_items: "{{ sudoisbot.docker_containers }}"
 
-- name: create config dir
-  file:
-    path: /etc/sudoisbot
-    state: directory
-
-- name: template weather config
+- name: template config files
   template:
-    src: weather.yml.j2
-    dest: /etc/sudoisbot/weather.yml
-  tags:
-    - sudoisbot-config
-    - sudoisbot-weather
-  when: weather is defined
+    src: "{{ item }}.yml.j2"
+    dest: /usr/local/etc/sudoisbot-{{ item }}.yml
+  with_items: "{{ sudoisbot.docker_containers }}"
+
+- name: start docker containers
+  docker_container:
+    name: "sudoisbot_{{ item }}"
+    image: "benediktkr/sudoisbot:latest"
+    auto_remove: no
+    detach: yes
+    pull: yes
+    restart_policy: "no"
+    state: started
+    env:
+      SUDOISBOT_CONF: "/etc/sudoisbot.yml"
+      SUDOISBOT_LOGFILE: "/data/sudoisbot.log"
+    volumes:
+      - /usr/local/etc/sudoisbot-{{ item }}.yml:/etc/sudoisbot.yml
+      - /srv/sudoisbot/{{ item }}:/data
+    command: "{{ item }}"
+  with_items: "{{ sudoisbot.docker_containers }}"

@@ -155,21 +155,17 @@
       - pihole_dns_1
       - pihole_dns_2
     networks_cli_compatible: no
+    networks:
+      - name: bridgewithdns
+        ipv4_address: "{{ pihole_docker_ip }}"
     volumes:
       - "{{ pihole_root }}/etc/pihole:/etc/pihole"
       - "{{ pihole_root }}/etc/dnsmasq.d:/etc/dnsmasq.d"
   tags: pihole-container
 
-- name: get container ip
-  shell: "docker inspect pihole | jq -r '.[].NetworkSettings.IPAddress'"
-  register: piholeip
-  changed_when: no
-  tags: pihole-container
-
-- name: wait for {{ piholeip.stdout }}:53
+- name: wait for {{ pihole_docker_ip }}:53
   wait_for:
     port: 53
-    host: "{{ piholeip.stdout }}"
+    host: "{{ pihole_docker_ip }}"
     sleep: 4
-  ignore_errors: yes # fails in --check
   tags: pihole-container
