@@ -75,6 +75,12 @@
     - packages
   when: ansible_lsb.codename != "bullseye"
 
+- name: set docker gid
+  group:
+    name: docker
+    gid: 998
+    state: present
+
 - name: install pip modules for ansible tasks
   pip:
     name:

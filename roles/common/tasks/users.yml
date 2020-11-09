@@ -1,21 +1,31 @@
 ---
 
-- set_fact:
-    human_users: "{{ default_users + extra_users }}"
-    system_users: "{{ default_system_users + system_users }}"
+- name: set groups
+  block:
+    - set_fact:
+        human_users: "{{ default_users + extra_users }}"
+        system_users: "{{ default_system_users + system_users }}"
+      tags:
+        - systemusers
+        - humanusers
 
-- name: list human users
-  debug:
-    var: human_users
+    - name: list human users
+      debug:
+        var: human_users
 
-- name: list system users
-  debug:
-    var: system_users
+    - name: list system users
+      debug:
+        var: system_users
 
-- name: sanity check
-  fail:
-    msg: 'my user is missing'
-  when: myusername not in human_users
+    - name: sanity check
+      fail:
+        msg: 'my user is missing'
+      when: myusername not in human_users
+  tags:
+    - systemusers
+    - humanusers
+    - users
+
 
 - name: set root shell to zsh
   user:
@@ -101,23 +111,29 @@
   block:
     - name: create system user groups
       group:
-        name: "{{ systemuserlist[item]['username'] }}"
-        gid: "{{ systemuserlist[item]['gid'] }}"
-      with_items: "{{ system_users }}"
+        state: "{% if item.key in system_users %}present{% else %}absent{%endif%}"
+        name: "{{ item.key }}"
+        gid: "{{ item.value.gid | default(item.value.uid) }}"
+      with_dict: "{{ systemuserlist }}"
+      loop_control:
+        label: "{{ item.key }} [{% if item.key in system_users %}present{% else %}absent{%endif%}]"
 
     - name: create system users
       user:
-        name: "{{ systemuserlist[item]['username'] }}"
-        group: "{{ systemuserlist[item]['username'] }}"
-        groups: "{{ systemuserlist[item]['groups'] | default([]) }}"
-        shell: "{{ systemuserlist[item]['shell'] | default('/dev/null') }}"
-        uid: "{{ systemuserlist[item]['uid'] }}"
-        create_home: "{{ 'home' in systemuserlist[item] | default(False) }}"
-        home: "{{ systemuserlist[item]['home'] | default() }}"
+        state: "{% if item.key in system_users %}present{% else %}absent{%endif%}"
+        name: "{{ item.key }}"
+        group: "{{ item.key }}"
+        groups: "{{ item.value.groups | default([]) }}"
+        shell: "{{ item.value.shell | default('/dev/null') }}"
+        uid: "{{ item.value.uid }}"
+        create_home: "{{ 'home' in item.value | default(False) }}"
+        home: "{{ item.value.home | default() }}"
         move_home: yes
         append: yes
         system: yes
-      with_items: "{{ system_users }}"
+      loop_control:
+        label: "{{ item.key }} [{% if item.key in system_users %}present{% else %}absent{%endif%}]"
+      with_dict: "{{ systemuserlist }}"
 
     - name: set authorized_keys for tunnel user
       authorized_key:
@@ -130,6 +146,8 @@
         - sshkeys
 
   when: system_users|length>0
+  tags:
+    - systemusers
 
 - name: check for deadspace
   stat:

@@ -1,0 +1,51 @@
+---
+
+- name: create dirs
+  file:
+   path: "{{ jenkins_root }}/{{ item }}"
+   state: directory
+   mode: '0755'
+   owner: jenkins
+   group: jenkins
+   recurse: yes
+  with_items:
+    - home
+    - etc/docker
+
+- name: create dirs for nginx
+  file:
+    path: "/var/www/{{ builds_url }}/{{ item }}"
+    state: directory
+    mode: 0755
+    owner: jenkins
+    group: jenkins
+    recurse: yes
+  with_items:
+    - apt
+    - pip
+
+
+- name: start docker container
+  docker_container:
+    name: "jenkins"
+    image: "benediktkr/jenkins:lts"
+    auto_remove: no
+    detach: yes
+    pull: yes
+    restart_policy: "unless-stopped"
+    #user: "{{systemuserlist.jenkins.uid}}:{{systemuserlist.jenkins.gid}}"
+    state: started
+    ports:
+      - "127.0.0.1:{{ jenkins_port }}:8080/tcp"
+      - "50000:50000/tcp"
+    volumes:
+      - "{{ jenkins_root }}/home:/var/jenkins_home"
+      - "{{ jenkins_root }}/etc/docker:/etc/docker"
+      - "/var/www/{{ builds_url }}:/builds"
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks_cli_compatible: no
+    networks:
+      - name: bridge
+      - name: bridgewithdns
+
+# sudo docker exec -it jenkins /usr/bin/docker login

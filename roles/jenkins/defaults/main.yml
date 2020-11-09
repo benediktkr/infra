@@ -1,0 +1,4 @@
+---
+
+jenkins_port: 3003
+jenkins_root: /srv/jenkins

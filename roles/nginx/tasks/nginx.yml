@@ -154,6 +154,7 @@
     job: "/usr/local/bin/certbot renew -n" # send via telegram
     state: absent
   tags: letsencrypt
+  ignore_errors: yes
 
 # - name: get letsencrypt cert for hostname (can be used by other roles as well)
 #   command: "/usr/local/bin/certbot -n certonly --standalone -d {{ inventory_hostname }} --agree-tos --email {{ myemail }}"
