@@ -18,7 +18,7 @@
 
 - name: start docker containers
   docker_container:
-    name: "sudoisbot_{{ item }}"
+    name: "{{ item }}"
     image: "benediktkr/sudoisbot:latest"
     auto_remove: no
     detach: yes
@@ -32,4 +32,9 @@
       - /usr/local/etc/sudoisbot-{{ item }}.yml:/etc/sudoisbot.yml
       - /srv/sudoisbot/{{ item }}:/data
     command: "{{ item }}"
+    networks_cli_compatible: no
+    networks:
+      - name: bridge
+      - name: bridgewithdns
+
   with_items: "{{ sudoisbot.docker_containers }}"

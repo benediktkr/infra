@@ -22,4 +22,8 @@
     volumes:
       - /usr/local/etc/zflux.yml:/etc/zflux.yml
       - /srv/zflux:/data
+    networks_cli_compatible: no
+    networks:
+      - name: bridge
+      - name: bridgewithdns
   tags: zflux-container
