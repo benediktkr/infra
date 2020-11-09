@@ -106,7 +106,9 @@
     src: vhost-proxy.j2
     dest: /etc/nginx/sites-enabled/01-proxy-vhosts
   when: "nginx_vhost_proxies is defined"
-  tags: nginx-config
+  tags:
+    - nginx-config
+    - nginx-vhosts
   notify: reload nginx
 
 - name: copy vhosts (specific roles copy/template their own)
