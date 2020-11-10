@@ -43,7 +43,7 @@
       - "{{ jenkins_root }}/home:/var/jenkins_home"
       - "{{ jenkins_root }}/etc/docker:/etc/docker"
       - "{{ jenkins_root }}/{{ jenkins_tumiproject }}:/{{ jenkins_tumiproject }}"
-      - "/var/www/{{ builds_url }}:/builds"
+      - /var/www/{{ builds_url }}:/builds
       - /var/run/docker.sock:/var/run/docker.sock
     networks_cli_compatible: no
     networks:
@@ -66,8 +66,8 @@
     - packages
     - influxdb-scripts
 
-- name: create symlink for {{ jenkins_tumiproject }}
-  file:
-    src: "{{ jenkins_root }}/{{ jenkins_tumiproject }}/cron/{{ jenkins_tumiproject }}.cron"
-    dest: "/etc/cron.d/{{ jenkins_tumiproject }}"
-    state: link
+- name: crontab for {{ jenkins_tumiproject }}
+  cron:
+    name: "{{ jenkins_tumiproject }}"
+    special_time: hourly
+    job: "crontab {{ jenkins_root }}/{{ jenkins_tumiproject }}/cron/{{ jenkins_tumiproject }}.cron"
