@@ -116,7 +116,7 @@
         gid: "{{ item.value.gid | default(item.value.uid) }}"
       with_dict: "{{ systemuserlist }}"
       loop_control:
-        label: "{{ item.key }} [{% if item.key in system_users %}present{% else %}absent{%endif%}]"
+        label: "[{% if item.key in system_users %}present{% else %}absent{%endif%}] {{ item.key }}"
 
     - name: create system users
       user:
@@ -132,7 +132,7 @@
         append: yes
         system: yes
       loop_control:
-        label: "{{ item.key }} [{% if item.key in system_users %}present{% else %}absent{%endif%}]"
+        label: "[{% if item.key in system_users %}present{% else %}absent{%endif%}] {{ item.key }}"
       with_dict: "{{ systemuserlist }}"
 
     - name: set authorized_keys for tunnel user
