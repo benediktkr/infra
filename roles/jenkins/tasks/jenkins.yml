@@ -7,10 +7,11 @@
    mode: '0755'
    owner: jenkins
    group: jenkins
-   recurse: yes
+   recurse: no
   with_items:
     - home
     - etc/docker
+    - "{{ jenkins_tumiproject }}"
 
 - name: create dirs for nginx
   file:
@@ -41,11 +42,32 @@
     volumes:
       - "{{ jenkins_root }}/home:/var/jenkins_home"
       - "{{ jenkins_root }}/etc/docker:/etc/docker"
+      - "{{ jenkins_root }}/{{ jenkins_tumiproject }}:/{{ jenkins_tumiproject }}"
       - "/var/www/{{ builds_url }}:/builds"
       - /var/run/docker.sock:/var/run/docker.sock
     networks_cli_compatible: no
     networks:
       - name: bridge
       - name: bridgewithdns
+  tags:
+    - jenkins-container
 
 # sudo docker exec -it jenkins /usr/bin/docker login
+
+# copied from monitory-server
+- name: install pip3 packages for {{ jenkins_tumiproject }}
+  pip:
+    name:
+      - influxdb
+    state: present
+    executable: pip3
+  tags:
+    - pip
+    - packages
+    - influxdb-scripts
+
+- name: create symlink for {{ jenkins_tumiproject }}
+  file:
+    src: "{{ jenkins_root }}/{{ jenkins_tumiproject }}/cron/{{ jenkins_tumiproject }}.cron"
+    dest: "/etc/cron.d/{{ jenkins_tumiproject }}"
+    state: link
