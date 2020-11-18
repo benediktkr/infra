@@ -61,6 +61,9 @@
       - lsb-release
       - lsb-base
       - at
+      - cmake    # emacs vterm
+      - libtool  # emacs vterm
+      - libtool-bin
       - build-essential
       - ca-certificates
       - cbm
