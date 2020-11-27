@@ -50,14 +50,14 @@
     label: "{{ item.name }}"
   when: False  # disabled during migration
 
-- name: start redis containers
+- name: redis containers
   docker_container:
     name: "redis_{{ item.name }}"
     image: "redis:latest"
     auto_remove: yes
     detach: yes
     pull: yes
-    state: started
+    state: "{{ item.state | default('started') }}"
     env:
       REDIS_HOST: "redis_{{ item.name }}"
     networks_cli_compatible: no
@@ -66,7 +66,7 @@
   when: item.redis
   with_items: "{{ nextclouds }}"
   loop_control:
-    label: "redis_{{ item.name }}"
+    label: "redis_{{ item.name }} [{{ item.state }}]"
   tags:
     - nextcloud-container
     - redis
@@ -76,14 +76,14 @@
 # to
 #  /usr/lib/python2.7/dist-packages/backports
 # after upgrading debian
-- name: start nextcloud containers
+- name: nextcloud containers
   docker_container:
     name: "{{ item.name }}"
     image: "nextcloud:{{ item.version }}"
     auto_remove: no
     detach: yes
     pull: yes
-    state: started
+    state: "{{ item.state | default('started') }}"
     restart_policy: "unless-stopped"
     env:
       NEXTCLOUD_DATA_DIR: "/data"
@@ -99,7 +99,7 @@
         ipv4_address: "{{ item.docker_ip }}"
   with_items: "{{ nextclouds }}"
   loop_control:
-    label: "{{ item.name }}"
+    label: "{{ item.name }} [{{ item.state }}]"
   tags:
     - nextcloud-container
 
@@ -130,7 +130,7 @@
     port: "{{ item.container_port }}"
     host: "{{ item.docker_ip }}"
     sleep: 2
-  when: item.docker_ip is defined
+  when: item.docker_ip is defined and item.state == "started"
   with_items: "{{ nextclouds }}"
   loop_control:
     label: "{{ item.name }}"
