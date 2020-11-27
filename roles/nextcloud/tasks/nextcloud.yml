@@ -48,6 +48,7 @@
   with_items: "{{ nextclouds }}"
   loop_control:
     label: "{{ item.name }}"
+  when: False  # disabled during migration
 
 - name: start redis containers
   docker_container:

@@ -33,11 +33,11 @@ $CONFIG = array (
   'datadirectory' => '/data',
   'overwrite.cli.url' => 'https://{{ item.url }}',
   'overwriteprotocol' => 'https',
-  'dbtype'        => 'mysql',
-  'dbname'        => '{{ item.name }}',
-  'dbuser'        => '{{ item.name }}',
-  'dbpassword'    => '{{ systemuserlist[item.name].mariadb_pass }}',
-  'dbhost'        => '{{ item.db_host }}',
+  'dbtype' => 'mysql',
+  'dbname' => '{{ item.name }}',
+  'dbuser' => '{{ item.name }}',
+  'dbpassword' => '{{ systemuserlist[item.name].mariadb_pass }}',
+  'dbhost' => '{{ item.db_host }}',
   'dbport' => '3306',
   'dbtableprefix' => 'oc_',
   'mysql.utf8mb4' => true,
@@ -59,11 +59,13 @@ $CONFIG = array (
     0 => 'keeweb',
   ),
 {% if item.redis %}
-  'memcache.distributed' => '\\OC\\Memcache\\Redis',
-  'redis' => [
+  'memcache.distributed' => '\OC\Memcache\Redis',
+  'memcache.locking' => '\OC\Memcache\Redis',
+  'redis' =>
+  array (
      'host' => 'redis_{{ item.name }}',
      'port' => 6379,
-  ],
+  ),
 {% endif %}
 {% if item.name == "nextcloud" %}
  'mail_smtpsecure' => 'ssl',

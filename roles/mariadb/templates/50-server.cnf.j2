@@ -27,7 +27,11 @@ lc-messages-dir         = /usr/share/mysql
 
 # Instead of skip-networking the default is now to listen only on
 # localhost which is more compatible and is not less secure.
+{% if ansible_docker0 is defined %}
+bind-address            = {{ ansible_docker0.ipv4.address }}
+{% else %}
 bind-address            = 127.0.0.1
+{% endif %}
 
 
 #

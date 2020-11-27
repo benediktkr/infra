@@ -4,9 +4,16 @@ use mysql;
 {% if systemuserlist[user]['mariadb']|default(False)  %}
 -- {{ user }}
 CREATE DATABASE IF NOT EXISTS {{ user }} CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;;
-CREATE USER IF NOT EXISTS  '{{ user }} '@'localhost' IDENTIFIED WITH unix_socket;
+CREATE USER IF NOT EXISTS  '{{ user }}'@'localhost' IDENTIFIED WITH unix_socket;
 GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, INDEX, DROP, ALTER, CREATE TEMPORARY TABLES, LOCK TABLES ON {{ user }}.* TO '{{ user }}'@'localhost';
+
+{% if "mariadb_pass" in systemuserlist[user] %}
+CREATE USER IF NOT EXISTS  '{{ user }}'@'%' IDENTIFIED BY '{{ systemuserlist[user]["mariadb_pass"] }}' ;
+GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, INDEX, DROP, ALTER, CREATE TEMPORARY TABLES, LOCK TABLES ON {{ user }}.* TO '{{ user }}'@'%';
 {% endif %}
+{% endif %}
+
 {% endfor %}
+
 
 FLUSH privileges;

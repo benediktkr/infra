@@ -5,7 +5,7 @@
 echo "{"
 {% for item in nextclouds %}
 phpversion="{{ item.root }}/html/version.php"
-version=$(grep 'OC_VersionString' $phpversion | awk '{ print $3 }' | tr -d "';")
+version=$(grep 'OC_Version =' $phpversion | awk '{ print $3 }' | tr -d "[a-z]();" | tr ',' '.')
 comma="{% if not loop.last %},{%endif%}"
 
 key="{{ item.name }}"
