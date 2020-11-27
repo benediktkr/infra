@@ -34,12 +34,12 @@
     - jellyfin-container
 
 
-- name: get jellyfin container ip
-  shell: "docker inspect jellyfin | jq -r '.[].NetworkSettings.IPAddress'"
-  register: jellyfin_ip
-  changed_when: no
-  tags:
-    - jellyfin-container
+# - name: get jellyfin container ip
+#   shell: "docker inspect jellyfin | jq -r '.[].NetworkSettings.IPAddress'"
+#   register: jellyfin_ip
+#   changed_when: no
+#   tags:
+#     - jellyfin-container
 
 - name: jellyfin nginx dir
   file:
@@ -91,9 +91,9 @@
     - jellyfin-conf
   notify: reload nginx
 
-- name: wait for jellyfin container on {{ jellyfin_ip.stdout }}
-  wait_for:
-    port: 8096
-    host: "{{ jellyfin_ip.stdout }}"
-  tags:
-    - jellyfin-container
+# - name: wait for jellyfin container on {{ jellyfin_ip.stdout }}
+#   wait_for:
+#     port: 8096
+#     host: "{{ jellyfin_ip.stdout }}"
+#   tags:
+#     - jellyfin-container
