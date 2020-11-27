@@ -34,6 +34,7 @@ def check():
         "fields": {
             "age_days": backup_age.days,
             "age_seconds": backup_age.seconds,
+            "backup_size": int(j['backup_size']),
             "value": dt_backup_updated.isoformat()
         }
     },
