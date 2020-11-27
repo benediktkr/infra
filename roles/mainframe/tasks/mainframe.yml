@@ -1,0 +1,9 @@
+---
+
+- name: install packages
+  apt:
+    update_cache: yes
+    name:
+      - irssi
+  tags:
+    - packages
