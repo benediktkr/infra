@@ -46,6 +46,15 @@
     - alternatives
   when: ansible_distribution == "Ubuntu"
 
+- name: remove packages that should only be on mainframe (temp and enable me pls)
+  apt:
+    state: absent
+    name:
+      - irssi
+  when: "{{ inventory_hostname }} != mainframe.sudo.is"
+  tags:
+    - remove-packages
+
 - name: install packages
   apt:
     state: latest
@@ -69,7 +78,6 @@
       - cbm
       - cryptsetup
       - curl
-      - irssi
       - dnsutils
       - git
       - gnupg2
