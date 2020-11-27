@@ -2,60 +2,110 @@
 
 - name: create dir structure
   file:
-    path: "{{ nextcloud_root }}/{{ item['dir'] }}"
+    path: "{{ item[1].root }}/{{ item[0] }}"
     state: directory
     mode: 0750
-    owner: "{{ item['owner'] | default('www-data') }}"
-    group: "{{ item['group'] | default('www-data') }}"
-  with_items:
-    - { dir: html, group: "root" }
-    - { dir: data }
+    owner: www-data
+    group: www-data
+  loop_control:
+    label: "{{ item[1].root }}/{{ item[0] }}"
+  with_nested:
+    - - html
+      - data
+    - "{{ nextclouds }}"
 
+
+# test this
+- name: template script to write version string to txt file
+  template:
+    src: nextcloudversion.sh.j2
+    dest: /usr/local/bin/nextcloudversion.sh
+    mode: 0750
+    owner: root
+    group: root
+
+- name: versions to variable
+  command: /usr/local/bin/nextcloudversion.sh
+  register: cmdnextcloudversion
+  check_mode: no  # warning: dragons
+  changed_when: false
+
+- set_fact:
+    nc_versions: "{{ cmdnextcloudversion.stdout | from_json }}"
+  check_mode: no
+
+- debug:
+    var:
+      nc_versions
+
+- name: template config.php
+  template:
+    src: config.php.j2
+    dest: "{{ item.root }}/html/config/config.php"
+    mode: 0750
+    owner: www-data
+    group: www-data
+  with_items: "{{ nextclouds }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: start redis containers
+  docker_container:
+    name: "redis_{{ item.name }}"
+    image: "redis:latest"
+    auto_remove: yes
+    detach: yes
+    pull: yes
+    state: started
+    env:
+      REDIS_HOST: "redis_{{ item.name }}"
+    networks_cli_compatible: no
+    networks:
+      - name: bridgewithdns
+  when: item.redis
+  with_items: "{{ nextclouds }}"
+  loop_control:
+    label: "redis_{{ item.name }}"
+  tags:
+    - nextcloud-container
+    - redis
 
 # Had to copy ssl_match_hostname from
 #   /usr/local/lib/python2.7/dist-pacakges/backports
 # to
 #  /usr/lib/python2.7/dist-packages/backports
 # after upgrading debian
-- name: start docker container
+- name: start nextcloud containers
   docker_container:
-    name: "{{ nextcloud_container_name }}"
-    image: "nextcloud:{{ nextcloud_version }}"
+    name: "{{ item.name }}"
+    image: "nextcloud:{{ item.version }}"
     auto_remove: no
     detach: yes
     pull: yes
     state: started
+    restart_policy: "unless-stopped"
     env:
       NEXTCLOUD_DATA_DIR: "/data"
     ports:
-      - "{{ nextcloud_exposed_port }}:80"
+      - "127.0.0.1:{{ item.exposed_port }}:{{ item.container_port }}"
     volumes:
-      - "{{ nextcloud_root }}/data:/data"
-      - "{{ nextcloud_root }}/html:/var/www/html"
+      - "{{ item.root }}/data:/data"
+      - "{{ item.root }}/html:/var/www/html"
+      - /var/run/mysqld/mysqld.sock:/var/run/mysqld/mysqld.sock
+    networks_cli_compatible: no
+    networks:
+      - name: bridgewithdns
+        ipv4_address: "{{ item.docker_ip }}"
+  with_items: "{{ nextclouds }}"
+  loop_control:
+    label: "{{ item.name }}"
   tags:
-    - docker
-
-- name: wait for nextcloud to be responsive
-  wait_for:
-    port: "{{ nextcloud_exposed_port }}"
-    host: localhost
-    sleep: 2
-  tags:
-    - docker
-
-- name: add to certbot
-  command: "/usr/local/bin/certbot certonly -n --nginx -d {{ nextcloud_url }} --agree-tos --email {{ myemail }}"
-  args:
-    creates: "/etc/letsencrypt/live/{{ nextcloud_url }}/fullchain.pem"
-  environment:
-    PATH: "{{ ansible_env.PATH }}:/sbin:/usr/sbin"
-  tags:
-    - letsencrypt
+    - nextcloud-container
 
 - name: template nginx vhost
   template:
     src: nginx-site.conf.j2
-    dest: "/etc/nginx/sites-enabled/01-nextcloud.sudo.is"
+    dest: /etc/nginx/sites-enabled/01-nextcloud
   tags:
     - nginx
   notify: reload nginx
@@ -63,19 +113,25 @@
 - name: template uploadsize.conf
   template:
     src: nginx-uploadsize.conf.j2
-    dest: "/etc/nginx/conf.d/uploadsize.conf"
+    dest: /etc/nginx/conf.d/uploadsize.conf
   tags:
     - nginx
   notify: reload nginx
 
-- name: nextcloud cron
-  cron:
-    name: nextcloud
-    minute: "*/15"
-    job: "/usr/bin/docker exec --user www-data {{ nextcloud_container_name }} php cron.php >> /tmp/nextcloud_cron.log"
+- name: template cron file
+  template:
+    src: nextcloud-cron.j2
+    dest: /etc/cron.d/nextcloud
+  tags: cron
 
-- name: thumbnails cron
-  cron:
-    name: nextcloud_thumbnails
-    minute: "*/15"
-    job: "/usr/bin/docker exec --user www-data {{ nextcloud_container_name }} php occ preview:pre-generate >> /tmp/nextcloud_previews.log"
+- name: wait for nextclouds
+  wait_for:
+    port: "{{ item.container_port }}"
+    host: "{{ item.docker_ip }}"
+    sleep: 2
+  when: item.docker_ip is defined
+  with_items: "{{ nextclouds }}"
+  loop_control:
+    label: "{{ item.name }}"
+  tags:
+    - docker

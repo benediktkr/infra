@@ -1,0 +1,83 @@
+<?php
+$CONFIG = array (
+  'htaccess.RewriteBase' => '/',
+  'memcache.local' => '\\OC\\Memcache\\APCu',
+  'apps_paths' =>
+  array (
+    0 =>
+    array (
+      'path' => '/var/www/html/apps',
+      'url' => '/apps',
+      'writable' => false,
+    ),
+    1 =>
+    array (
+      'path' => '/var/www/html/custom_apps',
+      'url' => '/custom_apps',
+      'writable' => true,
+    ),
+  ),
+  'instanceid' => '{{ item.instanceid }}',
+  'passwordsalt' => '{{ item.salt }}',
+  'secret' => '{{ item.secret }}',
+  'trusted_domains' =>
+   array (
+     0 => '{{ item.url }}',
+{% if item.extra_urls is defined %}
+{%   for url in item.extra_urls %}
+{# loop.index0 starts at 0, but loop.index starts at 1 #}
+     {{ loop.index }} => '{{ url }}',
+{%   endfor %}
+{% endif %}
+  ),
+  'datadirectory' => '/data',
+  'overwrite.cli.url' => 'https://{{ item.url }}',
+  'overwriteprotocol' => 'https',
+  'dbtype'        => 'mysql',
+  'dbname'        => '{{ item.name }}',
+  'dbuser'        => '{{ item.name }}',
+  'dbpassword'    => '{{ systemuserlist[item.name].mariadb_pass }}',
+  'dbhost'        => '{{ item.db_host }}',
+  'dbport' => '3306',
+  'dbtableprefix' => 'oc_',
+  'mysql.utf8mb4' => true,
+  'version' => '{{ nc_versions[item.name] }}',
+  'logtimezone' => 'UTC',
+  'installed' => true,
+  'loglevel' => 0,
+  'logfile' => '/var/www/html/log/nextcloud.log',
+  'maintenance' => false,
+  'mail_smtpmode' => 'smtp',
+  'mail_smtpauthtype' => 'LOGIN',
+  'mail_from_address' => 'nextcloud',
+  'mail_domain' => '{{ domain }}',
+  'mail_smtpport' => '465',
+  'mail_sendmailmode' => 'smtp',
+  'theme' => '',
+  'app_install_overwrite' =>
+  array (
+    0 => 'keeweb',
+  ),
+{% if item.redis %}
+  'memcache.distributed' => '\\OC\\Memcache\\Redis',
+  'redis' => [
+     'host' => 'redis_{{ item.name }}',
+     'port' => 6379,
+  ],
+{% endif %}
+{% if item.name == "nextcloud" %}
+ 'mail_smtpsecure' => 'ssl',
+ 'mail_smtphost' => '{{ item.smtp_host }}',
+ 'mail_smtpauth' => 1,
+ 'mail_smtpname' => '{{ item.smtp_name }}',
+ 'mail_smtppassword' => '{{ item.smtp_passwd }}',
+{% endif %}
+  'twofactor_enforced' => 'true',
+  'twofactor_enforced_groups' =>
+  array (
+    0 => '2fa',
+  ),
+  'twofactor_enforced_excluded_groups' =>
+  array (
+  ),
+);

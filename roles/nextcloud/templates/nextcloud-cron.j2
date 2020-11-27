@@ -1,0 +1,12 @@
+# m h  dom mon dow   command
+
+{% for item in nextclouds %}
+{% if item.cron %}
+*/15 * * * * /usr/bin/docker exec --user www-data {{ item.name }} php cron.php >> {{ item.root }}/cron.log 2>&1
+# */15 * * * * /usr/bin/docker exec --user www-data {{ item.name }} php occ preview:pre-generate >> {{ item.root }}/preview.log 2>&1
+{% endif %}
+
+{% endfor %}
+
+
+#
