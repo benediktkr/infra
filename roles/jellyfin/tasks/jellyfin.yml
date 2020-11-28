@@ -16,10 +16,10 @@
   docker_container:
     name: jellyfin
     image: jellyfin/jellyfin:latest
-    auto_remove: no
+    auto_remove: yes     # auto remove and no restart policy better for reboots
     detach: yes
     pull: yes
-    restart_policy: "unless-stopped"
+    restart_policy: no
     state: started
     user: "{{ systemuserlist.jellyfin.uid }}:{{ systemuserlist.jellyfin.gid }}"
     ports:

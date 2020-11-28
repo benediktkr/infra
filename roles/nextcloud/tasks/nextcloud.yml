@@ -54,7 +54,7 @@
   docker_container:
     name: "redis_{{ item.name }}"
     image: "redis:latest"
-    auto_remove: no
+    auto_remove: yes
     detach: yes
     pull: yes
     state: "{{ item.state | default('started') }}"
@@ -80,11 +80,11 @@
   docker_container:
     name: "{{ item.name }}"
     image: "nextcloud:{{ item.version }}"
-    auto_remove: no
+    auto_remove: yes
     detach: yes
     pull: yes
     state: "{{ item.state | default('started') }}"
-    restart_policy: "unless-stopped"
+    restart_policy: no
     env:
       NEXTCLOUD_DATA_DIR: "/data"
     ports:

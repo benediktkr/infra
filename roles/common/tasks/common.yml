@@ -84,6 +84,7 @@
       - procmail
       - acl
       - sshfs
+      - lshw
       - file
       - haveged
       - htop
