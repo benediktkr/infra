@@ -1,7 +1,5 @@
 ---
 
-rsnapshot_root: '/deadspace/rsnapshot'
-rsnapshot_logfile: '/deadspace/rsnapshot.log'
 sdfbackup: False
 
 retain_alpha: 30
