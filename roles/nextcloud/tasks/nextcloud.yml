@@ -54,7 +54,7 @@
   docker_container:
     name: "redis_{{ item.name }}"
     image: "redis:latest"
-    auto_remove: yes
+    auto_remove: no
     detach: yes
     pull: yes
     state: "{{ item.state | default('started') }}"
