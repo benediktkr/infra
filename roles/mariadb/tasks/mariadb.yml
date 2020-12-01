@@ -22,3 +22,28 @@
     src: users.sql.j2
     dest: /usr/local/etc/users.sql
   notify: reload mariadb users
+
+- name: create dump destination
+  file:
+    state: directory
+    owner: root
+    group: root
+    mode: 0770
+    path: "{{ mariadb_dump_path }}"
+  when: mariadb_dump_path is defined
+
+
+- name: backup script
+  template:
+    src: mariadb_backup.sh.j2
+    dest: /usr/local/bin/mariadb_backup.sh
+    owner: root
+    group: root
+    mode: 0770
+  when: mariadb_dump_path is defined
+
+- name: backup cron
+  template:
+    src: mariadb_backup_cron.j2
+    dest: /etc/cron.d/mariadb_backup_cron
+  when: mariadb_dump_path is defined

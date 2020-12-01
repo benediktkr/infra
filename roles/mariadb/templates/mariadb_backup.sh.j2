@@ -1,0 +1,30 @@
+#!/bin/bash
+
+lockfile -l 86400 -r 0 /var/run/maridb_backup.lock || exit 2
+
+print () {
+    PRINT=true
+    if [ "$PRINT" = "true" ]; then  echo `date +"%F %R:"` "$*" ; fi
+}
+
+
+if [ ! -d {{ mariadb_dump_path }} ]; then
+    print "path '{{ mariadb_dump_path }}' does not exist, bailing"
+    exit 1
+fi
+
+{% for user in system_users|default([]) %}
+{% if systemuserlist[user]['mariadb']|default(False)  %}
+# dumping '{{ user }}'
+if [ -f {{ mariadb_dump_path }}/{{ user }}.1.sql ]; then
+    rm {{ mariadb_dump_path }}/{{ user }}.1.sql
+fi
+if [ -f {{ mariadb_dump_path }}/{{ user }}.sql ]; then
+    mv {{ mariadb_dump_path }}/{{ user }}.sql {{ mariadb_dump_path }}/{{ user }}.1.sql
+fi
+mysqldump {{ user }} > {{ mariadb_dump_path }}/{{ user }}.sql
+
+{% endif %}
+{% endfor %}
+
+rm -f /var/run/maridb_backup.lock
