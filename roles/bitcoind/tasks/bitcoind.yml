@@ -1,0 +1,37 @@
+---
+
+- name: create dir for bind mount
+  file:
+    path: "{{ bitcoind_root }}/data"
+    state: directory
+    mode: 0755
+    owner: bitcoind
+    group: bitcoind
+    #recurse: yes
+
+# the image has a user to run bitcoind, but it is set to uid 1000
+
+- name: start container
+  docker_container:
+    name: bitcoind
+    image: kylemanna/bitcoind
+    auto_remove: yes     # auto remove and no restart policy better for reboots
+    detach: yes
+    pull: yes
+    restart_policy: "no"
+    state: started
+    user: "{{ systemuserlist.bitcoind.uid }}:{{ systemuserlist.bitcoind.gid }}"
+    ports:
+      - 8333:8333
+      - 127.0.0.1:8332:8332
+    volumes:
+      - "{{ bitcoind_root }}/data:/bitcoin"
+  tags:
+    - bitcoind-container
+    - docker-containers
+
+- name: wait for port 8333 on the container
+  wait_for:
+    host: localhost
+    port: 8333
+    sleep: 3
