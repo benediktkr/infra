@@ -3,10 +3,14 @@
 # how to resize:
 # https://ruderich.org/simon/notes/encrypted-remote-backups
 
-lockfile -l 86400 -r 0 /var/run/backup.lock || exit 2
+lockfile -l 86400 -r 0 /var/run/sdfbackup.lock || exit 2
 
 NAME={{ inventory_hostname.split('.')[0] }}
 SRC={{ rsnapshot_root }}/alpha.0
+#SRC=/backups/endor-rsnapshot/alpha.0
+
+# and edit cron job
+
 KEYFILE=/root/sdf_backup_lukskey
 SDF={{ sdf_metaarray }}
 VERBOSE=true
@@ -51,8 +55,12 @@ if [ ! -f /metaarray/backup/.metaarray_present ]; then
     print "metaarray not decrypted or mounted"
    exit 6
 fi
+
+print "df of metaarray luks volume:"
+df -h /metaarray/backup
+
 print "starting 'rsync -a $SRC /metaarray/backup'"
-rsync -a $SRC /metaarray/backup
+rsync -a $SRC /metaarray/backup --delete
 rsync_rc=$?
 
 print "rsync exited, napping for 10s"
@@ -67,6 +75,9 @@ if [ $rsync_rc -ne 0 ]; then
 fi
 
 sleep 60
+
+print "df of metaarray luks volume (after):"
+df -h /metaarray/backup
 
 # mark last succesful backup
 /usr/bin/date >> /metaarray/backup/.metaarray_present
@@ -93,4 +104,4 @@ rmdir /metaarray/sshfs
 rmdir /metaarray
 
 print "removing lockfile"
-rm -f /var/run/backup.lock
+rm -f /var/run/sdfbackup.lock
