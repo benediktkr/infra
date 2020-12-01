@@ -57,9 +57,9 @@ if [ ! -f /metaarray/backup/.metaarray_present ]; then
 fi
 
 print "df of metaarray luks volume:"
-df -h /metaarray/backup
+df -h /metaarray/backup | tail -n 1
 
-print "starting 'rsync -a $SRC /metaarray/backup'"
+print "starting 'rsync -a $SRC /metaarray/backup --delete'"
 rsync -a $SRC /metaarray/backup --delete
 rsync_rc=$?
 
@@ -77,7 +77,7 @@ fi
 sleep 60
 
 print "df of metaarray luks volume (after):"
-df -h /metaarray/backup
+df -h /metaarray/backup | tail -n 1
 
 # mark last succesful backup
 /usr/bin/date >> /metaarray/backup/.metaarray_present
@@ -89,15 +89,16 @@ umount /metaarray/backup
 #umount -f /metaarray/backup
 #umount -l /metaarray/backup # nuclear option
 rmdir /metaarray/backup
+sleep 5
 
 # and close the encryption
 print 'closing LUKS'
 /usr/sbin/cryptsetup luksClose metaarray-$NAME
+sleep 5
 
 # and unmount sshfs connection but we're not
-# managing the sshfs connection in this script
-fusermount -u /metaarray/sshfs
-#umount /metaarray/sshfs
+#fusermount -u /metaarray/sshfs
+umount /metaarray/sshfs
 #umount -f /metaarray/sshfs
 rmdir /metaarray/sshfs
 
