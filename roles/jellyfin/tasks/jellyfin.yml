@@ -19,7 +19,7 @@
     auto_remove: yes     # auto remove and no restart policy better for reboots
     detach: yes
     pull: yes
-    restart_policy: no
+    restart_policy: "no"
     state: started
     user: "{{ systemuserlist.jellyfin.uid }}:{{ systemuserlist.jellyfin.gid }}"
     ports:
@@ -32,6 +32,7 @@
       JELLYFIN_PublishedServerUrl: "{{ jellyfin_url }}"
   tags:
     - jellyfin-container
+    - docker-containers
 
 
 # - name: get jellyfin container ip

@@ -70,6 +70,7 @@
   tags:
     - nextcloud-container
     - redis
+    - docker-containers
 
 # Had to copy ssl_match_hostname from
 #   /usr/local/lib/python2.7/dist-pacakges/backports
@@ -84,7 +85,7 @@
     detach: yes
     pull: yes
     state: "{{ item.state | default('started') }}"
-    restart_policy: no
+    restart_policy: "no"
     env:
       NEXTCLOUD_DATA_DIR: "/data"
     ports:
@@ -102,6 +103,7 @@
     label: "{{ item.name }} [{{ item.state }}]"
   tags:
     - nextcloud-container
+    - docker-containers
 
 - name: template nginx vhost
   template:
