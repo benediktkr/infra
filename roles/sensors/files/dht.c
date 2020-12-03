@@ -4,6 +4,9 @@
  *
  * depends on 'wiringpi' apt package
  * based on:  http://www.uugear.com/portfolio/read-dht1122-temperature-humidity-sensor-from-raspberry-pi/
+ *
+ * wiring pi layout: http://wiringpi.com/pins/
+
  */
 
 #include <wiringPi.h>
@@ -12,16 +15,11 @@
 #include <stdint.h>
 
 #define MAX_TIMINGS	85
+#define MAX_TRIES	5
 
 int data[5] = { 0, 0, 0, 0, 0 };
 
-uint8_t digital_read_and_print(int dht_pin) {
-    int digital = digitalRead(dht_pin);
-    /*printf("digitalRead: %i\n", digital);*/
-    return digital;
-}
-
-void print_json(int dht_pin) {
+int print_json(int dht_pin) {
     uint8_t laststate	= HIGH;
     uint8_t counter	= 0;
     uint8_t j	        = 0, i;
@@ -35,25 +33,23 @@ void print_json(int dht_pin) {
 
     /* prepare to read the pin */
     pinMode(dht_pin, INPUT);
-    printf("%i\n", laststate);
+    //printf("%i\n", laststate);
 
     /* detect change and read data */
     for (i = 0; i < MAX_TIMINGS; i++) {
         counter = 0;
 
-        while (digital_read_and_print(dht_pin) == laststate) {
+        while (digitalRead(dht_pin) == laststate ) {
             counter++;
             delayMicroseconds(1);
             if (counter == 255)  {
-                printf("inner 255 at %i\n", i);
+                //printf("inner 255 at %i\n", i);
                 break;
             }
         }
         laststate = digitalRead(dht_pin);
-        printf("%i\n", laststate);
 
         if (counter == 255) {
-            printf("the second 255\n");
             break;
         }
 
@@ -64,7 +60,6 @@ void print_json(int dht_pin) {
             if (counter > 16) {
                 data[j / 8] |= 1;
             }
-            printf("incrementing j\n");
             j++;
         }
     }
@@ -73,11 +68,7 @@ void print_json(int dht_pin) {
      * check we read 40 bits (8bit x 5 ) + verify checksum in the last byte
      * print it out if data is good
      */
-    if (j < 40) {
-        printf("{\"error\": \"only read %i bits\"}\n", j);
-        exit(10);
-    }
-    if (data[4] == ((data[0]+data[1]+data[2]+data[3]) & 0xFF)) {
+    if ( (j>=40) && (data[4] == ((data[0]+data[1]+data[2]+data[3]) & 0xFF)) ) {
         float h = (float)((data[0] << 8) + data[1]) / 10;
         if (h > 100) {
             h = data[0];	// for DHT11
@@ -90,32 +81,44 @@ void print_json(int dht_pin) {
             c = -c;
         }
         printf("{\"humidity\": %.1f, \"temp\": %.1f}\n", h, c);
+       return 0;
     } else  {
-        printf("{\"error\": \"checksum\"}\n" );
+        // printf("{\"error\": \"checksum\"}\n" );
+        return 1;
     }
 }
 
 int main(int argc, char* argv[]) {
     if (wiringPiSetup() == -1) {
+        printf("{\"error\": \"please install wiringPi\"}\n" );
         exit(1);
     }
-    if (argc != 2) {
-        printf("{\"error\": \"usage: ./dht DHT_PIN\"}\n" );
+
+    int dht_pin = 0;
+    if (argc == 1) {
+        // defaulting to pin 3
+        // in wiringPi, dht_pin 3 is GPIO-22
+        // reference: http://wiringpi.com/pins/
+        dht_pin = 3;
+    } else if (argc == 2) {
+        // read first argument and try to parse as string
+
+        if (sscanf(argv[1], "%i", &dht_pin) != 1) {
+            printf("{\"error\": \"parsing DHT_PIN failed\"}\n");
+            exit(3);
+        }
+    } else {
+        printf("{\"error\": \"usage: ./dht [DHT_PIN]\"}\n" );
         exit(2);
     }
-    /* dht_pin 3 is GPIO-22 */
-    int dht_pin = 0;
-    if (sscanf(argv[1], "%i", &dht_pin) != 1) {
-        printf("{\"error\": \"parsing DHT_PIN failed\"}\n");
-        exit(3);
+
+    int i;
+    int dht_res = 1;
+    while (dht_res !=0 && i < MAX_TRIES) {
+        delay(2000);
+        dht_res = print_json(dht_pin);
+        i++;
     }
 
-    if (dht_pin == 0) {
-        printf("{\"error\": \"DHT_PIN is still 0\"}\n");
-        exit(4);
-    }
-
-
-    print_json(dht_pin);
     return(0);
 }
