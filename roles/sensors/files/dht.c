@@ -80,7 +80,7 @@ int print_json(int dht_pin) {
         if (data[2] & 0x80) {
             c = -c;
         }
-        printf("{\"humidity\": %.1f, \"temp\": %.1f}\n", h, c);
+        printf("{\"humidity\": %.1f, \"temp\": %.1f, \"dht_pin\": %d}\n", h, c, dht_pin);
        return 0;
     } else  {
         // printf("{\"error\": \"checksum\"}\n" );
@@ -94,20 +94,18 @@ int main(int argc, char* argv[]) {
         exit(1);
     }
 
-    int dht_pin = 0;
-    if (argc == 1) {
-        // defaulting to pin 3
-        // in wiringPi, dht_pin 3 is GPIO-22
-        // reference: http://wiringpi.com/pins/
-        dht_pin = 3;
-    } else if (argc == 2) {
+    // defaulting to pin 3
+    // in wiringPi, dht_pin 3 is GPIO-22
+    // reference: http://wiringpi.com/pins/
+    int dht_pin = 3;
+    if (argc == 2) {
         // read first argument and try to parse as string
 
         if (sscanf(argv[1], "%i", &dht_pin) != 1) {
             printf("{\"error\": \"parsing DHT_PIN failed\"}\n");
             exit(3);
         }
-    } else {
+    } else if (argc != 1) {
         printf("{\"error\": \"usage: ./dht [DHT_PIN]\"}\n" );
         exit(2);
     }
@@ -120,5 +118,9 @@ int main(int argc, char* argv[]) {
         i++;
     }
 
-    return(0);
+    if (dht_res != 0) {
+        printf("{\"error\": \"no valid data\", \"dht_pin\": %d}\n", dht_pin);
+    }
+
+    return(dht_res);
 }
