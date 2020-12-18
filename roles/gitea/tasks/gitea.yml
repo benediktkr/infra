@@ -37,7 +37,6 @@
     networks:
       - name: bridgewithdns
         ipv4_address: "{{ bridgewithdns.gitea }}"
-
   tags:
     - gitea-container
     - docker-containers
