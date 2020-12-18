@@ -37,7 +37,7 @@
     #user: "{{systemuserlist.jenkins.uid}}:{{systemuserlist.jenkins.gid}}"
     state: started
     ports:
-      - "127.0.0.1:{{ jenkins_port }}:8080/tcp"
+      - "{{ jenkins_bind_addr | default('127.0.0.1') }}:{{ jenkins_port }}:8080/tcp"
       - "50000:50000/tcp"
     volumes:
       - "{{ jenkins_root }}/home:/var/jenkins_home"
