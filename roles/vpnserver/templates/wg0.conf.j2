@@ -28,9 +28,7 @@ PersistentKeepalive = 240
 # {{ peer }}
 [Peer]
 PublicKey = {{ lookup('file', 'private/wireguard/' + peer + '.pub' ) }}
-{% set clients = [wireguard_clients[c].ip+"/32" for c in d.clients] %}
-{% set ips  = [d.ip + "/32"] + clients
-AllowedIPs = {{ ips | join(", ") }}
+AllowedIPs = {{ d.ip }}/32
 {%   endif %}
 
 {% endfor %}
