@@ -7,7 +7,7 @@
 
 
 [agent]
-  interval = "60s"
+  interval = "{{ telegraf_interval | default('60s') }}"
   ## Rounds collection interval to 'interval'
   ## ie, if interval="10s" then always collect on :00, :10, :20, etc.
   round_interval = true
@@ -227,9 +227,9 @@
   # fielddrop = ["uptime_format"]
 
 
-{% if 'docker' in role_names %}
-#[[inputs.docker]]
-#  timeout = "5s"
+{% if 'docker' in group_names %}
+[[inputs.docker]]
+  timeout = "5s"
 {% endif %}
 
 

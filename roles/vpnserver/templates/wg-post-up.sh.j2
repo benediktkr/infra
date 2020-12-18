@@ -15,8 +15,10 @@ ip route add {{ upstream_dns_2 }}/32 via $dgw metric 0
 {% endif %}
 
 {% for host in wireguard_endpoints.values() %}
-{% set serverip = wireguard_clients[host]['ip'] %}
+{%   if 'endpoint_for' in wireguard_clients[host] %}
+{%     set serverip = wireguard_clients[host]['ip'] %}
 ping -c 1 {{ serverip }} || true
+{%   endif %}
 {% endfor %}
 
 exit 0

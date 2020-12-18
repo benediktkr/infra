@@ -1,0 +1,12 @@
+---
+
+logging:
+  dir: "/var/log"
+  rotation: "50 MB"
+  level: "DEBUG"
+  backtrace: False
+  diagnose: False
+
+proxy_pubsub:
+  zmq_frontend: tcp://*:{{ zmq_proxy_frontend_port }}
+  zmq_backend: tcp://*:{{ zmq_proxy_backend_port }}

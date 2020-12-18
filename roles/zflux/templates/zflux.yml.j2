@@ -1,12 +1,16 @@
 ---
 
+# should be capable of both bind and connect tbh
+
 zmq:
-  topic: 'zflux:{{ zflux.zmq.topic }}'
-{% if zflux.zmq.bind_port is defined %}
-  bind: 'tcp://*:{{ zflux.zmq.bind_port|default("5558") }}'
+  topic: {{ zflux.zmq.topic }}
+{% if zflux.bind is defined %}
+  # bind: 'tcp://*:{{ zflux.zmq.bind_port|default("5558") }}'
+  bind: {{ zflux.bind }}
 {% else %}
   connect: 'tcp://{{ broker }}:5560'
 {% endif %}
+
 
 influxdb:
   host: {{ ingest }}

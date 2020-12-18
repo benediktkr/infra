@@ -1,0 +1,13 @@
+# distributed from ansible
+
+# m h dom mon dow
+15 */1 * * * root /usr/local/sbin/git-cron.sh
+
+#13 * * * * root /usr/local/sbin/ansible-convergence.sh
+13 3 * * * root /usr/local/sbin/ansible-convergence.sh sensors
+
+17 */3 * * * root /usr/local/sbin/tf-convergence.sh
+
+
+
+#

@@ -1,0 +1,14 @@
+---
+- name: restart sudoisbot temp_pub
+  systemd:
+    state: restarted
+    daemon_reload: yes
+    name: "sudoisbot@temp_pub"
+  when: "'temp' in sensors"
+
+- name: restart sudoisbot rain_pub
+  systemd:
+    state: restarted
+    daemon_reload: yes
+    name: "sudoisbot@rain_pub"
+  when: "'rain' in sensors"

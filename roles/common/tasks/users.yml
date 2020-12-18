@@ -8,6 +8,7 @@
       tags:
         - systemusers
         - humanusers
+        - sshkeys
 
     - name: list human users
       debug:
@@ -25,6 +26,7 @@
     - systemusers
     - humanusers
     - users
+    - sshkeys
 
 
 - name: set root shell to zsh
@@ -78,6 +80,16 @@
   with_items: "{{ human_users }}"
   tags: human
 
+- name: chmod and chown for .ssh
+  file:
+    path: "~{{ item }}/.ssh"
+    state: directory
+    owner: "{{ item }}"
+    group: "{{ item }}"
+    mode: 0700
+  with_items: "{{ human_users }}"
+  tags: human
+
 - name: move homedirs if host uses alterantive location
   user:
     name: "{{ userlist[item]['username'] }}"
@@ -96,11 +108,14 @@
   when: is_local is not defined
 
 - name: set authorized_keys for users with local pubkey files
-  authorized_key:
-    user: "{{ item }}"
-    state: present
-    key: "{{ lookup('file', 'private/sshkeys/' + item  + '.pub') }}"
-    manage_dir: yes
+  template:
+    src: "private/sshkeys/{{ item }}.pub"
+    dest: "~/.ssh/authorized_keys"
+    owner: "{{ item }}"
+    group: "{{ item }}"
+    mode: 0600
+  become: true
+  become_user: "{{ item }}"
   with_items: "{{ human_users }}"
   when:
     - userlist[item]['sshkey']
@@ -109,18 +124,39 @@
 
 - name: set up system users
   block:
+
+    - name: remove system users that shouldnt be on this system
+      user:
+        name: "{{ item.key }}"
+        state: absent
+        remove: yes
+      loop_control:
+        label: "{{ item.key }}"
+      with_dict: "{{ systemuserlist }}"
+      when: item.key not in system_users
+
+    - name: remove system groups that shouldnt be on this system
+      group:
+        name: "{{ item.key }}"
+        state: absent
+      loop_control:
+        label: "{{ item.key }}"
+      with_dict: "{{ systemuserlist }}"
+      when: item.key not in system_users
+
     - name: create system user groups
       group:
         state: "{% if item.key in system_users %}present{% else %}absent{%endif%}"
         name: "{{ item.key }}"
         gid: "{{ item.value.gid | default(item.value.uid) }}"
       with_dict: "{{ systemuserlist }}"
+      when: item.key in system_users
       loop_control:
         label: "[{% if item.key in system_users %}present{% else %}absent{%endif%}] {{ item.key }}"
 
     - name: create system users
       user:
-        state: "{% if item.key in system_users %}present{% else %}absent{%endif%}"
+        state: present
         name: "{{ item.key }}"
         group: "{{ item.key }}"
         groups: "{{ item.value.groups | default([]) }}"
@@ -131,6 +167,7 @@
         move_home: yes
         append: yes
         system: yes
+      when: item.key in system_users
       loop_control:
         label: "[{% if item.key in system_users %}present{% else %}absent{%endif%}] {{ item.key }}"
       with_dict: "{{ systemuserlist }}"

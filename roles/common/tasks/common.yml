@@ -1,12 +1,71 @@
 ---
 - name: set hostname
   hostname:
-    name: "{{ item }}"
+    name: "{{ inventory_hostname }}"
     use: systemd
-  with_items:
-    - "{{ inventory_hostname }}"
   tags:
     - hostname
+
+- name: set image hostname
+  hostname:
+    name: "sensor-image"
+    use: systemd
+  tags:
+    - never
+    - image
+
+- name: copy ssh keys if known
+  copy:
+    src: "{{ item }}"
+    dest: /etc/ssh/
+  with_fileglob: "private/ssh_host_keys/{{ inventory_hostname }}/ssh_host_*"
+  tags:
+    - ssh
+
+- name: copy sensor-image keys when relevant
+  copy:
+    src: "{{ item }}"
+    dest: /etc/ssh/
+  with_fileglob: "private/ssh_host_keys/sensor-image/ssh_host_*"
+  tags:
+    - never
+    - image
+
+- name: make dir for host keys
+  file:
+    state: directory
+    path: "private/ssh_host_keys/{{ inventory_hostname }}"
+    owner: "{{ myusername }}"
+    group: "{{ myusername }}"
+  delegate_to: localhost
+  tags:
+    - ssh
+
+- name: save hosts keys
+  fetch:
+    src: "/etc/ssh/{{ item }}"
+    dest: private/ssh_host_keys/
+  with_items:
+    - ssh_host_ecdsa_key
+    - ssh_host_ecdsa_key.pub
+    - ssh_host_ed25519_key
+    - ssh_host_ed25519_key.pub
+    - ssh_host_rsa_key
+    - ssh_host_rsa_key.pub
+  tags:
+    - ssh
+
+- name: chown ssh_host_keys
+  file:
+    path: private/ssh_host_keys
+    owner: "{{ myusername }}"
+    group: "{{ myusername }}"
+    mode: 0700
+    recurse: yes
+  delegate_to: localhost
+  become: true
+  tags:
+    - ssh
 
 - name: Set timezone to Europe/Berlin
   timezone:
@@ -46,33 +105,40 @@
     - alternatives
   when: ansible_distribution == "Ubuntu"
 
-- name: remove packages that should only be on mainframe (temp and enable me pls)
+- name: remove packages that should only be on mainframe
   apt:
     state: absent
+    purge: yes
     name:
+      - autoconf # emacs-build
+      - gnupg2
+      - gnutls-bin # emacs-build
       - irssi
-  when: "{{ inventory_hostname }} != mainframe.sudo.is"
+      - kpcli
+      - libgnutls28-dev # emacs-build
+      - libncurses-dev # emacs-build
+      - pkg-config # emacs-build
+      - texinfo  # emacs-build
+      - libffi-dev
+      - libssl-dev
+      - cmake    # emacs vterm
+      - libtool  # emacs vterm
+      - libtool-bin
+
+  when: 'inventory_hostname != "mainframe.sudo.is"'
   tags:
     - remove-packages
+    - packages
 
 - name: install packages
   apt:
     state: latest
     name:
-      - autoconf # emacs-build
-      - texinfo  # emacs-build
-      - gnutls-bin # emacs-build
-      - libgnutls28-dev # emacs-build
-      - pkg-config # emacs-build
-      - libncurses-dev # emacs-build
       - apt-transport-https
       - aptitude
       - lsb-release
       - lsb-base
       - at
-      - cmake    # emacs vterm
-      - libtool  # emacs vterm
-      - libtool-bin
       - build-essential
       - ca-certificates
       - cbm
@@ -80,7 +146,6 @@
       - curl
       - dnsutils
       - git
-      - gnupg2
       - procmail
       - acl
       - sshfs
@@ -93,9 +158,6 @@
       - iotop
       - iptraf
       - jq
-      - kpcli
-      - libffi-dev
-      - libssl-dev
       - lsof
       - lvm2
       - molly-guard
@@ -104,7 +166,6 @@
       - nethogs
       - nmap
       #- ntp
-      - openssh-server
       - openssl
       #- python-netaddr
       - rsync
@@ -127,8 +188,17 @@
       - update-motd
       - landscape-client
       - landscape-common
+    autoremove: yes
     state: absent
+    purge: yes
   tags: packages
+
+- name: make sure openssh-server is installed
+  apt:
+    name: openssh-server
+    state: present
+  tags:
+    - packages
 
 - name: remove ntp package (systemd...)
   apt:
@@ -163,18 +233,22 @@
 - name: check if hosts file needs fixing
   command: grep {{ inventory_hostname }} /etc/hosts
   register: grephosts
-  tags: etchosts
   failed_when: grephosts.rc >= 2
   changed_when: grephosts.rc != 0
+  tags:
+    - image
+    - etchosts
 
 - name: fix hosts file
   lineinfile:
     path: /etc/hosts
     line: "127.0.0.1 {{ inventory_hostname }}"
     create: no
-  tags: etchosts
   ignore_errors: yes  # fails in --check
   when: grephosts.rc != 0
+  tags:
+    - etchosts
+    - image
 
 - name: disable password authentication
   replace:
@@ -209,36 +283,66 @@
     recurse: yes
   when: ansible_distribution == "Ubuntu"
 
-- name: install unattended-upgrades
+- name: install/remove unattended-upgrades
   apt:
     name: unattended-upgrades
-    state: present
+    state: "{% if unatt_enabled|bool %}present{% else %}absent{%endif%}"
     update_cache: yes
-  when: unatt_enabled|bool
   tags:
     - unatt
     - packages
 
-- name: install pip packages
+- name: install common pip packages
   pip:
     name:
-      - ansible
       - poetry
-      - netaddr
-      - certbot
+      - influxdb
+    state: latest
     executable: pip3
   tags:
     - pip
     - packages
 
-- name: install zmq pip package
+- name: remove pip packages that are only needed on mainframe
   pip:
-    name: zmq
+    name:
+      - ansible
+      - certbot
+      - netaddr
+    state: absent
     executable: pip3
+  when: 'inventory_hostname != "mainframe.sudo.is"'
   tags:
+    - remove-packages
     - pip
     - packages
-  when: zmq_install
+
+
+- name: use grafana instead of emails to notify of reboots needed
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: root
+    group: root
+    mode: "{{ item.mode }}"
+  with_items:
+    - src: reboot_required.py.j2
+      dest: /usr/local/bin/reboot_required.py
+      mode: 770
+    - src: reboot_required-cron.j2
+      dest: /etc/cron.d/reboot_required
+      mode: 660
+  tags:
+    - rebootrequired
+
+# - name: install zmq pip package
+#   pip:
+#     name: zmq
+#     executable: pip3
+#   tags:
+#     - pip
+#     - packages
+#   when: zmq_install
 
 # TODO: Decide on which way...
 - name: enable unattended-upgrades (following codenames)
@@ -251,3 +355,14 @@
   when: unatt_enabled|bool
   tags:
     - unatt
+
+- name: clean up unattended-upgrades config if not used
+  file:
+    path: "/etc/apt/apt.conf.d/{{ item }}"
+    state: absent
+  with_items:
+    - 50unattended-upgrades
+    - 20auto-upgrades
+  when: not unatt_enabled|bool
+  tags:
+    - unatt2

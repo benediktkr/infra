@@ -1,0 +1,21 @@
+#!/bin/bash
+
+set -e
+
+{% set base = git_cron.base_path %}
+
+cd {{ base }}/infra
+
+if [ "$1" = "sensors" ]; then
+    ansible-playbook \
+        -i hosts-sensors.yml \
+        sensors.yml \
+        --diff \
+        --check > {{ base }}/ansible-convergence-sensors.txt
+else
+    ansible-playbook \
+        -i hosts.yml \
+        {{ git_cron.convergence }} \
+        --diff \
+        --check > {{ base }}/ansible-convergence.txt
+fi

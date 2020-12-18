@@ -1,6 +1,6 @@
 server {
    listen 80;
-   server_name {{ item }};
+   server_name {{ item.name }} {{ item.aliases | join (" ") | default([]) }};
 
     return 301 https://$host$request_uri;
 }
@@ -9,9 +9,9 @@ server {
   listen 443 ssl;
   listen   [::]:443 ssl; # listen for ipv6
 
-  server_name {{ item }};
+  server_name {{ item.name }} {{ item.aliases | join (" ") | default([]) }};
 
-  root /var/www/{{ item }};
+  root /var/www/{{ item.name }};
   location / {
       autoindex on;
   }
@@ -19,13 +19,13 @@ server {
     add_header Content-Type text/plain;
   }
 
-  access_log /var/log/nginx/{{ item }}.log main;
-  error_log /var/log/nginx/{{ item }}_error.log warn;
+  access_log /var/log/nginx/access_{{ item.name }}.log main;
+  error_log /var/log/nginx/error_{{ item.name }}.log warn;
 
   ssl_session_timeout 5m;
 
   # using wildcard for our domain, but cloudflare doesnt care
-  {% set domain = '.'.join(item.split('.')[-2:]) %}
+  {% set domain = '.'.join(item.name.split('.')[-2:]) %}
   ssl_certificate /etc/letsencrypt/live/{{ domain }}/fullchain.pem;
   ssl_certificate_key /etc/letsencrypt/live/{{ domain }}/privkey.pem;
 

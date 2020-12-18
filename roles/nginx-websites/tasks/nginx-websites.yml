@@ -6,13 +6,13 @@
     owner: "{{ myusername }}"
     group: www-data
     mode: 0755
-    path: "/var/www/{{ item }}"
+    path: "/var/www/{{ item.name }}"
   with_items: "{{ static_sites }}"
 
 - name: template static website configs
   template:
     src: nginx-static-vhost.j2
-    dest: /etc/nginx/sites-enabled/02-{{ item }}
+    dest: /etc/nginx/sites-enabled/02-{{ item.name }}
     owner: www-data
     group: www-data
   with_items: "{{ static_sites }}"

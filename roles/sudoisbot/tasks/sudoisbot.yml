@@ -1,10 +1,17 @@
 ---
 
+- name: add {{ myusername }} to groups for sensors
+  user:
+    name: "{{ myusername }}"
+    groups:
+      - sudoisbot
+    append: yes
+
 - name: create directory for data
   file:
-   path: /srv/sudoisbot/{{ item }}
+   path: "{{ sudoisbot.fsroot }}/{{ item }}"
    state: directory
-   mode: '0755'
+   mode: '0664'
    owner: sudoisbot
    group: sudoisbot
    recurse: yes
@@ -15,26 +22,28 @@
     src: "{{ item }}.yml.j2"
     dest: /usr/local/etc/sudoisbot-{{ item }}.yml
   with_items: "{{ sudoisbot.docker_containers }}"
+  tags:
+    - sudoisbot-config
 
-- name: start docker containers
-  docker_container:
-    name: "{{ item }}"
-    image: "benediktkr/sudoisbot:latest"
-    auto_remove: no
-    detach: yes
-    pull: yes
-    restart_policy: "no"
-    state: started
-    env:
-      SUDOISBOT_CONF: "/etc/sudoisbot.yml"
-      SUDOISBOT_LOGFILE: "/data/sudoisbot.log"
-    volumes:
-      - /usr/local/etc/sudoisbot-{{ item }}.yml:/etc/sudoisbot.yml
-      - /srv/sudoisbot/{{ item }}:/data
-    command: "{{ item }}"
-    networks_cli_compatible: no
-    networks:
-      - name: bridge
-      - name: bridgewithdns
+# - name: start docker containers
+#   docker_container:
+#     name: "{{ item }}"
+#     image: "benediktkr/sudoisbot:latest"
+#     auto_remove: no
+#     detach: yes
+#     pull: yes
+#     restart_policy: "no"
+#     state: started
+#     env:
+#       SUDOISBOT_CONF: "/etc/sudoisbot.yml"
+#       SUDOISBOT_LOGFILE: "/data/sudoisbot.log"
+#     volumes:
+#       - /usr/local/etc/sudoisbot-{{ item }}.yml:/etc/sudoisbot.yml
+#       - "{{ sudoisbot.fsroot }}/{{ item }}:/data"
+#     command: "{{ item }}"
+#     networks_cli_compatible: no
+#     networks:
+#       - name: bridge
+#       - name: bridgewithdns
 
-  with_items: "{{ sudoisbot.docker_containers }}"
+#   with_items: "{{ sudoisbot.docker_containers }}"

@@ -66,6 +66,7 @@
   tags:
     - jellyfin-conf
     - jellyfin-users
+    - jellyfin-auth
     - nginx-conf
   with_items:
     - users.digest

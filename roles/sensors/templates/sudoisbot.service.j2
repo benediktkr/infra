@@ -1,0 +1,14 @@
+[Unit]
+Description=sudoisbot (sensor)
+After=syslog.target
+
+[Service]
+User=sensors
+Group=sensors
+WorkingDirectory={{ systemuserlist['sensors']['home'] }}
+ExecStart=/usr/local/bin/sudoisbot %I
+Restart=on-success
+RestartSec=0
+
+[Install]
+WantedBy=multi-user.target

@@ -1,22 +1,22 @@
 ---
 
-# needs to be fixed in the code, it expects a file logger and this will throw an error
-
-logging:
-  level: ERROR
-
+broker: tcp://{{ broker }}:5559
+frequency: {{ frequency | default(240) }}
+location: {{ location | default(inventory_hostname.split('.')[1]) }}
+sensor_log_no: {{ temp_log_no | default(9) }}
 
 {% if sensors is defined %}
 sensors:
-  {% for sensor in sensors  %}
 
-  - name: {{ sensor.name }}
-    type: {{ sensor.type }}
-    {% if 'id' in sensor %}id: {{ sensor.id }}{% endif %}
+{% for sensortype, sensors in sensors.items()  %}
+  {{ sensortype }}:
+  {% for sensor in sensors %}
+
+  - {% for key, value in sensor.items() %} {{ key }}: {{ value }}
+    {% endfor %}
   {% endfor %}
 
+{% endfor %}
 {% endif %}
-
-pub:
-  broker: tcp://{{ broker }}:5559
-  interval: {{ pub_interval | default(240) }}
+#logging:
+#  level: ERROR

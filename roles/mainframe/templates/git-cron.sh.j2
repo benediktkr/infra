@@ -1,0 +1,41 @@
+#!/bin/bash
+
+set -e
+
+cd /root
+
+{% set base = git_cron.base_path %}
+
+{% for repo in git_cron.repos %}
+if [ ! -d {{ base }}/{{ repo.dest }}/.git ]; then
+    git clone {{ repo.src }} {{ base }}/{{ repo.dest }}
+fi
+{% endfor %}
+
+(
+{% for repo in git_cron.repos %}
+
+    echo "{{ repo.dest }}"
+    cd {{ base }}/{{ repo.dest }}
+    git pull
+
+{% endfor %}
+) > /dev/null
+
+(
+{% for repo in git_cron.repos %}
+{%   for link_src in repo.private_links|default([]) %}
+{%     set link = '/'.join([base, git_cron.private, link_src]) %}
+    ln -s {{ link }} {{ base }}/{{ repo.dest }}/
+{%   endfor %}
+{% endfor %}
+
+    mkdir -p /root/.zsh.d/
+    ln -s /root/dotfiles/zsh/.zsh.d/jreese2.zsh-theme /root/.zsh.d/
+    ln -s /root/dotfiles/zsh/.zshrc /root/.zshrc
+
+    ln -s /root/dotfiles/emacs/.emacs /root/.zshrc
+    ln -s /root/dotfiles/ssh/config /root/.ssh/config
+
+
+) &> /dev/null

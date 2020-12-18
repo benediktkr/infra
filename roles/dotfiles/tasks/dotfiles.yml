@@ -12,7 +12,7 @@
     mode: 0750
     owner: "{{ myusername }}"
     group: "{{ myusername }}"
-    recurse: yes
+
 
 
 - name: pull my dotfiles repo
@@ -27,6 +27,10 @@
   ignore_errors: yes
   register: gitpull
 
+- name: check if the dotfiles repo is managed in ~/projects/dotfiles
+  stat:
+    path: "~{{ myusername }}/projects/dotfiles"
+  register: projects_dotfiles
 
 - name: put my dotfiles in place
   copy:
@@ -36,7 +40,9 @@
   with_items:
     - "{{ dotfiles }}"
   become_user: "{{ myusername }}"
-  when: gitpull.changed
+  when:
+    - gitpull.changed
+    - not projects_dotfiles.stat.exists
 
 - name: put dotfiles for root in place
   copy:
@@ -47,4 +53,6 @@
     group: root
   with_items:
     - "{{ dotfiles }}"
-  when: gitpull.changed
+  when:
+    - gitpull.changed
+    - not projects_dotfiles.stat.exists

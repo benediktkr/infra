@@ -4,26 +4,26 @@
   template:
     src: zflux.yml.j2
     dest: /usr/local/etc/zflux.yml
-  notify: restart zflux
+  #notify: restart zflux
 
-- name: start docker container
-  docker_container:
-    name: "zflux"
-    image: "benediktkr/zflux:latest"
-    auto_remove: no
-    detach: yes
-    pull: yes
-    restart_policy: "unless-stopped"
-    state: started
-    env:
-      ZFLUX_LOGFILE: /data/zflux.log
-    ports:
-      - "{{ zflux.zmq.bind_port }}:{{ zflux.zmq.bind_port }}/tcp"
-    volumes:
-      - /usr/local/etc/zflux.yml:/etc/zflux.yml
-      - /srv/zflux:/data
-    networks_cli_compatible: no
-    networks:
-      - name: bridge
-      - name: bridgewithdns
-  tags: zflux-container
+# - name: start docker container
+#   docker_container:
+#     name: "zflux"
+#     image: "benediktkr/zflux:latest"
+#     auto_remove: no
+#     detach: yes
+#     pull: yes
+#     restart_policy: "unless-stopped"
+#     state: started
+#     env:
+#       ZFLUX_LOGFILE: /data/zflux.log
+#     ports:
+#       - "{{ zflux.zmq.bind_port }}:{{ zflux.zmq.bind_port }}/tcp"
+#     volumes:
+#       - /usr/local/etc/zflux.yml:/etc/zflux.yml
+#       - /srv/zflux:/data
+#     networks_cli_compatible: no
+#     networks:
+#       - name: bridge
+#       - name: bridgewithdns
+#   tags: zflux-container

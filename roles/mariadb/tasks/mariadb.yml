@@ -22,6 +22,8 @@
     src: users.sql.j2
     dest: /usr/local/etc/users.sql
   notify: reload mariadb users
+  tags:
+    - users
 
 - name: create dump destination
   file:

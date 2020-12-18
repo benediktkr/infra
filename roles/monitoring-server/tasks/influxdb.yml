@@ -22,18 +22,6 @@
     - influxdb-scripts
 
 
-# renewal cron job is set in the nginx role (not the best place)
-
-- name: get letsencrypt cert
-  command: "/usr/local/bin/certbot certonly -n --nginx -d {{ influxdb_url }} --agree-tos --email {{ myemail }}"
-  args:
-    creates: "/etc/letsencrypt/live/{{ influxdb_url }}/fullchain.pem"
-  environment:
-    PATH: "{{ ansible_env.PATH }}:/sbin:/usr/sbin"
-  tags:
-    - letsencrypt
-    - influxdb-letsencrypt
-
 - name: nginx vhost
   template:
     src: 01-influxdb.j2

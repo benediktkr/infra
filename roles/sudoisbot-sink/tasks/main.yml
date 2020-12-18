@@ -1,0 +1,3 @@
+---
+ - include: sudoisbot-sink.yml
+   tags: sudoisbot-sink
