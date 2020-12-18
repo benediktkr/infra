@@ -122,6 +122,15 @@
   tags:
     - sshkeys
 
+- name: set a password for {{ myusername }}
+  user:
+    name: "{{ myusername }}"
+    password: "{{ mypassword }}"
+    update_password: always
+  tags:
+    - human
+    - mypass
+
 - name: set up system users
   block:
 

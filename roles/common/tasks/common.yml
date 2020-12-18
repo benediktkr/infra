@@ -6,13 +6,13 @@
   tags:
     - hostname
 
-- name: set image hostname
-  hostname:
-    name: "sensor-image"
-    use: systemd
-  tags:
-    - never
-    - image
+# - name: set image hostname
+#   hostname:
+#     name: "sensor-image"
+#     use: systemd
+#   tags:
+#     - never
+#     - image
 
 - name: copy ssh keys if known
   copy:
