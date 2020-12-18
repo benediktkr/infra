@@ -42,15 +42,8 @@
     name: telegraf
     state: latest
     update_cache: true
-
   tags:
     - packages
-  notify: restart telegraf
-
-- name: enable telegraf
-  service:
-    name: telegraf
-    enabled: yes
   notify: restart telegraf
 
 - name: template telegraf config
@@ -61,3 +54,56 @@
     - restart telegraf
   tags:
     - telegraf-config
+
+- name: enable telegraf
+  service:
+    name: telegraf
+    enabled: yes
+  notify: restart telegraf
+
+- name: adding telegraf to docker group
+  user:
+    name: telegraf
+    append: yes
+    groups:
+      - docker
+  when: "'docker' in group_names"
+  notify: restart telegraf
+
+- name: set postfix permissions for telegraf
+  file:
+    dest: "/var/spool/postfix/{{ item }}"
+    group: mail
+    mode: 0750
+    recurse: yes
+  with_items:
+    - active
+    - deferred
+    - hold
+    - incoming
+  notify:
+    - restart postfix
+  tags:
+    - telegraf
+
+- name: set permissions on maildrop dir for telegraf
+  file:
+    dest: /var/spool/postfix/maildrop
+    mode: u=rwx,g=rwx,+t
+    recurse: yes
+  notify: restart postfix
+  tags:
+    - telegraf
+
+- name: adding telegraf user to postfix related groups
+  user:
+    name: telegraf
+    append: yes
+    groups:
+      - postfix
+      - mail
+      - postdrop
+  tags:
+    - telegraf
+  when: enable_telegraf
+  notify: restart telegraf

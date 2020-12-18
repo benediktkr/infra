@@ -2,6 +2,7 @@
 
 addr: tcp://{{ broker }}:5559
 owm_token: {{ sudoisbot.weather.owm_token }}
+frequency: {{ sudoisbot.weather.frequency | default(300) }}
 
 locations:
   {% for location in sudoisbot.weather.locations %}

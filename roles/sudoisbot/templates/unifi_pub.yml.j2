@@ -1,0 +1,18 @@
+---
+
+addr: tcp://{{ broker }}:5559
+location: s21
+
+unifi:
+  url: {{ sudoisbot.unifi.url }}
+  username: {{ sudoisbot.unifi.username }}
+  password: {{ sudoisbot.unifi.password }}
+
+people:
+{% for initials, devices in sudoisbot.unifi.people.items() %}
+  {{ initials }}:
+  {% for device in devices %}
+    - {{ device }}
+  {% endfor %}
+
+{% endfor %}

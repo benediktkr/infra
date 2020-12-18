@@ -1,8 +1,12 @@
 ---
 
 zflux:
-  addr: "{{ sudoisbot.sink.zflux.addr }}"
-  topic: "zflux:{{ zflux.zmq.topic }}"
+  topic: {{ zflux.zmq.topic }}
+{% if zflux.addr is defined %}
+  addr: {{ zflux.addr }}
+{% else %}
+  addr: "tcp://{{ broker }}:5559"
+{% endif %}
 
 sink:
   addr: tcp://{{ broker }}:5560
@@ -11,3 +15,17 @@ sink:
     {% for topic in sudoisbot.sink.topics -%}
     - {{ topic }}
     {% endfor %}
+
+mysql:
+  host: "{{ mysql }}"
+  database: sink
+  user: sink
+  password: "{{ systemuserlist.sink.mariadb_pass }}"
+
+screen:
+  rotation: 0
+  msgs:
+    - "wash hands & 'void the 'rona!"
+    - "the dog goes woof"
+    - "doggie doggie what now!?"
+    - "wash hands and shoes off"

@@ -3,7 +3,7 @@ server {
    listen 443 ssl;
    listen   [::]:443 ssl; # listen for ipv6
 
-   server_name {{ vhost.name }};
+   server_name {{ vhost.name }} {{ vhost.aliases | default([]) | join(" ") }};
 
    {% if 'ws' in vhost %}
    location /{{ vhost.ws }}/ {

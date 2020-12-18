@@ -1,0 +1,44 @@
+---
+
+- name: create dir structure
+  file:
+    path: "{{ systemuserlist.gitea.home }}/{{ item }}"
+    state: directory
+    mode: 0750
+    owner: gitea
+    group: gitea
+  with_items:
+    - data
+
+- name: start container
+  docker_container:
+    name: gitea
+    image: gitea/gitea:1
+    detach: yes
+    pull: yes
+    restart_policy: "no"
+    state: started
+    user:
+    ports:
+      - 7999:22/tcp
+    volumes:
+      - "{{ systemuserlist.gitea.home }}/data:/data"
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    env:
+      USER_UID: "{{ systemuserlist.gitea.uid }}"
+      USER_GID: "{{ systemuserlist.gitea.gid }}"
+      DB_TYPE: mysql
+      DB_HOST: "{{ ansible_docker0.ipv4.address }}:3306"
+      DB_NAME: gitea
+      DB_USER: gitea
+      DB_PASSWD: "{{ systemuserlist.gitea.mariadb_pass }}"
+      DISABLE_REGISTRATION: "true"
+    networks_cli_compatible: no
+    networks:
+      - name: bridgewithdns
+        ipv4_address: "{{ bridgewithdns.gitea }}"
+
+  tags:
+    - gitea-container
+    - docker-containers

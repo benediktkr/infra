@@ -24,6 +24,8 @@
     group: root
     mode: "{{ item['mode'] }}"
     path: "{{ item['path'] }}"
+  tags:
+    - letsencrypt
   with_items:
     - { path: /etc/letsencrypt, mode: '0755' }
     - { path: /etc/letsencrypt/live, mode: '0700' }
@@ -35,6 +37,9 @@
     owner: root
     group: root
     mode: 0755
+  tags:
+    - letsencrypt
+  notify: reload nginx
   with_items: "{{ letsencrypt_domains }}"
 
 - name: install nginx
@@ -125,55 +130,29 @@
     enabled: yes
     state: started
 
-- name: install certbot from pip (currently the easiest way to get certbot-nginx)
+- name: remove certbot, should only be on mainframe
   pip:
     name:
       - certbot
       - certbot-nginx
+    state: absent
+    executable: pip3
+  when: 'inventory_hostname != "mainframe.sudo.is"'
   tags:
     - letsencrypt
     - packages
 
 
-# The command in the nextcloud role might be better than this
-# - name: lets encrypt
-#   command: "/usr/local/bin/certbot -n --nginx -d {{ item }} --agree-tos --email {{ myemail }}"
-#   args:
-#     creates: "/etc/letsencrypt/live/{{ item.split(' ')[0] }}/fullchain.pem"
-#   environment:
-#     PATH: "{{ ansible_env.PATH }}:/sbin:/usr/sbin"
-#   with_items: "{{ letsencrypt_defaults }} + ['{{ inventory_hostname }}'] "
-#   tags:
-#     - letsencrypt
-
-
 - name: remove letsencrypt renewal cron job from the cron module
   cron:
     name: letsencrypt_renewal
-    weekday: "0"
-    minute: "0"
-    hour: "16"
-    job: "/usr/local/bin/certbot renew -n" # send via telegram
     state: absent
   tags: letsencrypt
   ignore_errors: yes
 
-# - name: get letsencrypt cert for hostname (can be used by other roles as well)
-#   command: "/usr/local/bin/certbot -n certonly --standalone -d {{ inventory_hostname }} --agree-tos --email {{ myemail }}"
-#   args:
-#     creates: "/etc/letsencrypt/live/{{ inventory_hostname }}/fullchain.pem"
-#   environment:
-#     PATH: "{{ ansible_env.PATH }}:/sbin:/usr/sbin"
-#   tags:
-#     - letsencrypt
-#     - postfix
-#     - nginx
-#   when:
-#     - "letsencrypt_hostname|default(True)"
-
-- name: template certbot cron renewal job
-  template:
-    src: letsencrypt.cron
-    dest: /etc/cron.d/letsencrypt
+- name: remove letsencrypt cron file
+  file:
+    path: /etc/cron.d/letsencrypt
+    state: absent
   tags:
     - letsencrypt

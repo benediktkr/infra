@@ -1,5 +1,4 @@
 {% set wg_client = wireguard_clients[inventory_hostname] %}
-{% set endpoint = wireguard_endpoints[wg_client['endpoint']] %}
 {% set wg_main = wireguard_clients[wireguard_main]['ip'] %}
 
 [Interface]
@@ -7,10 +6,13 @@ Address = {{ wg_client['ip'] }}/32
 {% if wg_client['vpn_dns'] | default(false) %}
 DNS = {{ wireguard_dns }}
 {% endif %}
+{% if wg_client['listen'] | default(false) %}
+ListenPort = {{ wireguard_port }}
+{% endif %}
 PrivateKey = {{ lookup('file', 'private/wireguard/' + inventory_hostname ) }}
 PostUp = /usr/local/bin/wg-post-up.sh
 
-
+{% set endpoint = wireguard_endpoints[wg_client['endpoint']] %}
 [Peer]
 {% if 'endpoint_hostname' in wg_client %}
 Endpoint = {{ wg_client['endpoint_hostname'] }}:{{ wireguard_port }}
@@ -24,3 +26,12 @@ AllowedIPs = 0.0.0.0/0
 AllowedIPs = {{ wireguard_cidr }}
 {% endif %}
 PersistentKeepalive = 240
+
+{% for peername in wg_client.clients | default([]) %}
+{%   set peer = wireguard_clients[peername] %}
+# {{ peername }}
+[Peer]
+PublicKey = {{ lookup('file', 'private/wireguard/' + peername + '.pub' ) }}
+AllowedIPs = {{ peer.ip }}/32
+
+{% endfor %}

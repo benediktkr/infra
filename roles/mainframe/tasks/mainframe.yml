@@ -1,10 +1,58 @@
 ---
 
+# should be installed on e.g. ber0 as well,
+# so some sort of task to isntall packages on
+# human used systems
 - name: install packages
   apt:
     update_cache: yes
     name:
-      - irssi
+      - autoconf # emacs-build
       - ffmpeg
+      - gnupg2
+      - gnutls-bin # emacs-build
+      - irssi
+      - kpcli
+      - libgnutls28-dev # emacs-build
+      - libncurses-dev # emacs-build
+      - pkg-config # emacs-build
+      - texinfo  # emacs-build
+      - libffi-dev
+      - libssl-dev
+      - cmake    # emacs vterm
+      - libtool  # emacs vterm
+      - libtool-bin
   tags:
     - packages
+
+- name: install pip packages
+  pip:
+    name:
+      - ansible
+      - certbot
+      - netaddr
+    state: latest
+    executable: pip3
+  tags:
+    - remove-packages
+    - pip
+    - packages
+
+- name: maintain master copy of repos
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: root
+    group: root
+    mode: 0770
+  tags:
+    - unatt
+  with_items:
+    - src: git-cron.j2
+      dest: /etc/cron.d/git-cron
+    - src: git-cron.sh.j2
+      dest: /usr/local/sbin/git-cron.sh
+    - src: ansible-convergence.sh.j2
+      dest: /usr/local/sbin/ansible-convergence.sh
+    - src: tf-convergence.sh.j2
+      dest: /usr/local/sbin/tf-convergence.sh

@@ -1,0 +1,5 @@
+---
+
+- name: restart sudoisbot-proxy
+  command: docker restart sudoisbot_proxy
+  become: yes

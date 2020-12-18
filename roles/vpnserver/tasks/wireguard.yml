@@ -1,5 +1,14 @@
 ---
 
+- name: create keys if they dont exist
+  shell:
+    cmd: "wg genkey | tee {{ inventory_hostname }} | wg pubkey > {{ inventory_hostname }}.pub"
+    chdir: "{{ wireguard_keydir }}"
+    creates: "{{ wireguard_keydir }}/{{ inventory_hostname }}"
+  delegate_to: localhost
+  tags:
+    - wg-keygen
+
 - name: template iptables rule file
   template:
     src: "{{ iptables_rules|default('iptables.rules.j2') }}"

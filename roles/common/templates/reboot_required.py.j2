@@ -1,0 +1,41 @@
+#!/usr/bin/env python3
+
+import time
+import os
+import sys
+import socket
+from datetime import datetime, timezone
+
+from influxdb import InfluxDBClient
+
+client = InfluxDBClient(
+    host='{{ influxdb_url }}',
+    port=443,
+    username='metrics',
+    password="{{ influxdb_pass.metrics }}",
+    ssl=True,
+    verify_ssl=True,
+    database='metrics'
+)
+
+try:
+    ctime = os.stat('/var/run/reboot-required').st_ctime
+    age = time.time() - ctime
+    reboot_required = True
+except FileNotFoundError:
+    age = 0
+    reboot_required = False
+
+datapoints = [{
+    "measurement": "reboot_required",
+    "tags": {'host': socket.gethostname()},
+    "time": datetime.now(timezone.utc).isoformat(),
+    "fields": {
+        'reboot_required': reboot_required,
+        'age': float(age)
+    }
+}]
+if "-v" in sys.argv:
+    print(datapoints)
+
+client.write_points(datapoints, time_precision='h')

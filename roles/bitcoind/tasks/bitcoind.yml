@@ -14,7 +14,7 @@
 - name: start container
   docker_container:
     name: bitcoind
-    image: kylemanna/bitcoind
+    image: kylemanna/bitcoind:latest
     auto_remove: yes     # auto remove and no restart policy better for reboots
     detach: yes
     pull: yes

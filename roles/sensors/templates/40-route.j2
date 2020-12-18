@@ -1,0 +1,2 @@
+ip route add {{ wireguard_cidr }} via {{ vpn_gw }}
+ip route add {{ wireguard_clients['ber0.sudo.is'].ip }}/32 via {{ vpn_gw }}

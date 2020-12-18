@@ -1,11 +1,29 @@
 ---
 
+# probably: libyaml-dev
+
+- name: add {{ myusername }} to groups for sensors
+  user:
+    name: "{{ myusername }}"
+    groups:
+      - gpio
+      - dialout
+      - sensors
+    append: yes
+
+- name: dhcpd hook for route to vpn
+  template:
+    src: 40-route.j2
+    dest: /lib/dhcpcd/dhcpcd-hooks/40-route
+  tags:
+    - vpnclient
+
 - name: enable w1 in bootloader config
   lineinfile:
     path: /boot/config.txt
     line: "dtoverlay=w1-gpio"
     create: no
-  #when: "'ds18b20' in sensors|map(attribute='type')"
+  when: "'ds18b20' in sensors.temp|map(attribute='kind')"
   register: bootconfig
 
 # molly-guard is usually installed, but it symlinks the real binaries
@@ -19,43 +37,122 @@
       - "/sbin"
   when:
     - bootconfig.changed
-    #- "'ds18b20' in sensors|map(attribute='type')"
+    - "'ds18b20' in sensors.temp|map(attribute='kind')"
 
 - name: install dedendencies for dht.c
   apt:
     name: wiringpi
     state: present
   when:
-    - "'dht' in sensors|map(attribute='type')"
+    - "'temp' in sensors"
+    - "'dht' in sensors.temp|map(attribute='kind')"
   tags: dht
+
+- name: find /dev/hidraw* files
+  find:
+    paths: /dev
+    patterns: 'hidraw*'
+    recurse: no
+    file_type: any
+  when:
+    - "'temp' in sensors"
+    - "'temper' in sensors.temp|map(attribute='kind')"
+  register: hidraw
+  tags:
+    - hidraw
+
+- name: set /dev/hidraw permissions
+  file:
+    path: "{{ item.path }}"
+    group: sensors
+    mode: 0660
+  notify: restart sudoisbot temp_pub
+  when:
+    - "'temp' in sensors"
+    - "'temper' in sensors.temp|map(attribute='kind')"
+  with_items: "{{ hidraw.files }}"
+  loop_control:
+    label: "{{ item.path }}"
+  tags:
+    - hidraw
 
 - name: copy dht.c
   copy:
     src: dht.c
     dest: /root/dht.c
   when:
-    - "'dht' in sensors|map(attribute='type')"
+    - "'temp' in sensors"
+    - "'dht' in sensors.temp|map(attribute='kind')"
   register: dht_c
   tags:
     - dht
     - dht-update
+    - deploy
 
 - name: compile and install dht.c
   command: cc -Wall /root/dht.c -o /usr/local/bin/dht -lwiringPi
   when:
     - dht_c.changed
-    - "'dht' in sensors|map(attribute='type')"
+    - "'temp' in sensors"
+    - "'dht' in sensors.temp|map(attribute='kind')"
   tags:
     - dht
     - dht-update
+    - deploy
+  notify:
+    - restart sudoisbot temp_pub
+    - restart sudoisbot rain_pub
 
-- name: template sudoisbot config (wrong location right now)
+- name: template sudoisbot config to standard location
   template:
     src: sudoisbot.yml.j2
-    dest: /tmp/wrongsudoisbot.yml
+    dest: /usr/local/etc/sudoisbot.yml
     owner: root
     group: root
     mode: 0644
   tags:
-    - sensor-config
     - sensors-config
+    - sensors-sudoisbot
+    - deploy
+  notify:
+    - restart sudoisbot temp_pub
+    - restart sudoisbot rain_pub
+
+- name: install sudoisbot as pip package
+  pip:
+    name: sudoisbot
+    state: latest
+    executable: pip3
+  tags:
+    - sensors-sudoisbot
+    - deploy
+  notify:
+    - restart sudoisbot temp_pub
+    - restart sudoisbot rain_pub
+
+- name: install systemd config for sudoisbot
+  template:
+    src: sudoisbot.service.j2
+    dest: "/etc/systemd/system/sudoisbot@.service"
+  tags:
+    - sensors-config
+    - sensors-systemd
+    - deploy
+  notify:
+    - restart sudoisbot temp_pub
+    - restart sudoisbot rain_pub
+
+- name: enable sudoisbot
+  systemd:
+    state: started
+    enabled: yes
+    daemon_reload: yes
+    name: "sudoisbot@{{ item.key }}_pub"
+  loop_control:
+    label: "sudoisbot@{{ item.key }}_pub"
+  with_dict:
+    - "{{ sensors }}"
+  tags:
+    - sensors-config
+    - sensors-systemd
+    - deploy

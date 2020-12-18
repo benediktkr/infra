@@ -2,7 +2,9 @@
 
 - name: include private vars
   include_vars: private/vars.yml
-  tags: docker
+  tags:
+    - docker
+    - pihole-container
 
 - name: create dir structure
   file:
@@ -24,7 +26,7 @@
     owner: root
     group: root
     mode: 0644
-  notify: restart pihole
+  #notify: restart pihole
   tags:
     - pihole-config
     - pihole-overrides
@@ -39,7 +41,7 @@
   tags:
     - pihole-config
   when: pihole_dhcp
-  notify: restart pihole
+  #notify: restart pihole
 
 - name: install dhcp-helper
   apt:
@@ -128,6 +130,42 @@
 #
 # TODO: does pihole run with uid 999? then change it, telegraf wants to use that
 
+# - name: start docker container
+#   docker_container:
+#     name: "pihole"
+#     image: "pihole/pihole:{{ pihole_version | default('latest') }}"
+#     auto_remove: no
+#     detach: yes
+#     pull: yes
+#     restart_policy: "unless-stopped"
+#     state: started
+#     capabilities: "{% if pihole_dhcp %}['NET_ADMIN']{% else %}[]{% endif %}"
+#     env:
+#       TZ: "Europe/Berlin"
+#       WEBPASSWORD: "{{ pihole_web_password }}"
+#       DNS1: "{{ upstream_dns_1 }}"
+#       DNS2: "{{ upstream_dns_2 }}"
+#       CONDITIONAL_FORWARDING: "{{ pihole_cond|string }}"
+#       CONDITIONAL_FORWARDING_IP: "{{ pihole_cond_ip }}"
+#       CONDITIONAL_FORWARDING_DOMAIN: "{{ pihole_cond_domain }}"
+#     ports:
+#       - "53:53/tcp"
+#       - "53:53/udp"
+#       - "{{ pihole_http_inet }}:{{ pihole_http_port }}:80/tcp"
+#     dns_servers:
+#       - 127.0.0.1
+#       - pihole_dns_1
+#       - pihole_dns_2
+#     hostname: "{{ inventory_hostname.split('.')[0] }}-pihole"
+#     networks_cli_compatible: no
+#     networks:
+#       - name: bridgewithdns
+#         ipv4_address: "{{ pihole_docker_ip }}"
+#     volumes:
+#       - "{{ pihole_root }}/etc/pihole:/etc/pihole"
+#       - "{{ pihole_root }}/etc/dnsmasq.d:/etc/dnsmasq.d"
+#   tags: pihole-container
+
 - name: start docker container
   docker_container:
     name: "pihole"
@@ -137,7 +175,9 @@
     pull: yes
     restart_policy: "unless-stopped"
     state: started
-    capabilities: "{% if pihole_dhcp %}['NET_ADMIN']{% else %}[]{% endif %}"
+    network_mode: host
+    capabilities:
+      - NET_ADMIN
     env:
       TZ: "Europe/Berlin"
       WEBPASSWORD: "{{ pihole_web_password }}"
@@ -147,25 +187,66 @@
       CONDITIONAL_FORWARDING_IP: "{{ pihole_cond_ip }}"
       CONDITIONAL_FORWARDING_DOMAIN: "{{ pihole_cond_domain }}"
     ports:
-      - "53:53/tcp"
-      - "53:53/udp"
-      - "{{ pihole_http_inet }}:{{ pihole_http_port }}:80/tcp"
+      - "53/tcp"
+      - "53/udp"
+      - "80/tcp"
     dns_servers:
       - 127.0.0.1
       - pihole_dns_1
       - pihole_dns_2
-    networks_cli_compatible: no
-    networks:
-      - name: bridgewithdns
-        ipv4_address: "{{ pihole_docker_ip }}"
+    hostname: "{{ inventory_hostname.split('.')[0] }}-pihole"
     volumes:
       - "{{ pihole_root }}/etc/pihole:/etc/pihole"
       - "{{ pihole_root }}/etc/dnsmasq.d:/etc/dnsmasq.d"
   tags: pihole-container
 
-- name: wait for {{ pihole_docker_ip }}:53
+# - name: start docker container
+#   docker_container:
+#     name: "pihole"
+#     image: "pihole/pihole:{{ pihole_version | default('latest') }}"
+#     auto_remove: no
+#     detach: yes
+#     pull: yes
+#     restart_policy: "unless-stopped"
+#     state: started
+#     capabilities:
+#       - NET_ADMIN
+#     env:
+#       TZ: "Europe/Berlin"
+#       WEBPASSWORD: "{{ pihole_web_password }}"
+#       DNS1: "{{ upstream_dns_1 }}"
+#       DNS2: "{{ upstream_dns_2 }}"
+#       CONDITIONAL_FORWARDING: "{{ pihole_cond|string }}"
+#       CONDITIONAL_FORWARDING_IP: "{{ pihole_cond_ip }}"
+#       CONDITIONAL_FORWARDING_DOMAIN: "{{ pihole_cond_domain }}"
+#     ports:
+#       - "53/tcp"
+#       - "53/udp"
+#       - "80/tcp"
+#     dns_servers:
+#       - 127.0.0.1
+#       - upstream_dns_1
+#       - upstream_dns_2
+#     hostname: "{{ inventory_hostname.split('.')[0] }}-pihole"
+#     networks_cli_compatible: no
+#     networks:
+#       - name: macvlan-local
+#         ipv4_address: "{{ pihole_docker_ip }}"
+#     volumes:
+#       - "{{ pihole_root }}/etc/pihole:/etc/pihole"
+#       - "{{ pihole_root }}/etc/dnsmasq.d:/etc/dnsmasq.d"
+#   tags: pihole-container
+
+# - name: wait for {{ pihole_docker_ip }}:53
+#   wait_for:
+#     port: 53
+#     host: "{{ pihole_docker_ip }}"
+#     sleep: 4
+#   tags: pihole-container
+
+- name: wait for port 53
   wait_for:
     port: 53
-    host: "{{ pihole_docker_ip }}"
+    host: localhost
     sleep: 4
   tags: pihole-container
