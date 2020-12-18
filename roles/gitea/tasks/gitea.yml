@@ -18,9 +18,8 @@
     pull: yes
     restart_policy: "no"
     state: started
-    user:
     ports:
-      - 7999:22/tcp
+      - "7999:22"
     volumes:
       - "{{ systemuserlist.gitea.home }}/data:/data"
       - /etc/timezone:/etc/timezone:ro
