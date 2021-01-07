@@ -1,0 +1,45 @@
+---
+
+- name: create dir structure
+  file:
+    path: "{{ systemuserlist.mayan.home }}/{{ item }}"
+    state: directory
+    mode: 0750
+    owner: mayan
+    group: mayan
+  with_items:
+    - media
+
+- name: start container
+  docker_container:
+    name: mayan
+    image: mayanedms/mayanedms:3
+    detach: yes
+    pull: yes
+    restart_policy: "no"
+    state: started
+    volumes:
+      - "{{ systemuserlist.mayan.home }}/media:/var/lib/mayan"
+    env:
+      MAYAN_DATABASE_DRIVER: "django.db.backends.mysql"
+      MAYAN_DATABASE_NAME: "mayan"
+      MAYAN_DATABASE_USER: "mayan_user"
+      MAYAN_DATABASE_PASSWORD: "{{ systemuserlist.mayan.mariadb_pass }}"
+      MAYAN_DATABASE_HOST: "{{ ansible_docker0.ipv4.address }}"
+      MAYAN_DATABASE_PORT: "3306"
+      MAYAN_USER_UID: "{{ systemuserlist.mayan.uid }}"
+      MAYAN_USER_GID: "{{ systemuserlist.mayan.gid }}"
+      EMAIL_BACKEND: "django.core.mail.backends.smtp.EmailBackend"
+      EMAIL_HOST: "{{ smtp_server }}"
+      EMAIL_HOST_USER: "{{ smtp_username }}"
+      EMAIL_HOST_PASSWORD: "{{ smtp_passwd }}"
+      EMAIL_PORT: "{{ smtp_port|string }}"
+      EMAIL_USE_TLS: "true"
+      EMAIL_USE_SSL: "true"
+    networks_cli_compatible: no
+    networks:
+      - name: bridgewithdns
+        ipv4_address: "{{ bridgewithdns.mayan }}"
+  tags:
+    - mayan-container
+    - docker-containers
