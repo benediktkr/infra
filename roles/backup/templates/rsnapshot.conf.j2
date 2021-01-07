@@ -146,6 +146,8 @@ lockfile	/var/run/rsnapshot.pid
 #include	???
 #include	???
 #exclude	???
+{% for path in rsnapshot_exclude %}
+exclude		{{ path }}
 exclude		/home/benedikt/video/
 exclude		/home/benedikt/.bitcoin/blocks
 exclude		/home/benedikt/.bitcoin.old/blocks
@@ -159,6 +161,35 @@ exclude		/media
 exclude		/backups
 exclude		/metaarray
 exclude		/mnt
+{% endfor %}
+exclude		/bin
+exclude		/boot
+exclude		/dev
+exclude		/initrd.img
+exclude		/media
+exclude		/metaarray
+exclude		/mnt
+exclude		/proc
+exclude		/run
+exclude		/sbin
+exclude		/sshfs
+exclude		/sys
+exclude		/tmp
+exclude		/usr/local/bin
+exclude		/vmlinuz
+exclude		/vmlinuz.old
+exclude		Virtualbox\ VMs
+exclude		lost+found
+
+
+
+
+
+
+
+
+
+
 
 
 # The include_file and exclude_file parameters, if enabled, simply get
@@ -225,13 +256,11 @@ exclude		/mnt
 {%   set backup_paths = rsnapshot_backup_all + rsnapshot_backup_extra %}
 
 # {{ hostname }}
-{%   for path in backup_paths %}
-{%     if inventory_hostname == hostname %}
-backup	{{ path }}		{{ hostname }}/
-{%     else %}
-backup	{{ rsnapshot_user }}@{{ hostname }}:{{ path }}	{{ hostname}}/
-{%     endif %}
-{%   endfor %}
+{%   if inventory_hostname == hostname %}
+backup	/		{{ hostname }}/
+{%   else %}
+backup	{{ rsnapshot_user }}@{{ hostname }}:/	{{ hostname }}/
+{%   endif %}
 
 {% endfor %}
 

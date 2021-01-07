@@ -1,0 +1,118 @@
+#!/usr/bin/env python3
+
+import argparse
+from datetime import datetime, timezone
+import os
+import socket
+import subprocess
+
+from influxdb import InfluxDBClient
+from loguru import logger
+
+
+
+
+class SdfSshMount(object):
+
+    def __init__(self, ssh, sshfs_dir):
+        self.ssh = ssh
+        self.sshfs_dir = sshfs_dir
+        self.present_file = os.path.join(self.sshfs_dir, ".metaarray_plain")
+
+    def __enter__(self):
+        os.mkdir(SSHFS, exists_ok=True)
+        if os.path.exists(self.present_file):
+            logger.error(f"found '{self.present_file}', aborting")
+            raise SystemExit(1)
+
+        p = subprocess.run(["sshfs", "-o", "idmap=user",
+                            f"{self.ssh}/metaarray", self.sshfs_dir],
+                           check=True)
+
+        assert os.file.exists(self.present)
+        logger.debug(f"mounted '{self.sshfs_dir}' as '{self.ssh'}")
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        umount_cmds = [["umount"], ["umount", "-f"], ["fusermount", "-u"]]
+        for umount in umount_cmds:
+            try:
+                subprocess.run(umount + [self.sshfs_dir], check=True)
+                os.rmdir(SSHFS)
+                logger.debug(f"unmounted '{self.sshfs_dir}'")
+            except subprocess.CalledProcessError as e:
+                logger.error(f"'{umount}' failed with {e.returncode}")
+                continue
+        else:
+            logger.error(f"giving up on unmounting '{self.sshfs_dir}'")
+
+
+class SdfLuksOpen(object):
+
+    def __init__(self, sdfpath, luks_file, luks_key_file, name="backup"):
+        self.sdfpath = sdfpath
+        self.luks_file = luks_file
+        self.luks_key_file = luks_key_file
+        self.name = name
+        self.present_file = os.path.join(self.sdfpath, ".metaarray_present")
+
+    def __enter__(self):
+
+        subprocess.run(["/usr/sbin/cryptsetup", "luksOpen", self.luks_file,
+                        self.name, f"--key-file={self.luks_key_file}"],
+                       check=True)
+        os.mkdir(self.sdfpath, exists_ok=True)
+        subprocess.run(['mount', f'/dev/mapper/{self.name}', self.sdfpath],
+                       check=True)
+        assert os.file.exists(self.present_file)
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        time.sleep(10.0)
+        logger.debug("starting 'sync'")
+        subprocess.run(["sync"], check=True)
+        time.sleep(3.0)
+        logger.denug(f"unmoutning {self.sdfpath}")
+        subprocess.run(["umount", self.sdfpath])
+        os.rmdir(self.sdfpath)
+
+
+def sdfbackup(ssh, sshfs_dir, sdfpath, luks_file, luks_key_file, backup_src):
+    with SdfSshMount(ssh, sshfs) as sshfs:
+        with SdfLuksOpen(sdfpath, luks_file, luks_key_file):
+            # do the rsync
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--ssh", required=True)
+    parser.add_argument("--sshfs-dir", required=True)
+    parser.add_argument("--sdfpath", required=True)
+    parser.add_argument("--luks-file", required=True)
+    parser.add_argument("--luks-key-file", required=True)
+    parser.add_argument("--backup-src", required=True)
+
+
+    args = parser.parse_args()
+
+    tags = {
+        'host': socket.gethostname(),
+        'script': 'sdfbackup.py',
+        'args': vars(args),
+    }
+
+    client = InfluxDBClient(
+        host='{{ influxdb_url }}',
+        port=443,
+        username='metrics',
+        password="{{ influxdb_pass.metrics }}",
+        ssl=True,
+        verify_ssl=True,
+        database='metrics'
+    )
+
+    datapoints = [{
+        "measurement": "backups",
+        "tags": tags,
+        "time": datetime.now(timezone.utc).isoformat(),
+    }]

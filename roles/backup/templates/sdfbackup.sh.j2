@@ -3,7 +3,7 @@
 # how to resize:
 # https://ruderich.org/simon/notes/encrypted-remote-backups
 
-lockfile -l 86400 -r 0 /var/run/sdfbackup.lock || exit 2
+lockfile -r 0 /var/run/sdfbackup.lock || exit 2
 
 NAME={{ inventory_hostname.split('.')[0] }}
 SRC={{ rsnapshot_root }}/alpha.0
@@ -19,15 +19,17 @@ print () {
     if [ "$VERBOSE" = "true" ]; then  echo `date +"%F %R:"` "$*" ; fi
 }
 
-# mount sshfs
-mkdir -p /metaarray/sshfs
-sshfs -o idmap=user $SDF:metaarray/ /metaarray/sshfs
+mkdir -p /metaarray
 
-if [ ! -f /metaarray/sshfs/$NAME ]; then
-    print "luks file '/metaarray/sshfs/$NAME' not found"
+# mount sshfs
+mkdir -p /sshfs/metaarray
+sshfs -o idmap=user $SDF:metaarray/ /sshfs/metaarray
+
+if [ ! -f /sshfs/metaarray/$NAME ]; then
+    print "luks file '/sshfs/metaarray/$NAME' not found"
     exit 1
 
-elif [ ! -f /metaarray/sshfs/.metaarray_plain ]; then
+elif [ ! -f /sshfs/metaarray/.metaarray_plain ]; then
      print "metarray not mounted, .metarray_plain not found"
      exit 2
 
@@ -38,7 +40,7 @@ fi
 
 
 print 'opening LUKS'
-/usr/sbin/cryptsetup luksOpen /metaarray/sshfs/$NAME metaarray-$NAME --key-file=$KEYFILE
+/usr/sbin/cryptsetup luksOpen /sshfs/metaarray/$NAME metaarray-$NAME --key-file=$KEYFILE
 cryptsetup_rc=$?
 
 if [ $cryptsetup_rc -ne 0 ]; then
@@ -60,6 +62,7 @@ print "df of metaarray luks volume:"
 df -h /metaarray/backup | tail -n 1
 
 print "starting 'rsync -a $SRC /metaarray/backup --delete'"
+# add a configurable --exclude here
 rsync -a $SRC /metaarray/backup --delete
 rsync_rc=$?
 
@@ -84,7 +87,7 @@ df -h /metaarray/backup | tail -n 1
 
 sleep 3
 
-print "unmounting /metarray/backup"
+print "unmounting /metaarray/backup"
 umount /metaarray/backup
 #umount -f /metaarray/backup
 #umount -l /metaarray/backup # nuclear option
@@ -97,12 +100,11 @@ print 'closing LUKS'
 sleep 5
 
 # and unmount sshfs connection but we're not
-#fusermount -u /metaarray/sshfs
-umount /metaarray/sshfs
-#umount -f /metaarray/sshfs
-rmdir /metaarray/sshfs
+#fusermount -u /sshfs/metaarray
+umount /sshfs/metaarray
+#umount -f /sshfs/metaarray
+rmdir /sshfs/metaarray
 
-rmdir /metaarray
 
 print "removing lockfile"
 rm -f /var/run/sdfbackup.lock

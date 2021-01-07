@@ -1,3 +1,5 @@
-umount /metaarray/backup
 
-cryptsetup luksClose metaarray-backup
+
+umount -l /metaarray/backup
+cryptsetup luksClose metaarray-mainframe
+umount -l /sshfs/metaarray
