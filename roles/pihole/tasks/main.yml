@@ -176,9 +176,10 @@
     restart_policy: "unless-stopped"
     state: started
     network_mode: host
-    capabilities:
-      - NET_ADMIN
+    # capabilities:
+    #   - NET_ADMIN
     env:
+      WEB_PORT: "8081"
       TZ: "Europe/Berlin"
       WEBPASSWORD: "{{ pihole_web_password }}"
       DNS1: "{{ upstream_dns_1 }}"
