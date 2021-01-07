@@ -66,8 +66,8 @@
     - packages
     - influxdb-scripts
 
-- name: crontab for {{ jenkins_tumiproject }}
-  cron:
-    name: "{{ jenkins_tumiproject }}"
-    special_time: hourly
-    job: "crontab {{ jenkins_root }}/{{ jenkins_tumiproject }}/cron/{{ jenkins_tumiproject }}.cron"
+# - name: crontab for {{ jenkins_tumiproject }}
+#   cron:
+#     name: "{{ jenkins_tumiproject }}"
+#     special_time: hourly
+#     job: "crontab {{ jenkins_root }}/{{ jenkins_tumiproject }}/cron/{{ jenkins_tumiproject }}.cron"
