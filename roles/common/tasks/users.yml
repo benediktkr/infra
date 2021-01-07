@@ -122,14 +122,17 @@
   tags:
     - sshkeys
 
-- name: set a password for {{ myusername }}
+- name: set a password for {{ myusername }} and root
   user:
-    name: "{{ myusername }}"
+    name: "{{ item }}"
     password: "{{ mypassword }}"
     update_password: always
   tags:
     - human
     - mypass
+  with_items:
+    - "{{ myusername }}"
+    - root
 
 - name: set up system users
   block:

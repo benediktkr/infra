@@ -18,3 +18,6 @@
     name: autossh-{{ item.hostname }}
     state: restarted
   with_items: "{{ ssh_tunnels }}"
+
+- name: run reboot_required.py
+  command: /usr/local/bin/reboot_required.py

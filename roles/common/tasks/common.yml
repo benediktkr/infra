@@ -134,6 +134,7 @@
   apt:
     state: latest
     name:
+      - nano
       - apt-transport-https
       - aptitude
       - lsb-release
@@ -177,6 +178,7 @@
       - vnstat
       - whois
       - zsh
+      - zip
   environment:
     PATH: "{{ ansible_env.PATH }}:/sbin:/usr/sbin"
   tags:
@@ -331,9 +333,10 @@
       mode: 770
     - src: reboot_required-cron.j2
       dest: /etc/cron.d/reboot_required
-      mode: 660
+      mode: 600
   tags:
     - rebootrequired
+  notify: run reboot_required.py
 
 # - name: install zmq pip package
 #   pip:
