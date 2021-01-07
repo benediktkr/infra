@@ -102,26 +102,3 @@
     internal: no
   tags:
     - docker-network
-
-
-- name: optional macvlan bridge to host networks
-  when: macvlan|length > 0
-  tags:
-    - macvlan
-    - docker-network
-  block:
-
-
-    - name: set up macvlan
-      docker_network:
-        name: "macvlan-local"
-        driver: macvlan
-        ipam_config:
-          - subnet: "{{ item.net }}"
-            gateway: "{{ item.gw }}"
-            iprange: "{{ item.range }}"
-        driver_options:
-          parent: "{{ item.iface }}"
-
-        internal: no
-      with_items: "{{ macvlan }}"
