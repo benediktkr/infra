@@ -10,6 +10,33 @@
   with_items:
     - media
 
+- name: redis containers
+  docker_container:
+    name: "redis_mayan"
+    image: "redis:latest"
+    auto_remove: yes
+    detach: yes
+    pull: yes
+    state: started
+    command: redis-server --appendonly "no" --databases "2"
+    env:
+      REDIS_HOST: "redis_mayan"
+    networks_cli_compatible: no
+    networks:
+      - name: bridgewithdns
+  tags:
+    - mayan-container
+    - redis
+    - docker-containers
+
+- name: template config file
+  template:
+    src: mayan.yml.j2
+    dest: "{{ systemuserlist.mayan.home }}/media/config.yml"
+    owner: mayan
+    group: mayan
+    mode: 0644
+
 - name: start container
   docker_container:
     name: mayan
@@ -18,24 +45,13 @@
     pull: yes
     restart_policy: "no"
     state: started
-    volumes:
-      - "{{ systemuserlist.mayan.home }}/media:/var/lib/mayan"
     env:
-      MAYAN_DATABASE_DRIVER: "django.db.backends.mysql"
-      MAYAN_DATABASE_NAME: "mayan"
-      MAYAN_DATABASE_USER: "mayan_user"
-      MAYAN_DATABASE_PASSWORD: "{{ systemuserlist.mayan.mariadb_pass }}"
-      MAYAN_DATABASE_HOST: "{{ ansible_docker0.ipv4.address }}"
-      MAYAN_DATABASE_PORT: "3306"
+      MAYAN_SKIP_CHOWN_ON_STARTUP: "true"
+      MAYAN_DOCKER_WAIT: "redis_mayan:6379 {{ ansible_docker0.ipv4.address }}:3306"
       MAYAN_USER_UID: "{{ systemuserlist.mayan.uid }}"
       MAYAN_USER_GID: "{{ systemuserlist.mayan.gid }}"
-      EMAIL_BACKEND: "django.core.mail.backends.smtp.EmailBackend"
-      EMAIL_HOST: "{{ smtp_server }}"
-      EMAIL_HOST_USER: "{{ smtp_username }}"
-      EMAIL_HOST_PASSWORD: "{{ smtp_passwd }}"
-      EMAIL_PORT: "{{ smtp_port|string }}"
-      EMAIL_USE_TLS: "true"
-      EMAIL_USE_SSL: "true"
+    volumes:
+      - "{{ systemuserlist.mayan.home }}/media:/var/lib/mayan"
     networks_cli_compatible: no
     networks:
       - name: bridgewithdns
