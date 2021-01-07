@@ -1,0 +1,61 @@
+---
+
+- name: create dir structure
+  file:
+    path: "{{ systemuserlist.mayan.home }}/{{ item }}"
+    state: directory
+    mode: 0750
+    owner: mayan
+    group: mayan
+  with_items:
+    - media
+
+- name: redis containers
+  docker_container:
+    name: "redis_mayan"
+    image: "redis:latest"
+    auto_remove: yes
+    detach: yes
+    pull: yes
+    state: started
+    command: redis-server --appendonly "no" --databases "2"
+    env:
+      REDIS_HOST: "redis_mayan"
+    networks_cli_compatible: no
+    networks:
+      - name: bridgewithdns
+  tags:
+    - mayan-container
+    - redis
+    - docker-containers
+
+- name: template config file
+  template:
+    src: mayan.yml.j2
+    dest: "{{ systemuserlist.mayan.home }}/media/config.yml"
+    owner: mayan
+    group: mayan
+    mode: 0644
+
+- name: start container
+  docker_container:
+    name: mayan
+    image: mayanedms/mayanedms:3
+    detach: yes
+    pull: yes
+    restart_policy: "no"
+    state: started
+    env:
+      MAYAN_SKIP_CHOWN_ON_STARTUP: "true"
+      MAYAN_DOCKER_WAIT: "redis_mayan:6379 {{ ansible_docker0.ipv4.address }}:3306"
+      MAYAN_USER_UID: "{{ systemuserlist.mayan.uid }}"
+      MAYAN_USER_GID: "{{ systemuserlist.mayan.gid }}"
+    volumes:
+      - "{{ systemuserlist.mayan.home }}/media:/var/lib/mayan"
+    networks_cli_compatible: no
+    networks:
+      - name: bridgewithdns
+        ipv4_address: "{{ bridgewithdns.mayan }}"
+  tags:
+    - mayan-container
+    - docker-containers
