@@ -2,3 +2,4 @@
 dependencies:
   - nginx
   - docker
+  - mariadb
