@@ -22,6 +22,8 @@
       - cmake    # emacs vterm
       - libtool  # emacs vterm
       - libtool-bin
+      - simple-cdd
+      - libcurl4-gnutls-dev
   tags:
     - packages
 
@@ -44,15 +46,19 @@
     dest: "{{ item.dest }}"
     owner: root
     group: root
-    mode: 0770
+    mode: "{{ item.mode }}"
   tags:
     - unatt
   with_items:
     - src: git-cron.j2
       dest: /etc/cron.d/git-cron
+      mode: 660
     - src: git-cron.sh.j2
       dest: /usr/local/sbin/git-cron.sh
+      mode: 770
     - src: ansible-convergence.sh.j2
       dest: /usr/local/sbin/ansible-convergence.sh
+      mode: 770
     - src: tf-convergence.sh.j2
       dest: /usr/local/sbin/tf-convergence.sh
+      mode: 770

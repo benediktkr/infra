@@ -11,11 +11,11 @@ if [ "$1" = "sensors" ]; then
         -i hosts-sensors.yml \
         sensors.yml \
         --diff \
-        --check > {{ base }}/ansible-convergence-sensors.txt
+        --check &> {{ base }}/ansible-convergence-sensors.txt
 else
     ansible-playbook \
         -i hosts.yml \
         {{ git_cron.convergence }} \
         --diff \
-        --check > {{ base }}/ansible-convergence.txt
+        --check &> {{ base }}/ansible-convergence.txt
 fi

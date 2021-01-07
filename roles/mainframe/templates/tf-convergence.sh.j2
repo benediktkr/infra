@@ -4,4 +4,4 @@ set -e
 
 {% set base = git_cron.base_path %}
 
-{{ base }}/tf/tf.py plan > convergence-tf.txt
+{{ base }}/tf/tf.py plan &> {{ base }}/convergence-tf.txt
