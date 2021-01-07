@@ -1,5 +1,7 @@
 ---
 
+# subtitles: https://jellyfin.org/docs/general/server/media/subtitles.html
+
 - name: create dir structure
   file:
     path: "{{ jellyfin_root }}/{{ item }}"
@@ -79,6 +81,18 @@
     mode: 0755
     owner: www-data
     group: www-data
+
+- name: install systemd config for auth stuff
+  template:
+    src: private/jellyfin_auth.service.j2
+    dest: "/etc/systemd/system/jellyfin_auth.service"
+
+- name: enable jellyfin_auth
+  systemd:
+    state: started
+    enabled: yes
+    daemon_reload: yes
+    name: jellyfin_auth
 
 
 - name: template jellyfin nginx config
