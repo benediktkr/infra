@@ -13,7 +13,8 @@ server {
 
   root /var/www/{{ item.name }};
   location / {
-      autoindex on;
+    autoindex on;
+    autoindex_exact_size off;
   }
   location ~* ^.+\.(whois|log|grep)$ {
     add_header Content-Type text/plain;
