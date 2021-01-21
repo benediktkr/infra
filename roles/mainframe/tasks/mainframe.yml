@@ -51,8 +51,8 @@
     - unatt
   with_items:
     - src: git-cron.j2
-      dest: /etc/cron.d/git-cron
-      mode: 660
+      dest: /etc/cron.d/git
+      mode: 600
     - src: git-cron.sh.j2
       dest: /usr/local/sbin/git-cron.sh
       mode: 770
