@@ -338,6 +338,15 @@
     - rebootrequired
   notify: run reboot_required.py
 
+- name: cronjob to touch /root/.backup_age_marker
+  template:
+    src: backup_age_marker-cron.j2
+    dest: /etc/cron.d/backup_age_marker
+    owner: root
+    group: root
+    mode: 0600
+  tags: backup_age_marker
+
 # - name: install zmq pip package
 #   pip:
 #     name: zmq

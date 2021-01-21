@@ -1,5 +1,12 @@
 ---
 
+- name: install rsnapshot
+  apt:
+    name: rsnapshot
+    state: present
+  tags:
+    - packages
+
 - name: template rsnapshot config
   template:
     src: rsnapshot.conf.j2
