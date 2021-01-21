@@ -1,9 +1,12 @@
 ---
-- name: add ssh hostkey known hosts for git
+- name: add ssh hostkey for git into global ssh_known_hosts
   lineinfile:
     path: /etc/ssh/ssh_known_hosts
-    line: "{{ github_hostkey }}"
+    line: "{{ item }}"
     create: yes
+  with_items:
+    - "{{ github_hostkey }}"
+    - "{{ sudo_hostkey }}"
 
 - name: create dir structure
   file:
@@ -12,8 +15,6 @@
     mode: 0750
     owner: "{{ myusername }}"
     group: "{{ myusername }}"
-
-
 
 - name: pull my dotfiles repo
   git:
@@ -24,7 +25,6 @@
     update: yes
     force: yes
   become_user: "{{ myusername }}"
-  ignore_errors: yes
   register: gitpull
 
 - name: check if the dotfiles repo is managed in ~/projects/dotfiles
@@ -32,7 +32,7 @@
     path: "~{{ myusername }}/projects/dotfiles"
   register: projects_dotfiles
 
-- name: put my dotfiles in place
+- name: put my dotfiles in place if dotfiles repo isnt human-managed
   copy:
     remote_src: yes
     src: "{{ dotfiles_path }}/dotfiles/{{ item.src }}"
@@ -55,4 +55,13 @@
     - "{{ dotfiles }}"
   when:
     - gitpull.changed
-    - not projects_dotfiles.stat.exists
+    - item.root
+
+- name: rm dotfiles that root should not have
+  file:
+    path: "{{ dotfiles_path }}/dotfiles/{{ item.src }}"
+    state: absent
+  with_items:
+    - "{{ dotfiles }}"
+  when:
+    - not item.root
