@@ -1,6 +1,6 @@
 ---
 
-- name: restart nginx
+- name: reload nginx
   service:
-    state: restarted
+    state: reloaded
     name: nginx

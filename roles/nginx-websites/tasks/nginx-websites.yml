@@ -16,4 +16,4 @@
     owner: www-data
     group: www-data
   with_items: "{{ static_sites }}"
-  notify: restart nginx
+  notify: reload nginx
