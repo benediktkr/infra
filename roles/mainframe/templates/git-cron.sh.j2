@@ -17,15 +17,21 @@ fi
 
     echo "{{ repo.dest }}"
     cd {{ base }}/{{ repo.dest }}
-    git pull
+    git remote rm origin
+    git remote add origin {{ repo.src }}
+    git config branch.{{ git_cron.branch }}.remote origin
+    git config branch.{{ git_cron.branch }}.merge refs/heads/master
+    git pull -q
 
 {% endfor %}
 ) > /dev/null
+
 
 (
 {% for repo in git_cron.repos %}
 {%   for link_src in repo.private_links|default([]) %}
 {%     set link = '/'.join([base, git_cron.private, link_src]) %}
+    echo ln -s {{ link }} {{ base }}/{{ repo.dest }}/
     ln -s {{ link }} {{ base }}/{{ repo.dest }}/
 {%   endfor %}
 {% endfor %}

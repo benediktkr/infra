@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# distributed from ansible
+
+set -e
+
+eval $(cat ~/.ssh-agent) > /dev/null
+workdir="/tmp/ghsync"
+
+mkdir $workdir || exit
+
+(
+
+    cd $workdir
+    repos="{% for repo in ghsync_repos %}{{ repo }}{%endfor%}"
+    for repo in $repos; do
+        git clone ssh://git@git.sudo.is:7999/ben/${repo}.git > /dev/null
+        (
+            set -e
+
+            cd ${workdir}/${repo}
+            git pull origin master
+            git remote add github git@github.com:benediktkr/${repo}.git
+            git push github master | egrep "\.\.|To"
+        )
+        rm -rf ${workdir}/${repo}/
+    done
+)
+
+rmdir /tmp/ghsync

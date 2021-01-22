@@ -2,6 +2,23 @@
 
 set -e
 
+LOCKFILE=/tmp/tf-convergence.lock
+/usr/bin/lockfile -r 0 $LOCKFILE
+
 {% set base = git_cron.base_path %}
 
-{{ base }}/tf/tf.py plan &> {{ base }}/convergence-tf.txt
+(
+    cd {{ base }}/tf
+
+    ./tf.py init &>> {{ base }}/convergence-tf.log
+
+    # pipe the output to a tmp file, filter it, throw away temp file
+    ./tf.py plan &> {{ base }}/convergence-tf.tmp
+    /usr/bin/egrep "\~|\+ resource|\- resource" {{ base }}/convergence-tf.tmp > {{ base }}/convergence-tf.txt
+    # log it
+    cat {{ base }}/convergence-tf.tmp >> {{ base }}/convergence-tf.log
+    /usr/bin/rm {{ base }}/convergence-tf.tmp
+
+)
+
+/usr/bin/rm -f $LOCKFILE

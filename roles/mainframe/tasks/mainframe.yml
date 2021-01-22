@@ -40,6 +40,17 @@
     - pip
     - packages
 
+- name: template scripts
+  template:
+    src: "{{ item }}.j2"
+    dest: "/usr/local/bin/{{ item }}"
+    owner: root
+    group: root
+    mode: 0755
+  tags: scripts
+  with_items:
+    - ghsync.sh
+
 - name: maintain master copy of repos
   template:
     src: "{{ item.src }}"
