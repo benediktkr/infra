@@ -9,6 +9,17 @@
     path: "/var/www/{{ item.name }}"
   with_items: "{{ static_sites }}"
 
+- name: template robots.txt
+  template:
+    src: robots.txt.j2
+    dest: "/var/www/{{ item.name }}/robots.txt"
+    owner: "{{ myusername }}"
+    group: www-data
+    mode: 0755
+  with_items: "{{ static_sites }}"
+  when:
+    - item.robots | default(false)
+
 - name: template static website configs
   template:
     src: nginx-static-vhost.j2
