@@ -102,3 +102,8 @@
     internal: no
   tags:
     - docker-network
+
+- name: install systemd config for container
+  template:
+    src: container.service.j2
+    dest: "/etc/systemd/system/container@.service"
