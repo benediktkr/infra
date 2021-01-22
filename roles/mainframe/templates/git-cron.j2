@@ -6,10 +6,10 @@
 15 */1 * * * root /usr/local/sbin/git-cron.sh
 
 # sync github (hides errors, needs some monitoring/checking)
-18 8 * * * root /usr/local/bin/ghsync.sh &> /dev/null
+14 */4 * * * root /usr/local/bin/ghsync.sh &> /root/ghsync.log
 
 # run convergence
-#13 * * * * root /usr/local/sbin/ansible-convergence.sh
+#13 */12 * * * root /usr/local/sbin/ansible-convergence.sh
 #13 3 * * * root /usr/local/sbin/ansible-convergence.sh sensors
 17 */6 * * * root /usr/local/sbin/tf-convergence.sh
 
