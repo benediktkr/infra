@@ -6,8 +6,12 @@ server {
 }
 
 server {
-  listen 443 ssl;
+{% if item.interface is defined %}
+  listen {{ item.interface }}:443 ssl;
+{% else %}
+  listen  443 ssl;
   listen   [::]:443 ssl; # listen for ipv6
+{% endif %}
 
   server_name {{ item.name }} {{ item.aliases | default([]) |join (" ") }};
 
