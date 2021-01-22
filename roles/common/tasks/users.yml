@@ -54,6 +54,16 @@
     - ubuntu
     - opc
 
+- name: remove lingering /home dirs for stupid default users
+  file:
+    state: absent
+    path: "/home/{{ item }}"
+  with_items:
+    - pi
+    - ec2user
+    - ubuntu
+    - opc
+
 - name: create user groups
   group:
     name: "{{ userlist[item]['username'] }}"
