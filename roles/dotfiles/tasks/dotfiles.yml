@@ -44,6 +44,8 @@
   with_items:
     - "{{ dotfiles }}"
   become_user: "{{ myusername }}"
+  loop_control:
+    label: "{{ item.dest }}"
   when:
     - gitpull.changed
     - not projects_dotfiles.stat.exists
@@ -55,6 +57,8 @@
     dest: "/root/{{ item.dest }}"
     owner: root
     group: root
+  loop_control:
+    label: "{{ item.dest }}"
   with_items:
     - "{{ dotfiles }}"
   when:
@@ -65,6 +69,8 @@
   file:
     path: "/root/{{ item.dest }}"
     state: absent
+  loop_control:
+    label: "{{ item.dest }}"
   with_items:
     - "{{ dotfiles }}"
   when:
