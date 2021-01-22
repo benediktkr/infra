@@ -104,3 +104,21 @@
     dest: /etc/cron.d/influxdb_collectors
   tags:
     - influxdb-scripts
+
+- name: backup dir
+  file:
+    state: directory
+    path: "{{ influxdb_backup_path }}"
+    owner: root
+    group: root
+    mode: 0700
+  tags: influxdb-backup
+
+- name: backup cron
+  template:
+    src: influxdb_backup-cron.j2
+    dest: /etc/cron.d/influxdb_backup
+    owner: root
+    group: root
+    mode: 0600
+  tags: influxdb-backup
