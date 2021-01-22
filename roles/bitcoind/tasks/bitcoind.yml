@@ -25,7 +25,7 @@
       - 8333:8333
       - 127.0.0.1:8332:8332
     volumes:
-      - "{{ bitcoind_root }}/data:/bitcoin"
+      - "{{ bitcoind_root }}/data/.bitcoin:/bitcoin/.bitcoin"
   tags:
     - bitcoind-container
     - docker-containers
