@@ -1,0 +1,43 @@
+#!/usr/bin/env python3
+
+from datetime import datetime, timezone
+from influxdb import InfluxDBClient
+
+dbs = {
+    'metrics': "{{ influxdb_pass['metrics'] }}"
+}
+
+def now_isoformat():
+    return datetime.now(tz=timezone.utc).isoformat()
+
+def datapoint(measurement, tags, fields):
+    return {
+        "measurement": measurement,
+        "tags": tags,
+        "time": now_isoformat(),
+        "fields": fields
+    }
+
+
+def write_datapoint(measurement, tags, fields, db="metrics", precision="m"):
+    return write(datapoint(measurement, tags, fields), db=db, precision=precision)
+
+
+def write(datapoints, db="metrics", precision='m', debug_mode=False):
+    client = InfluxDBClient(
+        host='{{ influxdb_url }}',
+        port=443,
+        username=db,
+        password=dbs[db],
+        ssl=True,
+        verify_ssl=True,
+        database=db)
+
+    if not isinstance(datapoints, list):
+        datapoints = [datapoints]
+
+    if debug_mode:
+        import pprint
+        pprint.pprint(datapoints)
+    else:
+        client.write_points(datapoints, time_precision=precision)

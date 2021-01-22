@@ -1,0 +1,6 @@
+# distributed from ansible
+
+# m h dom mon dow
+{% if inventory_hostname == rsnapshot_primary %}
+31 22 * * * root /usr/local/bin/sudoisrsnapshot.py
+{% endif %}

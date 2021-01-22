@@ -3,7 +3,9 @@
 from datetime import datetime, timezone
 
 import requests
-from influxdb import InfluxDBClient
+
+import sudoisinflux
+
 
 SDF_URL = "{{ sdf_metaarray_url }}"  # without trailing /
 
@@ -51,25 +53,7 @@ def check():
         }
     }]
 
-    influxdb_write(datapoints)
-
-
-def influxdb_write(datapoints):
-    client = InfluxDBClient(
-        host='{{ influxdb_url }}',
-        port=443,
-        username='metrics',
-        password="{{ influxdb_user_database['metrics'] }}",
-        ssl=True,
-        verify_ssl=True,
-        database='metrics')
-
-    client.write_points(datapoints, time_precision='m')
-
-
-
-
-
+    sudoisinflux.write(datapoints, precision='m')
 
 
 if __name__ == "__main__":

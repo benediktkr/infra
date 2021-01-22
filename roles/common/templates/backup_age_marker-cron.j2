@@ -1,8 +1,7 @@
 # distributed from ansible
 
 # m h dom mon dow
-45 */1 * * * root /usr/bin/touch /root/.backup_age_marker
-
+45 */1 * * * root /bin/date --iso-8601=minutes -u > /root/.backup_age_marker
 
 # this is just to have a known path to a file that should be
 # updated, to detect if a backup is too old

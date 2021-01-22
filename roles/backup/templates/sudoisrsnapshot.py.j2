@@ -1,0 +1,122 @@
+#!/usr/bin/env python3
+
+import argparse
+from datetime import datetime, timezone
+from subprocess import run, CalledProcessError
+from os import path, stat, listdir
+import sys
+
+from loguru import logger
+
+import sudoisinflux
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--interval", default="alpha")
+parser.add_argument("--debug", action="store_true")
+parser.add_argument("--dry-run", action="store_true", help="dont run rsnapshot")
+args = parser.parse_args()
+
+if not args.debug and not args.dry_run:
+    logger.remove()
+    logger.add(sys.stderr, level="WARNING")
+else:
+    logger.success("verbose output")
+
+rsnapshot_bin = "/usr/bin/rsnapshot"
+date_bin = "/usr/bin/date"
+du_bin = "/usr/bin/du"
+
+marker_name = ".backup_age_marker"
+
+latest_path = path.join("{{ rsnapshot_root }}", f"{args.interval}.0")
+marker_path = path.join(latest_path, marker_name)
+
+mb = lambda bytes: bytes//1024
+gb = lambda bytes: mb(bytes)//1024
+
+def tags(host=None):
+    return {'host': '{{ inventory_hostname }}' if host is None else host,
+            'interval': args.interval,
+            'path': latest_path }
+
+
+def utc_now():
+    return datetime.now(tz=timezone.utc)
+
+def utc_isoformat():
+    return utc_now().isoformat()
+
+def du(path):
+    du = run([du_bin, "-s", path], capture_output=True)
+
+    bytes = int(du.stdout.decode().split('\t')[0])
+    return bytes
+
+def update_marker():
+    with open(marker_path, 'w') as f:
+        f.write(utc_isoformat() + "\n")
+
+def read_host_marker(hostname):
+    host_marker = path.join(latest_path, hostname, "root", marker_name)
+    with open(host_marker, 'r') as f:
+        return datetime.fromisoformat(f.read().strip())
+
+def get_hosts_in_backup():
+    return [a for a in listdir(latest_path) if a[0].isalpha()]
+
+def rsnapshot():
+    try:
+        before = du(latest_path)
+        logger.debug(f"starting. current size: {gb(before)}G")
+
+        if not args.dry_run:
+            run([rsnapshot_bin, args.interval])
+
+        after = du(latest_path)
+        logger.debug(f"rsnapshot done, current size: {gb(after)}G")
+
+        return after - before
+
+    except CalledProcessError:
+        raise
+
+def read_all_host_markers():
+    now = utc_now()
+    for host in get_hosts_in_backup():
+        try:
+            marker = read_host_marker(host)
+            age = now - marker
+            size_mb = mb(du(path.join(latest_path, host)))
+            yield host, marker, age, size_mb
+        except (FileNotFoundError, ValueError) as e:
+            logger.error(f"backup age marker missing/broken for {host}: {e}")
+            continue
+
+
+if __name__ == "__main__":
+
+    diff_mb = rsnapshot()
+    logger.info(f"diff: {mb(diff_mb)}M")
+
+    for item in read_all_host_markers():
+        mins = item[2].seconds//60
+        days = item[2].days
+        host = item[0]
+        if days > 0:
+            if days == 1:
+                level = "WARNING"
+            else:
+                level = "ERROR"
+            logger.log(level, f"backup for {host} is {days}d old")
+        else:
+            logger.info(f"{host}: {mins} mins")
+
+
+
+
+
+    # only update the marker if the full backup was succesful
+    update_marker()
+
+        #fields = {'size_mb': after,
+        #'marker_date': stat(marker_path).mtime}

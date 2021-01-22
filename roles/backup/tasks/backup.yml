@@ -12,19 +12,26 @@
     src: rsnapshot.conf.j2
     dest: /etc/rsnapshot.conf
 
-- name: template sdf backup scripts
+- name: template cron file
+  template:
+    src: backup-cron.j2
+    dest: /etc/cron.d/backup
+    mode: 0750
+
+- name: template backup scripts
   template:
     src: "{{ item }}.j2"
     dest: "/usr/local/bin/{{ item }}"
     mode: 0755
     owner: root
     group: root
-  when: sdfbackup
   with_items:
     - sdfbackup.sh
     - sdfcleanup.sh
+    - sudoisrsnapshot.py
+  tags: backup_scripts
 
-- name: luks key
+- name: luks key for sdf
   copy:
     src: private/sdf_backup_lukskey
     dest: /root/sdf_backup_lukskey
