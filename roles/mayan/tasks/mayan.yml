@@ -1,20 +1,22 @@
 ---
 
-- name: create dir structure
+- name: create media dir
   file:
-    path: "{{ systemuserlist.mayan.home }}/{{ item }}"
+    path: "{{ systemuserlist.mayan.home }}/media"
     state: directory
     mode: 0750
     owner: mayan
     group: mayan
-  with_items:
-    - media
-    - db
 
-- name: template config file
+- name: create db dir
+  file:
+    path: "{{ systemuserlist.mayan.home }}/db"
+    state: directory
+
+- name: template env file
   template:
-    src: mayan.yml.j2
-    dest: "{{ systemuserlist.mayan.home }}/media/config.yml"
+    src: mayan.env.j2
+    dest: "{{ systemuserlist.mayan.home }}/mayan.env"
     owner: mayan
     group: mayan
     mode: 0644
@@ -25,7 +27,7 @@
     image: "postgres:9-alpine"
     auto_remove: no
     env:
-      POSTGRES_USERL: mayan
+      POSTGRES_USER: mayan
       POSTGRES_DB: mayan
       POSTGRES_PASSWORD: "{{ systemuserlist.mayan.mariadb_pass }}"
     volumes:
@@ -64,11 +66,8 @@
     auto_remove: no
     restart_policy: "no"
     state: started
-    env:
-      MAYAN_SKIP_CHOWN_ON_STARTUP: "true"
-      MAYAN_DOCKER_WAIT: "redis_mayan:6379 postgres_mayan:5432"
-      MAYAN_USER_UID: "{{ systemuserlist.mayan.uid }}"
-      MAYAN_USER_GID: "{{ systemuserlist.mayan.gid }}"
+    user: root:root
+    env_file: "{{ systemuserlist.mayan.home }}/mayan.env"
     volumes:
       - "{{ systemuserlist.mayan.home }}/media:/var/lib/mayan"
     networks_cli_compatible: no
