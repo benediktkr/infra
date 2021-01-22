@@ -2,11 +2,15 @@
 - name: add ssh hostkey for git into global ssh_known_hosts
   lineinfile:
     path: /etc/ssh/ssh_known_hosts
-    line: "{{ item }}"
+    line: "{{ item.key }}"
     create: yes
+  loop_control:
+    label: "{{ item.name }}"
   with_items:
-    - "{{ github_hostkey }}"
-    - "{{ sudo_hostkey }}"
+    - key: "{{ github_hostkey }}"
+      name: github
+    - key: "{{ sudo_hostkey }}"
+      name: sudo.is
 
 - name: create dir structure
   file:
@@ -55,13 +59,13 @@
     - "{{ dotfiles }}"
   when:
     - gitpull.changed
-    - item.root
+    - item.root|bool
 
 - name: rm dotfiles that root should not have
   file:
-    path: "{{ dotfiles_path }}/dotfiles/{{ item.src }}"
+    path: "/root/{{ item.dest }}"
     state: absent
   with_items:
     - "{{ dotfiles }}"
   when:
-    - not item.root
+    - not item.root|bool
