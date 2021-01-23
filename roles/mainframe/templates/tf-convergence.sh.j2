@@ -18,7 +18,7 @@ LOCKFILE=/tmp/tf-convergence.lock
     /usr/bin/egrep "\~|\+ resource|\- resource" {{ base }}/convergence-tf.tmp > {{ base }}/convergence-tf.txt
     /usr/bin/cp {{ base }}/convergence-tf.txt {{ tools_path }}/convergence/convergence-tf.txt
     # log it
-    cat {{ base }}/convergence-tf.tmp >> {{ base }}/convergence-tf.log
+    /usr/bin/cat {{ base }}/convergence-tf.tmp >> {{ base }}/convergence-tf.log
     /usr/bin/rm {{ base }}/convergence-tf.tmp
 
 )

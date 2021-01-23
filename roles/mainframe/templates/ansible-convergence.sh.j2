@@ -2,6 +2,8 @@
 
 set -e
 
+LOCKFILE=/tmp/ansible-convergence.lock
+/usr/bin/lockfile -r 0 $LOCKFILE
 
 {% set base = git_cron.base_path %}
 {% set tools_path = "/var/www/" + git_cron.tools_url %}
@@ -9,18 +11,12 @@ set -e
 cd {{ base }}/infra
 
 if [ "$1" = "sensors" ]; then
-    LOCKFILE=/tmp/tf-convergence-sensors.lock
-    /usr/bin/lockfile -r 0 $LOCKFILE
-
     ansible-playbook \
         -i hosts-sensors.yml \
         sensors.yml \
         --diff \
         --check &> {{ base }}/ansible-convergence-sensors.txt
 else
-    LOCKFILE=/tmp/tf-convergence.lock
-    /usr/bin/lockfile -r 0 $LOCKFILE
-
     ansible-playbook \
         -i hosts.yml \
         {{ git_cron.convergence }} \
