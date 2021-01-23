@@ -6,6 +6,7 @@ LOCKFILE=/tmp/tf-convergence.lock
 /usr/bin/lockfile -r 0 $LOCKFILE
 
 {% set base = git_cron.base_path %}
+{% set tools_path = "/var/www/" + git_cron.tools_url %}
 
 (
     cd {{ base }}/tf
@@ -15,6 +16,7 @@ LOCKFILE=/tmp/tf-convergence.lock
     # pipe the output to a tmp file, filter it, throw away temp file
     ./tf.py plan &> {{ base }}/convergence-tf.tmp
     /usr/bin/egrep "\~|\+ resource|\- resource" {{ base }}/convergence-tf.tmp > {{ base }}/convergence-tf.txt
+    /usr/bin/cp {{ base }}/convergence-tf.txt > {{ tools_path }}/convergence/convergence-tf.txt
     # log it
     cat {{ base }}/convergence-tf.tmp >> {{ base }}/convergence-tf.log
     /usr/bin/rm {{ base }}/convergence-tf.tmp

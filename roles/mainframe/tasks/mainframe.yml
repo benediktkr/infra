@@ -51,7 +51,15 @@
   with_items:
     - ghsync.sh
 
-- name: maintain master copy of repos
+- name: convergence dir on {{ git_cron.tools_url }}
+  file:
+    state: directory
+    path: "/var/www/{{ git_cron.tools_url }}/convergence"
+    owner: root
+    group: root
+    mode: 0664
+
+- name: maintain master copy of repos and convergence scripts
   template:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
@@ -60,8 +68,6 @@
     mode: "{{ item.mode }}"
   loop_control:
     label: "{{ item.src }}"
-  tags:
-    - unatt
   with_items:
     - src: git-cron.j2
       dest: /etc/cron.d/git
