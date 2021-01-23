@@ -31,6 +31,7 @@
   tags:
     - never
     - image
+    - hostkeys
 
 - name: make dir for host keys
   file:
@@ -41,6 +42,7 @@
   delegate_to: localhost
   tags:
     - ssh
+    - hostkeys
 
 - name: save hosts keys
   fetch:
@@ -55,6 +57,7 @@
     - ssh_host_rsa_key.pub
   tags:
     - ssh
+    - hostkeys
 
 - name: chown ssh_host_keys
   file:
@@ -67,6 +70,7 @@
   become: true
   tags:
     - ssh
+    - hostkeys
 
 - name: Set timezone to Europe/Berlin
   timezone:
