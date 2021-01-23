@@ -4,6 +4,7 @@ set -e
 
 
 {% set base = git_cron.base_path %}
+{% set tools_path = "/var/www/" + git_cron.tools_url %}
 
 cd {{ base }}/infra
 
@@ -27,4 +28,5 @@ else
         --check &> {{ base }}/ansible-convergence.txt
 fi
 
+/usr/bin/cp {{ base }}/ansible-convergence*.txt {{ tools_path }}/convergence/
 /usr/bin/rm -f $LOCKFILE

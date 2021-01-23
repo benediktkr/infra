@@ -57,7 +57,7 @@
     path: "/var/www/{{ git_cron.tools_url }}/convergence"
     owner: root
     group: root
-    mode: 0664
+    mode: 0775
 
 - name: maintain master copy of repos and convergence scripts
   template:
