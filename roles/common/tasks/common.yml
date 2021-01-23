@@ -303,8 +303,7 @@
     path: /etc/hosts
     line: "127.0.0.1 {{ inventory_hostname }}"
     create: no
-  ignore_errors: yes  # fails in --check
-  when: grephosts.rc != 0
+  when: not grephosts.skipped and grephosts.rc != 0
   tags:
     - etchosts
     - image
