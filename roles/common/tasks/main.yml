@@ -8,6 +8,7 @@
     name: users
   tags:
     - users
+    - common
 
 - include_role:
     name: tunnel
@@ -15,14 +16,12 @@
   tags:
     - tunnel
     - autossh
-
-- include_role:
-    name: dotfiles
-  tags: dotfiles
+    - common
 
 - include_role:
     name: postfix
   tags:
+    - common
     - postfix
     - postfix-cron
 
@@ -30,3 +29,7 @@
     name: telegraf
   tags: telegraf
   when: enable_telegraf == True
+
+- include_role:
+    name: dotfiles
+  tags: dotfiles
