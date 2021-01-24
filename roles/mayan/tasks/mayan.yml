@@ -26,6 +26,7 @@
     name: "postgres_mayan"
     image: "postgres:9-alpine"
     auto_remove: no
+    pull: yes
     env:
       POSTGRES_USER: mayan
       POSTGRES_DB: mayan
@@ -66,7 +67,7 @@
     auto_remove: no
     restart_policy: "no"
     state: started
-    user: root:root
+    user: root:root  # container starts as root, chowns and then switches to uid in env file
     env_file: "{{ systemuserlist.mayan.home }}/mayan.env"
     volumes:
       - "{{ systemuserlist.mayan.home }}/media:/var/lib/mayan"

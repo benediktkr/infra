@@ -1,0 +1,32 @@
+---
+
+- name: create dl dir
+  file:
+    path: "{{ ytdl_dl_dir }}"
+    state: directory
+    mode: 0770
+    owner: sudoisytdl
+    group: sudoisytdl
+
+- name: sudoisytdl container
+  docker_container:
+    name: sudoisytdl
+    image: benediktkr/sudoisytdl:latest
+    pull: yes
+    detach: yes
+    auto_remove: no
+    user: sudoisytdl:sudoisytdl
+    state: started
+    restart_policy: "no"
+    env:
+      TG_TOKEN: "{{ ytdl_tg_token }}"
+      DOMAIN: "{{ ytdl_domain }}"
+      MY_TG: "{{ ytdl_my_tg }}"
+      DEBUG: "false"
+    volumes:
+      - "{{ ytdl_dl_dir }}:/data"
+      - "{{ ytdl_web_dir }}:/web"
+  tags:
+    - sudoisytdl-container
+    - ytdl-container
+    - docker-containers

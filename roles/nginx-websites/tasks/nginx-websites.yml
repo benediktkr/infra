@@ -3,7 +3,7 @@
 - name: create directories for static websites
   file:
     state: directory
-    owner: "{{ myusername }}"
+    owner: "{{ item.owner | default(myusername) }}"
     group: www-data
     mode: 0755
     path: "/var/www/{{ item.name }}"
