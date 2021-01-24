@@ -169,6 +169,7 @@
       - lvm2
       - molly-guard
       - mtr
+      - locales
       - ncdu
       - nethogs
       - nmap
@@ -303,10 +304,20 @@
     path: /etc/hosts
     line: "127.0.0.1 {{ inventory_hostname }}"
     create: no
-  when: not grephosts.skipped and grephosts.rc != 0
+  when: not grephosts.skipped|default(false) and grephosts.rc != 0
   tags:
     - etchosts
     - image
+
+- name: enable en_US.UTF-8 (is usually enabled)
+  lineinfile:
+    path: /etc/locale.gen
+    line: 'en_US.UTF-8 UTF-8'
+    state: present
+  tags:
+    - scripts-common
+    - locale
+  notify: locale-gen
 
 - name: disable password authentication
   replace:
@@ -356,9 +367,10 @@
     dest: "/usr/local/bin/{{ item }}"
     owner: root
     group: root
-    mode: 0770
+    mode: 0775
   with_items:
     - reboot_required.py
+    - update_omzsh.sh
   tags:
     - scripts-common
 
@@ -375,7 +387,7 @@
   with_items:
     - backup_age_marker
     - reboot_required
-
+    - update_omzsh
 
 # - name: install zmq pip package
 #   pip:

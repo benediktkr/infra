@@ -15,3 +15,6 @@
 
 - name: run reboot_required.py
   command: /usr/local/bin/reboot_required.py
+
+- name: locale-gen
+  command: locale-gen

@@ -1,0 +1,24 @@
+#!/bin/bash
+
+
+weird_omzsh_epoch=$(( $(date +%s)/ 60 / 60 / 24 ))
+
+if [ -d "/home/{{ myusername }}/.oh-my-zsh" ]; then
+    (
+        echo "updating oh-my-zsh for {{ myusername }}"
+        cd /home/{{ myusername }}/.oh-my-zsh/
+
+        /usr/bin/sudo -u {{ myusername }} /usr/bin/git pull -q
+        echo $weird_omzsh_epoch > /home/{{ myusername }}/.oh-my-zsh/cache/.zsh-update
+    )
+fi
+
+if [ -d "/root/.oh-my-zsh" ] && [[ $EUID -eq 0 ]]; then
+    (
+        echo "updating oh-my-zsh for root"
+
+        cd /root/.oh-my-zsh/
+        /usr/bin/git pull -q
+        echo $weird_omzsh_epoch > /home/{{ myusername }}/.oh-my-zsh/cache/.zsh-update
+    )
+fi
