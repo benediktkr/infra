@@ -195,11 +195,12 @@
       with_dict: "{{ systemuserlist }}"
 
     - name: set authorized_keys for tunnel user
-      authorized_key:
-        user: tunnel
-        state: present
-        key: "{{ lookup('file', 'private/sshkeys/tunnel.authorized_keys') }}"
-        manage_dir: yes
+      template:
+        src: private/sshkeys/tunnel.authorized_keys
+        dest: /home/.system/tunnel/.ssh/authorized_keys
+        owner: tunnel
+        group: tunnel
+        mode: 0700
       when: '"tunnel" in system_users'
       tags:
         - sshkeys

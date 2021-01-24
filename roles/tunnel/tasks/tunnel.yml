@@ -19,6 +19,14 @@
     - tunnel
     - tunnel.pub
 
+- name: template tunnel authorized_keys
+  template:
+    src: private/sshkeys/tunnel.authorized_keys
+    dest: /home/.system/tunnel/.ssh/authorized_keys
+    owner: tunnel
+    group: tunnel
+    mode: 0700
+
 - name: set up autossh tunnels systemd services
   template:
     src: autossh.service.j2
