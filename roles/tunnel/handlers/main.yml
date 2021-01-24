@@ -1,0 +1,8 @@
+---
+
+- name: restart autossh
+  service:
+    name: autossh-{{ item.hostname }}
+    state: restarted
+  with_items: "{{ ssh_tunnels }}"
+  when: not ansible_check_mode

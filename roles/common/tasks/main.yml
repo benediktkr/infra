@@ -4,10 +4,13 @@
   tags:
     - common
 
-- include: users.yml
-  tags: users
+- include_role:
+    name: users
+  tags:
+    - users
 
-- include: tunnel.yml
+- include_role:
+    name: tunnel
   when: ssh_tunnels|length > 0
   tags:
     - tunnel

@@ -8,8 +8,8 @@
     - autossh
     - packages
 
-- name: copy tunnel keys
-  copy:
+- name: template tunnel keys
+  template:
     src: "private/sshkeys/{{ item }}"
     dest: /home/.system/tunnel/.ssh/{{ item }}
     owner: tunnel
@@ -34,3 +34,4 @@
     enabled: yes
     state: started
   with_items: "{{ ssh_tunnels }}"
+  when: not ansible_check_mode
