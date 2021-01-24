@@ -350,35 +350,32 @@
     - unatt
     - packages
 
-- name: use grafana instead of emails to notify of reboots needed
+- name: template common scripts
   template:
-    src: "{{ item.src }}"
-    dest: "{{ item.dest }}"
+    src: "{{ item }}.j2"
+    dest: "/usr/local/bin/{{ item }}"
     owner: root
     group: root
-    mode: "{{ item.mode }}"
+    mode: 0770
   with_items:
-    - src: reboot_required.py.j2
-      dest: /usr/local/bin/reboot_required.py
-      mode: 770
-    - src: reboot_required-cron.j2
-      dest: /etc/cron.d/reboot_required
-      mode: 600
+    - reboot_required.py
   tags:
-    - rebootrequired
-    - cron
-  notify: run reboot_required.py
+    - scripts-common
 
-- name: template backup_age_marker cron job
+- name: template common cron jobs
   template:
-    src: backup_age_marker-cron.j2
-    dest: /etc/cron.d/backup_age_marker
+    src: "{{ item }}-cron.j2"
+    dest: "/etc/cron.d/{{ item }}"
     owner: root
     group: root
     mode: 0600
   tags:
     - cron
     - cron-common
+  with_items:
+    - backup_age_marker
+    - reboot_required
+
 
 # - name: install zmq pip package
 #   pip:
