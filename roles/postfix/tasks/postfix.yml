@@ -46,3 +46,14 @@
     src: aliases.j2
     dest: /etc/aliases
   notify: newaliases
+
+- name: template postfix restart cron job
+  template:
+    src: restart_postfix-cron.j2
+    dest: /etc/cron.d/restart_postfix
+    owner: root
+    group: root
+    mode: 0600
+  tags:
+    - cron
+    - cron-postfix

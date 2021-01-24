@@ -369,18 +369,16 @@
     - cron
   notify: run reboot_required.py
 
-- name: common cronjobs
+- name: template backup_age_marker cron job
   template:
-    src: "{{ item }}-cron.j2"
-    dest: "/etc/cron.d/{{ item }}"
+    src: backup_age_marker-cron.j2
+    dest: /etc/cron.d/backup_age_marker
     owner: root
     group: root
     mode: 0600
   tags:
     - cron
-  with_items:
-    - backup_age_marker
-    - restart_postfix
+    - cron-common
 
 # - name: install zmq pip package
 #   pip:

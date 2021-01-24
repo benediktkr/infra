@@ -1,7 +1,8 @@
 ---
 # file: roles/common/tasks/main.yml
 - include: common.yml
-  tags: common
+  tags:
+    - common
 
 - include: users.yml
   tags: users
@@ -18,7 +19,9 @@
 
 - include_role:
     name: postfix
-  tags: postfix
+  tags:
+    - postfix
+    - postfix-cron
 
 - include_role:
     name: telegraf
