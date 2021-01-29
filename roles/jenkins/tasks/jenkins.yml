@@ -11,7 +11,6 @@
   with_items:
     - home
     - etc/docker
-    - "{{ jenkins_tumiproject }}"
 
 - name: create dirs for nginx
   file:
@@ -43,7 +42,6 @@
     volumes:
       - "{{ jenkins_root }}/home:/var/jenkins_home"
       - "{{ jenkins_root }}/etc/docker:/etc/docker"
-      - "{{ jenkins_root }}/{{ jenkins_tumiproject }}:/{{ jenkins_tumiproject }}"
       - /var/www/{{ builds_url }}:/builds
       - /var/run/docker.sock:/var/run/docker.sock
     networks_cli_compatible: no
