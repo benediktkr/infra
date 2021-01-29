@@ -17,7 +17,12 @@ mkdir $workdir
 
     cd $workdir
 {%  for repo in ghsync_repos %}
+    echo
+    echo
     echo {{ repo }}
+    echo "======"
+    echo
+
     git clone ssh://git@git.sudo.is:7999/ben/{{ repo }}.git
 
     (
