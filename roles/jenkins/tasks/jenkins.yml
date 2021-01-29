@@ -34,6 +34,7 @@
     detach: yes
     pull: yes
     restart_policy: "unless-stopped"
+    container_default_behavior: compatibility
     #user: "{{systemuserlist.jenkins.uid}}:{{systemuserlist.jenkins.gid}}"
     state: started
     ports:
@@ -53,21 +54,3 @@
     - jenkins-container
 
 # sudo docker exec -it jenkins /usr/bin/docker login
-
-# copied from monitory-server
-- name: install pip3 packages for {{ jenkins_tumiproject }}
-  pip:
-    name:
-      - influxdb
-    state: present
-    executable: pip3
-  tags:
-    - pip
-    - packages
-    - influxdb-scripts
-
-# - name: crontab for {{ jenkins_tumiproject }}
-#   cron:
-#     name: "{{ jenkins_tumiproject }}"
-#     special_time: hourly
-#     job: "crontab {{ jenkins_root }}/{{ jenkins_tumiproject }}/cron/{{ jenkins_tumiproject }}.cron"
