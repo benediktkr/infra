@@ -4,7 +4,7 @@
   file:
     path: "{{ ytdl_dl_dir }}"
     state: directory
-    mode: 0770
+    mode: 0775
     owner: sudoisytdl
     group: sudoisytdl
 
@@ -15,7 +15,7 @@
     pull: yes
     detach: yes
     auto_remove: no
-    user: sudoisytdl:sudoisytdl
+    user: "{{ ytdl_user.uid }}"
     state: started
     restart_policy: "no"
     container_default_behavior: compatibility
@@ -23,6 +23,7 @@
       TG_TOKEN: "{{ ytdl_tg_token }}"
       DOMAIN: "{{ ytdl_domain }}"
       MY_TG: "{{ ytdl_my_tg }}"
+      EXPIRE_AFTER_MINS: "{{ ytdl_expire_after_mins }}"
       DEBUG: "false"
     volumes:
       - "{{ ytdl_dl_dir }}:/data"
