@@ -18,6 +18,7 @@
     user: sudoisytdl:sudoisytdl
     state: started
     restart_policy: "no"
+    container_default_behavior: compatibility
     env:
       TG_TOKEN: "{{ ytdl_tg_token }}"
       DOMAIN: "{{ ytdl_domain }}"
