@@ -24,7 +24,7 @@ mkdir $workdir
         cd ${workdir}/{{ repo }}
         git pull origin master
         git remote add github git@github.com:benediktkr/{{ repo }}.git
-        git push github master #| egrep "\.\.|To"
+        git push github master --force #| egrep "\.\.|To"
 
         echo {{ repo }}
 
