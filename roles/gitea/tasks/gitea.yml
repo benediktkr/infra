@@ -27,6 +27,14 @@
     owner: git
     group: git
 
+- name: template config
+  template:
+    src: private/gitea_app.ini.j2
+    dest: "{{ systemuserlist.git.home }}/data/gitea/conf/app.ini"
+    owner: git
+    group: git
+    mode: 0644
+
 - name: start container
   docker_container:
     name: gitea
