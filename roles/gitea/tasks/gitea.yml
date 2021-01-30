@@ -18,6 +18,7 @@
     pull: yes
     restart_policy: "no"
     state: started
+    container_default_behavior: compatibility
     ports:
       - "7999:22"
     volumes:
