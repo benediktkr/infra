@@ -15,6 +15,7 @@
   docker_container:
     name: bitcoind
     image: kylemanna/bitcoind:latest
+    container_default_behavior: compatibility
     auto_remove: yes     # auto remove and no restart policy better for reboots
     detach: yes
     pull: yes
