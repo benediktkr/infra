@@ -37,7 +37,7 @@
     state: started
     container_default_behavior: compatibility
     ports:
-      - "{{ gitea_ssh_port }}:22"
+      - "127.0.0.1:{{ gitea_ssh_port }}:22"
     volumes:
       - "{{ systemuserlist.git.home }}/data:/data"
       - /etc/timezone:/etc/timezone:ro
