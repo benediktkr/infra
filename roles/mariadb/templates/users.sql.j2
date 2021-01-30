@@ -3,15 +3,16 @@ use mysql;
 {% for username in systemuserlist %}
 {% set user = systemuserlist[username] %}
 {% if username in system_users and user.mariadb|default(False)  %}
+{% set username = user.mariadb_user | default(user.username) %}
 
--- {{ user.username }}
-CREATE DATABASE IF NOT EXISTS {{ user.username }} CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;;
-CREATE USER IF NOT EXISTS  '{{ user.username }}'@'localhost' IDENTIFIED WITH unix_socket;
-GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, INDEX, DROP, ALTER, CREATE TEMPORARY TABLES, LOCK TABLES ON {{ user.username }}.* TO '{{ user.username }}'@'localhost';
+-- {{ username }}
+CREATE DATABASE IF NOT EXISTS {{ username }} CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;;
+CREATE USER IF NOT EXISTS  '{{ username }}'@'localhost' IDENTIFIED WITH unix_socket;
+GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, INDEX, DROP, ALTER, CREATE TEMPORARY TABLES, LOCK TABLES ON {{ username }}.* TO '{{ username }}'@'localhost';
 
 {% if "mariadb_pass" in user %}
-CREATE USER IF NOT EXISTS  '{{ user.username }}'@'%' IDENTIFIED BY '{{ user.mariadb_pass }}' ;
-GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, INDEX, DROP, ALTER, CREATE TEMPORARY TABLES, LOCK TABLES ON {{ user.username }}.* TO '{{ user.username }}'@'%';
+CREATE USER IF NOT EXISTS  '{{ username }}'@'%' IDENTIFIED BY '{{ user.mariadb_pass }}' ;
+GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, INDEX, DROP, ALTER, CREATE TEMPORARY TABLES, LOCK TABLES ON {{ username }}.* TO '{{ username }}'@'%';
 {% endif %}
 
 {% endif %}

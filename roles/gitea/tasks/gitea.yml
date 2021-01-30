@@ -2,11 +2,11 @@
 
 - name: create dir structure
   file:
-    path: "{{ systemuserlist.gitea.home }}/{{ item }}"
+    path: "{{ systemuserlist.git.home }}/{{ item }}"
     state: directory
     mode: 0750
-    owner: gitea
-    group: gitea
+    owner: git
+    group: git
   with_items:
     - data
 
@@ -22,17 +22,17 @@
     ports:
       - "7999:22"
     volumes:
-      - "{{ systemuserlist.gitea.home }}/data:/data"
+      - "{{ systemuserlist.git.home }}/data:/data"
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     env:
-      USER_UID: "{{ systemuserlist.gitea.uid }}"
-      USER_GID: "{{ systemuserlist.gitea.gid }}"
+      USER_UID: "{{ systemuserlist.git.uid }}"
+      USER_GID: "{{ systemuserlist.git.gid }}"
       DB_TYPE: mysql
       DB_HOST: "{{ ansible_docker0.ipv4.address }}:3306"
       DB_NAME: gitea
       DB_USER: gitea
-      DB_PASSWD: "{{ systemuserlist.gitea.mariadb_pass }}"
+      DB_PASSWD: "{{ systemuserlist.git.mariadb_pass }}"
       DISABLE_REGISTRATION: "true"
     networks_cli_compatible: no
     networks:
@@ -41,3 +41,9 @@
   tags:
     - gitea-container
     - docker-containers
+
+- name: symlink .ssh for git user
+  file:
+    src: "{{ systemuserlist.git.home }}/data/git/.ssh"
+    dest: "{{ systemuserlist.git.home }}/.ssh"
+    state: link
