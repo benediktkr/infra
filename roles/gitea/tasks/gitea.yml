@@ -10,6 +10,23 @@
   with_items:
     - data
 
+- name: create dir for ssh passthrough script
+  file:
+    path: "/app/gitea/"
+    state: directory
+    mode: 0755
+    owner: git
+    group: git
+    recurse: yes
+
+- name: template ssh passthrough script
+  template:
+    src: ssh-passthrough.j2
+    dest: /app/gitea/gitea
+    mode: 0755
+    owner: git
+    group: git
+
 - name: start container
   docker_container:
     name: gitea
@@ -20,7 +37,7 @@
     state: started
     container_default_behavior: compatibility
     ports:
-      - "7999:22"
+      - "{{ gitea_ssh_port }}:22"
     volumes:
       - "{{ systemuserlist.git.home }}/data:/data"
       - /etc/timezone:/etc/timezone:ro
