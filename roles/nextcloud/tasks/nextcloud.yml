@@ -58,6 +58,7 @@
     detach: yes
     pull: yes
     state: "{{ item.state | default('started') }}"
+    container_default_behavior: compatibility
     env:
       REDIS_HOST: "redis_{{ item.name }}"
     networks_cli_compatible: no
@@ -86,6 +87,7 @@
     pull: yes
     state: "{{ item.state | default('started') }}"
     restart_policy: "no"
+    container_default_behavior: compatibility
     env:
       NEXTCLOUD_DATA_DIR: "/data"
     ports:
