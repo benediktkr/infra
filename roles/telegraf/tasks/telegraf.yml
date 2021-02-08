@@ -1,5 +1,64 @@
 ---
 
+- name: temp stop telegraf
+  service:
+    name: telegraf
+    state: stopped
+  when: stop_telegraf|default(False)|bool
+  notify: restart telegraf
+
+- name: group for telegraf user
+  group:
+    state: present
+    name: "{{ systemuserlist.telegraf.username }}"
+    gid: "{{ systemuserlist.telegraf.gid }}"
+  tags: users
+  notify: restart telegraf
+
+- name: telegraf user
+  user:
+    state: present
+    name: "{{ systemuserlist.telegraf.username }}"
+    group: "{{ systemuserlist.telegraf.username }}"
+    shell: "{{ systemuserlist.telegraf.shell }}"
+    uid: "{{ systemuserlist.telegraf.uid }}"
+    create_home: yes
+    home: "{{ systemuserlist.telegraf.home }}"
+    move_home: yes
+    system: yes
+  tags: users
+  notify: restart telegraf
+
+- name: allow telegraf to sudo and use smartctl
+  template:
+    src: telegraf.sudoers.j2
+    dest: /etc/sudoers.d/telegraf
+    mode: 0440
+    owner: root
+    group: root
+  when: telegraf_smart_disks
+  notify: restart telegraf
+  tags: users
+
+- name: get list of existing groups
+  shell: "/usr/bin/getent group | awk -F':' '{print $1}'"
+  register: etc_groups
+  check_mode: no
+  changed_when: false
+  tags: users
+
+- name: adding telegraf user to groups that exist on this system"
+  user:
+    name: "{{ systemuserlist.telegraf.username }}"
+    groups: "{{ item }}"
+    append: yes
+  with_items: "{{ systemuserlist.telegraf.groups }}"
+  tags: users
+  when: 'item in etc_groups.stdout_lines'
+  loop_control:
+    label: "{{ systemuserlist.telegraf.username }} {{ item }}"
+  notify: restart telegraf
+
 - name: add apt key for influxdata to install telegraf
   apt_key:
     url: https://repos.influxdata.com/influxdb.key
@@ -27,9 +86,6 @@
     codename: "{{ ansible_lsb.codename }}"
   when: ansible_lsb.codename != "bullseye"
 
-- debug:
-    var: ansible_lsb
-
 - name: add repo for influxdata to install telegraf
   apt_repository:
     repo: deb https://repos.influxdata.com/{{ distro | lower }} {{ codename }} stable
@@ -46,6 +102,17 @@
     - packages
   notify: restart telegraf
 
+# telegraf errors and doesnt do the smart check if this
+# isnt installed, regardless of if there are nvme disks
+- name: install nvme-cli for telegraf s.m.a.r.t. monitoring
+  apt:
+    name: nvme-cli
+    state: latest
+  when: telegraf_smart_disks
+  tags:
+    - packages
+  notify: restart telegraf
+
 - name: template telegraf config
   template:
     src: telegraf.conf.j2
@@ -58,52 +125,6 @@
 - name: enable telegraf
   service:
     name: telegraf
+    state: started
     enabled: yes
-  notify: restart telegraf
-
-- name: adding telegraf to docker group
-  user:
-    name: telegraf
-    append: yes
-    groups:
-      - docker
-  when: "'docker' in group_names"
-  notify: restart telegraf
-
-- name: set postfix permissions for telegraf
-  file:
-    dest: "/var/spool/postfix/{{ item }}"
-    group: mail
-    mode: 0750
-    recurse: yes
-  with_items:
-    - active
-    - deferred
-    - hold
-    - incoming
-  notify:
-    - restart postfix
-  tags:
-    - telegraf
-
-- name: set permissions on maildrop dir for telegraf
-  file:
-    dest: /var/spool/postfix/maildrop
-    mode: u=rwx,g=rwx,+t
-    recurse: yes
-  notify: restart postfix
-  tags:
-    - telegraf
-
-- name: adding telegraf user to postfix related groups
-  user:
-    name: telegraf
-    append: yes
-    groups:
-      - postfix
-      - mail
-      - postdrop
-  tags:
-    - telegraf
-  when: enable_telegraf
   notify: restart telegraf

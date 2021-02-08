@@ -1,0 +1,4 @@
+{% if telegraf_smart_disks %}
+telegraf ALL=(root) NOPASSWD: /usr/sbin/smartctl
+telegraf ALL=(root) NOPASSWD: /usr/sbin/nvme
+{% endif %}

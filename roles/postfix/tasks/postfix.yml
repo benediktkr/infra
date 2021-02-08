@@ -57,3 +57,28 @@
   tags:
     - cron
     - cron-postfix
+
+- name: set postfix permissions for telegraf
+  file:
+    dest: "/var/spool/postfix/{{ item }}"
+    group: mail
+    mode: 0750
+    recurse: yes
+  with_items:
+    - active
+    - deferred
+    - hold
+    - incoming
+  notify:
+    - restart postfix
+  tags:
+    - telegraf
+
+- name: set permissions on maildrop dir for telegraf
+  file:
+    dest: /var/spool/postfix/maildrop
+    mode: u=rwx,g=rwx,+t
+    recurse: yes
+  notify: restart postfix
+  tags:
+    - telegraf

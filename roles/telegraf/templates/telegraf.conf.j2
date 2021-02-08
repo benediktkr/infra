@@ -87,7 +87,7 @@
   ## urls will be written to each interval.
   # urls = ["unix:///var/run/influxdb.sock"]
   # urls = ["udp://127.0.0.1:8089"]
-   urls = ["https://{{ ingest }}"]
+  urls = ["https://{{ ingest }}"]
 
   ## The target database for metrics; will be created as needed.
   ## For UDP url endpoint database needs to be configured on server side.
@@ -103,7 +103,7 @@
   ## If true, no CREATE DATABASE queries will be sent.  Set to true when using
   ## Telegraf with a user without permissions to create databases or when the
   ## database already exists.
-  skip_database_creation = false
+  skip_database_creation = true
 
   ## Name of existing retention policy to write to.  Empty string writes to
   ## the default retention policy.  Only takes effect when using HTTP.
@@ -253,3 +253,8 @@
 
 [[inputs.postfix]]
     queue_directory = "/var/spool/postfix"
+
+{% if telegraf_smart_disks %}
+[[inputs.smart]]
+    use_sudo = true
+{% endif %}
