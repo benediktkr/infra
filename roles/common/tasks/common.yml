@@ -96,6 +96,7 @@
       - python3-venv
       - python3-dev
       - python-setuptools
+    state: latest
   tags:
     - packages
     - python3
