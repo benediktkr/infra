@@ -257,4 +257,12 @@
 {% if telegraf_smart_disks %}
 [[inputs.smart]]
     use_sudo = true
+[[processors.enum]]
+  [[processors.enum.mapping]]
+    field = "health_ok"
+    dest = "health_ok_int"
+
+    [processors.enum.mapping.value_mappings]
+      false = 0
+      true = 1
 {% endif %}
