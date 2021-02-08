@@ -155,7 +155,7 @@
       loop_control:
         label: "{{ item.key }}"
       with_dict: "{{ systemuserlist }}"
-      when: item.key not in system_users
+      when: item.key not in system_users+['telegraf']
 
     - name: remove system groups that shouldnt be on this system
       group:
@@ -164,7 +164,7 @@
       loop_control:
         label: "{{ item.key }}"
       with_dict: "{{ systemuserlist }}"
-      when: item.key not in system_users
+      when: item.key not in system_users+['telegraf']
 
     - name: create system user groups
       group:
@@ -191,7 +191,7 @@
         system: yes
       when: item.key in system_users
       loop_control:
-        label: "[{% if item.key in system_users %}present{% else %}absent{%endif%}] {{ item.key }}"
+        label: "{{ item.key }}"
       with_dict: "{{ systemuserlist }}"
 
     - name: set authorized_keys for tunnel user
