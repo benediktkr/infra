@@ -14,15 +14,16 @@ if [ ! -d {{ mariadb_dump_path }} ]; then
 fi
 
 {% for user in system_users|default([]) %}
-{% if systemuserlist[user]['mariadb']|default(False)  %}
-# dumping '{{ user }}'
-if [ -f {{ mariadb_dump_path }}/{{ user }}.1.sql ]; then
-    rm {{ mariadb_dump_path }}/{{ user }}.1.sql
+{% if systemuserlist[user].mariadb |default(False)  %}
+{% set username = systemuserlist[user].mariadb_user | default(user) %}
+# dumping '{{ username }}'
+if [ -f {{ mariadb_dump_path }}/{{ username }}.1.sql ]; then
+    rm {{ mariadb_dump_path }}/{{ username }}.1.sql
 fi
-if [ -f {{ mariadb_dump_path }}/{{ user }}.sql ]; then
-    mv {{ mariadb_dump_path }}/{{ user }}.sql {{ mariadb_dump_path }}/{{ user }}.1.sql
+if [ -f {{ mariadb_dump_path }}/{{ username }}.sql ]; then
+    mv {{ mariadb_dump_path }}/{{ username }}.sql {{ mariadb_dump_path }}/{{ username }}.1.sql
 fi
-mysqldump {{ user }} > {{ mariadb_dump_path }}/{{ user }}.sql
+mysqldump {{ username }} > {{ mariadb_dump_path }}/{{ username }}.sql
 
 {% endif %}
 {% endfor %}
