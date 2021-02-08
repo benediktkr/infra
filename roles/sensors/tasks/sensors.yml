@@ -11,12 +11,13 @@
       - sensors
     append: yes
 
-- name: dhcpd hook for route to vpn
-  template:
-    src: 40-route.j2
-    dest: /lib/dhcpcd/dhcpcd-hooks/40-route
-  tags:
-    - vpnclient
+#- name: dhcpd hook for route to vpn
+#  template:
+#    src: 40-route.j2
+#    dest: /lib/dhcpcd/dhcpcd-hooks/40-route
+#  tags:
+#    - vpnclient
+# when: plz add
 
 - name: enable w1 in bootloader config
   lineinfile:
