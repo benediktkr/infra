@@ -1,12 +1,5 @@
 ---
 
-- name: temp stop telegraf
-  service:
-    name: telegraf
-    state: stopped
-  when: stop_telegraf|default(False)|bool
-  notify: restart telegraf
-
 - name: group for telegraf user
   group:
     state: present
