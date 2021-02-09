@@ -10,3 +10,8 @@
 
 - name: systemctl daemon reload
   command: systemctl daemon-reload
+
+- name: reload nginx
+  service:
+    name: nginx
+    state: reloaded

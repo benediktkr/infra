@@ -6,6 +6,17 @@
     - docker
     - pihole-container
 
+- name: template nginx vhost for {{ pihole_vhost }}
+  template:
+    src: pihole-vhost.j2
+    dest: /etc/nginx/sites-enabled/01-pihole-vhost
+    #validate: /usr/sbin/nginx -t
+  tags:
+    - nginx-config
+    - nginx-vhosts
+    - pihole-nginx
+  notify: reload nginx
+
 - name: create dir structure
   file:
     path: "{{ pihole_root }}/{{ item['dir'] }}"
