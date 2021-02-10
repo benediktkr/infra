@@ -194,14 +194,15 @@
         label: "{{ item.key }}"
       with_dict: "{{ systemuserlist }}"
 
-    - name: set authorized_keys for tunnel user
+    - name: set authorized_keys for system users
       template:
         src: private/sshkeys/tunnel.authorized_keys
         dest: /home/.system/tunnel/.ssh/authorized_keys
-        owner: tunnel
-        group: tunnel
+        owner: "{{ item }}"
+        group: "{{ item }}"
         mode: 0700
-      when: '"tunnel" in system_users'
+      when: 'systemuserlist[item].sshkey|default(False)'
+      with_items: "{{ system_users }}"
       tags:
         - sshkeys
 
