@@ -19,13 +19,16 @@
     - tunnel
     - tunnel.pub
 
-- name: template tunnel authorized_keys
+- name: template tunnel authorized_keys and known hosts
   template:
-    src: private/sshkeys/tunnel.authorized_keys
-    dest: /home/.system/tunnel/.ssh/authorized_keys
+    src: private/sshkeys/tunnel.{{ item }}
+    dest: /home/.system/tunnel/.ssh/{{ item }}
     owner: tunnel
     group: tunnel
     mode: 0700
+  with_items:
+    - authorized_keys
+    - known_hosts
 
 - name: set up autossh tunnels systemd services
   template:
