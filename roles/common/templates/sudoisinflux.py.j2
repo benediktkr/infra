@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 
+from sys import argv
 from datetime import datetime, timezone
 from influxdb import InfluxDBClient
 
 dbs = {
     'metrics': "{{ influxdb_pass['metrics'] }}"
+}
+
+TAG_HOST = {
+    "host": "{{ inventory_hostname }}"
 }
 
 def now_isoformat():
@@ -18,9 +23,20 @@ def datapoint(measurement, tags, fields):
         "fields": fields
     }
 
+def int_if_bool(value):
+    if isinstance(value, bool):
+        return int(value)
+    else:
+         return value
 
 def write_datapoint(measurement, tags, fields, db="metrics", precision="m"):
-    return write(datapoint(measurement, tags, fields), db=db, precision=precision)
+    _tags = {k: int_if_bool(v) for k, v in tags.items()}
+
+    return write(
+        datapoint(measurement, _tags, fields),
+        db=db,
+        precision=precision
+    )
 
 
 def write(datapoints, db="metrics", precision='m', dry_run=False):
@@ -36,8 +52,9 @@ def write(datapoints, db="metrics", precision='m', dry_run=False):
     if not isinstance(datapoints, list):
         datapoints = [datapoints]
 
-    if dry_run:
+    if dry_run or "-v" in argv:
         import pprint
         pprint.pprint(datapoints)
-    else:
+
+    if not dry_run:
         return client.write_points(datapoints, time_precision=precision)
