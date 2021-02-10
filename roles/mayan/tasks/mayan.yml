@@ -27,12 +27,14 @@
     image: "postgres:9-alpine"
     auto_remove: no
     pull: yes
+    container_default_behavior: compatibility
     env:
       POSTGRES_USER: mayan
       POSTGRES_DB: mayan
       POSTGRES_PASSWORD: "{{ systemuserlist.mayan.mariadb_pass }}"
     volumes:
       - "{{ systemuserlist.mayan.home }}/db:/var/lib/postgresql/data"
+    networks_cli_compatible: no
     networks:
       - name: bridgewithdns
   tags:
@@ -50,6 +52,7 @@
     command: redis-server --appendonly "no" --databases "2"
     env:
       REDIS_HOST: "redis_mayan"
+    container_default_behavior: compatibility
     networks_cli_compatible: no
     networks:
       - name: bridgewithdns
@@ -71,6 +74,7 @@
     env_file: "{{ systemuserlist.mayan.home }}/mayan.env"
     volumes:
       - "{{ systemuserlist.mayan.home }}/media:/var/lib/mayan"
+    container_default_behavior: compatibility
     networks_cli_compatible: no
     networks:
       - name: bridgewithdns
