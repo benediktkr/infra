@@ -236,14 +236,14 @@
 #[[inputs.ethtool]]
 
 
-{% if 'monitoring-server' in role_names %}
+{% if 'monitoring' in group_names %}
 [[inputs.influxdb]]
 {% endif %}
 
 [[inputs.net]]
 
 
-{% if 'nginx' in role_names %}
+{% if 'nginx' in group_names %}
 
 [[inputs.nginx]]
      urls = ["https://{{ inventory_hostname }}/server_status"]
