@@ -9,27 +9,6 @@
   tags:
     - wg-keygen
 
-- name: template iptables rule file
-  template:
-    src: "{{ iptables_rules|default('iptables.rules.j2') }}"
-    dest: /etc/iptables.rules
-  tags:
-    - iptables
-  when: wireguard_local_nat is defined
-  #notify: apply iptables rules
-
-- name: cron to reload iptables rules 3 minutes after reboot
-  cron:
-    name: iptables load
-    special_time: reboot
-    job: "sleep 180 && /sbin/iptables-restore --noflush < /etc/iptables.rules"
-    user: root
-    state: "{% if wireguard_local_nat is defined %}present{% else %}absent{%endif%}"
-  tags:
-    - cron
-    - iptables
-  when: wireguard_local_nat is defined
-
 - name: enable ip_forward in proc
   sysctl:
     name: net.ipv4.ip_forward
@@ -104,7 +83,6 @@
     - wg-config
     - wireguard_clients
     - wireguard-clients
-
 
 - name: enable wireguard server with wg-quick
   service:

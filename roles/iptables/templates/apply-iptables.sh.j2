@@ -1,0 +1,52 @@
+#!/bin/bash
+
+## Failsafe:
+## Check if there exists a file with this hostname on {{ iptables_url }}
+## If it does exist (curl returns 0), then we do not apply the
+## iptables rules.
+##
+## Food for thought
+##  - if a host boots and {{ iptables_url }} is down, rules are applied
+##  - it defaults to applying the rules
+##  - means that i am unlikely to lock myself out
+##  - should we default to NOT applying?
+##  - default to old style sleep 180 if any other error than 404?
+
+if [[ $EUID -ne 0 ]]; then
+    echo "must run as root"
+    exit 1
+fi
+
+BOLD='\033[1m'
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+NC='\033[0m'
+
+red() {
+    echo -e "${RED}${BOLD}${*}${NC}"
+}
+green() {
+    echo -e "${GREEN}${BOLD}${*}${NC}"
+}
+
+# Touch a marker file for iptables-monitor.py
+MARKER_FILE=/var/run/iptables_applied
+rm $MARKER_FILE 2> /dev/null || true
+
+if `curl -s --fail -m 15 {{ iptables_url }}/{{ inventory_hostname }}` ; then
+    echo "a file {{ iptables_url }}/{{ inventory_hostname }} exists"
+    red "iptables rules NOT APPLIED (DID NOTHING)"
+    # exits with 0 after the if statement
+else
+    echo "no {{ iptables_url }}/{{ inventory_hostname }} file exists"
+    # using iptables-appl because it is smart about not re-applying rules
+    # that already exist, but it doesnt have a non-interactive mode, so
+    # we just a "Y" to it
+    echo "Y" | /usr/sbin/iptables-apply /etc/iptables.rules
+    touch $MARKER_FILE
+    green "iptables rules APPLIED"
+fi
+
+/usr/local/bin/iptables-monitor.py
+
+exit 0

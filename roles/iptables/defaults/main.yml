@@ -1,0 +1,5 @@
+---
+main_inet: eth0
+open_ports:
+  - proto: tcp
+    port: 22

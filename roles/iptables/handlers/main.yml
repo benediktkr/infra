@@ -1,0 +1,10 @@
+---
+
+- name: daemon reload
+  command: systemctl daemon-reload
+
+- name: apply iptables rules if forced
+  service:
+    name: iptables
+    state: started
+  when: iptables_apply_force|default(false)|bool
