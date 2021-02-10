@@ -6,7 +6,7 @@
     state: reloaded
 
 - name: systemctl daemon reload
-  shell: systemctl daemon-reload
+  command: systemctl daemon-reload
 
 - name: restart systemd-timesyncd
   service:

@@ -5,9 +5,6 @@
     name: openvpn
     state: reloaded
 
-- name: apply iptables rules
-  shell: iptables-restore < /etc/iptables.rules
-
 - name: restart dnsmasq
   systemd:
     name: dnsmasq
@@ -15,7 +12,7 @@
     daemon_reload: yes
 
 - name: systemctl daemon reload
-  shell: systemctl daemon-reload
+  command: systemctl daemon-reload
 
 - name: restart wireguard
   service:
