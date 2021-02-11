@@ -2,16 +2,20 @@
 
 - name: create dir structure
   file:
-    path: "{{ item[1].root }}/{{ item[0] }}"
+    path: "{{ item[1].root }}/{{ item[0].dir }}"
     state: directory
     mode: 0750
-    owner: www-data
-    group: www-data
+    owner: "{{ item[0].owner }}"
+    group: "{{ item[0].group }}"
   loop_control:
-    label: "{{ item[1].root }}/{{ item[0] }}"
+    label: "{{ item[1].root }}/{{ item[0].dir }}"
   with_nested:
-    - - html
-      - data
+    - - dir: html
+        owner: www-data
+        group: root # will be automatically change to this
+      - dir: data
+        owner: www-data
+        group: www-data
     - "{{ nextclouds }}"
 
 
