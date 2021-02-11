@@ -25,6 +25,7 @@
     state: started
     user: "{{ systemuserlist.jellyfin.uid }}:{{ systemuserlist.jellyfin.gid }}"
     container_default_behavior: compatibility
+    hostname: "{{ jellyfin_url.split('.')[0] }}"
     ports:
       - 127.0.0.1:8096:8096
     volumes:
