@@ -78,7 +78,7 @@
 
 - name: template acl script
   template:
-    src: private/jellyfin_auth.py.j2
+    src: jellyfin_auth.py.j2
     dest: /usr/local/bin/jellyfin_auth.py
     mode: 0755
     owner: www-data
