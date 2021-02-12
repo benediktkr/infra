@@ -185,7 +185,7 @@
         shell: "{{ item.value.shell | default('/dev/null') }}"
         uid: "{{ item.value.uid }}"
         create_home: "{{ 'home' in item.value | default(False) }}"
-        home: "{{ item.value.home | default() }}"
+        home: "{{ item.value.home | default('/var/lib/' + item.key) }}"
         move_home: yes
         append: yes
         system: yes
