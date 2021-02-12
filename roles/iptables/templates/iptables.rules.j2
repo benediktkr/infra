@@ -1,6 +1,6 @@
 # Lokun VPN server iptable rules
 # make template
-{% if 'mainframe' in group_names %}
+{% if not iptables_no_discard_icmp19|default(False) %}
 *raw
 :PREROUTING ACCEPT [383321:226121929]
 :OUTPUT ACCEPT [328664:371455172]
@@ -24,7 +24,7 @@ COMMIT
 {% if 'docker' in group_names %}
 :DOCKER-USER - [0:0]
 {% endif %}
-:FWINPUT DROP [0:0]
+:FWINPUT - [0:0]
 -A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
 -A INPUT -i lo -j ACCEPT
 {% if ansible_wg0 is defined %}
