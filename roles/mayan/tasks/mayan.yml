@@ -31,7 +31,7 @@
     env:
       POSTGRES_USER: mayan
       POSTGRES_DB: mayan
-      POSTGRES_PASSWORD: "{{ systemuserlist.mayan.mariadb_pass }}"
+      POSTGRES_PASSWORD: "{{ systemuserlist.mayan.postgres_pass }}"
     volumes:
       - "{{ systemuserlist.mayan.home }}/db:/var/lib/postgresql/data"
     networks_cli_compatible: no
