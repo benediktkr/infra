@@ -1,6 +1,7 @@
 [Unit]
 Description = apply iptables
-Before=network-online.target
+After=network-online.target
+Wants=network-online.target
 {% if 'docker' in group_names %}
 Before=docker.service
 {% endif %}

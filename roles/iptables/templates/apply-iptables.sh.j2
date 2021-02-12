@@ -33,7 +33,34 @@ green() {
 MARKER_FILE=/var/run/iptables_applied
 rm $MARKER_FILE 2> /dev/null || true
 
-if `curl -s --fail -m 15 {{ iptables_url }}/{{ inventory_hostname }}` ; then
+for i in {1..10}; do
+    ping -w 1 -c 1 {{ iptables_ping }} > /dev/null
+    ping_rc=$?
+    if [ $ping_rc -eq 0 ] ; then
+        green "ping to {{ iptables_ping }} ok!"
+        break
+    fi
+
+    if [ $i -eq 10 ] ; then
+        red "no response from {{ iptables_ping }}, exhausted retries"
+        exit 0
+    fi
+
+    sleep 2
+
+done
+
+curl -s --fail -m 15 {{ iptables_url }}/ > /dev/null
+test_check=$?
+if [ $test_check -ne 0 ] ; then
+    # unsure if this should cause it to bail. for now we just print a
+    # a warning message and then proceed.
+    echo "WARNING: {{ iptables_url }} seems to be DOWN!"
+fi
+
+curl -s --fail -m 15 {{ iptables_url }}/{{ inventory_hostname }}
+disable_file_exists=$?
+if [ $disable_file_exists -eq 0 ] ; then
     echo "a file {{ iptables_url }}/{{ inventory_hostname }} exists"
     red "iptables rules NOT APPLIED (DID NOTHING)"
     # exits with 0 after the if statement
