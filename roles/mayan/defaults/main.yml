@@ -1,3 +1,0 @@
----
-
-mayan_db: "{'default':{'ENGINE':'django.db.backends.postgresql','NAME':'mayan','PASSWORD':'{{ systemuserlist.mayan.mariadb_pass }}','USER':'mayan','HOST':'postgres_mayan'}}"

@@ -1,7 +1,7 @@
 ---
 
 - name: update initramfs
-  command: update-initramfs -u
+  command: update-initramfs -u -k all
   environment:
     PATH: "{{ ansible_env.PATH }}:/sbin:/usr/sbin"
   changed_when: no
