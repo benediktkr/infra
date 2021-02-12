@@ -43,6 +43,9 @@
     group: root
     mode: 0770
   when: mariadb_dump_path is defined
+  tags:
+    - backup
+    - users
 
 - name: backup cron
   template:
