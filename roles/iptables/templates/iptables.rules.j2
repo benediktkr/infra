@@ -34,7 +34,7 @@ COMMIT
 {% if 'docker' in group_names %}
 -A INPUT -s 172.17.0.1/24 -j ACCEPT
 -A INPUT -s 172.18.0.1/24 -j ACCEPT
--A DOCKER-USER -i {{ main_inet }} -j FWINPUT
+-A DOCKER-USER -m conntrack --ctstate NEW -i {{ main_inet }} -j FWINPUT
 {% endif %}
 -A INPUT -m conntrack --ctstate NEW -j FWINPUT
 {% for item in open_ports %}
