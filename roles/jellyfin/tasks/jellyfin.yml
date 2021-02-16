@@ -23,7 +23,7 @@
     pull: yes
     restart_policy: "no"
     state: started
-    user: "{{ systemuserlist.jellyfin.uid }}:{{ systemuserlist.jellyfin.gid }}"
+    user: "{{ systemuserlist.jellyfin.uid }}:{{ grouplist.media.gid }}"
     container_default_behavior: compatibility
     hostname: "{{ jellyfin_url.split('.')[0] }}"
     labels:
