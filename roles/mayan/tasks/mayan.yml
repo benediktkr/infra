@@ -50,6 +50,8 @@
     pull: yes
     state: started
     command: redis-server --appendonly "no" --databases "2"
+    labels:
+      dockerlogs_format: redis
     env:
       REDIS_HOST: "redis_mayan"
     container_default_behavior: compatibility

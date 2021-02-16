@@ -69,6 +69,8 @@
     networks_cli_compatible: no
     networks:
       - name: bridgewithdns
+    labels:
+      dockerlogs_format: "redis"
   when: item.redis
   with_items: "{{ nextclouds }}"
   loop_control:
