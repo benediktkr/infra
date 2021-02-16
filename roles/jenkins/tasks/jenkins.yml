@@ -50,5 +50,6 @@
       - name: bridgewithdns
   tags:
     - jenkins-container
+    - docker-containers
 
 # sudo docker exec -it jenkins /usr/bin/docker login

@@ -1,0 +1,3 @@
+---
+ - include: rsyslog.yml
+   tags: rsyslog

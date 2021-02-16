@@ -58,6 +58,7 @@
   docker_container:
     name: "redis_{{ item.name }}"
     image: "redis:latest"
+    hostname: "redis_{{ item.name }}"
     auto_remove: yes
     detach: yes
     pull: yes
@@ -85,6 +86,7 @@
 - name: nextcloud containers
   docker_container:
     name: "{{ item.name }}"
+    hostname: "{{ item.name }}"
     image: "nextcloud:{{ item.version }}"
     auto_remove: yes
     detach: yes
@@ -104,6 +106,8 @@
     networks:
       - name: bridgewithdns
         ipv4_address: "{{ item.docker_ip }}"
+    labels:
+      dockerlogs_format: "nextcloud"
   with_items: "{{ nextclouds }}"
   loop_control:
     label: "{{ item.name }} [{{ item.state }}]"

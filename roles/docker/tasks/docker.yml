@@ -9,6 +9,17 @@
   when: ansible_lsb.id == "Raspbian"
   tags: packages
 
+- name: template daemon.json
+  template:
+    dest: /etc/docker/daemon.json
+    src: daemon.json.j2
+    owner: root
+    group: root
+    mode: 0600
+  notify: restart docker
+  tags:
+    - daemon.json
+
 - name: set arch to amd64 for {{ ansible_lsb.id }} if not Raspbian
   set_fact:
     arch: amd64
@@ -107,3 +118,37 @@
   template:
     src: container.service.j2
     dest: "/etc/systemd/system/container@.service"
+
+- meta: flush_handlers
+
+# - name: start dockerlogs container
+#   docker_container:
+#     name: dockerlogs
+#     hostname: dockerlogs
+#     image: benediktkr/dockerlogs:latest
+#     auto_remove: no
+#     detach: yes
+#     pull: yes
+#     restart_policy: "no"
+#     state: started
+#     container_default_behavior: compatibility
+#     env:
+#       DOCKERLOGS_OUTPUT_TYPE: udp
+#       DOCKERLOGS_OUTPUT_URL: "{{ logstash_url }}:{{ logstash_udp }}"
+#     mounts:
+#       - type: bind
+#         source: /var/run/docker.sock
+#         target: /var/run/docker.sock
+#       - type: bind
+#         source: /var/lib/docker/containers
+#         target: /var/lib/docker/containers
+#         read_only: yes
+#     networks_cli_compatible: no
+#     networks:
+#       - name: bridgewithdns
+#         ipv4_address: "{{ bridgewithdns.dockerlogs }}"
+#     labels:
+#       dockerlogs_format: "plain" # hmmmm...
+#   tags:
+#     - docker-containers
+#     - dockerlogs
