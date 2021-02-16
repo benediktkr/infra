@@ -20,7 +20,7 @@ def datapoint(measurement, tags, fields):
         "measurement": measurement,
         "tags": tags,
         "time": now_isoformat(),
-        "fields": fields
+        "fields": {k: int_if_bool(v) for k, v in fields.items()}
     }
 
 def int_if_bool(value):
@@ -30,10 +30,8 @@ def int_if_bool(value):
          return value
 
 def write_datapoint(measurement, tags, fields, db="metrics", precision="m"):
-    _tags = {k: int_if_bool(v) for k, v in tags.items()}
-
     return write(
-        datapoint(measurement, _tags, fields),
+        datapoint(measurement, tags, fields),
         db=db,
         precision=precision
     )
