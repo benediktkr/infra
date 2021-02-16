@@ -15,6 +15,7 @@ parser.add_argument("--interval", default="alpha")
 parser.add_argument("--debug", action="store_true")
 parser.add_argument("--dry-run", action="store_true", help="dont run rsnapshot")
 parser.add_argument("--force-yes-i-know-what-im-doing", action="store_true")
+parser.add_argument("--metrics-only", action="store_true")
 args = parser.parse_args()
 
 if not args.debug and not args.dry_run:
@@ -102,7 +103,30 @@ if __name__ == "__main__":
     if "{{ inventory_hostname }}" != "{{ rsnapshot_primary }}" and not args.force_yes_i_know_what_im_doing:
         logger.error(f"this is probably the wrong host, otherwise '--force-yes-i-know-what-im-doing'")
         raise SystemExit(13)
-    if not path.exists(latest_path):
+
+    backup_path_exists = path.exists(latest_path)
+    if args.metrics_only:
+        if backup_path_exists:
+            marker = read_host_marker('{{ rsnapshot_primary }}')
+            age = utc_now() - marker
+            age_secs = age.total_seconds()
+            age_days = age.days
+        else:
+            age_secs: None
+            age_days: None
+
+        sudoisinflux.write({
+            'tags': tags(),
+            'measurement': 'backup_health',
+            'time': utc_isoformat(),
+            'fields': {
+                'path_exists': int(backup_path_exists),
+                'age_secs': int(age_secs),
+                'age_days': int(age_days)
+            }}, precision='h')
+        raise SystemExit(0)
+
+    if not backup_path_exists:
         logger.error(f"path '{latest_path}' doesnt exist")
         raise SystemExit(1)
 
@@ -113,7 +137,7 @@ if __name__ == "__main__":
 
     for item in read_all_host_markers():
         days = int(item[2].days)
-        secs = int(item[2].seconds)
+        secs = int(item[2].total_seconds())
         mins = int(secs//60)
         host_size_mb = int(mb(item[3]))
         host = item[0]
