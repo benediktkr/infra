@@ -227,7 +227,7 @@
   # fielddrop = ["uptime_format"]
 
 
-{% if 'docker' in group_names %}
+{% if 'docker' in group_names and not telegraf_disable_docker|default(false) %}
 [[inputs.docker]]
   timeout = "5s"
 {% endif %}
