@@ -1,4 +1,4 @@
-{{ pihole_local_ip }} pihole.sudo.is
+{{ pihole_local_ip }} {{ pihole_url }}
 {% for record in pihole_dns_overrides %}
 {{ record['ip'] }} {{ record['name'] }}
 {% endfor %}
