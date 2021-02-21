@@ -14,6 +14,34 @@
     - cache
   tags: jellyfin-dirs
 
+- name: make dirs
+  file:
+    state: directory
+    path: /var/www/jellyfin_auth
+    owner: www-data
+    group: www-data
+    mode: 0755
+  tags:
+    - nginx-config
+    - jellyfin-conf
+  notify: reload nginx
+
+- name: template html
+  template:
+    src: private/{{ item.src }}.j2
+    dest: "{{ item.dest }}"
+    owner: www-data
+    group: www-data
+    mode: 0755
+  with_items:
+    - src: jellyfin_auth.html
+      dest: /var/www/jellyfin_auth/index.html
+    - src: jellyfin_index.html
+      dest: "{{ jellyfin_root }}/index.html"
+  tags:
+    - nginx-config
+    - jellyfin-conf
+
 - name: start container
   docker_container:
     name: jellyfin
@@ -30,10 +58,20 @@
       dockerlogs_format: jellyfin
     ports:
       - 127.0.0.1:8096:8096
-    volumes:
-      - "{{ jellyfin_root }}/config:/config"
-      - "{{ jellyfin_root }}/cache:/cache"
-      - "{{ jellyfin_media }}:/media"
+    mounts:
+      - type: bind
+        source: "{{ jellyfin_root }}/config"
+        target: /config
+      - type: bind
+        source: "{{ jellyfin_root }}/cache"
+        target: /cache
+      - type: bind
+        source: "{{ jellyfin_media }}"
+        target: /media
+      - type: bind
+        source: "{{ jellyfin_root }}/index.html"
+        target: /jellyfin/jellyfin-web/index.html
+        read_only: yes
     env:
       JELLYFIN_PublishedServerUrl: "{{ jellyfin_url }}"
   tags:
@@ -110,6 +148,7 @@
     - nginx-config
     - jellyfin-conf
   notify: reload nginx
+
 
 # - name: wait for jellyfin container on {{ jellyfin_ip.stdout }}
 #   wait_for:
