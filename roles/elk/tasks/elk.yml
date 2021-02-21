@@ -76,7 +76,7 @@
       - 127.0.0.1:9200:9200
       - 127.0.0.1:9300:9300
     env:
-      ES_JAVA_OPTS: "-Xmx256m -Xms256m"
+      ES_JAVA_OPTS: "-Xmx1g -Xms1g"
       ELASTIC_PASSWORD: "{{ elk_default_password }}"
       discovery.type: single-node
     networks_cli_compatible: no
