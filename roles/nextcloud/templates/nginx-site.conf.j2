@@ -6,7 +6,6 @@ server {
   listen 80;
   listen   [::]:443 ssl; # listen for ipv6
 
-
   server_name {{ item.url }};
 
   if ($scheme != "https") {
