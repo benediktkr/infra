@@ -59,7 +59,7 @@
     name: "redis_{{ item.name }}"
     image: "redis:latest"
     hostname: "redis_{{ item.name }}"
-    auto_remove: yes
+    auto_remove: no
     detach: yes
     pull: yes
     state: "{{ item.state | default('started') }}"

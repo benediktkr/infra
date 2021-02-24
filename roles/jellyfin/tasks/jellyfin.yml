@@ -58,6 +58,10 @@
       dockerlogs_format: jellyfin
     ports:
       - 127.0.0.1:8096:8096
+    networks_cli_compatible: no
+    networks:
+      - name: bridgewithdns
+        ipv4_address: "{{ bridgewithdns.notflix }}"
     mounts:
       - type: bind
         source: "{{ jellyfin_root }}/config"
@@ -85,6 +89,18 @@
 #   changed_when: no
 #   tags:
 #     - jellyfin-container
+
+- name: ldap config for jellyfin
+  template:
+    src: LDAP-Auth.xml.j2
+    dest: "{{ jellyfin_root }}/config/plugins/configurations/LDAP-Auth.xml"
+    owner: jellyfin
+    group: jellyfin
+    mode: 0644
+  tags:
+    - ldap
+    - openldap
+    - jellyfin-ldap
 
 - name: jellyfin nginx dir
   file:

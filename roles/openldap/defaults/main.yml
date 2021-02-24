@@ -1,0 +1,5 @@
+---
+
+openldap_uid: "{{systemuserlist.openldap.uid}}"
+openldap_gid: "{{systemuserlist.openldap.gid}}"
+openldap_root: "{{ systemuserlist.openldap.home }}"

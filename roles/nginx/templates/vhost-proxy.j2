@@ -1,7 +1,13 @@
 {% for vhost in nginx_vhost_proxies %}
 server {
-   listen 443 ssl;
-   listen   [::]:443 ssl; # listen for ipv6
+  {% if vhost.interface is defined %}
+  listen {{ vhost.interface }}:443 ssl;
+
+  {% else %}
+
+  listen 443 ssl;
+  listen   [::]:443 ssl; # listen for ipv6
+  {% endif %}
 
    server_name {{ vhost.name }} {{ vhost.aliases | default([]) | join(" ") }};
 
