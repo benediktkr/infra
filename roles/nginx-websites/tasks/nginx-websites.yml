@@ -3,7 +3,7 @@
 - name: create directories for static websites
   file:
     state: directory
-    owner: "{{ item.owner | default(myusername) }}"
+    owner: "{{ item.owner | default('www-data') }}"
     group: www-data
     mode: 0755
     path: "/var/www/{{ item.name }}"
@@ -22,8 +22,6 @@
     state: link
     src: "/var/www/shared"
     dest: "/var/www/{{ item.name }}/.shared"
-    owner: root
-    group: www-data
     mode: 0755
   when: item.name != "www.sudo.is"
   with_items: "{{ static_sites }}"
