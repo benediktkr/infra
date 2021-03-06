@@ -423,3 +423,31 @@
   when: not unatt_enabled|bool
   tags:
     - unatt2
+
+- name: add apt key for apt.sudo.is
+  apt_key:
+    url: https://{{ apt_url }}/KEY.gpg
+    state: present
+  tags:
+    - packages
+    - apt.sudo.is
+
+- name: add apt.sudo.is repo
+  apt_repository:
+    repo: "deb https://{{ apt_url }}/ /"
+    state: present
+    update_cache: yes
+  tags:
+    - packages
+    - apt.sudo.is
+
+- name: tempalte priorities for apt
+  template:
+    src: apt-sudois.j2
+    dest: /etc/apt/preferences.d/sudois
+    mode: 644
+    owner: root
+    group: root
+  tags:
+    - packages
+    - apt.sudo.is

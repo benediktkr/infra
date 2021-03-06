@@ -9,6 +9,25 @@
     path: "/var/www/{{ item.name }}"
   with_items: "{{ static_sites }}"
 
+- name: wwwsudois install latest
+  apt:
+    name: wwwsudois
+    state: latest
+    update_cache: yes
+  tags:
+    - wwwsudois
+
+- name: symlink wwwsudois shared because nginx needs relative paths
+  file:
+    state: link
+    src: "/var/www/shared"
+    dest: "/var/www/{{ item.name }}/.shared"
+    owner: root
+    group: www-data
+    mode: 0755
+  when: item.name != "www.sudo.is"
+  with_items: "{{ static_sites }}"
+
 - name: template robots.txt
   template:
     src: robots.txt.j2

@@ -40,14 +40,37 @@
     - bootconfig.changed
     - "'ds18b20' in sensors.temp|map(attribute='kind')"
 
-- name: install dedendencies for dht.c
+
+- name: install build dedendencies for dht.c
   apt:
-    name: wiringpi
+    name:
+      - wiringpi
+      - ruby
+      - ruby-dev
+      - rubygems1.8
+      # - build-essential # already isntallde
     state: present
+  when: dht_builder|default(False)
+  tags: dht
+
+- name: install fpm with gem
+  command: gem install --no-document fpm
+  when: dht_builder|default(False)
+  tags: dht
+
+- name: install sudoisdht
+  apt:
+    name: sudoisdht
+    state: latest
+    update_cache: yes
   when:
     - "'temp' in sensors"
     - "'dht' in sensors.temp|map(attribute='kind')"
-  tags: dht
+  tags:
+    - dht
+    - package
+  notify:
+    - restart sudoisbot temp_pub
 
 - name: find /dev/hidraw* files
   find:
@@ -76,33 +99,6 @@
     label: "{{ item.path }}"
   tags:
     - hidraw
-
-- name: copy dht.c
-  copy:
-    src: dht.c
-    dest: /root/dht.c
-  when:
-    - "'temp' in sensors"
-    - "'dht' in sensors.temp|map(attribute='kind')"
-  register: dht_c
-  tags:
-    - dht
-    - dht-update
-    - deploy
-
-- name: compile and install dht.c
-  command: cc -Wall /root/dht.c -o /usr/local/bin/dht -lwiringPi
-  when:
-    - dht_c.changed
-    - "'temp' in sensors"
-    - "'dht' in sensors.temp|map(attribute='kind')"
-  tags:
-    - dht
-    - dht-update
-    - deploy
-  notify:
-    - restart sudoisbot temp_pub
-    - restart sudoisbot rain_pub
 
 - name: template sudoisbot config to standard location
   template:
