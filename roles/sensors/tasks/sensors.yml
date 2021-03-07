@@ -156,4 +156,5 @@
   tags:
     - sensors-config
     - sensors-systemd
+    - sensors-started
     - deploy
