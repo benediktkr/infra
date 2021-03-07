@@ -54,9 +54,13 @@
   tags: dht
 
 - name: install fpm with gem
-  command: gem install --no-document fpm
+  gem:
+    name: fpm
+    include_doc: no
+    state: latest
   when: dht_builder|default(False)
-  tags: dht
+  tags: dht, fpm
+
 
 - name: install sudoisdht
   apt:

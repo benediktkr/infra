@@ -7,7 +7,7 @@ User=sensors
 Group=sensors
 WorkingDirectory={{ systemuserlist['sensors']['home'] }}
 ExecStart=/usr/local/bin/sudoisbot %I
-Restart=on-success
+Restart=on-failure
 RestartSec=0
 
 [Install]
