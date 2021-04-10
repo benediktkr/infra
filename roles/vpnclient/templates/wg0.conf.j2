@@ -25,7 +25,7 @@ AllowedIPs = 0.0.0.0/0
 {% else %}
 AllowedIPs = {{ wireguard_cidr }}
 {% endif %}
-PersistentKeepalive = 240
+PersistentKeepalive = 25
 
 {% for peername in wg_client.clients | default([]) %}
 {%   set peer = wireguard_clients[peername] %}
