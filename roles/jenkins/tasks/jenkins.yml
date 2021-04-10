@@ -10,25 +10,67 @@
    recurse: no
   with_items:
     - home
+    - home/.docker
+    - home/artifacts
     - etc/docker
 
-- name: create dirs for nginx
-  file:
-    path: "/var/www/{{ builds_url }}/{{ item }}"
-    state: directory
+- name: copy docker config for dockerhub
+  template:
+    src: private/jenkins/docker.config.json.j2
+    dest: "{{ jenkins_root }}/home/.docker/config.json"
     mode: 0755
     owner: jenkins
     group: jenkins
-    recurse: yes
+  tags:
+    - docker
+
+- name: create dirs for {{ apt_url }}
+  file:
+    path: "/var/www/{{ apt_url }}/{{ item }}"
+    state: directory
+    mode: 0755
+    owner: jenkins
+    group: www-data
   with_items:
-    - apt
-    - pip
+    - amd64
+    - armhf
+    - all
+
+- name: create .gnupg
+  file:
+   path: "{{ jenkins_root }}/home/.gnupg"
+   state: directory
+   mode: 0700
+   owner: jenkins
+   group: jenkins
+
+
+- name: copy gpg stuff
+  template:
+    src: "private/jenkins/{{ item }}.j2"
+    dest: "{{ jenkins_root }}/home/.gnupg/{{ item }}"
+    mode: 0700
+    owner: jenkins
+    group: jenkins
+  with_items:
+    - "{{ apt_url }}.conf"
+    - "{{ apt_url }}.gpg"
+    - "{{ apt_url }}.key"
+
+- name: copy KEY.gpg
+  template:
+    src: "private/jenkins/{{ apt_url }}.gpg.j2"
+    dest: "/var/www/{{ apt_url }}/KEY.gpg"
+    mode: 0755
+    owner: jenkins
+    group: www-data
 
 
 - name: start docker container
   docker_container:
     name: "jenkins"
     image: "benediktkr/jenkins:lts"
+    hostname: "jenkins"
     auto_remove: no
     detach: yes
     pull: yes
@@ -42,6 +84,7 @@
     volumes:
       - "{{ jenkins_root }}/home:/var/jenkins_home"
       - "{{ jenkins_root }}/etc/docker:/etc/docker"
+      - "/var/www/{{ apt_url }}:/var/www/{{ apt_url }}"
       - /var/www/{{ builds_url }}:/builds
       - /var/run/docker.sock:/var/run/docker.sock
     networks_cli_compatible: no
