@@ -17,31 +17,6 @@
   tags:
     - packages
 
-- name: ensure lestencrypt permissions
-  file:
-    state: directory
-    owner: root
-    group: root
-    mode: "{{ item['mode'] }}"
-    path: "{{ item['path'] }}"
-  tags:
-    - letsencrypt
-  with_items:
-    - { path: /etc/letsencrypt, mode: '0755' }
-    - { path: /etc/letsencrypt/live, mode: '0700' }
-
-- name: install current letsencrypt wildcards
-  copy:
-    src: "private/letsencrypt/{{ item }}"
-    dest: "/etc/letsencrypt/live/"
-    owner: root
-    group: root
-    mode: 0755
-  tags:
-    - letsencrypt
-  notify: reload nginx
-  with_items: "{{ letsencrypt_domains }}"
-
 - name: install nginx
   apt:
     name:
@@ -129,30 +104,3 @@
     name: nginx
     enabled: yes
     state: started
-
-- name: remove certbot, should only be on mainframe
-  pip:
-    name:
-      - certbot
-      - certbot-nginx
-    state: absent
-    executable: pip3
-  when: 'inventory_hostname != "mainframe.sudo.is"'
-  tags:
-    - letsencrypt
-    - packages
-
-
-- name: remove letsencrypt renewal cron job from the cron module
-  cron:
-    name: letsencrypt_renewal
-    state: absent
-  tags: letsencrypt
-  ignore_errors: yes
-
-- name: remove letsencrypt cron file
-  file:
-    path: /etc/cron.d/letsencrypt
-    state: absent
-  tags:
-    - letsencrypt

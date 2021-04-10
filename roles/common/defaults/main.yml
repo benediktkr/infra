@@ -1,5 +1,5 @@
 ---
-unatt_enabled: true
+unatt_enabled: false
 unatt_mail_only_on_error: "false"
 unatt_remove_unused_kernel_packages: "true"
 unatt_remove_unused_dependencies: "true"
@@ -16,3 +16,5 @@ enable_telegraf: false
 
 ssh_tunnels: []
 tunnel_user: ""
+
+letsencrypt_manager: no

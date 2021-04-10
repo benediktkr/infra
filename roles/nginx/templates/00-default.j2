@@ -2,8 +2,18 @@ server {
    listen 80;
    server_name {{ inventory_hostname }};
 
-    return 301 https://$host$request_uri;
+   return 301 https://$host$request_uri;
 }
+
+{# {% if 'matrix' in group_names %}
+ # server {
+ #    listen 8448;
+ #    server_name {{ inventory_hostname }};
+ #
+ #    return 301 https://{{ matrix_url }}:8448$request_uri;
+ # }
+ #
+ # {% endif %} #}
 
 server {
   listen 443 ssl;

@@ -9,17 +9,6 @@
   when: ansible_lsb.id == "Raspbian"
   tags: packages
 
-- name: template daemon.json
-  template:
-    dest: /etc/docker/daemon.json
-    src: daemon.json.j2
-    owner: root
-    group: root
-    mode: 0600
-  notify: restart docker
-  tags:
-    - daemon.json
-
 - name: set arch to amd64 for {{ ansible_lsb.id }} if not Raspbian
   set_fact:
     arch: amd64
@@ -91,6 +80,17 @@
     name: docker
     gid: "{{ docker_gid | default(998) }}"
     state: present
+
+- name: template daemon.json
+  template:
+    dest: /etc/docker/daemon.json
+    src: daemon.json.j2
+    owner: root
+    group: root
+    mode: 0600
+  notify: restart docker
+  tags:
+    - daemon.json
 
 - name: install pip modules for ansible tasks
   pip:

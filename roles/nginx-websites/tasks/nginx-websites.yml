@@ -7,6 +7,8 @@
     group: www-data
     mode: 0755
     path: "/var/www/{{ item.name }}"
+  loop_control:
+    label: "{{ item.name }}"
   with_items: "{{ static_sites }}"
 
 - name: wwwsudois install latest
@@ -23,8 +25,23 @@
     src: "/var/www/shared"
     dest: "/var/www/{{ item.name }}/.shared"
     mode: 0755
-  when: item.name != "www.sudo.is"
+  when:
+    - item.name != "www.sudo.is"
+    - item.custom_autoindex|default(True)
   with_items: "{{ static_sites }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: no symlink if no custom autoindex
+  file:
+    state: absent
+    dest: "/var/www/{{ item.name }}/.shared"
+  when:
+    - item.name != "www.sudo.is"
+    - item.custom_autoindex|default(True) != True
+  with_items: "{{ static_sites }}"
+  loop_control:
+    label: "{{ item.name }}"
 
 - name: template robots.txt
   template:
@@ -32,7 +49,7 @@
     dest: "/var/www/{{ item.name }}/robots.txt"
     owner: "{{ myusername }}"
     group: www-data
-    mode: 0755
+    mode: 0644
   with_items: "{{ static_sites }}"
   when:
     - item.robots | default(false)

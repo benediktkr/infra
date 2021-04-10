@@ -34,6 +34,18 @@ server {
   location ~* ^.+\.(whois|log|grep|pub)$ {
     add_header Content-Type text/plain;
   }
+{% if 'matrix' in item %}
+  location = /.well-known/matrix/server {
+    default_type application/json;
+    add_header Access-Control-Allow-Origin *;
+    return 200 '{"m.server": "{{ item.matrix.server }}:{{item.matrix.port}}"}';
+  }
+  location = /.well-known/matrix/client {
+    default_type application/json;
+    add_header Access-Control-Allow-Origin *;
+    return 200 '{"m.homeserver":{"base_url":"https://{{ item.matrix.server }}"}}';
+  }
+{% endif %}
 {% if item.force_download | default(false) %}
 
   add_header Content-disposition "attachment; filename=$1";

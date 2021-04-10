@@ -1,0 +1,131 @@
+---
+
+- name: make dirs
+  file:
+    path: "{{ systemuserlist.matrix.home }}/{{ item.name }}"
+    state: directory
+    mode: "{{ item.mode|default(750) }}"
+    owner: "{{ item.owner|default('matrix') }}"
+    group: matrix
+  with_items:
+    - name: data
+    - name: postgres
+      owner: 70
+      mode: 700
+    - name: html
+      mode: 755
+
+- name: matrix index.html
+  template:
+    src: index.html.j2
+    dest: "{{ systemuserlist.matrix.home }}/html/index.html"
+    owner: matrix
+    group: www-data
+    mode: 755
+
+
+- name: template nginx vhost
+  template:
+    src: 01-matrix.j2
+    dest: /etc/nginx/sites-enabled/01-matrix
+    owner: root
+    group: root
+    mode: 755
+  tags:
+    - nginx
+  notify: reload nginx
+
+- name: template config
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ systemuserlist.matrix.home }}/data/{{ item }}"
+    mode: 0600
+    owner: matrix
+    group: matrix
+  with_items:
+    - log.config
+    - homeserver.yaml
+    - turnserver.conf
+  tags:
+    - matrix-config
+
+- name: copy signing key
+  copy:
+    src: private/matrix/{{ matrix_domain }}.signing.key
+    dest: "{{ systemuserlist.matrix.home }}/data/"
+    mode: 0644
+    owner: matrix
+    group: matrix
+
+- name: redis container for matrix synapse
+  docker_container:
+    name: matrix_redis
+    image: "redis:latest"
+    auto_remove: no
+    detach: yes
+    pull: yes
+    state: started
+    container_default_behavior: compatibility
+    env:
+      REDIS_HOST: matrix_redis
+    networks_cli_compatible: no
+    networks:
+      - name: bridgewithdns
+  tags:
+    - matrix-container
+    - docker-containers
+
+- name: postgres container for matrix synapse
+  docker_container:
+    name: matrix_postgresql
+    image: docker.io/postgres:12-alpine
+    container_default_behavior: compatibility
+    networks_cli_compatible: no
+    networks:
+      - name: bridgewithdns
+    env:
+      POSTGRES_USER: "{{ systemuserlist.matrix.username }}"
+      POSTGRES_PASSWORD: "{{ systemuserlist.matrix.postgres_passwd }}"
+      # ensure the database gets created correctly
+      # https://github.com/matrix-org/synapse/blob/master/docs/postgres.md#set-up-database
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    mounts:
+      - type: bind
+        source: "{{ systemuserlist.matrix.home }}/postgres"
+        target: /var/lib/postgresql/data
+  tags:
+    - matrix-container
+    - docker-containers
+
+- name: start container
+  docker_container:
+    name: matrix
+    image: avhost/docker-matrix:latest
+    auto_remove: no     # auto remove and no restart policy better for reboots
+    detach: yes
+    pull: yes
+    restart_policy: "no"
+    state: started
+    user: "{{ systemuserlist.matrix.uid }}:{{ systemuserlist.matrix.gid }}"
+    container_default_behavior: compatibility
+    networks_cli_compatible: no
+    networks:
+      - name: bridgewithdns
+        ipv4_address: "{{ bridgewithdns.matrix }}"
+    mounts:
+      - type: bind
+        source: "{{ systemuserlist.matrix.home }}/data"
+        target: /data
+      - type: bind
+        read_only: yes
+        source: /etc/letsencrypt/live/{{ matrix_domain }}/fullchain.pem
+        target: /data/{{ matrix_domain }}.crt
+      - type: bind
+        read_only: yes
+        source: /etc/letsencrypt/live/{{ matrix_domain }}/privkey.pem
+        target: /data/{{ matrix_domain }}.key
+    env:
+      SERVER_NAME: "{{ matrix_domain }}"
+  tags:
+    - matrix-container
+    - docker-containers

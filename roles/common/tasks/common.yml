@@ -193,6 +193,7 @@
     - packages
     - common-packages
 
+#- dateutil
 - name: install common pip packages
   pip:
     name:
@@ -203,6 +204,7 @@
     executable: pip3
   tags:
     - pip
+    - common-pip
     - packages
 
 - name: remove pip packages that are only needed on mainframe

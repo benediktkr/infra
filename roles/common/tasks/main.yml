@@ -3,3 +3,9 @@
 - include: common.yml
   tags:
     - common
+
+- include: letsencrypt.yml
+  tags:
+    - common
+    - letsencrypt
+  when: not letsencrypt_manager
