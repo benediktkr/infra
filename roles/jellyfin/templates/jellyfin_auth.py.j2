@@ -94,7 +94,7 @@ def main():
         ip = line['remote_addr']
         status = line['status']
         if ip not in state.ipset and status in ['204', '200']:
-            print(f"allow listing {ip}")
+            print(f"allow listing {ip} ({line['request']})")
             state.add(ip)
             write_acl(ACL, state.ipset)
             reload_nginx()

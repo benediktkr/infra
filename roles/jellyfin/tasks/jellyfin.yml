@@ -17,7 +17,7 @@
 - name: make dirs
   file:
     state: directory
-    path: /var/www/jellyfin_auth
+    path: "{{ jellyfin_auth_path }}"
     owner: www-data
     group: www-data
     mode: 0755
@@ -28,16 +28,14 @@
 
 - name: template html
   template:
-    src: private/{{ item.src }}.j2
-    dest: "{{ item.dest }}"
+    src: private/{{ item }}.j2
+    dest: "{{ jellyfin_auth_path }}/{{ item }}"
     owner: www-data
     group: www-data
     mode: 0755
   with_items:
-    - src: jellyfin_auth.html
-      dest: /var/www/jellyfin_auth/index.html
-    - src: jellyfin_index.html
-      dest: "{{ jellyfin_root }}/index.html"
+    - jellyfin_auth_ok.html
+    - jellyfin_auth_prompt.html
   tags:
     - nginx-config
     - jellyfin-conf
@@ -72,10 +70,10 @@
       - type: bind
         source: "{{ jellyfin_media }}"
         target: /media
-      - type: bind
-        source: "{{ jellyfin_root }}/index.html"
-        target: /jellyfin/jellyfin-web/index.html
-        read_only: yes
+      # - type: bind
+      #   source: "{{ jellyfin_root }}/index.html"
+      #   target: /jellyfin/jellyfin-web/index.html
+      #   read_only: yes
     env:
       JELLYFIN_PublishedServerUrl: "{{ jellyfin_url }}"
   tags:
