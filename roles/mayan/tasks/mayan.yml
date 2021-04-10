@@ -28,6 +28,7 @@
     auto_remove: no
     pull: yes
     container_default_behavior: compatibility
+    restart_policy: "unless-stopped"
     env:
       POSTGRES_USER: mayan
       POSTGRES_DB: mayan
@@ -46,6 +47,7 @@
     name: "redis_mayan"
     image: "redis:latest"
     auto_remove: no
+    restart_policy: "unless-stopped"
     detach: yes
     pull: yes
     state: started
@@ -70,7 +72,7 @@
     detach: yes
     pull: yes
     auto_remove: no
-    restart_policy: "no"
+    restart_policy: "unless-stopped"
     state: started
     user: root:root  # container starts as root, chowns and then switches to uid in env file
     env_file: "{{ systemuserlist.mayan.home }}/mayan.env"

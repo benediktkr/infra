@@ -58,9 +58,9 @@
     hostname: elasticsearch
     image: docker.elastic.co/elasticsearch/elasticsearch:{{ elk_version }}
     auto_remove: no
+    restart_policy: "unless-stopped"
     detach: yes
     pull: yes
-    restart_policy: "no"
     state: started
     container_default_behavior: compatibility
     #user: "{{ elk_uid }}:{{ elk_gid }}"
@@ -96,9 +96,9 @@
     hostname: logstash
     image: docker.elastic.co/logstash/logstash:{{ elk_version }}
     auto_remove: no
+    restart_policy: "unless-stopped"
     detach: yes
     pull: yes
-    restart_policy: "no"
     state: started
     container_default_behavior: compatibility
     mounts:
@@ -135,9 +135,9 @@
     hostname: kibana
     image: docker.elastic.co/kibana/kibana:{{ elk_version }}
     auto_remove: no
+    restart_policy: "unless-stopped"
     detach: yes
     pull: yes
-    restart_policy: "no"
     state: started
     container_default_behavior: compatibility
     mounts:

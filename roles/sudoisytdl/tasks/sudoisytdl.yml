@@ -15,9 +15,9 @@
     pull: yes
     detach: yes
     auto_remove: no
+    restart_policy: "unless-stopped"
     user: "{{ ytdl_user.uid }}"
     state: started
-    restart_policy: "no"
     container_default_behavior: compatibility
     env:
       TG_TOKEN: "{{ ytdl_tg_token }}"

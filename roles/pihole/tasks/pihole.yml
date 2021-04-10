@@ -77,7 +77,8 @@
     state: started
     network_mode: host
     container_default_behavior: compatibility
-    capabilities: "{% if pihole_dhcp %}['NET_ADMIN']{%else%}[]{%endif%}"
+    capabilities: #"{% if pihole_dhcp %}['NET_ADMIN']{%else%}[]{%endif%}"
+      - NET_ADMIN
     env:
       WEB_PORT: "{{ pihole_http_port|string }}"
       DNSMASQ_LISTENING: "local"
@@ -90,11 +91,16 @@
       CONDITIONAL_FORWARDING: "{{ pihole_cond|string }}"
       CONDITIONAL_FORWARDING_IP: "{{ pihole_cond_ip }}"
       CONDITIONAL_FORWARDING_DOMAIN: "{{ pihole_cond_domain }}"
+      IPv6: "false"
     dns_servers:
       - 127.0.0.1
       - pihole_dns_1
       - pihole_dns_2
-    hostname: "{{ inventory_hostname.split('.')[0] }}-pihole"
+    # hostname might be causing problems on cold boot
+    #hostname: "{{ inventory_hostname.split('.')[0] }}-pihole"
+    #etc_hosts:
+    #   "{{ inventory_hostname.split('.')[0] }}-pihole": "127.0.0.1"
+
     # networks_cli_compatible: no
     # networks:
     #   - name: bridgewithdns

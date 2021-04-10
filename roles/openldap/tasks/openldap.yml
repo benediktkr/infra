@@ -93,6 +93,8 @@
     networks:
       - name: bridgewithdns
         ipv4_address: "{{ bridgewithdns.ldapadmin }}"
+  tags:
+    - docker-containers
 
 # https://tylersguides.com/guides/openldap-how-to-add-a-user/
 - name: apt packages that python-ldap depends on
