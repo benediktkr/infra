@@ -28,6 +28,13 @@
     - users
     - sshkeys
 
+- name: add .ssh dir to /etc/skel
+  file:
+    state: directory
+    path: /etc/skel/.ssh
+    mode: 700
+    owner: root
+    group: root
 
 - name: set root shell to zsh
   user:
@@ -194,17 +201,27 @@
         label: "{{ item.key }}"
       with_dict: "{{ systemuserlist }}"
 
-    - name: set authorized_keys for system users
+    - name: set authorized_keys for tunnel user
       template:
         src: private/sshkeys/tunnel.authorized_keys
         dest: /home/.system/tunnel/.ssh/authorized_keys
-        owner: "{{ item }}"
-        group: "{{ item }}"
+        owner: tunnel
+        group: tunnel
         mode: 0700
-      when: 'systemuserlist[item].sshkey|default(False)'
-      with_items: "{{ system_users }}"
       tags:
         - sshkeys
+
+    - name: set authorized_keys for jenkins user
+      template:
+        src: private/sshkeys/jenkins.pub
+        dest: "{{ systemuserlist.jenkins.home }}/.ssh/authorized_keys"
+        owner: jenkins
+        group: jenkins
+        mode: 0700
+      when: '"jenkins" in system_users'
+      tags:
+        - sshkeys
+
 
   when: system_users|length>0
   tags:
