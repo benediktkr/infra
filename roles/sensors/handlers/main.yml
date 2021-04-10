@@ -12,3 +12,6 @@
     daemon_reload: yes
     name: "sudoisbot@rain_pub"
   when: "'rain' in sensors"
+
+- name: systemctl daemon reload
+  command: systemctl daemon-reload

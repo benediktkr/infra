@@ -142,6 +142,7 @@
   notify:
     - restart sudoisbot temp_pub
     - restart sudoisbot rain_pub
+    - systemctl daemon reload
 
 - name: enable sudoisbot
   systemd:
