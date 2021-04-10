@@ -1,0 +1,36 @@
+---
+
+- name: only works for ubuntu
+  fail:
+    msg: "this isnt ubuntu"
+  when: ansible_lsb.id != "Ubuntu"
+
+
+- name: set a password for kodi user
+  user:
+    name: kodi
+    password: "{{ userlist.kodi.password_crypted }}"
+    update_password: always
+
+- name: install software-properties-common
+  apt:
+    state: latest
+    name: software-properties-common
+  tags:
+    - packages
+
+- name: add kodi ppa
+  apt_repository:
+    repo: "ppa:team-xbmc/ppa"
+    state: present
+    update_cache: yes
+  when: False
+  tags:
+    - packages
+
+- name: install kodi
+  apt:
+    name: kodi
+    state: latest
+  tags:
+    - packages
