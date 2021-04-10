@@ -14,7 +14,7 @@
     docker_cidr_mask: "{{ ip | ipaddr('prefix') }}"
   vars:
     ip: "{{ ansible_docker0.ipv4.network }}/{{ ansible_docker0.ipv4.netmask }}"
-  when: ansible_docker0 is defined
+  when: ansible_docker0.ipv4 is defined
 
 - name: include secrets
   include_vars: private/postfix.yml

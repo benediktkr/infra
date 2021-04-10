@@ -41,17 +41,20 @@ myorigin = {{ inventory_hostname }}
 #myorigin =
 
 # postfix uses /etc/aliases for everything sent to these things
-#mydestination = {{ ansible_fqdn }}, {{ ansible_domain }}{% if inventory_hostname == "lon-vpn.sudo.is" %} lon-vpn.do.sudo.is {% endif %}
+#mydestination = {{ ansible_fqdn }}
 
 # so only emails sent to known local mailboxes work, but everything with
 # an @ gets relayed
 mydestination = {{ inventory_hostname }}, localhost, localhost.localdomain{% if ansible_fqdn != inventory_hostname %}, {{ ansible_fqdn }}{% endif %}
+#mydestination=
 
 fallback_transport = relay
 
 
-relayhost =
-{% if ansible_docker0 is defined %}
+relayhost = [{{ smtp_server }}]:{{ smtp_port }}
+smtp_tls_wrappermode = yes
+smtp_tls_security_level = encrypt
+{% if ansible_docker0.ipv4 is defined %}
 mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128 {{ ansible_docker0.ipv4.network }}/{{ docker_cidr_mask }}
 inet_interfaces = 127.0.0.1, {{ ansible_docker0.ipv4.address }}
 {% else %}
