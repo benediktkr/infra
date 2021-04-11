@@ -1219,9 +1219,9 @@ disable_msisdn_registration: false
 # 3PIDs with accounts on this server.
 #
 allowed_local_3pids:
-{% for domain in matrix_allowed_email_domains %}
+{% for email in matrix_allowed_email %}
  - medium: email
-   pattern: '.*@{{ domain }}'
+   pattern: '{{ email }}'
 {% endfor %}
 #  - medium: msisdn
 #    pattern: '\+44'
