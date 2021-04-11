@@ -1128,7 +1128,7 @@ url_preview_accept_language:
 
 # Enable registration for new users.
 #
-#enable_registration: false
+enable_registration: true
 
 # Optional account validity configuration. This allows for accounts to be denied
 # any request after a given period.
@@ -1259,7 +1259,7 @@ allow_guest_access: false
 # (By default, no suggestion is made, so it is left up to the client.
 # This setting is ignored unless public_baseurl is also set.)
 #
-#default_identity_server: https://matrix.org
+default_identity_server: https://matrix.org
 
 # Handle threepid (email/phone etc) registration and password resets through a set of
 # *trusted* identity servers. Note that this allows the configured identity server to
@@ -2259,7 +2259,7 @@ email:
 
   # The port on the mail server for outgoing SMTP. Defaults to 25.
   #
-  smtp_port: {{ smtp_port }}
+  smtp_port: {{ smtp_port_starttls }}
 
   # Username/password for authentication to the SMTP server. By default, no
   # authentication is attempted.
