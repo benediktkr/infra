@@ -28,7 +28,11 @@ PersistentKeepalive = 240
 # {{ peer }}
 [Peer]
 PublicKey = {{ lookup('file', 'private/wireguard/' + peer + '.pub' ) }}
+{% if 'allow' in d %}
+AllowedIPs = {{ d.ip }}/32, {{ d['allow'] }}
+{% else %}
 AllowedIPs = {{ d.ip }}/32
+{% endif %}
 {%   endif %}
 
 {% endfor %}
