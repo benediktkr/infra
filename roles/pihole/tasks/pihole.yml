@@ -60,6 +60,32 @@
     path: "{{ pihole_root}}/etc/pihole/pihole-FTL.conf"
     line: "BLOCKINGMODE=NULL"
 
+
+# NOTE: For a DNS server with lots of short-lived connections, you may
+# wish to consider adding --net=host to the run command for
+# performance reasons.
+- name: start unbound docker container
+  docker_container:
+    name: unbound
+    image: mvance/unbound:latest
+    auto_remove: no
+    pull: yes
+    restart_policy: "always"
+    state: started
+    ports:
+      - 4053:53/udp
+    container_default_behavior: compatibility
+    networks_cli_compatible: no
+    networks:
+      - name: bridgewithdns
+        ipv4_address: "{{ bridgewithdns.unbound }}"
+    dns_servers:
+      - 127.0.0.1
+  tags:
+    - unbound-container
+    - docker-containers
+
+
 # If you get the error about ssl_match_hostname, see the comment in
 # the nextcloud role for the docker_container task.
 #

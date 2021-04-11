@@ -140,11 +140,11 @@
   apt:
     state: latest
     name:
-      - nano
+      #- ntp
+      #- python-netaddr
+      - acl
       - apt-transport-https
       - aptitude
-      - lsb-release
-      - lsb-base
       - at
       - build-essential
       - ca-certificates
@@ -153,40 +153,41 @@
       - cryptsetup
       - curl
       - dnsutils
-      - git
-      - procmail
-      - acl
-      - sshfs
-      - lshw
       - file
+      - git
       - haveged
       - htop
-      - netcat
-      - tcpdump
       - iotop
+      - ipcalc
       - iptraf
       - jq
+      - locales
+      - lsb-base
+      - lsb-release
+      - lshw
       - lsof
       - lvm2
       - molly-guard
       - mtr
-      - locales
+      - mtr
+      - nano
       - ncdu
+      - netcat
       - nethogs
       - nmap
-      #- ntp
       - openssl
-      #- python-netaddr
+      - procmail
       - rsync
       - smartmontools
+      - sshfs
       - sudo
+      - tcpdump
       - tmux
       - unzip
-      - ipcalc
       - vnstat
       - whois
-      - zsh
       - zip
+      - zsh
   environment:
     PATH: "{{ ansible_env.PATH }}:/sbin:/usr/sbin"
   tags:
