@@ -1,5 +1,0 @@
-#!/bin/sh
-# re-stream raspivid with vlc
-#raspivid -o - -t 0 -w {{ rtps_width }} -h {{ rtps_height }} -fps {{ rtps_fps }} -b 250000 | cvlc -vvv stream:///dev/stdin --sout '#rtp{access=udp,sdp=rtsp://:{{ rtsp_port }}/}' :demux=h264
-# stream directly with vlc and the v4l driver
-cvlc v4l2:///dev/video0 --v4l2-width {{ rtps_width }} --v4l2-height {{ rtps_height }} --v4l2-chroma h264 --sout '#rtp{access=udp,sdp=rtsp://:{{ rtsp_port }}/}'

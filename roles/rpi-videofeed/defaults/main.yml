@@ -1,4 +1,0 @@
-rtsp_port: "8554"
-rtps_height: "576"
-rtps_width: "1000"
-rtps_fps: "20"

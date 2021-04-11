@@ -1,6 +1,0 @@
----
-
-- name: restart rpi-videofeed
-  service:
-    name: rpi-videofeed.service
-    state: restarted
