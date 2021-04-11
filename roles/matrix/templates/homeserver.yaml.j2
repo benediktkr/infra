@@ -1213,7 +1213,7 @@ registrations_require_3pid:
 # Explicitly disable asking for MSISDNs from the registration
 # flow (overrides registrations_require_3pid if MSISDNs are set as required)
 #
-disable_msisdn_registration: true
+disable_msisdn_registration: false
 
 # Mandate that users are only allowed to associate certain formats of
 # 3PIDs with accounts on this server.
@@ -1223,10 +1223,6 @@ allowed_local_3pids:
  - medium: email
    pattern: '.*@{{ domain }}'
 {% endfor %}
-#  - medium: email
-#    pattern: '.*@matrix\.org'
-#  - medium: email
-#    pattern: '.*@vector\.im'
 #  - medium: msisdn
 #    pattern: '\+44'
 
