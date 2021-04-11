@@ -74,6 +74,11 @@
     state: started
     ports:
       - 4053:53/udp
+    mounts:
+      - type: bind
+        read_only: yes
+        source: /dev/null
+        target: /opt/unbound/etc/unbound/forward-records.conf
     container_default_behavior: compatibility
     networks_cli_compatible: no
     networks:
@@ -120,8 +125,9 @@
       IPv6: "false"
     dns_servers:
       - 127.0.0.1
-      - pihole_dns_1
-      - pihole_dns_2
+      - "{{ bridgewithdns.unbound }}"
+      #- pihole_dns_1
+      #- pihole_dns_2
     # hostname might be causing problems on cold boot
     #hostname: "{{ inventory_hostname.split('.')[0] }}-pihole"
     #etc_hosts:
