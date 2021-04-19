@@ -117,7 +117,9 @@
       # ServerIP: "{{ pihole_local_ip }}" # can disable wg0
       TZ: "Europe/Berlin"
       WEBPASSWORD: "{{ pihole_web_password }}"
-      DNS1: "{{ bridgewithdns.unbound }}"
+      DNS1: "{{ upstream_dns_1 }}"
+      DNS2: "{{ upstream_dns_2 }}"
+      #DNS1: "{{ bridgewithdns.unbound }}" # has problems with my subdomains
       CONDITIONAL_FORWARDING: "{{ pihole_cond|string }}"
       CONDITIONAL_FORWARDING_IP: "{{ pihole_cond_ip }}"
       CONDITIONAL_FORWARDING_DOMAIN: "{{ pihole_cond_domain }}"
