@@ -7,6 +7,11 @@ import json
 import sys
 from dataclasses import dataclass, asdict
 
+from loguru import logger
+
+logger.remove()
+logger.add('/var/log/jellyfin_auth.log')
+
 LOGFILE="/var/log/nginx/access_{{ jellyfin_url }}.log"
 STATE="/etc/nginx/jellyfin/ipset.json"
 ACL="/etc/nginx/jellyfin/acl.conf"
@@ -19,6 +24,10 @@ if ($remote_addr = "__ALLOW_IP__") {
 
 # another way of doing this:
 # https://serverfault.com/questions/743414/how-can-i-check-if-remote-addr-ip-is-not-in-cidr-range-in-nginx
+
+def logmsg(msg):
+    print(msg)
+    logger.info(msg)
 
 @dataclass
 class IpState(object):
@@ -64,11 +73,11 @@ def reload_nginx():
     # raise exception (and crash) if non-zero
     reloading.check_returncode()
 
-    print('nginx reloaded')
+    logmsg('nginx reloaded')
 
 
 def tail(filename):
-    print(f"tailing {filename}")
+    logmsg(f"tailing {filename}")
     f = subprocess.Popen(
         ['tail','-F', filename],
         stdout=subprocess.PIPE,stderr=subprocess.PIPE
@@ -87,14 +96,17 @@ def main():
     state = IpState.read(STATE)
     write_acl(ACL, state.ipset)
     for ip in state.ipset:
-        print(f"allow listed known ip {ip}")
+        logmsg(f"allow listed known ip {ip}")
     reload_nginx()
 
     for line in tail(LOGFILE):
         ip = line['remote_addr']
         status = line['status']
         if ip not in state.ipset and status in ['204', '200']:
-            print(f"allow listing {ip} ({line['request']})")
+            ua = line['http_user_agent']
+            req = line['request']
+            logmsg(f"allow listing {ip} - {req} - {ua}")
+
             state.add(ip)
             write_acl(ACL, state.ipset)
             reload_nginx()
