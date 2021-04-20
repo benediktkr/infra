@@ -108,7 +108,7 @@
     state: started
     network_mode: host
     container_default_behavior: compatibility
-    capabilities: #"{% if pihole_dhcp %}['NET_ADMIN']{%else%}[]{%endif%}"
+    capabilities:
       - NET_ADMIN
     env:
       WEB_PORT: "{{ pihole_http_port|string }}"
