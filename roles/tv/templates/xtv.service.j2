@@ -1,0 +1,14 @@
+[Unit]
+Description=start X.org as tv
+After=syslog.target
+
+[Service]
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu
+ExecStart=/usr/bin/startx
+Restart=on-failure
+RestartSec=6
+
+[Install]
+WantedBy=multi-user.target

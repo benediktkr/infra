@@ -18,3 +18,8 @@
 
 - name: locale-gen
   command: locale-gen
+
+- name: reload nginx
+  service:
+    name: nginx
+    state: reloaded
