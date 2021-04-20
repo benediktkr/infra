@@ -105,7 +105,8 @@ def main():
         if ip not in state.ipset and status in ['204', '200']:
             ua = line['http_user_agent']
             req = line['request']
-            logmsg(f"allow listing {ip} - {req} - {ua}")
+            user = line['remote_user']
+            logmsg(f"allow listing {ip} - {req} - {ua} - {user}")
 
             state.add(ip)
             write_acl(ACL, state.ipset)
