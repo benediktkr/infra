@@ -9,21 +9,34 @@ import json
 
 import requests
 from influxdb import InfluxDBClient
+from loguru import logger
+
+logger.remove()
+logger.add(
+    "{{ userlist[myusername].home }}/berlinrona-api.log",
+    format="{time}${message}",
+    filter=lambda r: "api" in r["extra"]
+)
+logger.add(
+    "{{ userlist[myusername].home }}/berlinrona-datapoints.log",
+    format="{message}",
+    filter=lambda r: "datapoint" in r["extra"]
+)
 
 url = "https://www.berlin.de/lageso/gesundheit/infektionsepidemiologie-infektionsschutz/corona/tabelle-bezirke/index.php/index/all.json?q="
 
 if __name__ == "__main__":
-
 
     time = datetime.utcnow().replace(tzinfo=timezone.utc).isoformat()
 
     r = requests.get(url)
     r.raise_for_status()
     j = r.json()
+    logger.bind(api=True).info(j)
 
     points = []
     for item in j['index']:
-        points.append({
+        point = {
             'measurement': 'coronavirus',
             'tags': {
                 'bezirk': item['bezirk']
@@ -35,8 +48,11 @@ if __name__ == "__main__":
                 'incidence': float(item['inzidenz']),
                 'diff': float(item['differenz'])
             }
-        })
-
+        }
+        logger.bind(datapoint=True).info(point)
+        points.append(point)
+        if "-v" in sys.argv:
+            print(point['tags']['bezirk'], point['fields'])
 
     client = InfluxDBClient(
         host='{{ influxdb_url }}',
@@ -46,9 +62,5 @@ if __name__ == "__main__":
         ssl=True,
         verify_ssl=True,
         database='berlinrona')
-
-    if "-v" in sys.argv:
-        for item in points:
-            print(item['tags']['bezirk'], item['fields'])
 
     client.write_points(points, time_precision='h')
