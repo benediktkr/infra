@@ -1,0 +1,121 @@
+#!/usr/bin/python3
+
+"""data from impfstoff.link
+"""
+
+from datetime import datetime, timezone
+import sys
+import json
+
+import requests
+from influxdb import InfluxDBClient
+from loguru import logger
+
+logger.remove()
+logger.add(
+    "{{ userlist[myusername].home }}/impfstoff-api.log",
+    format="{time}${message}",
+    filter=lambda r: "api" in r["extra"]
+)
+logger.add(
+    "{{ userlist[myusername].home }}/impfstoff-datapoints.log",
+    format="{message}",
+    filter=lambda r: "datapoint" in r["extra"]
+)
+
+url = "https://api.impfstoff.link/"
+params = {'robot': '1'}
+headers = {'User-Agent': 'https://matrix.to/#/@ben:sudo.is'}
+
+client = InfluxDBClient(
+    host='{{ influxdb_url }}',
+    port=443,
+    username='impfstoff',
+    password="{{ influxdb_user_database['impfstoff'] }}",
+    ssl=True,
+    verify_ssl=True,
+    database='impfstoff')
+
+def utc_isoformat(timestamp):
+    if timestamp is None:
+        # influxdb likes this
+        return None
+    unix_epoch = int(timestamp)/1000
+    utc = datetime.utcfromtimestamp(unix_epoch).replace(tzinfo=timezone.utc)
+    return utc.isoformat()
+
+if __name__ == "__main__":
+
+    time = datetime.utcnow().replace(tzinfo=timezone.utc).isoformat()
+
+    r = requests.get(url, params=params, headers=headers)
+    r.raise_for_status()
+    j = r.json()
+    logger.bind(api=True).info(j)
+
+    points = []
+
+    for item in j['stats']:
+        stats = sorted(item['stats'].items())
+        available = [{'date': date, **stats} for date, stats in stats]
+
+        #total_open_count = sum([a['count'] for a in item['stats'].values()])
+        #total_open_days = len(item['stats'])
+
+        total_open_count = sum([a['count'] for a in available])
+        total_open_days = len(available)
+        all_open_dates = [a['date'] for a in available]
+
+        if len(available) > 0:
+            # next_open_date = list(item['stats'].keys())[0]
+            # next_open_count = item['stats'][next_open_date]['count']
+            # next_open_perc = item['stats'][next_open_date]['percent']
+
+            # last_open_date = list(item['stats'].keys())[-1]
+            # last_open_count = item['stats'][last_open_date]['count']
+            # last_open_perc = item['stats'][last_open_date]['percent']
+
+            next_open_date = available[0]['date']
+            last_open_date = available[-1]['date']
+            next_open_count = available[0]['count']
+            last_open_count = available[-1]['count']
+            next_open_perc = available[0]['percent']
+            last_open_perc = available[-1]['percent']
+
+        else:
+            next_open_date = None
+            last_open_date = None
+            next_open_count = 0
+            last_open_count = 0
+            next_open_perc = 0.0
+            last_open_perc = 0.0
+
+        point = {
+            'measurement': 'impftermine',
+            'tags': {
+                'id': item['id'],
+                'name': item['name']
+            },
+            'time': time,
+            'fields': {
+                'open': int(item['open']),
+                'last_update': utc_isoformat(item.get('lastUpdate')),
+                'total_open_count': total_open_count,
+                'total_open_days': total_open_days,
+                'next_open_date': next_open_date,
+                'next_open_count': next_open_count,
+                'next_open_perc': next_open_perc,
+                'last_open_date': last_open_date,
+                'last_open_count': last_open_count,
+                'last_open_perc': last_open_perc,
+                'all_open_dates': ", ".join(all_open_dates)
+            }
+        }
+
+        logger.bind(datapoint=True).info(point)
+        points.append(point)
+        if "-v" in sys.argv:
+            import pprint
+            pprint.pprint(point)
+
+    client.write_points(points, time_precision='m')
