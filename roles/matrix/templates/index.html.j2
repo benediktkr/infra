@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Synapse is running</title>
+    <link rel="stylesheet" type="text/css" href="https://sudo.is/dark/style.css" media="screen">
+    <title>matrix</title>
     <style>
       body {
-      font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif;
       max-width: 40em;
       margin: auto;
       text-align: center;
@@ -24,10 +24,25 @@
       display: block;
       width: 12em;
       margin: 4em auto;
+      -webkit-filter: invert(100%);
+      filter: invert(100%);
+      }
+      .rabbit {
+      position:fixed;
+      left:0px;
+      bottom:10px;
       }
     </style>
   </head>
   <body>
+    <div id="header" class="header">
+      <div class="logodiv">
+        <div class="righthead">
+          <a href="https://sudo.is/">HOME</a>
+        </div>
+      </div>
+    </div>
+
     <div class="logo">
       <svg role="img" aria-label="[Matrix logo]" viewBox="0 0 200 85" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
         <g id="parent" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
@@ -49,10 +64,26 @@
     <hr>
     <p>
       <small>
+        element: <a href="https://{{ element_url }}" target="_blank" rel="noopener noreferrer">
+          {{ element_url }}
+        </a>
+      </small>
+    </p>
+    <p>
+      <small>
         <a href="https://matrix.org" target="_blank" rel="noopener noreferrer">
           matrix.org
         </a>
       </small>
     </p>
+    <div id="rabbit" class="rabbit">
+      <div id="footer" class="footer">
+        <div class="footertext">
+          <span class="left"></span>
+          <span class="right">follow the white rabbit..</span>
+        </div>
+      </div>
+    </div>
+
   </body>
 </html>

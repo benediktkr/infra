@@ -9,6 +9,8 @@
     group: matrix
   with_items:
     - name: data
+    - name: element
+      mode: 755
     - name: postgres
       owner: 70
       mode: 700
@@ -21,8 +23,19 @@
     dest: "{{ systemuserlist.matrix.home }}/html/index.html"
     owner: matrix
     group: www-data
-    mode: 755
+    mode: 0755
+  tags:
+    - matrix-html
 
+- name: element config
+  template:
+    src: element-config.json.j2
+    dest: "{{ systemuserlist.matrix.home }}/element/config.json"
+    owner: matrix
+    group: matrix
+    mode: 0775
+  tags:
+    - element
 
 - name: template nginx vhost
   template:
@@ -97,7 +110,9 @@
     - matrix-container
     - docker-containers
 
-- name: start container
+# register_new_matrix_user -u $username -t bot -c /data/homeserver.yaml http://localhost:8008
+
+- name: start synapse container
   docker_container:
     name: matrix
     image: avhost/docker-matrix:latest
@@ -128,4 +143,28 @@
       SERVER_NAME: "{{ matrix_domain }}"
   tags:
     - matrix-container
+    - docker-containers
+
+- name: start element-web container
+  docker_container:
+    name: matrix_element
+    image: bubuntux/element-web:latest
+    auto_remove: no
+    detach: yes
+    pull: yes
+    restart_policy: "no"
+    state: started
+    container_default_behavior: compatibility
+    networks_cli_compatible: no
+    networks:
+      - name: bridgewithdns
+        ipv4_address: "{{ bridgewithdns.element }}"
+    mounts:
+      - type: bind
+        source: "{{ systemuserlist.matrix.home }}/element/config.json"
+        target: /etc/element-web/config.json
+        read_only: yes
+  tags:
+    - element
+    - element-container
     - docker-containers
