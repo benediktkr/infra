@@ -27,9 +27,9 @@
     replace: "NO_START=1"
   notify: update initramfs
 
-- name: copy authorized_keys for dropbear
-  copy:
-    src: authorized_keys
+- name: authorized_keys for dropbear
+  template:
+    src: "private/sshkeys/{{ myusername }}.authorized_keys"
     dest: /etc/dropbear-initramfs/authorized_keys
     mode: 700
     force: yes
