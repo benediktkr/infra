@@ -11,13 +11,16 @@
       - sensors
     append: yes
 
-#- name: dhcpd hook for route to vpn
-#  template:
-#    src: 40-route.j2
-#    dest: /lib/dhcpcd/dhcpcd-hooks/40-route
-#  tags:
-#    - vpnclient
-# when: plz add
+- name: wifi
+  template:
+    src: wpa_supplicant.conf.j2
+    dest: /etc/wpa_supplicant/wpa_supplicant.conf
+    owner: root
+    group: root
+    mode: 0600
+  when: wifi_enabled|bool|default(False)
+  tags:
+    - wifi
 
 - name: enable w1 in bootloader config
   lineinfile:
@@ -119,7 +122,7 @@
     - restart sudoisbot temp_pub
     - restart sudoisbot rain_pub
 
-- name: install sudoisbot as pip package
+- name: remove sudoisbot as pip package
   pip:
     name: sudoisbot
     state: latest
