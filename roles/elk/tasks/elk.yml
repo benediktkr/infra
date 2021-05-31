@@ -61,7 +61,7 @@
     restart_policy: "unless-stopped"
     detach: yes
     pull: yes
-    state: started
+    state: stopped
     container_default_behavior: compatibility
     #user: "{{ elk_uid }}:{{ elk_gid }}"
     mounts:
@@ -99,7 +99,7 @@
     restart_policy: "unless-stopped"
     detach: yes
     pull: yes
-    state: started
+    state: stopped
     container_default_behavior: compatibility
     mounts:
       - type: bind
@@ -138,7 +138,7 @@
     restart_policy: "unless-stopped"
     detach: yes
     pull: yes
-    state: started
+    state: stopped
     container_default_behavior: compatibility
     mounts:
       - type: bind
