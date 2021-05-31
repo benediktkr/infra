@@ -28,9 +28,11 @@
   file:
     state: directory
     path: /etc/skel/.ssh
-    mode: 700
+    mode: 0700
     owner: root
     group: root
+  tags:
+    - skel
 
 - name: set root shell to zsh
   user:
@@ -38,11 +40,12 @@
     shell: /bin/zsh
 
 - name: set authorized_keys for root
-  authorized_key:
-    user: "root"
-    state: present
-    key: "{{ lookup('file', 'private/sshkeys/root.pub') }}"
-    manage_dir: yes
+  template:
+    src: "private/sshkeys/root.authorized_keys"
+    dest: "~/.ssh/authorized_keys"
+    owner: root
+    group: root
+    mode: 0600
   tags:
     - sshkeys
 
@@ -82,6 +85,8 @@
     name: "{{ item.key }}"
     gid: "{{ item.value.gid }}"
   with_dict: "{{ grouplist | default({}) }}"
+  loop_control:
+    label: "{{ item.key }}"
   tags: groups
 
 
@@ -106,14 +111,6 @@
   with_items: "{{ human_users }}"
   tags: human
 
-- name: move homedirs if host uses alterantive location
-  user:
-    name: "{{ userlist[item]['username'] }}"
-    move_home: yes
-    home: "{{ alt_homedirs }}/{{ item }}"
-  when: alt_homedirs is defined
-  with_items: "{{ human_users }}"
-
 - name: allow 'sudo' group to have passwordless sudo
   lineinfile:
     dest: /etc/sudoers
@@ -125,7 +122,7 @@
 
 - name: set authorized_keys for users with local pubkey files
   template:
-    src: "private/sshkeys/{{ item }}.pub"
+    src: "private/sshkeys/{{ item }}.authorized_keys"
     dest: "~/.ssh/authorized_keys"
     owner: "{{ item }}"
     group: "{{ item }}"
@@ -190,9 +187,9 @@
       tags:
         - sshkeys
 
-    - name: set authorized_keys for jenkins user
+    - name: set authorized_keys for jenkins user if jenkins server
       template:
-        src: private/sshkeys/jenkins.pub
+        src: private/sshkeys/jenkins.authorized_keys
         dest: "{{ systemuserlist.jenkins.home }}/.ssh/authorized_keys"
         owner: jenkins
         group: jenkins
@@ -220,4 +217,4 @@
         state: link
       with_items: "{{ human_users }}"
 
-  when: deadspace
+  when: "'mainframe' in group_names"
