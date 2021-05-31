@@ -175,7 +175,7 @@
   # mount_points = ["/"]
 
   ## Ignore mount points by filesystem type.
-  ignore_fs = ["tmpfs", "devtmpfs", "devfs", "iso9660", "overlay", "aufs", "squashfs"]
+  ignore_fs = ["fuse.sshfs", "tmpfs", "devtmpfs", "devfs", "iso9660", "overlay", "aufs", "squashfs"]
 
 
 [[inputs.diskio]]
@@ -227,9 +227,15 @@
   # fielddrop = ["uptime_format"]
 
 
-{% if 'docker' in group_names and not telegraf_disable_docker|default(false) %}
+{% if 'servers' in group_names and not telegraf_disable_docker|default(false) %}
 [[inputs.docker]]
   timeout = "5s"
+
+
+[[inputs.nginx]]
+  urls = ["https://{{ inventory_hostname }}/server_status"]
+
+
 {% endif %}
 
 
@@ -241,14 +247,6 @@
 {% endif %}
 
 [[inputs.net]]
-
-
-{% if 'nginx' in group_names %}
-
-[[inputs.nginx]]
-     urls = ["https://{{ inventory_hostname }}/server_status"]
-
-{% endif %}
 
 
 [[inputs.postfix]]

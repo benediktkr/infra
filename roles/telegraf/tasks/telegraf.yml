@@ -74,10 +74,17 @@
     codename: buster
   when: ansible_lsb.codename == "bullseye"
 
+- name: set codename to focal if hirsute
+  set_fact:
+    codename: focal
+  when: ansible_lsb.codename == "hirsute"
+
 - name: otherwise use lsb codename
   set_fact:
     codename: "{{ ansible_lsb.codename }}"
-  when: ansible_lsb.codename != "bullseye"
+  when:
+    - ansible_lsb.codename != "bullseye"
+    - ansible_lsb.codename != "hirsute"
 
 - name: add repo for influxdata to install telegraf
   apt_repository:
@@ -121,3 +128,5 @@
     state: started
     enabled: yes
   notify: restart telegraf
+
+- meta: flush_handlers
