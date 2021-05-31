@@ -178,7 +178,7 @@
       userPassword: "{{ item.ldap_password|default('') }}"
       #homeDirectory: "/home/{{ item.username }}"
       # sshPublicKey: schema here: http://pig.made-it.com/ldap-openssh.html
-      roomNumber: "{% if item.sshkey %}{{ lookup('file', 'private/sshkeys/' + item.username + '.pub')}}{% else %} {% endif %}"
+      roomNumber: "{% if False %}{{ lookup('file', 'private/sshkeys/' + item.username + '.pub')}}{% else %} {% endif %}"
       loginShell: "{{ item.shell|default('/bin/zsh') }}"
       mail:  "{{ item.email|default('') }}"
     state: exact
