@@ -3,16 +3,13 @@
 # m h dom mon dow
 
 # sync master copies to {{ git_cron.base_path }}
-15 */1 * * * root /usr/local/sbin/git-cron.sh
-
-# sync github (hides errors, needs some monitoring/checking)
-#14 13 * * * root /usr/local/bin/ghsync.sh &> /root/ghsync.log
+#15 */1 * * * root /usr/local/sbin/git-cron.sh
 
 # run convergence
 #13 */12 * * * root /usr/local/sbin/ansible-convergence.sh
 #13 3 * * * root /usr/local/sbin/ansible-convergence.sh sensors
-17 */6 * * * root /usr/local/sbin/tf-convergence.sh
+#17 */6 * * * root /usr/local/sbin/tf-convergence.sh
 
-
-18 08 * * * root /usr/local/bin/certbot -q >> /var/log/certbot.log
+# -q
+15 1 * * * root /usr/local/bin/certbot >> /var/log/certbot.log
 #
