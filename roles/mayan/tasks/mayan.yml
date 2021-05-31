@@ -23,8 +23,8 @@
 
 - name: postgres container
   docker_container:
-    name: "postgres_mayan"
-    image: "postgres:9-alpine"
+    name: "mayan_postgresql"
+    image: "postgres:10.15-alpine"
     auto_remove: no
     pull: yes
     container_default_behavior: compatibility
@@ -44,7 +44,7 @@
 
 - name: redis container
   docker_container:
-    name: "redis_mayan"
+    name: "mayan_redis"
     image: "redis:latest"
     auto_remove: no
     restart_policy: "unless-stopped"
@@ -55,7 +55,7 @@
     labels:
       dockerlogs_format: redis
     env:
-      REDIS_HOST: "redis_mayan"
+      REDIS_HOST: "mayan_redis"
     container_default_behavior: compatibility
     networks_cli_compatible: no
     networks:
@@ -68,7 +68,7 @@
 - name: mayan container
   docker_container:
     name: mayan
-    image: mayanedms/mayanedms:3
+    image: mayanedms/mayanedms:s4
     detach: yes
     pull: yes
     auto_remove: no
