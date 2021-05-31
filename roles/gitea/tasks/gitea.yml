@@ -4,11 +4,14 @@
   file:
     path: "{{ systemuserlist.git.home }}/{{ item }}"
     state: directory
-    mode: 0750
+    mode: 0755
     owner: git
     group: git
   with_items:
     - data
+    - data/gitea
+    - data/gitea/conf
+    - data/git
 
 - name: create dir for ssh passthrough script
   file:
@@ -38,11 +41,11 @@
 - name: start container
   docker_container:
     name: gitea
-    image: gitea/gitea:1
+    image: gitea/gitea:1.13
     detach: yes
     pull: yes
     restart_policy: "no"
-    state: started
+    state: "{{ container_state | default('started') }}"
     container_default_behavior: compatibility
     ports:
       - "127.0.0.1:{{ gitea_ssh_port }}:22"
