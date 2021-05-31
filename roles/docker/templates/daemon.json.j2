@@ -1,4 +1,10 @@
 {
+{% if 'pihole' in group_names %}
+  "dns": ["{{ bridgewithdns.pihole }}"],
+  {# "dns-search": "brirdgewithdns", #}
+
+{% endif %}
+
   "log-driver": "json-file"
 
    {#, "log-opts": {
@@ -7,4 +13,5 @@
    #   "tag": {% raw %}"{{ .Name }}" {% endraw %}
    #
    # } #}
+
 }
