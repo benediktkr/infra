@@ -1,118 +1,190 @@
 #!/usr/bin/env python3
 
-import argparse
-from datetime import datetime, timezone
 import os
 import socket
 import subprocess
+import json
+from time import sleep
+import sys
 
-from influxdb import InfluxDBClient
+#from influxdb import InfluxDBClient
 from loguru import logger
 
-import sudoisinflux
+#import sudoisinflux
 
-
-class SdfSshMount(object):
-
-    def __init__(self, ssh, sshfs_dir):
-        self.ssh = ssh
-        self.sshfs_dir = sshfs_dir
-        self.present_file = os.path.join(self.sshfs_dir, ".metaarray_plain")
+class SDF(object):
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.unmount()
 
     def __enter__(self):
-        os.mkdir(SSHFS, exists_ok=True)
-        if os.path.exists(self.present_file):
-            logger.error(f"found '{self.present_file}', aborting")
-            raise SystemExit(1)
+        return self.mount()
 
-        p = subprocess.run(["sshfs", "-o", "idmap=user",
-                            f"{self.ssh}/metaarray", self.sshfs_dir],
-                           check=True)
+    def assert_nonempty_dir(self, path):
+        assert os.path.isdir(path)
+        assert len(os.listdir(path)) > 0
 
-        assert os.file.exists(self.present)
-        logger.debug(f"mounted '{self.sshfs_dir}' as '{self.ssh}'")
-        return self
+    def assert_unmounted(self):
+        assert os.stat(self.mountpoint)
+        assert os.path.isdir(self.mountpoint)
+        assert not os.path.isfile(self.check_file)
+        assert len(os.listdir(self.mountpoint)) == 0
 
-    def __exit__(self, exc_type, exc_value, traceback):
-        umount_cmds = [["umount"], ["umount", "-f"], ["fusermount", "-u"]]
-        for umount in umount_cmds:
-            try:
-                subprocess.run(umount + [self.sshfs_dir], check=True)
-                os.rmdir(SSHFS)
-                logger.debug(f"unmounted '{self.sshfs_dir}'")
-            except subprocess.CalledProcessError as e:
-                logger.error(f"'{umount}' failed with {e.returncode}")
-                continue
-        else:
-            logger.error(f"giving up on unmounting '{self.sshfs_dir}'")
+    def assert_mounted(self):
+        assert os.path.isfile(self.check_file)
+        self.assert_nonempty_dir(self.mountpoint)
 
-
-class SdfLuksOpen(object):
-
-    def __init__(self, sdfpath, luks_file, luks_key_file, name="backup"):
-        self.sdfpath = sdfpath
-        self.luks_file = luks_file
-        self.luks_key_file = luks_key_file
-        self.name = name
-        self.present_file = os.path.join(self.sdfpath, ".metaarray_present")
-
-    def __enter__(self):
-
-        subprocess.run(["/usr/sbin/cryptsetup", "luksOpen", self.luks_file,
-                        self.name, f"--key-file={self.luks_key_file}"],
-                       check=True)
-        os.mkdir(self.sdfpath, exists_ok=True)
-        subprocess.run(['mount', f'/dev/mapper/{self.name}', self.sdfpath],
-                       check=True)
-        assert os.file.exists(self.present_file)
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        time.sleep(10.0)
+    def do_sync(self):
+        sleep(10.0)
         logger.debug("starting 'sync'")
         subprocess.run(["sync"], check=True)
-        time.sleep(3.0)
-        logger.denug(f"unmoutning {self.sdfpath}")
-        subprocess.run(["umount", self.sdfpath])
-        os.rmdir(self.sdfpath)
+        sleep(3.0)
+
+class SSHMount(SDF):
+
+    def __init__(self, destination, mountpoint):
+        self.destination = destination
+        self.mountpoint = mountpoint
+        self.check_file = os.path.join(self.mountpoint, ".sdf_ssh")
+
+    def mount(self):
+        #self.assert_unmounted()
+
+        p = subprocess.run(
+            ["sshfs", "-o", "idmap=user", self.destination, self.mountpoint],
+            check=True
+        )
+
+        #self.assert_mounted()
+        c = len(os.listdir(self.mountpoint))
+
+        logger.debug(f"mounted '{self.destination}' as '{self.mountpoint}': {c} files")
+        return self
+
+    def unmount(self):
+        #self.assert_mounted()
+        #self.do_sync()
+
+        umount_cmds = [["umount"], ["umount", "-f"], ["fusermount", "-u"]]
+
+        for umount in umount_cmds:
+            try:
+                subprocess.run(umount + [self.mountpoint], check=True)
+                break
+            except subprocess.CalledProcessError as e:
+                logger.error(e)
+                continue
+        else:
+            logger.error(f"giving up on unmounting '{self.mountpoint}'")
+            raise SystemExit(1)
 
 
-def sdfbackup(ssh, sshfs_dir, sdfpath, luks_file, luks_key_file, backup_src):
-    with SdfSshMount(ssh, sshfs) as sshfs:
-        with SdfLuksOpen(sdfpath, luks_file, luks_key_file):
-            pass # do the rsync
+        #self.assert_unmounted()
+        logger.debug(f"unmounted '{self.mountpoint}'")
 
 
-def main(args):
-    tags = {
-        'host': socket.gethostname(),
-        'script': 'sdfbackup.py',
-        'args': vars(args),
-    }
+class LUKSMount(SDF):
 
-    datapoints = [{
-        "measurement": "backups",
-        "tags": tags,
-        "time": datetime.now(timezone.utc).isoformat(),
-    }]
+    def __init__(self, path, mountpoint, key_path):
+        self.path = path
+        self.mountpoint = mountpoint
+        self.key_path = key_path
+        self.name = os.path.splitext(os.path.basename(self.path))[0]
+        self.check_file = os.path.join(self.mountpoint, ".sdf_luks")
 
-if __name__ == "__main__":
+    def mount(self):
+        #self.assert_unmounted()
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--ssh", required=True)
-    parser.add_argument("--sshfs-dir", required=True)
-    parser.add_argument("--sdfpath", required=True)
-    parser.add_argument("--luks-file", required=True)
-    parser.add_argument("--luks-key-file", required=True)
-    parser.add_argument("--backup-src", required=True)
+        key_param = f"--key-file={self.key_path}"
+        crypts = "/usr/sbin/cryptsetup"
 
-    parser.add_argument("--force-yes-i-know-what-im-doing", action="store_true")
+        subprocess.run(
+            [crypts, "luksOpen", self.path, self.name, key_param],
+            check=True
+        )
+
+        subprocess.run(
+            ['/usr/bin/mount', f'/dev/mapper/{self.name}', self.mountpoint],
+            check=True
+        )
+
+        #self.assert_mounted()
+        logger.debug(f"luksOpen '{self.path}' on '{self.mountpoint}'..")
+
+        return self
+
+    def unmount(self):
+        #self.assert_mounted()
+        self.do_sync()
+        logger.debug(os.listdir(self.mountpoint))
+        subprocess.run(["umount", self.mountpoint], check=True)
+
+        self.assert_unmounted()
+
+        subprocess.run(
+            ["/usr/sbin/cryptsetup", "luksClose", self.name],
+            check=True
+        )
+        logger.debug(f"closed LUKS '{self.name}' and unmounted '{self.mountpoint}'")
+
+    def rsync(self, src_root, paths):
+        self.assert_nonempty_dir(src_root)
+
+        for path in paths:
+            assert not path.endswith("/")
+            self._rsync(os.path.join(src_root, path))
+
+    def _rsync(self, path):
+        rsync_cmd = [
+            "/usr/bin/rsync", "-rahS", "--numeric-ids",
+            "--delete-after", path, self.mountpoint
+        ]
+        logger.debug(" ".join(rsync_cmd))
+        subprocess.run(rsync_cmd, check=True)
 
 
-    args = parser.parse_args()
+@logger.catch
+def main():
 
-    if "{{ inventory_hostname }}" != "{{ sdfbackup_primary }}" and not args.force_yes_i_know_what_im_doing:
-        logger.error(f"this is probably the wrong host, otherwise '--force-yes-i-know-what-im-doing'")
+    with open('/usr/local/etc/sdfbackup.json') as f:
+        config = json.load(f)
+
+    # where the LUKS volume gets mounted when its open
+    luks_mountpoint = config['luks_args']['mountpoint']
+    key_path = config['luks_args']['key_path']
+
+
+    if 'logfile' in config:
+        if '-v' not in sys.argv:
+            logger.remove()
+            logger.add(sys.stderr, level="WARNING")
+        logger.add(config['logfile'])
+
+    if socket.gethostname() != config['primary']:
+        logger.error("wrong host")
         raise SystemExit(13)
 
-    main(args)
+    if "--open" in sys.argv:
+        # mount the sshfs and luks, exit and leave it open
+        ssh = SSHMount(**config['ssh_args'])
+        ssh.mount()
+        path = os.path.join(config['ssh_args']['mountpoint'], config['luks_args']['luks_img'])
+        luks = LUKSMount(path, luks_mountpoint, key_path)
+        luks.mount()
+        logger.warning(f"mounted '{luks.name}' on '{luks_mountpoint}', please close manually")
+        sys.exit(0)
+
+
+    logger.debug("starting sdfbackup.py..")
+
+
+    with SSHMount(**config['ssh_args']) as ssh:
+        # the path the the LUKS file image, in the sshfs mountpoint
+        path = os.path.join(ssh.mountpoint, config['luks_args']['luks_img'])
+
+        with LUKSMount(path, luks_mountpoint, key_path) as luks:
+            luks.rsync(config['src_root'], config['paths'])
+
+    logger.debug("exiting sdfbackup.py..")
+
+if __name__ == "__main__":
+    main()

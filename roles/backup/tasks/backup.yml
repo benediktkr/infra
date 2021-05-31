@@ -1,5 +1,15 @@
 ---
 
+- name: fail if path has trailing slash
+  fail:
+    msg: "invalid path: '{{ item }}'"
+  when: item.endswith('/') | bool
+  with_items: "{{ sdfbackup_opts.paths }}"
+  loop_control:
+    label: "{{ item }}"
+  run_once: True
+  delegate_to: localhost
+
 - name: install rsnapshot
   apt:
     name: rsnapshot
@@ -7,10 +17,30 @@
   tags:
     - packages
 
+- name: ensure mountpoints exist
+  file:
+    state: directory
+    path: "{{ item }}"
+    owner: "{{ rsnapshot_user }}"
+    group: "{{ rsnapshot_user }}"
+    mode: 0700
+  with_items:
+    - /media/sdf
+    - "{{ sdfbackup_opts.ssh_args.mountpoint }}"
+    - "{{ sdfbackup_opts.luks_args.mountpoint }}"
+
 - name: template rsnapshot config
   template:
     src: rsnapshot.conf.j2
     dest: /etc/rsnapshot.conf
+
+- name: template sdfbackup config
+  template:
+    src: sdfbackup.json.j2
+    dest: /usr/local/etc/sdfbackup.json
+    owner: root
+    group: root
+    mode: 0640
 
 - name: template cron file
   template:
@@ -22,14 +52,13 @@
   template:
     src: "{{ item }}.j2"
     dest: "/usr/local/bin/{{ item }}"
-    mode: 0755
+    mode: 0750
     owner: root
     group: root
   with_items:
     - sdfbackup.sh
     - sdfbackup.py
     - sdfcleanup.sh
-    - rsnapshot_mirror.py
     - sudoisrsnapshot.py
   tags: backup_scripts
 
@@ -39,14 +68,5 @@
     dest: /root/sdf_backup_lukskey
     owner: root
     group: root
-    mode: 0700
-  when: sdfbackup
-
-- name: make rsnapshot mirror dir
-  file:
-    path: "{{ rsnapshot_mirror_root }}"
-    state: directory
-    owner: root
-    group: root
-    mode: 0700
-  when: inventory_hostname != rsnapshot_primary
+    mode: 0600
+  no_log: True

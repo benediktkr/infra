@@ -6,11 +6,3 @@ retain_alpha: 30
 retain_beta: 7
 retain_gamma: 4
 retain_delta: 3
-
-rsnapshot_backup_all:
-  - /srv/
-  - /home/
-  - /etc/
-  - /var/
-
-rsnapshot_backup_extra: []
