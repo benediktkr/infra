@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# {{ template_path[a_prefix:] }}
+
+set -e
+
+LOCKFILE={{ deadspace_lockfile }}
+lockfile -r 0 $LOCKFILE
+
+RSYNC_EXCLUDE="{% for excl in deadspace_ignore %}--exclude {{ excl }} {% endfor %}"
+RSYNC_PARAMS="-rahS --numeric-ids --delete $RSYNC_EXCLUDE"
+
+{% for origin in deadspace %}
+{%   for item in deadspace[origin] %}
+{%     if origin != inventory_hostname and inventory_hostname in item.replicas %}
+
+mkdir -p {{ item.path }}/
+rsync $RSYNC_PARAMS {{ deadspace_user }}@{{ origin }}:{{ item.path }}/ {{ item.path }}/
+
+{# idea:
+ # chmod -R -w {{ item.path }}
+ # would cause rsync to spend more time syncing file attributes though
+ #}
+( echo "updated: $(date -Is)" && echo "origin: {{ origin }}" ) > {{ item.path }}/.deadspace
+
+{%     endif %}
+{%   endfor %}
+{% endfor %}
+
+rm -f $LOCKFILE

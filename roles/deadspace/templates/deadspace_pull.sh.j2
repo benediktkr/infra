@@ -1,0 +1,51 @@
+#!/bin/bash
+
+# {{ template_path[a_prefix:] }}
+
+# NOTE: chattr, -f is set:
+#       -f     Suppress most error messages
+
+set -e
+
+{% set user = deadspace_user %}
+
+LOCKFILE={{ deadspace_pull_lockfile }}
+lockfile -r 0 $LOCKFILE
+
+IGNORE="{% for excl in deadspace_ignore %}--exclude {{ excl }} {% endfor %}"
+PARAMS="-rahS --numeric-ids --delete-after "
+
+{% for origin in deadspace %}
+{%   for item in deadspace[origin] %}
+{%     if origin != inventory_hostname and inventory_hostname in item.replicas %}
+if [[ "$1" == "-v" ]]; then echo "{{ origin }}:{{ item.path }}"; fi
+
+{% if 'rsnapshot/' in item.path %}
+EXCLUDE="$IGNORE --exclude {{ inventory_hostname }}/"
+{% else %}
+EXCLUDE="$IGNORE "
+{% endif %}
+
+stat {{ item.path }} > /dev/null
+chattr -fR -i {{ item.path }} || true
+
+rsync -e "ssh -i {{ deadspace_sshkey }}" $PARAMS $EXCLUDE {{ user }}@{{ origin }}:{{ item.path }}/ {{ item.path }}/
+
+echo "origin: {{ origin }}
+path: {{ item.path }}
+state: replica
+comment: {{ item.comment|default("") }}
+updated: $(date -Is)" > {{ item.path }}/.deadspace-info
+
+{% if 'rsnapshot/' in item.path %}
+echo "did not rsync my own backup from origin" > {{ item.path }}/{{ inventory_hostname }}.txt
+
+{% endif -%}
+
+chattr -fR +i {{ item.path }} || true
+
+{%     endif %}
+{%   endfor %}
+{% endfor %}
+
+rm -f $LOCKFILE

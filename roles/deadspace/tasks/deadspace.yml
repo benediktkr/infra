@@ -1,0 +1,76 @@
+---
+
+- name: fail if path has trailing slash
+  fail:
+    msg: "invalid path: '{{ item.path }}'"
+  when: (item.path.endswith('/') or not item.path.startswith(deadspace_root)) | bool
+  with_flattened: "{{ deadspace.values() }}"
+  loop_control:
+    label: "{{ item.path }}"
+  run_once: True
+  delegate_to: localhost
+
+- name: deadspace ssh private key
+  template:
+    src: private/sshkeys/deadspace
+    dest: /root/.ssh/deadspace
+    owner: root
+    group: root
+    mode: 0700
+  tags:
+    - sshkeys
+
+- name: poke deadspaces at origin
+  file:
+    state: directory
+    path: "{{ item.path }}"
+    owner: "{{ item.owner|default(deadspace_user) }}"
+    group: "{{ item.group|default(deadspace_user) }}"
+    mode: "{{ item.mode|default(0775) }}"
+    recurse: false
+  loop_control:
+    label: "{{ item.path }}"
+  with_items: "{{ deadspace[inventory_hostname]  }}"
+
+- name: add comment files
+  lineinfile:
+    path: "{{ item.path }}/.deadspace-comment"
+    line: "{{ item.comment }}"
+    create: true
+  when: item.comment is defined
+  loop_control:
+    label: "{{ item.path }}"
+  with_items: "{{ deadspace[inventory_hostname] }}"
+
+- name: standard dirs
+  file:
+    state: directory
+    path: "{{ deadspace_root }}/{{ item }}"
+    owner: root
+    group: root
+    mode: 0755
+    recurse: false
+  loop_control:
+    label: "{{ deadspace_root }}/{{ item }}"
+  with_items: "{{ deadspace_standard }}"
+
+- name: tepmlate push script
+  template:
+    src: "{{ item }}.j2"
+    dest: "/usr/local/bin/{{ item }}"
+    owner: root
+    group: root
+    mode: 0770
+  with_items:
+    - deadspace_push.sh
+    - deadspace_pull.sh
+
+- name: template cron job
+  template:
+    src: "deadspace_sync-cron.j2"
+    dest: "/etc/cron.d/deadspace_sync"
+    owner: root
+    group: root
+    mode: 0600
+  tags:
+    - cron

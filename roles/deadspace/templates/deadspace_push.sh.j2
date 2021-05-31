@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# {{ template_path[a_prefix:] }}
+
+set -e
+
+{% set user = deadspace_user %}
+
+LOCKFILE={{ deadspace_push_lockfile }}
+lockfile -r 0 $LOCKFILE
+
+IGNORE="{% for excl in deadspace_ignore %}--exclude {{ excl }} {% endfor %}"
+PARAMS="-rahS --numeric-ids --delete-after"
+
+{% for item in deadspace[inventory_hostname] %}
+{%   for replica in item.replicas %}
+if [[ "$1" == "-v" ]]; then echo "{{ replica }}:{{ item.path }}"; fi
+
+EXCLUDE="$IGNORE {% if 'rsnapshot/' in item.path %}--exclude {{ replica }}/{% endif %}"
+
+rsync $PARAMS $EXCLUDE {{ item.path }}/ {{ user }}@{{ replica }}:{{ item.path }}/
+
+echo "origin: {{ inventory_hostname }}
+path: {{ item.path }}
+state: replica
+comment: {{ item.comment|default("") }}
+updated: $(date -Is)" > /tmp/ds.txt
+scp -q /tmp/ds.txt {{ deadspace_user }}@{{ replica }}:{{ item.path }}/.deadspace-info
+rm -f /tmp/ds.txt
+
+{%   endfor %}
+{% endfor %}
+
+rm -f $LOCKFILE
