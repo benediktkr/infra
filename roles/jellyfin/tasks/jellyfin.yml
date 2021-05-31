@@ -137,11 +137,15 @@
     mode: 0755
     owner: www-data
     group: www-data
+  tags:
+    - jellyfin-auth
 
 - name: install systemd config for auth stuff
   template:
     src: private/jellyfin_auth.service.j2
     dest: "/etc/systemd/system/jellyfin_auth.service"
+  tags:
+    - jellyfin-auth
 
 - name: enable jellyfin_auth
   systemd:

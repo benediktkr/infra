@@ -92,6 +92,7 @@ def tail(filename):
         except KeyboardInterrupt:
             raise SystemExit
 
+@logger.catch
 def main():
     state = IpState.read(STATE)
     write_acl(ACL, state.ipset)
