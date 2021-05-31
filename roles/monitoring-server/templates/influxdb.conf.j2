@@ -246,8 +246,10 @@ bind-address = "{{ influxdb_rpc_bind }}"
   enabled = true
   bind-address = "127.0.0.1:{{ influxdb_port }}"
   auth-enabled = true
-  log-enabled = true
-  access-log-path = "/var/log/influxdb/http_access.log"
+
+  # we have (rotated, unlike this one) logs on the nginx level
+  log-enabled = false
+  #access-log-path = "/var/log/influxdb/http_access.log"
 
   # handled by nginx
   https-enabled = false

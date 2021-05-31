@@ -97,6 +97,7 @@
     - berlinrona.py
     - nextcloud-influx.py
     - sdfcheck.py
+    - impfstoff.py
 
 - name: template cronjobs fr data collection scripts
   template:

@@ -15,12 +15,16 @@ logger.remove()
 logger.add(
     "{{ userlist[myusername].home }}/impfstoff-api.log",
     format="{time}${message}",
-    filter=lambda r: "api" in r["extra"]
+    filter=lambda r: "api" in r["extra"],
+    rotation="50 MB",
+    compression="zip"
 )
 logger.add(
     "{{ userlist[myusername].home }}/impfstoff-datapoints.log",
     format="{message}",
-    filter=lambda r: "datapoint" in r["extra"]
+    filter=lambda r: "datapoint" in r["extra"],
+    rotation="50 MB",
+    compression="zip"
 )
 
 url = "https://api.impfstoff.link/"

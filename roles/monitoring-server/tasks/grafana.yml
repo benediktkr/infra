@@ -13,6 +13,8 @@
   template:
     src: 01-grafana.j2
     dest: /etc/nginx/sites-enabled/01-grafana
+  tags:
+    - grafana-config
   notify: reload nginx
 
 - name: Create influxdb datasources
@@ -41,3 +43,13 @@
     version: latest
     state: absent
   ignore_errors: yes
+
+- name: template snapshot.py
+  template:
+    src: snapshot.py
+    dest: /usr/local/bin/snapshot.py
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - sensor-snapshot

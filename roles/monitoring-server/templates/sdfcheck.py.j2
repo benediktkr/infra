@@ -24,7 +24,7 @@ def check():
 
     backup_age = now - dt_backup_updated
     metric_age = now - dt_metric_updated
-    metric_age_mins = metric_age.seconds//60
+    metric_age_mins = metric_age.total_seconds() // 60
 
 
     datapoints = [{
@@ -34,8 +34,8 @@ def check():
         },
         "time": now.isoformat(),
         "fields": {
-            "age_days": backup_age.days,
-            "age_seconds": backup_age.seconds,
+            "age_days": int(backup_age.days),
+            "age_seconds": int(backup_age.total_seconds()),
             "backup_size": int(j['backup_size']),
             "value": dt_backup_updated.isoformat()
         }
@@ -47,13 +47,13 @@ def check():
         },
         "time": now.isoformat(),
         "fields": {
-            "age_mins": metric_age_mins,
-            "age_seconds": metric_age.seconds,
+            "age_mins": int(metric_age_mins),
+            "age_seconds": int(metric_age.total_seconds()),
             "metric_updated": dt_metric_updated.isoformat()
         }
     }]
 
-    sudoisinflux.write(datapoints, precision='m')
+    sudoisinflux.write(datapoints, precision='h')
 
 
 if __name__ == "__main__":
