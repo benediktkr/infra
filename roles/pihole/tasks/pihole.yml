@@ -1,10 +1,10 @@
 ---
 
-- name: template nginx vhost for {{ pihole_url }}
+- name: template nginx vhost
   template:
     src: pihole-vhost.j2
     dest: /etc/nginx/sites-enabled/01-pihole-vhost
-    #validate: /usr/sbin/nginx -t
+    validate: /usr/sbin/nginx -t
   tags:
     - nginx-config
     - nginx-vhosts
@@ -31,12 +31,11 @@
     owner: root
     group: root
     mode: 0644
-  #notify: restart pihole
   tags:
     - pihole-config
     - pihole-overrides
 
-- name: template dhcp options
+- name: template dhcp options if dhcp server
   template:
     src: 07-dhcp-options.conf.j2
     dest: "{{ pihole_root }}/etc/dnsmasq.d/07-dhcp-otions.conf"
@@ -46,56 +45,52 @@
   tags:
     - pihole-config
   when: pihole_dhcp
-  #notify: restart pihole
 
-- name: disable systemd-resolved
+- name: disable systemd-resolved or named if they are active
   service:
-    name: systemd-resolved
+    name: "{{ item }}"
     state: stopped
-    enabled: no
-
+    enabled: false
+  with_items:
+    - systemd-resolved
+    - named
 
 - name: enable null blocking
   lineinfile:
     path: "{{ pihole_root}}/etc/pihole/pihole-FTL.conf"
     line: "BLOCKINGMODE=NULL"
-
+    create: true
 
 # NOTE: For a DNS server with lots of short-lived connections, you may
 # wish to consider adding --net=host to the run command for
 # performance reasons.
-- name: start unbound docker container
+- name: start unbound docker containers
   docker_container:
-    name: unbound
+    name: "{{ item }}"
     image: mvance/unbound:latest
-    auto_remove: no
-    pull: yes
+    auto_remove: false
+    pull: true
     restart_policy: "always"
     state: started
-    ports:
-      - 4053:53/udp
     mounts:
       - type: bind
-        read_only: yes
+        read_only: true
         source: /dev/null
         target: /opt/unbound/etc/unbound/forward-records.conf
     container_default_behavior: compatibility
-    networks_cli_compatible: no
+    networks_cli_compatible: false
     networks:
       - name: bridgewithdns
-        ipv4_address: "{{ bridgewithdns.unbound }}"
+        ipv4_address: "{{ bridgewithdns[item] }}"
     dns_servers:
       - 127.0.0.1
   tags:
     - unbound-container
     - docker-containers
+  with_items:
+    - unbound0
+    - unbound1
 
-
-# If you get the error about ssl_match_hostname, see the comment in
-# the nextcloud role for the docker_container task.
-#
-#
-# TODO: does pihole run with uid 999? then change it, telegraf wants to use that
 
 - name: start docker container
   docker_container:
@@ -104,40 +99,40 @@
     auto_remove: no
     detach: yes
     pull: yes
-    restart_policy: "unless-stopped"
+    restart_policy: "always"
     state: started
-    network_mode: host
     container_default_behavior: compatibility
     capabilities:
       - NET_ADMIN
+      - NET_RAW
+      - NET_BIND_SERVICE
     env:
       WEB_PORT: "{{ pihole_http_port|string }}"
-      DNSMASQ_LISTENING: "local"
+      DNSMASQ_LISTENING: "all" # the docker nat port forward is a firewall
       VIRTUAL_HOST: "{{ pihole_url }}"
       # ServerIP: "{{ pihole_local_ip }}" # can disable wg0
       TZ: "Europe/Berlin"
       WEBPASSWORD: "{{ pihole_web_password }}"
-      DNS1: "{{ upstream_dns_1 }}"
-      DNS2: "{{ upstream_dns_2 }}"
-      #DNS1: "{{ bridgewithdns.unbound }}" # has problems with my subdomains
+      DNS1: "{{ bridgewithdns.unbound0 }}"
+      DNS2: "{{ bridgewithdns.unbound1 }}"
       CONDITIONAL_FORWARDING: "{{ pihole_cond|string }}"
       CONDITIONAL_FORWARDING_IP: "{{ pihole_cond_ip }}"
       CONDITIONAL_FORWARDING_DOMAIN: "{{ pihole_cond_domain }}"
       IPv6: "false"
     dns_servers:
-      - 127.0.0.1
-      - "{{ bridgewithdns.unbound }}"
-      #- pihole_dns_1
-      #- pihole_dns_2
-    # hostname might be causing problems on cold boot
-    #hostname: "{{ inventory_hostname.split('.')[0] }}-pihole"
-    #etc_hosts:
-    #   "{{ inventory_hostname.split('.')[0] }}-pihole": "127.0.0.1"
-
-    # networks_cli_compatible: no
-    # networks:
-    #   - name: bridgewithdns
-    #     ipv4_address: "{{ bridgewithdns.pihole }}"
+      - "{{ bridgewithdns.unbound0 }}"
+      - "{{ bridgewithdns.unbound1 }}"
+    ports:
+      - 127.0.0.1:53:53/udp
+      - 127.0.0.1:53:53/tcp
+      - "{{ pihole_nginx_interface }}:53:53/udp"
+      - 127.0.0.1:{{pihole_http_port}}:{{pihole_http_port}}
+    network_mode: bridge
+    purge_networks: yes
+    networks_cli_compatible: yes
+    networks:
+      - name: bridgewithdns
+        ipv4_address: "{{ bridgewithdns.pihole }}"
     volumes:
       - "{{ pihole_root }}/etc/pihole:/etc/pihole"
       - "{{ pihole_root }}/etc/dnsmasq.d:/etc/dnsmasq.d"
