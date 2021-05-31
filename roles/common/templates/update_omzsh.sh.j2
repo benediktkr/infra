@@ -19,6 +19,6 @@ if [ -d "/root/.oh-my-zsh" ] && [[ $EUID -eq 0 ]]; then
 
         cd /root/.oh-my-zsh/
         /usr/bin/git pull -q
-        echo $weird_omzsh_epoch > /home/{{ myusername }}/.oh-my-zsh/cache/.zsh-update
+        echo $weird_omzsh_epoch > /home/root/.oh-my-zsh/cache/.zsh-update
     )
 fi

@@ -18,7 +18,8 @@
   copy:
     src: "{{ item }}"
     dest: /etc/ssh/
-  with_fileglob: "private/ssh_host_keys/{{ inventory_hostname }}/ssh_host_*"
+  with_fileglob: "private/ssh_host_keys/{{ inventory_hostname }}/etc/ssh/ssh_host_*"
+  notify: reload sshd
   tags:
     - ssh
     - hostkeys
@@ -78,10 +79,9 @@
   tags:
     - timezone
 
-- name: update apt packages and cache
+- name: update apt cache
   apt:
     update_cache: yes
-    upgrade: dist
   changed_when: False
   tags:
     - packages
@@ -104,37 +104,38 @@
 - name: correct python3 version selected on ubuntu
   alternatives:
     name: python3
-    path: /usr/bin/python3.8
+    path: /usr/bin/python3.9
     link: /usr/bin/python3
   tags:
     - packages
     - alternatives
   when: ansible_distribution == "Ubuntu"
 
-- name: remove packages that should only be on mainframe
-  apt:
-    state: absent
-    purge: yes
-    name:
-      - autoconf # emacs-build
-      - gnupg2
-      - gnutls-bin # emacs-build
-      - irssi
-      - kpcli
-      - libgnutls28-dev # emacs-build
-      - libncurses-dev # emacs-build
-      - pkg-config # emacs-build
-      - texinfo  # emacs-build
-      - libffi-dev
-      - libssl-dev
-      - cmake    # emacs vterm
-      - libtool  # emacs vterm
-      - libtool-bin
+# - name: remove packages that should only be on mainframe
+#   apt:
+#     state: absent
+#     purge: yes
+#     name:
+#       - autoconf # emacs-build
+#       - gnupg2
+#       - gnutls-bin # emacs-build
+#       - irssi
+#       - kpcli
+#       - libgnutls28-dev # emacs-build
+#       - libncurses-dev # emacs-build
+#       - pkg-config # emacs-build
+#       - texinfo  # emacs-build
+#       - libffi-dev
+#       - libssl-dev
+#       - cmake    # emacs vterm
+#       - libtool  # emacs vterm
+#       - libtool-bin
 
-  when: 'inventory_hostname != "mainframe.sudo.is"'
-  tags:
-    - remove-packages
-    - packages
+#   when: 'inventory_hostname != "mainframe.sudo.is"'
+#   tags:
+#     - remove-packages
+#     - packages
+
 
 - name: install packages
   apt:
@@ -182,6 +183,7 @@
       - sshfs
       - sudo
       - tcpdump
+      - tree
       - tmux
       - unzip
       - vnstat
@@ -274,27 +276,27 @@
   tags:
     - ntp
 
-- name: set ntp servers
-  lineinfile:
-    path: /etc/systemd/timesyncd.conf
-    line: "NTP=0.pool.ntp.org 1.pool.ntp.org 2.pool.ntp.org 3.pool.ntp.org"
-    create: no
-  notify:
-    - systemctl daemon reload
-    - restart systemd-timesyncd
-  tags: ntp
+# - name: set ntp servers
+#   lineinfile:
+#     path: /etc/systemd/timesyncd.conf
+#     line: "NTP=0.pool.ntp.org 1.pool.ntp.org 2.pool.ntp.org 3.pool.ntp.org"
+#     create: no
+#   notify:
+#     - systemctl daemon reload
+#     - restart systemd-timesyncd
+#   tags: ntp
 
-- name: enable systemd-timesyncd
-  service:
-    name: systemd-timesyncd
-    enabled: yes
-    state: started
-  tags: ntp
+# - name: enable systemd-timesyncd
+#   service:
+#     name: systemd-timesyncd
+#     enabled: yes
+#     state: started
+#   tags: ntp
 
-- name: enable ntp
-  command: timedatectl set-ntp true
-  changed_when: false
-  tags: ntp
+# - name: enable ntp
+#   command: timedatectl set-ntp true
+#   changed_when: false
+#   tags: ntp
 
 - name: check if hosts file needs fixing
   command: grep {{ inventory_hostname }} /etc/hosts
@@ -321,7 +323,7 @@
     line: 'en_US.UTF-8 UTF-8'
     state: present
   tags:
-    - scripts-common
+    - common-scripts
     - locale
   notify: locale-gen
 
@@ -344,6 +346,8 @@
     - ssh
   notify:
     - reload sshd
+
+- meta: flush_handlers
 
 - name: empty /etc/motd
   copy:
@@ -378,7 +382,7 @@
     - reboot_required.py
     - update_omzsh.sh
   tags:
-    - scripts-common
+    - common-scripts
 
 - name: template common cron jobs
   template:
@@ -395,14 +399,16 @@
     - reboot_required
     - update_omzsh
 
-# - name: install zmq pip package
-#   pip:
-#     name: zmq
-#     executable: pip3
-#   tags:
-#     - pip
-#     - packages
-#   when: zmq_install
+- name: install zmq
+  apt:
+    name:
+      - python3-zmq
+      - python3-yaml
+    state: latest
+  tags:
+    - packages
+  when: install_zmq
+
 
 # TODO: Decide on which way...
 - name: enable unattended-upgrades (following codenames)
