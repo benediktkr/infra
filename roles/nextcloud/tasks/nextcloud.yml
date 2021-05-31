@@ -125,14 +125,6 @@
     - nginx
   notify: reload nginx
 
-- name: template uploadsize.conf
-  template:
-    src: nginx-uploadsize.conf.j2
-    dest: /etc/nginx/conf.d/uploadsize.conf
-  tags:
-    - nginx
-  notify: reload nginx
-
 - name: template cron file
   template:
     src: nextcloud-cron.j2
