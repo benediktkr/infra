@@ -11,14 +11,6 @@
     label: "{{ item.name }}"
   with_items: "{{ static_sites }}"
 
-- name: wwwsudois install latest
-  apt:
-    name: wwwsudois
-    state: latest
-    update_cache: yes
-  tags:
-    - wwwsudois
-
 - name: symlink wwwsudois shared because nginx needs relative paths
   file:
     state: link
