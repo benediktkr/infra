@@ -46,6 +46,7 @@
     mode: 755
   tags:
     - nginx
+    - matrix-nginx
   notify: reload nginx
 
 - name: template config
@@ -91,6 +92,7 @@
 - name: postgres container for matrix synapse
   docker_container:
     name: matrix_postgresql
+    state: started
     image: docker.io/postgres:12-alpine
     container_default_behavior: compatibility
     networks_cli_compatible: no
