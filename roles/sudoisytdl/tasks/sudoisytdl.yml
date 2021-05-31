@@ -19,6 +19,10 @@
     user: "{{ ytdl_user.uid }}"
     state: started
     container_default_behavior: compatibility
+    network_mode: bridge
+    networks_cli_compatible: yes
+    networks:
+      - name: bridgewithdns
     env:
       TG_TOKEN: "{{ ytdl_tg_token }}"
       DOMAIN: "{{ ytdl_domain }}"
