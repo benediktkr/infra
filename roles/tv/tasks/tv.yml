@@ -5,6 +5,12 @@
     msg: "this isnt ubuntu"
   when: ansible_lsb.id != "Ubuntu"
 
+- name: gid for bleutooth group
+  group:
+    name: bluetooth
+    gid: "{{ bluetooth_gid | default(118) }}"
+  tags: groups
+
 - name: "check if /boot/firmware/syscfg.txt exists to assume if rpi or not"
   stat:
     path: /boot/firmware/syscfg.txt
