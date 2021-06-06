@@ -143,6 +143,9 @@
     name:
       #- ntp
       #- python-netaddr
+      - autoconf
+      - cmake
+      - libtool
       - acl
       - apt-transport-https
       - aptitude
