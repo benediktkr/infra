@@ -1,0 +1,39 @@
+#!/bin/bash
+
+
+set -e
+
+LOCKFILE=/tmp/telegraf_chia.lock
+
+function cleanup {
+    rm -f $LOCKFILE
+}
+
+trap cleanup EXIT
+
+lockfile -l 21600 -r 0 $LOCKFILE
+
+
+#cd {{ chia_path }}/chia-blockchain
+cd /home/ben/github/chia-blockchain
+
+. ./activate
+
+
+peers=$(chia show -c)
+
+# incoming peers (assuming that every port that isnt 8444 is an incoming port)
+incoming_peer_count=$(echo "$peers" | grep -v "8444/8444" | grep -v "\-SB" | grep -v "Last Connect" | grep -v "127\.0\.0\.1" | grep -v "Connections:" | awk '{print $2}'| wc -l)
+# total peers connected, including introducers
+peer_count=$(echo "$peers"  | grep -v "\-SB" | grep -v "Last Connect" | grep -v "127\.0\.0\.1" | grep -v "Connections:" | awk '{print $2}'| wc -l)
+
+summary=$(chia farm summary)
+
+plot_count=$(echo "$summary" | grep "Plot count:" | awk '{print $3}')
+size_tib=$(echo "$summary" | grep "Total size of plots:" | awk '{print $5}')
+block_rewards=$(echo "$summary" | grep "Block rewards:" | awk '{print $3}')
+total_farmed=$(echo "$summary" | grep "Total chia farmed:" | awk '{print $4}')
+
+echo "chia,mode=node peer_count=${peer_count},incoming_peer_count=${incoming_peer_count},plot_count=${plot_count},size_tib=${size_tib},block_rewards=${block_rewards},total_farmed=${total_farmed}"
+
+rm -f $LOCKFILE

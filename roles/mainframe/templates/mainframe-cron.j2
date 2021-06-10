@@ -11,5 +11,5 @@
 #17 */6 * * * root /usr/local/sbin/tf-convergence.sh
 
 # -q
-15 1 * * * root /usr/local/bin/certbot >> /var/log/certbot.log
+45 */1 * * * root /usr/local/bin/certbot renew 2>>&1 /tmp/certbot.log
 #

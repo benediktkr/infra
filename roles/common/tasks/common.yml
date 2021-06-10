@@ -386,6 +386,7 @@
     - update_omzsh.sh
   tags:
     - common-scripts
+    - update_omzsh
 
 - name: template common cron jobs
   template:

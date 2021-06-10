@@ -4,7 +4,7 @@
   template:
     src: pihole-vhost.j2
     dest: /etc/nginx/sites-enabled/01-pihole-vhost
-    validate: /usr/sbin/nginx -t
+    #validate: /usr/sbin/nginx -t
   tags:
     - nginx-config
     - nginx-vhosts
@@ -51,6 +51,7 @@
     name: "{{ item }}"
     state: stopped
     enabled: false
+  ignore_errors: true
   with_items:
     - systemd-resolved
     - named

@@ -18,7 +18,8 @@ if [ -d "/root/.oh-my-zsh" ] && [[ $EUID -eq 0 ]]; then
         echo "updating oh-my-zsh for root"
 
         cd /root/.oh-my-zsh/
+        /usr/bin/mkdir -p /root/.oh-my-zsh/cache
         /usr/bin/git pull -q
-        echo $weird_omzsh_epoch > /home/root/.oh-my-zsh/cache/.zsh-update
+        echo $weird_omzsh_epoch > /root/.oh-my-zsh/cache/.zsh-update
     )
 fi

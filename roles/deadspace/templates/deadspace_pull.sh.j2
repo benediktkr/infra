@@ -7,6 +7,12 @@
 
 set -e
 
+function cleanup {
+    rm -f $LOCKFILE
+}
+
+trap cleanup EXIT
+
 {% set user = deadspace_user %}
 
 LOCKFILE={{ deadspace_pull_lockfile }}
@@ -14,6 +20,9 @@ lockfile -r 0 $LOCKFILE
 
 IGNORE="{% for excl in deadspace_ignore %}--exclude {{ excl }} {% endfor %}"
 PARAMS="-rahS --numeric-ids --delete-after "
+if [[ "$1" == "-v" ]]; then
+    PARAMS="$PARAMS --info=progress2"
+fi
 
 {% for origin in deadspace %}
 {%   for item in deadspace[origin] %}

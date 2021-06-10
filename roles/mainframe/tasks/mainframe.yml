@@ -23,9 +23,12 @@
       - cmake    # emacs vterm
       - libtool  # emacs vterm
       - libtool-bin
+      - libsodium-dev # chia-plotter
       - simple-cdd
       - libcurl4-gnutls-dev
       - weechat-matrix
+      - zip
+      - httrack
   tags:
     - packages
     - packages-mainframe
@@ -36,6 +39,7 @@
       - ansible
       - certbot
       - netaddr
+      - certbot-dns-cloudflare
     state: latest
     executable: pip3
   tags:

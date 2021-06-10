@@ -83,8 +83,8 @@ if __name__ == "__main__":
             last_open_date = available[-1]['date']
             next_open_count = available[0]['count']
             last_open_count = available[-1]['count']
-            next_open_perc = available[0]['percent']
-            last_open_perc = available[-1]['percent']
+            next_open_perc = float(available[0]['percent'])
+            last_open_perc = float(available[-1]['percent'])
 
         else:
             next_open_date = None

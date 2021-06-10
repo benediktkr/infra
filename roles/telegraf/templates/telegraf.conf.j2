@@ -157,6 +157,9 @@
   ## existing data has been written.
   # influx_uint_support = false
 
+{% if telegraf_sensors == true %}
+[[inputs.sensors]]
+{% endif %}
 
 [[inputs.cpu]]
   ## Whether to report per-cpu stats or not
@@ -175,7 +178,7 @@
   # mount_points = ["/"]
 
   ## Ignore mount points by filesystem type.
-  ignore_fs = ["fuse.sshfs", "tmpfs", "devtmpfs", "devfs", "iso9660", "overlay", "aufs", "squashfs"]
+  ignore_fs = ["fuse.sshfs","tmpfs", "devtmpfs", "devfs", "iso9660", "overlay", "aufs", "squashfs"]
 
 
 [[inputs.diskio]]
@@ -232,9 +235,11 @@
   timeout = "5s"
 
 
+{% if 's21' not in group_names %}
+{# ssl issues, no cert for subdomains #}
 [[inputs.nginx]]
   urls = ["https://{{ inventory_hostname }}/server_status"]
-
+{% endif %}
 
 {% endif %}
 
@@ -288,4 +293,12 @@
   # reverse metric names so they sort more naturally
   # Defaults to false if unset, but is set to true when generating a new config
   reverse_metric_names = true
+{% endif %}
+
+
+{% if 'farmer' in group_names %}
+[[inputs.exec]]
+  commands = ["cat /tmp/telegraf_c.txt"]
+  timeout = "5s"
+  data_format = "influx"
 {% endif %}
