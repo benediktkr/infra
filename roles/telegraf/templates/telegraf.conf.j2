@@ -235,11 +235,11 @@
   timeout = "5s"
 
 
-{% if 's21' not in group_names %}
-{# ssl issues, no cert for subdomains #}
-[[inputs.nginx]]
-  urls = ["https://{{ inventory_hostname }}/server_status"]
-{% endif %}
+{# {% if 's21' not in group_names %}
+ # ssl issues, no cert for subdomains
+ # [[inputs.nginx]]
+ #   urls = ["https://{{ inventory_hostname }}/server_status"]
+ # {% endif %} #}
 
 {% endif %}
 
@@ -298,7 +298,7 @@
 
 {% if 'farmer' in group_names %}
 [[inputs.exec]]
-  commands = ["cat /tmp/telegraf_c.txt"]
+  commands = ["/usr/local/bin/farmertelegraf.sh"]
   timeout = "5s"
   data_format = "influx"
 {% endif %}

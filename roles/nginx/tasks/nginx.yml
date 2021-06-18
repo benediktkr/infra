@@ -32,6 +32,8 @@
     PATH: "{{ ansible_env.PATH }}:/sbin:/usr/sbin"
   tags:
     - packages
+    - wwwsudois
+    - www.sudo.is
 
 # - name: create dh file
 #   command: openssl dhparam -out /etc/nginx/dhparam.pem 4096

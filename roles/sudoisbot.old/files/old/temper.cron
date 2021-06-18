@@ -1,5 +1,0 @@
-*/10 * * * * root /usr/local/bin/graphtemps.py --data /srv/temps.txt --hours 24 --output-file /srv/tempgraph.png &>>/tmp/graphtemps.log
-* * * * * root /usr/local/sbin/temper_read.py >> /srv/temps.txt
-
-
-#

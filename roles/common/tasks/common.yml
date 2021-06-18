@@ -165,6 +165,7 @@
       - ipcalc
       - iptraf
       - jq
+      - lm-sensors
       - locales
       - lsb-base
       - lsb-release
@@ -206,11 +207,13 @@
       - poetry
       - influxdb
       - loguru
+      - requests
     state: latest
     executable: pip3
   tags:
     - pip
     - common-pip
+    - common-pip-packages
     - packages
 
 - name: remove pip packages that are only needed on mainframe
