@@ -1,12 +1,13 @@
 ---
 
-- name: install busybox and dropbear
+- name: install busybox, cryptsetup and dropbear
   apt:
     name:
       - busybox
       - dropbear
       - dropbear-initramfs
       - cryptsetup
+      - cryptsetup-initramfs
     state: present
     update_cache: yes
   tags:
