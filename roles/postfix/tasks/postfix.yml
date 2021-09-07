@@ -4,8 +4,11 @@
     name:
       - postfix
       - mailutils
+      - libsasl2-modules
     state: latest
     update_cache: yes
+  notify:
+    - restart postfix
   tags:
     - packages
 
