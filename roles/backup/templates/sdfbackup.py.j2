@@ -136,6 +136,7 @@ class LUKSMount(SDF):
     def _rsync(self, path):
         rsync_cmd = [
             "/usr/bin/rsync", "-rahS", "--numeric-ids",
+            "--exclude", "ruv-dl",   # move to config
             "--delete-after", path, self.mountpoint
         ]
         logger.debug(" ".join(rsync_cmd))
@@ -183,6 +184,12 @@ def main():
 
         with LUKSMount(path, luks_mountpoint, key_path) as luks:
             luks.rsync(config['src_root'], config['paths'])
+            logger.debug("tree: start")
+            treecmd = [
+                "tree", luks_mountpoint, "-L", "8", "-o", "/root/sdftree.txt"
+            ]
+            subprocess.run(treecmd, check=True)
+            logger.debug("tree finished")
 
     logger.debug("exiting sdfbackup.py..")
 

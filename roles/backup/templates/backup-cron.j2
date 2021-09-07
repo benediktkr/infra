@@ -2,12 +2,12 @@
 
 # m h dom mon dow
 {% if inventory_hostname == rsnapshot_primary %}
-3 1 * * * root /usr/local/bin/sudoisrsnapshot.py
-30 */1 * * * root /usr/local/bin/sudoisrsnapshot.py --metrics-only
+{{ rsnapshot_cron }} root /usr/local/bin/sudoisrsnapshot.py
+{{ rsnapshot_cron_metrics }} root /usr/local/bin/sudoisrsnapshot.py --metrics-only
 {% endif %}
 
 {% if inventory_hostname == sdfbackup_opts.primary %}
-03 13  * * * root /usr/local/bin/sdfbackup.py
+{{ sdfbackup_cron }} root /usr/local/bin/sdfbackup.py
 {% endif %}
 
 
