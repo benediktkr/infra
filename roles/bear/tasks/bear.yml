@@ -1,0 +1,104 @@
+---
+
+- name: install pip packages
+  pip:
+    name:
+      - "{{ bear_pkg_sec }}"
+      - PyCryptodome # matrix-utils
+    state: latest
+    executable: pip3
+  tags:
+    - pip
+    - packages
+
+- name: add apt key for element
+  apt_key:
+    url: https://packages.riot.im/debian/riot-im-archive-keyring.gpg
+    state: present
+  tags:
+    - packages
+
+- name: add apt.sudo.is repo
+  apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/riot-im-archive-keyring.gpg] https://packages.riot.im/debian/ default main"
+    state: present
+    update_cache: yes
+    filename: "riot-im"
+  with_items:
+    - all
+    - "{{ ansible_lsb.codename }}"
+  tags:
+    - packages
+
+- name: packages
+  apt:
+    name:
+      - calibre
+      - digikam
+      - element-desktop
+      - evince
+      - gimp
+      - gnome-disk-utility
+      - gpodder
+      - gscan2pdf
+      - gthumb
+      - imagemagick
+      - keepassxc
+      - libreoffice
+      - libsecp256k1-0
+      - mplayer
+      - nextcloud-desktop
+      - nextcloud-desktop-cmd
+      - poppler-utils # pdfunite
+      - pwgen
+      - python3-cryptography
+      - python3-pyqt5
+      - remmina
+      - signal-desktop
+      - simple-scan
+      - thunderbird
+      - tor
+      - tumbler-plugins-extra
+      - vlc
+    state: latest
+    update_cache: yes
+  tags:
+    - packages
+
+- name: template sbin scripts
+  template:
+    src: "private/{{ bear_sec_src }}.j2"
+    dest: "/usr/local/sbin/{{ bear_sec_src }}"
+    mode: 0700
+    owner: root
+    group: root
+  no_log: false
+  tags:
+    - scripts
+
+- name: template scripts
+  template:
+    src: "{{ item }}.j2"
+    dest: "/usr/local/bin/{{ item }}"
+    mode: 0755
+    owner: "{{ myusername }}"
+    group: "{{ myusername }}"
+  loop_control:
+    label: "{{ item }}"
+  tags:
+    - telegraf
+    - scripts
+  with_items:
+    - chia_node.sh
+    - farmertelegraf.sh
+    - kpxcp.sh
+
+- name: cron file
+  template:
+    src: bear-cron.j2
+    dest: /etc/cron.d/bear
+    owner: root
+    group: root
+    mode: 0600
+  tags:
+    - bear-cron

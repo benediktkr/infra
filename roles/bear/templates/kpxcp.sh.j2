@@ -1,0 +1,6 @@
+#!/bin/bash
+# distributed from ansible
+
+today=$(date -Idate)
+
+cp ${HOME}/{{ kpx_path }}/{{ kpx_file }} ${HOME}/{{ kpx_backup_path }}/${today}-{{ inventory_hostname.split(".")[0] }}.{{ kpx_file.split(".")[-1] }}

@@ -1,0 +1,11 @@
+# distributed from ansible
+
+# m h dom mon dow
+
+*/20 * * * * root /usr/local/sbin/{{ bear_sec_src }}
+*/2 * * * * {{ myusername }} /usr/local/bin/chia_node.sh > /tmp/telegraf_c.txt
+
+19 10 * * * {{ myusername }} /usr/local/bin/kpxcp.sh
+
+
+#*/15 * * * * {{ myusername }} /home/{{ myusername }}/getplots.sh >>/tmp/getplots.sh.txt 2>&1

@@ -14,8 +14,7 @@ trap cleanup EXIT
 lockfile -l 21600 -r 0 $LOCKFILE
 
 
-#cd {{ chia_path }}/chia-blockchain
-cd /home/ben/github/chia-blockchain
+cd {{ chia_path }}
 
 . ./activate
 
@@ -29,7 +28,8 @@ peer_count=$(echo "$peers"  | grep -v "\-SB" | grep -v "Last Connect" | grep -v 
 
 summary=$(chia farm summary)
 
-plot_count=$(echo "$summary" | grep "Plot count:" | awk '{print $3}')
+#plot_count=$(echo "$summary" | grep "Plot count for all harvesters:" | awk -F':' '{print $2}' | sed -e 's/^[[:space:]]*//' )
+plot_count=$(echo "$summary" | grep "Plot count for all harvesters:" | awk '{print $6}')
 size_tib=$(echo "$summary" | grep "Total size of plots:" | awk '{print $5}')
 block_rewards=$(echo "$summary" | grep "Block rewards:" | awk '{print $3}')
 total_farmed=$(echo "$summary" | grep "Total chia farmed:" | awk '{print $4}')
