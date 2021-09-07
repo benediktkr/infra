@@ -1,0 +1,43 @@
+server_location: 'http://{{ bridgewithdns.matrix }}:{{ matrix_synapse_port }}'
+server_name: '{{ matrix_domain }}'
+base_url: ''
+registration_shared_secret: "{{ matrix_registration_shared_secret }}"
+admin_api_shared_secret: '{{ matrix_registration_api_key }}'
+client_redirect: 'https://{{ element_url }}/#/login'
+client_logo: 'static/images/element-logo.png'
+db: 'sqlite:////data/db.sqlite3'
+host: '{{ bridgewithdns.matrix_reg }}'
+port: {{ matrix_registration_port }}
+rate_limit: ["100 per day", "10 per minute"]
+allow_cors: false
+ip_logging: true
+logging:
+  disable_existing_loggers: false
+  version: 1
+  root:
+    level: DEBUG
+    handlers: [console, file]
+  formatters:
+    brief:
+      format: '%(name)s - %(levelname)s - %(message)s'
+    precise:
+      format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+  handlers:
+    console:
+      class: logging.StreamHandler
+      level: INFO
+      formatter: brief
+      stream: 'ext://sys.stdout'
+    file:
+      class: logging.handlers.RotatingFileHandler
+      formatter: precise
+      level: INFO
+      filename: '/data/m_reg.log'
+      maxBytes: 10485760 # 10MB
+      backupCount: 3
+      encoding: utf8
+password:
+  min_length: 8
+username:
+  validation_regex: []
+  invalidation_regex: []

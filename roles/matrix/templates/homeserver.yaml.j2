@@ -257,11 +257,19 @@ listeners:
     x_forwarded: true
     # docker doesnt support ipv6
     #bind_addresses: ['::1', '127.0.0.1']
-    bind_addresses: ['127.0.0.1', '{{ bridgewithdns.matrix }}']
+    bind_addresses:
+      - '127.0.0.1'
+      - '{{ bridgewithdns.matrix }}'
 
     resources:
       - names: [client, federation] #, webclient]
         compress: false
+
+  - port: {{ matrix_synapse_metrics_port }}
+    type: metrics
+    bind_addresses:
+      - '127.0.0.1'
+      - '{{ bridgewithdns.matrix }}'
 
     # example additional_resources:
     #
@@ -1096,11 +1104,11 @@ url_preview_accept_language:
 
 # The public URIs of the TURN server to give to clients
 #
-#turn_uris: ["turn:{{ matrix_domain }}:3478?transport=udp", "turn:{{ matrix_domain }}:3478?transport=tcp"]
+#turn_uris: ["turn:{{ coturn_url }}:3478?transport=udp", "turn:{{ coturn_url }}:3478?transport=tcp"]
 
 # The shared secret used to compute passwords for the TURN server
 #
-#turn_shared_secret: "pdTojBDcesSRX4qYCXuLGtywK0YK6WIAnBA0CNPsnnmAdlS2wBb8DyPlRQ2ipnmx"
+#turn_shared_secret: "{{ coturn_static_auth_secret }}"
 
 # The Username and password if the TURN server needs them and
 # does not use a token
@@ -1110,7 +1118,7 @@ url_preview_accept_language:
 
 # How long generated TURN credentials last
 #
-#turn_user_lifetime: 1h
+#turn_user_lifetime: 24h
 
 # Whether guests should be allowed to use the TURN server.
 # This defaults to True, otherwise VoIP will be unreliable for guests.
@@ -1118,6 +1126,7 @@ url_preview_accept_language:
 # connect to arbitrary endpoints without having first signed up for a
 # valid account (e.g. by passing a CAPTCHA).
 #
+# check on https://test.voip.librepush.net/
 #turn_allow_guests: true
 
 
@@ -1233,7 +1242,7 @@ allowed_local_3pids:
 # If set, allows registration of standard or admin accounts by anyone who
 # has the shared secret, even if registration is otherwise disabled.
 #
-registration_shared_secret: "KM5n.az:JC5d+__2pyvZonT.wBMFSsy^8YU=AB,W=.Up;*4@Aj"
+registration_shared_secret: "{{ matrix_registration_shared_secret }}"
 
 # Set the number of bcrypt rounds used to generate password hash.
 # Larger numbers increase the work factor needed to generate the hash.
@@ -1391,7 +1400,7 @@ auto_join_rooms:
 
 # Enable collection and rendering of performance metrics
 #
-enable_metrics: false
+enable_metrics: true
 
 # Enable sentry integration
 # NOTE: While attempts are made to ensure that the logs don't contain
@@ -1452,13 +1461,13 @@ report_stats: true
 # the registration_shared_secret is used, if one is given; otherwise,
 # a secret key is derived from the signing key.
 #
-macaroon_secret_key: "uYkP.Rw6N2qV^sdt_BSWSH#FSV-#IYYK&t72Qr,LTejK1;32NQ"
+macaroon_secret_key: "{{ matrix_macaroon_secret_key }}"
 
 # a secret which is used to calculate HMACs for form values, to stop
 # falsification of values. Must be specified for the User Consent
 # forms to work.
 #
-form_secret: "kAnoXCDegnVL7~@+^Icwj4BerV78M.0fK3n2pFGSM_X#SR17b="
+form_secret: "{{ matrix_form_secret }}"
 
 ## Signing Keys ##
 
@@ -1502,6 +1511,8 @@ old_signing_keys:
 # 'trusted_key_servers' defaults to matrix.org, but using it will generate a
 # warning on start-up. To suppress this warning, set
 # 'suppress_key_server_warning' to true.
+
+suppress_key_server_warning: true
 #
 # Options for each entry in the list include:
 #

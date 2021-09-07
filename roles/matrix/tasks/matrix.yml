@@ -10,12 +10,13 @@
   with_items:
     - name: data
     - name: element
-      mode: 755
+      mode: 644
     - name: postgres
       owner: 70
       mode: 700
     - name: html
-      mode: 755
+      mode: 644
+    - name: registration
 
 - name: matrix index.html
   template:
@@ -23,7 +24,7 @@
     dest: "{{ systemuserlist.matrix.home }}/html/index.html"
     owner: matrix
     group: www-data
-    mode: 0755
+    mode: 0644
   tags:
     - matrix-html
 
@@ -33,9 +34,19 @@
     dest: "{{ systemuserlist.matrix.home }}/element/config.json"
     owner: matrix
     group: matrix
-    mode: 0775
+    mode: 0664
   tags:
     - element
+
+- name: matrix-registration config
+  template:
+    src: registration-config.yml.j2
+    dest: "{{ systemuserlist.matrix.home }}/registration/config.yaml"
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - matrix-registration
 
 - name: template nginx vhost
   template:
@@ -43,7 +54,7 @@
     dest: /etc/nginx/sites-enabled/01-matrix
     owner: root
     group: root
-    mode: 755
+    mode: 0644
   tags:
     - nginx
     - matrix-nginx
@@ -75,6 +86,7 @@
   docker_container:
     name: matrix_redis
     image: "redis:latest"
+    restart_policy: "unless-stopped"
     auto_remove: no
     detach: yes
     pull: yes
@@ -95,6 +107,7 @@
     state: started
     image: docker.io/postgres:12-alpine
     container_default_behavior: compatibility
+    restart_policy: "unless-stopped"
     networks_cli_compatible: no
     networks:
       - name: bridgewithdns
@@ -118,10 +131,10 @@
   docker_container:
     name: matrix
     image: avhost/docker-matrix:latest
-    auto_remove: no     # auto remove and no restart policy better for reboots
+    auto_remove: no
     detach: yes
     pull: yes
-    restart_policy: "no"
+    restart_policy: "unless-stopped"
     state: started
     user: "{{ systemuserlist.matrix.uid }}:{{ systemuserlist.matrix.gid }}"
     container_default_behavior: compatibility
@@ -154,7 +167,7 @@
     auto_remove: no
     detach: yes
     pull: yes
-    restart_policy: "no"
+    restart_policy: "unless-stopped"
     state: started
     container_default_behavior: compatibility
     networks_cli_compatible: no
@@ -170,3 +183,68 @@
     - element
     - element-container
     - docker-containers
+
+- name: start matrix-registration container
+  docker_container:
+    name: matrix_registration
+    image: zeratax/matrix-registration:{{ matrix_registration_tag }}
+    auto_remove: no
+    detach: yes
+    pull: yes
+    restart_policy: "no"
+    state: started
+    container_default_behavior: compatibility
+    networks_cli_compatible: no
+    user: "{{ systemuserlist.matrix.uid }}:{{ systemuserlist.matrix.gid }}"
+    networks:
+      - name: bridgewithdns
+        ipv4_address: "{{ bridgewithdns.matrix_reg }}"
+    mounts:
+      - type: bind
+        source: "{{ systemuserlist.matrix.home }}/registration"
+        target: /data
+        read_only: no
+    command: serve
+  tags:
+    - matrix-registration
+    - matrix-registration-container
+    - docker-containers
+
+- name: template scripts
+  template:
+    src: "{{ item }}.j2"
+    dest: /usr/local/bin/{{ item }}
+    mode: 0750
+    owner: root
+    group: root
+  tags:
+    - backup
+    - matrix-backup
+    - matrix-scripts
+    - matrix-registration
+  loop_control:
+    label: "{{ item }}"
+  with_items:
+    - synapse-postgres-backup.sh
+    - matrix-invite.py
+
+- name: cron file
+  template:
+    src: matrix-cron.j2
+    dest: /etc/cron.d/matrix
+    mode: 0600
+    owner: root
+    group: root
+  tags:
+    - backup
+    - matrix-backup
+    - cron
+
+- name: telegraf file
+  template:
+    src: matrix-telegraf.conf.j2
+    dest: /etc/telegraf/telegraf.d/matrix.conf
+  notify:
+    - restart telegraf
+  tags:
+    - telegraf-config

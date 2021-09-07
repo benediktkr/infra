@@ -1,0 +1,79 @@
+#!/usr/bin/env python3
+
+import argparse
+from datetime import datetime, timedelta
+from urllib.parse import urljoin
+import json
+
+import requests
+
+def add_url(item):
+    token = item['name']
+    return {'url': f'https://{{ matrix_url }}/register?token={token}',
+            **item}
+
+def make_request(method, url, data=None):
+    base_url = "http://{{ bridgewithdns.matrix_reg }}:{{ matrix_registration_port }}"
+
+    s = requests.Session()
+    _headers = {
+        "Content-Type": "application/json",
+        "Authorization": "SharedSecret {{ matrix_registration_api_key }}"
+    }
+    s.headers.update(_headers)
+    _url = urljoin(base_url, url)
+
+    r = s.request(method, _url, data=json.dumps(data))
+    try:
+        r.raise_for_status()
+        j = r.json()
+        if isinstance(j, list):
+            return [add_url(a) for a in j]
+        else:
+            return add_url(j)
+
+    except requests.exceptions.HTTPError as e:
+        print(e)
+        print("reponse body:")
+        print(r.text)
+        raise SystemExit
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("action", nargs='?', choices=['new', 'ls', 'enable', 'disable', 'status'], help="default: 'new'", default="new")
+    parser.add_argument("--days", default=7, type=int, help="invite valid period")
+    parser.add_argument("--max-usage", default=1, type=int)
+    parser.add_argument("--token")
+    args = parser.parse_args()
+
+    if args.action == "new":
+        expires = datetime.now() + timedelta(days=args.days)
+        data = {
+            'max_usage': args.max_usage,
+            'expiration_date': expires.isoformat()
+        }
+        j = make_request("POST", "/api/token", data)
+        print(j['url'])
+
+    else:
+        if args.action == "ls":
+            j = make_request("GET", "/api/token")
+
+        elif args.action in ["disable", "enable"]:
+            if not args.token:
+                parser.error("missing: --token")
+
+            data = {'disabled': args.action == "disable"}
+            j = make_request("PATCH", f"/api/token/{args.token}", data)
+
+        elif args.action == "status":
+            if not args.token:
+                parser.error("missing: --token")
+
+            j = make_request("GET", f"/api/token/{args.token}")
+
+        else:
+            parser.error("wtf")
+
+        print(json.dumps(j, indent=2))
