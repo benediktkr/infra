@@ -9,3 +9,8 @@
   service:
     name: grafana-server
     state: restarted
+
+- name: reload nginx
+  service:
+    name: nginx
+    state: reloaded

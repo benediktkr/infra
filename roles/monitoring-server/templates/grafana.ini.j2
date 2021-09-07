@@ -185,7 +185,7 @@ reporting_enabled = false
 ;cookie_samesite = lax
 
 # set to true if you want to allow browsers to render Grafana in a <frame>, <iframe>, <embed> or <object>. default is false.
-;allow_embedding = false
+allow_embedding = true
 
 # Set to true if you want to enable http strict transport security (HSTS) response header.
 # This is only sent when HTTPS is enabled in this configuration.
@@ -213,7 +213,7 @@ reporting_enabled = false
 #################################### Snapshots ###########################
 [snapshots]
 # snapshot sharing options
-;external_enabled = true
+external_enabled = false
 ;external_snapshot_url = https://snapshots-origin.raintank.io
 ;external_snapshot_name = Publish to snapshot.raintank.io
 
@@ -222,7 +222,7 @@ reporting_enabled = false
 ;public_mode = false
 
 # remove expired snapshot
-;snapshot_remove_expired = true
+snapshot_remove_expired = true
 
 #################################### Dashboards History ##################
 [dashboards]
