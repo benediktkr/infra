@@ -231,16 +231,23 @@
 
 
 {% if 'servers' in group_names and not telegraf_disable_docker|default(false) %}
+
+{% if telegraf_docker|default(true) %}
 [[inputs.docker]]
   timeout = "5s"
+{% endif %}
 
-
-{# {% if 's21' not in group_names %}
- # ssl issues, no cert for subdomains
- # [[inputs.nginx]]
- #   urls = ["https://{{ inventory_hostname }}/server_status"]
- # {% endif %} #}
-
+[[inputs.nginx]]
+  urls = [
+  {% if 'address' in ansible_default_ipv4 %}
+    "https://{{ inventory_hostname }}/server_status"
+  {% else %}
+    "https://localhost/server_status"
+  {% endif %}
+  {% if 'nextcloud' in group_names %}
+    , "https://{{ hostvars[groups['nextcloud'][0]]['nextcloud_url'] }}/server_status"
+  {% endif %}
+  ]
 {% endif %}
 
 
@@ -296,9 +303,29 @@
 {% endif %}
 
 
-{% if 'farmer' in group_names %}
+{% if 'bear' in group_names %}
 [[inputs.exec]]
   commands = ["/usr/local/bin/farmertelegraf.sh"]
   timeout = "5s"
   data_format = "influx"
+{% endif %}
+
+{% if 'deadspace' in group_names %}
+[[inputs.filestat]]
+  ## These accept standard unix glob matching rules, but with the addition of
+  ## ** as a "super asterisk". See https://github.com/gobwas/glob.
+
+  files = [
+  {% for origin in deadspace %}
+    {% for ds in deadspace[origin] %}
+      {% if inventory_hostname in ds['replicas'] %}
+        "{{ ds.path }}",
+      {% endif %}
+    {% endfor %}
+  {% endfor %}
+
+  ]
+
+  ## If true, read the entire file and calculate an md5 checksum.
+  md5 = false
 {% endif %}
