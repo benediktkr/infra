@@ -119,110 +119,110 @@
     - pip
     - packages
 
-- name: create ou's
-  community.general.ldap_entry:
-    dn: "ou={{ item }},{{ openldap_dc }}"
-    objectClass:
-      - organizationalUnit
-    server_uri: ldap://{{ openldap_url }}/
-    bind_dn: cn=admin,{{ openldap_dc }}
-    bind_pw: "{{ openldap_admin_pass }}"
-  tags:
-    - ldap-users
-    - ldap-groups
-  with_items:
-    - people
-    - services
-    - hosts
+# - name: create ou's
+#   community.general.ldap_entry:
+#     dn: "ou={{ item }},{{ openldap_dc }}"
+#     objectClass:
+#       - organizationalUnit
+#     server_uri: ldap://{{ openldap_url }}/
+#     bind_dn: cn=admin,{{ openldap_dc }}
+#     bind_pw: "{{ openldap_admin_pass }}"
+#   tags:
+#     - ldap-users
+#     - ldap-groups
+#   with_items:
+#     - people
+#     - services
+#     - hosts
 
-- name: remove disabled users
-  community.general.ldap_entry:
-    dn: "uid={{ item.username }},ou=people,{{ openldap_dc }}"
-    state: absent
-    server_uri: ldap://{{ openldap_url }}/
-    bind_dn: cn=admin,{{ openldap_dc }}
-    bind_pw: "{{ openldap_admin_pass }}"
-  loop_control:
-    label: "{{ item.username }}"
-  with_items: "{{ userlist.values()|selectattr('enabled', 'false') }}"
-  tags:
-    - ldap-users
+# - name: remove disabled users
+#   community.general.ldap_entry:
+#     dn: "uid={{ item.username }},ou=people,{{ openldap_dc }}"
+#     state: absent
+#     server_uri: ldap://{{ openldap_url }}/
+#     bind_dn: cn=admin,{{ openldap_dc }}
+#     bind_pw: "{{ openldap_admin_pass }}"
+#   loop_control:
+#     label: "{{ item.username }}"
+#   with_items: "{{ userlist.values()|selectattr('enabled', 'false') }}"
+#   tags:
+#     - ldap-users
 
-- name: add people
-  community.general.ldap_entry:
-    dn: "uid={{ item.username }},ou=people,{{ openldap_dc }}"
-    objectClass:
-      - posixAccount
-      - inetOrgPerson
-    state: present
-    attributes:
-      description: "user for {{ item.username }}"
-      sn: "{{ item.username }}"
-      cn: "{{ item.username }}"
-      uidNumber: "{{ item.uid }}"
-      gidNumber: "{{ item.gid|default(item.uid) }}"
-      homeDirectory: "{{ item.home|default('/home/'+item.username) }}"
-    server_uri: ldap://{{ openldap_url }}/
-    bind_dn: cn=admin,{{ openldap_dc }}
-    bind_pw: "{{ openldap_admin_pass }}"
-  loop_control:
-    label: "{{ item.username }}"
-  with_items: "{{ userlist.values()|selectattr('enabled', 'true') }}"
-  tags:
-    - ldap-users
+# - name: add people
+#   community.general.ldap_entry:
+#     dn: "uid={{ item.username }},ou=people,{{ openldap_dc }}"
+#     objectClass:
+#       - posixAccount
+#       - inetOrgPerson
+#     state: present
+#     attributes:
+#       description: "user for {{ item.username }}"
+#       sn: "{{ item.username }}"
+#       cn: "{{ item.username }}"
+#       uidNumber: "{{ item.uid }}"
+#       gidNumber: "{{ item.gid|default(item.uid) }}"
+#       homeDirectory: "{{ item.home|default('/home/'+item.username) }}"
+#     server_uri: ldap://{{ openldap_url }}/
+#     bind_dn: cn=admin,{{ openldap_dc }}
+#     bind_pw: "{{ openldap_admin_pass }}"
+#   loop_control:
+#     label: "{{ item.username }}"
+#   with_items: "{{ userlist.values()|selectattr('enabled', 'true') }}"
+#   tags:
+#     - ldap-users
 
-- name: adding attrs for users
-  community.general.ldap_attrs:
-    dn: "uid={{ item.username }},ou=people,{{ openldap_dc }}"
-    attributes:
-      userPassword: "{{ item.ldap_password|default('') }}"
-      #homeDirectory: "/home/{{ item.username }}"
-      # sshPublicKey: schema here: http://pig.made-it.com/ldap-openssh.html
-      roomNumber: "{% if False %}{{ lookup('file', 'private/sshkeys/' + item.username + '.pub')}}{% else %} {% endif %}"
-      loginShell: "{{ item.shell|default('/bin/zsh') }}"
-      mail:  "{{ item.email|default('') }}"
-    state: exact
-    server_uri: ldap://{{ openldap_url }}/
-    bind_dn: cn=admin,{{ openldap_dc }}
-    bind_pw: "{{ openldap_admin_pass }}"
-  with_items: "{{ userlist.values()|selectattr('enabled', 'true') }}"
-  loop_control:
-    label: "{{ item.username }}"
-  tags:
-    - ldap-users
+# - name: adding attrs for users
+#   community.general.ldap_attrs:
+#     dn: "uid={{ item.username }},ou=people,{{ openldap_dc }}"
+#     attributes:
+#       userPassword: "{{ item.ldap_password|default('') }}"
+#       #homeDirectory: "/home/{{ item.username }}"
+#       # sshPublicKey: schema here: http://pig.made-it.com/ldap-openssh.html
+#       roomNumber: "{% if False %}{{ lookup('file', 'private/sshkeys/' + item.username + '.pub')}}{% else %} {% endif %}"
+#       loginShell: "{{ item.shell|default('/bin/zsh') }}"
+#       mail:  "{{ item.email|default('') }}"
+#     state: exact
+#     server_uri: ldap://{{ openldap_url }}/
+#     bind_dn: cn=admin,{{ openldap_dc }}
+#     bind_pw: "{{ openldap_admin_pass }}"
+#   with_items: "{{ userlist.values()|selectattr('enabled', 'true') }}"
+#   loop_control:
+#     label: "{{ item.username }}"
+#   tags:
+#     - ldap-users
 
-- name: service groups
-  community.general.ldap_entry:
-    dn: "cn={{ item }},ou=services,{{ openldap_dc }}"
-    objectClass:
-      - groupOfUniqueNames
-    state: present
-    attributes:
-      uniqueMember: "{{ openldap_dc }}"
-    server_uri: ldap://{{ openldap_url }}/
-    bind_dn: cn=admin,{{ openldap_dc }}
-    bind_pw: "{{ openldap_admin_pass }}"
-  loop_control:
-    label: "{{ item }}"
-  with_items: "{{ openldap_groups }}"
-  tags:
-    - ldap-users
-    - ldap-groups
+# - name: service groups
+#   community.general.ldap_entry:
+#     dn: "cn={{ item }},ou=services,{{ openldap_dc }}"
+#     objectClass:
+#       - groupOfUniqueNames
+#     state: present
+#     attributes:
+#       uniqueMember: "{{ openldap_dc }}"
+#     server_uri: ldap://{{ openldap_url }}/
+#     bind_dn: cn=admin,{{ openldap_dc }}
+#     bind_pw: "{{ openldap_admin_pass }}"
+#   loop_control:
+#     label: "{{ item }}"
+#   with_items: "{{ openldap_groups }}"
+#   tags:
+#     - ldap-users
+#     - ldap-groups
 
-- name: adding users to groups
-  community.general.ldap_attrs:
-    dn: "cn={{ item[0] }},ou=services,{{ openldap_dc }}"
-    attributes:
-      uniqueMember: "uid={{ item[1].username }},ou=people,{{ openldap_dc }}"
-    state: "{% if item[0] in item[1].ldap_groups|default([]) %}present{%else%}absent{%endif%}"
-    server_uri: ldap://{{ openldap_url }}/
-    bind_dn: cn=admin,{{ openldap_dc }}
-    bind_pw: "{{ openldap_admin_pass }}"
-  loop_control:
-    label: "{{ item[1].username }}/{{ item[0] }} {% if item[0] in item[1].ldap_groups|default([]) %}present{%else%}absent{%endif%}"
-  with_nested:
-    - "{{ openldap_groups }}"
-    - "{{ userlist.values()|selectattr('enabled', 'true') }}"
-  tags:
-    - ldap-users
-    - ldap-groups
+# - name: adding users to groups
+#   community.general.ldap_attrs:
+#     dn: "cn={{ item[0] }},ou=services,{{ openldap_dc }}"
+#     attributes:
+#       uniqueMember: "uid={{ item[1].username }},ou=people,{{ openldap_dc }}"
+#     state: "{% if item[0] in item[1].ldap_groups|default([]) %}present{%else%}absent{%endif%}"
+#     server_uri: ldap://{{ openldap_url }}/
+#     bind_dn: cn=admin,{{ openldap_dc }}
+#     bind_pw: "{{ openldap_admin_pass }}"
+#   loop_control:
+#     label: "{{ item[1].username }}/{{ item[0] }} {% if item[0] in item[1].ldap_groups|default([]) %}present{%else%}absent{%endif%}"
+#   with_nested:
+#     - "{{ openldap_groups }}"
+#     - "{{ userlist.values()|selectattr('enabled', 'true') }}"
+#   tags:
+#     - ldap-users
+#     - ldap-groups
