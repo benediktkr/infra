@@ -1,5 +1,5 @@
 ## https://jellyfin.org/docs/general/networking/nginx.html
-{% set domain = jellyfin_url.split('.')[-2:] | join(".")  %}
+{% set domain = jellyfin_url.split('.')[1:] | join(".")  %}
 
 server {
     listen 80;
