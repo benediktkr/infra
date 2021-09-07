@@ -1,11 +1,78 @@
 #!/usr/bin/env python3
 
 import os
+import sys
 
+from psutil import Process, NoSuchProcess
 import requests
 
 import sudoisinflux
 
+def lockfile(path):
+
+    def inner(func):
+
+        def wrapper(*args, **kwargs):
+            try:
+                with open(path, 'r') as f:
+                    lockfile_pid = int(f.read().strip())
+                p = Process(lockfile_pid)
+                print(f"pid {lockfile_pid} has status '{p.status()}'")
+            except FileNotFoundError as e:
+                # no lockfile exists, proceed as normally
+                pass
+            except NoSuchProcess:
+                # lockfile left over from a dead process
+                # for now lets try removing it and running
+                os.remove(path)
+
+            # 'x' = raises FileExistsError (errno 17) if file exists
+            with open(path, 'x') as f:
+                pid = os.getpid()
+                f.write(f"{pid}")
+            try:
+                func(*args, **kwargs)
+            finally:
+                os.remove(path)
+
+        return wrapper
+
+    return inner
+
+
+@lockfile("/tmp/xmrigmonitor-poolstats.lock")
+def poolstats():
+    try:
+       r = requests.get("{{ xmrig_pool_url }}",
+                        params={
+                            "address": "{{ xmrig_addr }}",
+                            "longpoll": "false"
+                        },
+                        headers={"accept": "application/json"})
+       r.raise_for_status()
+    except requests.exceptions.RequestException:
+        return
+
+    j = r.json()
+
+    def xmr(piconero):
+        return float(int(piconero) * 10**(-12))
+
+    tags = {
+        'host': '{{ inventory_hostname }}',
+        "address": "{{ xmrig_addr }}",
+    }
+
+    s = j['stats']
+    fields = {
+        'balance': xmr(s['balance']),
+        'last_reward': xmr(s['last_reward'])
+    }
+
+    datapoint = sudoisinflux.datapoint('xmrpool', tags, fields)
+    sudoisinflux.write([datapoint], precision="m")
+
+@lockfile("/tmp/xmrigmonitor.lock")
 def xmrigmonitor():
     try:
         r = requests.get("http://localhost:{{ xmrig_http_port }}/1/summary")
@@ -33,19 +100,12 @@ def xmrigmonitor():
     }
 
     datapoint = sudoisinflux.datapoint('xmrig', tags, fields)
-
     sudoisinflux.write([datapoint])
+
 
 if __name__ == "__main__":
 
-    lockfile = "/tmp/xmrigmonitor.lock"
-
-    # 'x' = raises FileExistsError (errno 17) if file exists
-    with open(lockfile, 'x') as f:
-        pid = os.getpid()
-        f.write("{pid}")
-
-    try:
+    if "--poolstats" in sys.argv:
+        poolstats()
+    else:
         xmrigmonitor()
-    finally:
-        os.remove(lockfile)

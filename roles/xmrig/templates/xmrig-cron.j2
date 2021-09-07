@@ -2,5 +2,8 @@
 
 # m h dom mon dow
 * * * * * {{ xmrig_user }} /usr/local/bin/xmrigmonitor.py
+{% if 'xmrig_primary' in group_names %}
+* * * * * {{ xmrig_user }} /usr/local/bin/xmrigmonitor.py --poolstats
+{% endif %}
 
 #

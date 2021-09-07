@@ -1,5 +1,14 @@
 ---
 
+- name: install packages
+  apt:
+    name:
+      - msr-tools
+      - i2c-tools # decode-dimms
+    state: latest
+  tags:
+    - packages
+
 - name: template xmrig monitor script
   template:
     src: xmrigmonitor.py.j2
