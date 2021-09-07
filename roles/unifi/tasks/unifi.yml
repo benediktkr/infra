@@ -7,7 +7,7 @@
     mode: 0750
     owner: unifi
     group: unifi
-    recurse: yes
+    recurse: no
 
 # to adopt
 # ssh unifi-ap
@@ -39,6 +39,7 @@
       RUNAS_UID0: "false"
       UNIFI_UID: "{{ systemuserlist['unifi']['uid'] }}"
       UNIFI_GID: "{{ systemuserlist['unifi']['gid'] }}"
+    container_default_behavior: compatibility
     volumes:
       - "{{ unifi_root }}:/unifi"
     ports:
