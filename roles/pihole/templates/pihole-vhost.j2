@@ -1,14 +1,11 @@
 server {
-   {% if pihole_nginx_interface|default("") != "" %}
-
-   listen {{ pihole_nginx_interface }}:443 ssl;
-
-   {% else %}
-
    listen 443 ssl;
    listen   [::]:443 ssl; # listen for ipv6
 
-   {% endif %}
+   {% for cidr in my_local_cidrs -%}
+   allow {{ cidr }};
+   {% endfor -%}
+   deny all;
 
    server_name {{ pihole_url }};
 
@@ -36,8 +33,8 @@ server {
 
     ssl_session_timeout 5m;
 
-    ssl_certificate /etc/letsencrypt/live/{{ pihole_url.split('.')[-2:] | join(".")  }}/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/{{ pihole_url.split('.')[-2:] | join(".")  }}/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/{{ pihole_url.split('.')[1:] | join(".")  }}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/{{ pihole_url.split('.')[1:] | join(".")  }}/privkey.pem;
 
     add_header Referrer-Policy "no-referrer" always;
     add_header X-Content-Type-Options "nosniff" always;
