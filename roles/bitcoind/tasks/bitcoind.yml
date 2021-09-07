@@ -11,17 +11,17 @@
 
 # the image has a user to run bitcoind, but it is set to uid 1000
 
-- name: start container
+- name: dont start container
   docker_container:
     name: bitcoind
     hostname: bitcoind
     image: kylemanna/bitcoind:latest
     container_default_behavior: compatibility
-    auto_remove: yes     # auto remove and no restart policy better for reboots
+    auto_remove: no
     detach: yes
     pull: yes
     restart_policy: "no"
-    state: started
+    state: stopped
     user: "{{ systemuserlist.bitcoind.uid }}:{{ systemuserlist.bitcoind.gid }}"
     ports:
       - 8333:8333
