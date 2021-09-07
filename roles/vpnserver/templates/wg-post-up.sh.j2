@@ -2,23 +2,15 @@
 
 set -e
 
-sleep 5
+iptables -t nat -A POSTROUTING -s {{ wireguard_cidr }} -o {{ ansible_default_ipv4.interface  }} -j MASQUERADE
 
-{% if 'pihole' is in group_names %}
-dgw=$(ip r | grep default | awk '{print $3}' | head -n 1)
-
-ip route del {{ upstream_dns_1 }}/32 via $dgw metric 0 || true
-ip route del {{ upstream_dns_2 }}/32 via $dgw metric 0 || true
-
-ip route add {{ upstream_dns_1 }}/32 via $dgw metric 0
-ip route add {{ upstream_dns_2 }}/32 via $dgw metric 0
-{% endif %}
-
-{% for host in wireguard_endpoints.values() %}
-{%   if 'endpoint_for' in wireguard_clients[host] %}
-{%     set serverip = wireguard_clients[host]['ip'] %}
-ping -c 1 {{ serverip }} || true
-{%   endif %}
-{% endfor %}
+# sleep 5
+#
+# {% for host in wireguard_endpoints.values() %}
+# {%   if 'endpoint_for' in wireguard_clients[host] %}
+# {%     set serverip = wireguard_clients[host]['ip'] %}
+# ping -c 1 {{ serverip }} || true
+# {%   endif %}
+# {% endfor %}
 
 exit 0
