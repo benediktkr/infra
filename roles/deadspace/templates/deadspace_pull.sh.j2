@@ -1,11 +1,14 @@
 #!/bin/bash
 
-# {{ template_path[a_prefix:] }}
+# {{ template_path }}
 
 # NOTE: chattr, -f is set:
 #       -f     Suppress most error messages
 
 set -e
+
+LOCKFILE={{ deadspace_pull_lockfile }}
+lockfile -r 0 $LOCKFILE
 
 function cleanup {
     rm -f $LOCKFILE
@@ -15,11 +18,8 @@ trap cleanup EXIT
 
 {% set user = deadspace_user %}
 
-LOCKFILE={{ deadspace_pull_lockfile }}
-lockfile -r 0 $LOCKFILE
-
 IGNORE="{% for excl in deadspace_ignore %}--exclude {{ excl }} {% endfor %}"
-PARAMS="-rahS --numeric-ids --delete-after "
+PARAMS="-rahS --numeric-ids --delete-after --safe-links "
 if [[ "$1" == "-v" ]]; then
     PARAMS="$PARAMS --info=progress2"
 fi
@@ -35,16 +35,19 @@ EXCLUDE="$IGNORE --exclude {{ inventory_hostname }}/"
 EXCLUDE="$IGNORE "
 {% endif %}
 
+mkdir -p {{ item.path }}
 stat {{ item.path }} > /dev/null
+
 chattr -fR -i {{ item.path }} || true
 
-rsync -e "ssh -i {{ deadspace_sshkey }}" $PARAMS $EXCLUDE {{ user }}@{{ origin }}:{{ item.path }}/ {{ item.path }}/
+rsync -e "ssh -i {{ deadspace_sshkey }}" $PARAMS $EXCLUDE {{ user }}@{{ origin }}:{{ item.path }}/ {{ item.path }}/ || true
 
 echo "origin: {{ origin }}
 path: {{ item.path }}
 state: replica
 comment: {{ item.comment|default("") }}
 updated: $(date -Is)" > {{ item.path }}/.deadspace-info
+chmod 644 {{ item.path }}/.deadspace-info
 
 {% if 'rsnapshot/' in item.path %}
 echo "did not rsync my own backup from origin" > {{ item.path }}/{{ inventory_hostname }}.txt
