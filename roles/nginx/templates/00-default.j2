@@ -22,11 +22,20 @@ server {
   server_name {{ inventory_hostname }};
 
   root /var/www/html;
+
   location = /server_status {
     stub_status;
+
+    access_log off;
+
     allow 127.0.0.1;
+    {% if 'address' in ansible_default_ipv4 -%}
+    allow {{ ansible_default_ipv4.address }};
+    {% endif -%}
+    {% if ansible_default_ipv6 is defined and 'address' in ansible_default_ipv6 -%}
+    allow {{ ansible_default_ipv6.address }};
+    {%endif -%}
     deny all;
-    access_log /var/log/nginx/access_server_status.loog;
   }
 
 {% for dir, proxypass in nginx_subdirs.items() %}

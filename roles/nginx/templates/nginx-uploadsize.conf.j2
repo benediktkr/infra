@@ -1,7 +1,9 @@
 # managed by ansible.
-#
+
+{% if 'rpi' not in group_names %}
 # This has no effects in a server-block, but seems to work
 # somewhat in /etc/nginx/conf.d
 
 client_max_body_size 2G;
 proxy_max_temp_file_size 2048m;
+{% endif %}

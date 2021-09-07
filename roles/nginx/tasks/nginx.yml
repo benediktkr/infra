@@ -21,7 +21,8 @@
   apt:
     name:
       - nginx
-      - nginx-extras
+      - nginx-full
+      - libnginx-mod-http-fancyindex
       - uwsgi
       - uwsgi-plugin-python3
       - apache2-utils
@@ -34,6 +35,7 @@
     - packages
     - wwwsudois
     - www.sudo.is
+    - apt.sudo.is
 
 # - name: create dh file
 #   command: openssl dhparam -out /etc/nginx/dhparam.pem 4096
@@ -82,7 +84,9 @@
     src: 00-default.j2
     dest: "/etc/nginx/sites-enabled/00-default"
   notify: reload nginx
-  tags: nginx-config
+  tags:
+    - nginx-config
+    - default-vhost
 
 - name: cleanup
   file:
@@ -113,5 +117,5 @@
 - name: start and enable nginx
   service:
     name: nginx
-    enabled: yes
+    enabled: true
     state: started
