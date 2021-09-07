@@ -29,10 +29,13 @@
     src: "{{ item }}"
     dest: /etc/ssh/
   with_fileglob: "private/ssh_host_keys/sensor-image/ssh_host_*"
+  notify: reload sshd
   tags:
     - never
     - image
     - hostkeys
+
+- meta: flush_handlers
 
 - name: make dir for host keys
   file:
@@ -82,7 +85,7 @@
 - name: update apt cache
   apt:
     update_cache: yes
-  changed_when: False
+  #changed_when: False
   tags:
     - packages
 
@@ -101,15 +104,15 @@
     - packages
     - python3
 
-- name: correct python3 version selected on ubuntu
-  alternatives:
-    name: python3
-    path: /usr/bin/python3.9
-    link: /usr/bin/python3
-  tags:
-    - packages
-    - alternatives
-  when: ansible_distribution == "Ubuntu"
+# - name: correct python3 version selected on ubuntu
+#   alternatives:
+#     name: python3
+#     path: /usr/bin/python{{ python3_version }}
+#     link: /usr/bin/python3
+#   tags:
+#     - packages
+#     - alternatives
+#   when: ansible_distribution == "Ubuntu"
 
 # - name: remove packages that should only be on mainframe
 #   apt:
@@ -155,6 +158,7 @@
       - cbm
       - cron
       - cryptsetup
+      - cryptsetup-initramfs
       - curl
       - dnsutils
       - file
@@ -208,6 +212,7 @@
       - influxdb
       - loguru
       - requests
+      - psutil
     state: latest
     executable: pip3
   tags:
@@ -450,9 +455,10 @@
 
 - name: add apt.sudo.is repo
   apt_repository:
-    repo: "deb https://{{ apt_url }}/ /"
+    repo: "deb https://{{ apt_url }} /"
     state: present
-    update_cache: yes
+    filename: "{{ apt_url }}"
+    update_cache: true
   tags:
     - packages
     - apt.sudo.is

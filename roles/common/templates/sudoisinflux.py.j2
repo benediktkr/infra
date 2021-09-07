@@ -37,12 +37,15 @@ def write_datapoint(measurement, tags, fields, db="metrics", precision="m"):
     )
 
 
-def write(datapoints, db="metrics", precision='m', dry_run=False):
+def write(datapoints, db="metrics", precision='m', dry_run=False, passwd=None):
+    if passwd is None:
+        passwd = dbs[db]
+
     client = InfluxDBClient(
         host='{{ influxdb_url }}',
         port=443,
         username=db,
-        password=dbs[db],
+        password=passwd,
         ssl=True,
         verify_ssl=True,
         database=db)

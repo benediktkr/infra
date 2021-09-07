@@ -1,4 +1,4 @@
 ---
 
 telegraf_smart_disks: false
-telegraf_sensors: false
+telegraf_sensors: true
