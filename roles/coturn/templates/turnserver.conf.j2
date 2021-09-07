@@ -1,0 +1,66 @@
+use-auth-secret
+static-auth-secret={{ coturn_static_auth_secret }}
+realm={{ coturn_url }}
+
+# logs
+#syslog
+log-file=/tmp/coturn.log
+
+# VoIP traffic is all UDP. no reason to let users connect to any TCP endpoints
+# via the relay.
+no-tcp-relay
+
+denied-peer-ip=10.0.0.0-10.255.255.255
+denied-peer-ip=192.168.0.0-192.168.255.255
+denied-peer-ip=172.16.0.0-172.31.255.255
+
+# special case the turn server itself so that client->TURN->TURN->client
+# flows work
+allowed-peer-ip={{ wireguard_clients[inventory_hostname]['ip'] }}
+
+# its possible to limit the quota of relayed streams per user (or
+total) to avoid risk of DoS.
+#
+# 4 streams per video call, so 12 streams = 3 simultaneous relayed calls
+# per user.
+user-quota=12
+total-quota=1200
+
+cert=/etc/letsencrypt/live/{{ inventory_hostname.split('.')[1:] | join(".") }}/fullchain.pem
+pkey=/etc/letsencrypt/live/{{ inventory_hostname.split('.')[1:] | join(".") }}/privkey.pem
+
+no-tlsv1
+no-tlsv1_1
+no-tlsv1_2
+
+# interesting parts from debian example file:
+
+# cli is on by default with these settings
+#no-cli
+#cli-ip=127.0.0.1
+#cli-port=5766
+
+# Enable Web-admin support on https. By default it is Disabled.
+# If it is enabled it also enables a http a simple static banner page
+# with a small reminder that the admin page is available only on https.
+#
+#web-admin
+
+# Local system IP address to be used for Web-admin server endpoint. Default value is 127.0.0.1.
+#
+#web-admin-ip=127.0.0.1
+
+# Web-admin server port. Default is 8080.
+#
+#web-admin-port=8080
+
+# Web-admin server listen on STUN/TURN worker threads
+# By default it is disabled for security resons! (Not recommended in any production environment!)
+#
+#web-admin-listen-on-workers
+#acme-redirect=http://redirectserver/.well-known/acme-challenge/
+# Redirect ACME, i.e. HTTP GET requests matching '^/.well-known/acme-challenge/(.*)' to '<URL>$1'.
+# Default is '', i.e. no special handling for such requests.
+
+# exposes path /metrics on port 9641
+#prometheus

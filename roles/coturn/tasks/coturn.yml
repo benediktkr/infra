@@ -1,0 +1,32 @@
+---
+
+- name: install coturn
+  apt:
+    name: coturn
+    state: latest
+    update_cache: true
+  notify: restart coturn
+  tags:
+    - packages
+
+- name: template coturn config
+  template:
+    src: turnserver.conf.j2
+    dest: /etc/turnserver.conf
+  notify: restart coturn
+
+- meta: flush_handlers
+
+- name: enable and start coturn
+  service:
+    name: coturn
+    state: started
+    enabled: true
+  when: coturn_enabled|default(false)
+
+- name: stop and disable coturn
+  service:
+    name: coturn
+    state: stopped
+    enabled: false
+  when: not coturn_enabled|default(false)
