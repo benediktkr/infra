@@ -63,6 +63,7 @@
     detach: yes
     pull: yes
     state: "{{ item.state | default('started') }}"
+    restart_policy: "unless-stopped"
     container_default_behavior: compatibility
     env:
       REDIS_HOST: "redis_{{ item.name }}"
@@ -90,20 +91,24 @@
     name: "{{ item.name }}"
     hostname: "{{ item.name }}"
     image: "nextcloud:{{ item.version }}"
-    auto_remove: yes
+    auto_remove: no
     detach: yes
     pull: yes
     state: "{{ item.state | default('started') }}"
-    restart_policy: "no"
+    restart_policy: "unless-stopped"
     container_default_behavior: compatibility
     env:
       NEXTCLOUD_DATA_DIR: "/data"
     ports:
       - "127.0.0.1:{{ item.exposed_port }}:{{ item.container_port }}"
-    volumes:
-      - "{{ item.root }}/data:/data"
-      - "{{ item.root }}/html:/var/www/html"
-      - /var/run/mysqld/mysqld.sock:/var/run/mysqld/mysqld.sock
+    mounts:
+      - type: bind
+        source: "{{ item.root }}/data"
+        target: /data
+      - type: bind
+        source: "{{ item.root }}/html"
+        target: /var/www/html
+
     networks_cli_compatible: no
     networks:
       - name: bridgewithdns

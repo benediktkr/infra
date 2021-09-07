@@ -21,11 +21,11 @@ server {
   # in all major browsers and getting removed from this list
   # could take several months.
   add_header Referrer-Policy "no-referrer" always;
-  add_header X-Content-Type-Options "nosniff" always;
-  add_header X-Download-Options "noopen" always;
-  add_header X-Frame-Options "SAMEORIGIN" always;
-  add_header X-Permitted-Cross-Domain-Policies "none" always;
-  add_header X-Robots-Tag "none" always;
+  #add_header X-Content-Type-Options "nosniff" always;
+  #add_header X-Download-Options "noopen" always;
+  #add_header X-Frame-Options "SAMEORIGIN" always;
+  #add_header X-Permitted-Cross-Domain-Policies "none" always;
+  #add_header X-Robots-Tag "none" always;
   add_header X-XSS-Protection "1; mode=block" always;
 
   # telling cloudflare to not proxy anything
@@ -54,7 +54,7 @@ server {
     proxy_set_header   X-Real-IP $remote_addr;
     proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header   X-Forwarded-Host $server_name;
-    proxy_pass_request_headers on;
+
   }
 
   location = /.well-known/carddav {
