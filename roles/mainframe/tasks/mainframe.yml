@@ -40,12 +40,31 @@
       - certbot
       - netaddr
       - certbot-dns-cloudflare
+      - feedparser
+      - loguru
+      - youtube-dl
+      - bdfr
+      - matrix_client
     state: latest
     executable: pip3
   tags:
-    - remove-packages
+    - archive
     - pip
     - packages
+
+- name: template config files for scripts
+  template:
+    src: "{{ item }}.j2"
+    dest: "/usr/local/etc/{{ item }}"
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - scripts
+    - archive
+    - archive-scripts
+  with_items:
+    - podcast.json
 
 - name: template scripts
   template:
@@ -54,9 +73,15 @@
     owner: root
     group: root
     mode: 0755
-  tags: scripts
   with_items:
-    - ghsync.sh
+    - archive-podcast.py
+    - youtube-dl-mirrors.sh
+    - reddit-archives.sh
+    - matrixmsg.py
+  tags:
+    - scripts
+    - archive
+    - archive-scripts
 
 - name: cron file
   template:
@@ -66,7 +91,10 @@
     group: root
     mode: 0600
   tags:
+    - cron
     - mainframe-cron
+    - archive
+    - archive-scripts
 
 - name: convergence dir on {{ git_cron.tools_url }}
   file:

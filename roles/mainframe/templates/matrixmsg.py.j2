@@ -1,0 +1,28 @@
+#!/usr/bin/env python3
+
+import argparse
+from matrix_client.client import MatrixClient
+
+
+def get_room_by_alias(client, alias):
+    for roomid, room in client.get_rooms().items():
+        if room.canonical_alias == alias:
+            return room
+    else:
+        raise RuntimeError(f"room '{alias}' not found!")
+
+def main():
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument("-m", "--msg", type=str, required=True)
+    parser.add_argument("-r", "--room", type=str, default="{{ matrix_bot.default_room }}", help="room to send msg to")
+
+    args = parser.parse_args()
+
+    client = MatrixClient("https://{{ matrix_url }}")
+    token = client.login(username="{{ matrix_bot.user }}", password="{{ matrix_bot.passwd }}")
+
+    room = get_room_by_alias(client, args.room)
+    room.send_text(args.msg)
+
+if __name__ == "__main__":
+    main()

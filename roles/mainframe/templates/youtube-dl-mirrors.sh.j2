@@ -1,0 +1,29 @@
+#!/bin/bash
+
+LOCKFILE=/tmp/youtube-dl-mirrors.lock
+
+lockfile -r 0 $LOCKFILE || exit 1
+
+{% set UA = "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:90.0) Gecko/20100101 Firefox/90.0" %}
+
+UA_VAL=
+UA="--user-agent \"${UA_VAL}\""
+
+du -sh {{ archives.youtube.path }}
+
+{% for channel in archives.youtube.channels %}
+
+(
+    mkdir -p {{ archives.youtube.path }}/{{ channel.name }}/
+    cd {{ archives.youtube.path }}/{{ channel.name }}/
+    youtube-dl --user-agent "{{ UA }}" -i {{ channel.url }}
+)
+
+
+{% endfor %}
+
+du -sh {{ archives.youtube.path }}
+find {{ archives.youtube.path }} -ctime -7
+
+
+rm -f $LOCKFILE

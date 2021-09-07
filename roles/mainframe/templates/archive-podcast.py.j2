@@ -1,0 +1,100 @@
+#!/usr/bin/env python3
+#
+
+import argparse
+import json
+from datetime import datetime
+import time
+import os
+import subprocess
+import sys
+
+import feedparser
+from loguru import logger
+
+def get_file_url(links):
+    for item in links:
+        if item['rel'] != "alternate" and item['type'] != "text/html":
+            return item['href']
+
+    else:
+        logger.error("\n" + json.dumps(links, indent=2))
+        raise RuntimeError(f"no mp3 url found")
+
+def download_file(url, dest):
+    subprocess.run(['wget', '-c', '--content-disposition', '-q', '-P', dest, url])
+
+def parse_feed(url, path):
+    d = feedparser.parse(url)
+
+    for item in d['entries']:
+        download_episode(item, path)
+
+def download_episode(item, path):
+    podcastpath = os.path.join(path, item['title'])
+    if os.path.exists(podcastpath):
+        logger.debug(f"already downloaded: '{item['title']}'")
+
+
+    else:
+
+        os.makedirs(podcastpath, exist_ok=False)
+        try:
+            download_file(get_file_url(item['links']), podcastpath)
+        except RuntimeError as f:
+            logger.error(f"{item['title']}: {e}")
+            # crash
+            raise
+
+        logger.info(f"downloaded: '{item['title']}'")
+
+        with open(os.path.join(podcastpath, 'info.json'), 'w') as f:
+            f.write(json.dumps(item, indent=2))
+
+        published = datetime(*item['published_parsed'][0:7])
+        ctime = time.mktime(published.timetuple())
+
+        for f in os.listdir(podcastpath):
+            if '?' in f:
+                old = os.path.join(podcastpath, f)
+                new = os.path.join(podcastpath, '1.mp3')
+                os.rename(old, new)
+                os.utime(new, (ctime, ctime))
+                logger.info("1.mp3")
+            else:
+                os.utime(os.path.join(podcastpath, f), (ctime, ctime))
+                if f != "info.json":
+                    logger.info(f)
+
+        os.utime(podcastpath, (ctime, ctime))
+
+
+@logger.catch
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('name', type=str, help="podcast name in config")
+    parser.add_argument('--debug', action="store_true", help="print DEBUG to stderr")
+    args = parser.parse_args()
+
+    with open('/usr/local/etc/podcast.json', 'r') as f:
+        config = json.load(f)[args.name]
+
+
+    if not args.debug:
+        stderr_loglevel = config.get("stderr_loglevel", "INFO")
+        logger.remove()
+        logger.add(sys.stderr, level=stderrloglevel)
+    else:
+        # do nothing, --debug causes DEBUG logs to stderr
+        pass
+
+    if 'logfile' in config:
+        logfile_loglevel = config.get("logfile_loglevel", "INFO")
+        logger.add(config['logfile'], level=logfile_loglevel)
+
+
+    os.makedirs(config['path'], exist_ok=True)
+    parse_feed(config['rss_url'], config['path'])
+
+if __name__ == "__main__":
+    main()

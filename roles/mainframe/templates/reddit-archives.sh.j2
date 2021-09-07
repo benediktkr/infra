@@ -1,0 +1,10 @@
+#!/bin/bash
+
+
+LOCKFILE=/tmp/reddit-archives.lock
+
+lockfile -r 0 $LOCKFILE || exit 1
+
+python3 -m bdfr clone {{ archives.reddit.path }}/r/ --make-hard-links --no-dupes --search-existing --subreddit "{{ archives.reddit.subreddits | join(',') }}" --file-scheme "{DATE}_{POSTID}_{TITLE}_{REDDITOR}" --sort new
+
+rm -f $LOCKFILE
