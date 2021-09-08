@@ -191,7 +191,7 @@
     auto_remove: no
     detach: yes
     pull: yes
-    restart_policy: "no"
+    restart_policy: "unless-stopped"
     state: started
     container_default_behavior: compatibility
     networks_cli_compatible: no
