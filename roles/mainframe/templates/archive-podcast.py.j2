@@ -35,7 +35,6 @@ def download_episode(item, path):
     if os.path.exists(podcastpath):
         logger.debug(f"already downloaded: '{item['title']}'")
 
-
     else:
 
         os.makedirs(podcastpath, exist_ok=False)
@@ -79,14 +78,14 @@ def main():
     with open('/usr/local/etc/podcast.json', 'r') as f:
         config = json.load(f)[args.name]
 
-
     if not args.debug:
         stderr_loglevel = config.get("stderr_loglevel", "INFO")
         logger.remove()
         logger.add(sys.stderr, level=stderrloglevel)
     else:
         # do nothing, --debug causes DEBUG logs to stderr
-        pass
+        logger.debug(f"{args.name}: {config['path']}")
+
 
     if 'logfile' in config:
         logfile_loglevel = config.get("logfile_loglevel", "INFO")

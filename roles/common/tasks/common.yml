@@ -82,13 +82,6 @@
   tags:
     - timezone
 
-- name: update apt cache
-  apt:
-    update_cache: yes
-  #changed_when: False
-  tags:
-    - packages
-
 - name: install python3
   apt:
     name:
@@ -99,6 +92,7 @@
       - python3-venv
       - python3-dev
       - python-setuptools
+    update_cache: true
     state: latest
   tags:
     - packages

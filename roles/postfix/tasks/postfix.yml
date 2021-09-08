@@ -80,8 +80,10 @@
 - name: set permissions on maildrop dir for telegraf
   file:
     dest: /var/spool/postfix/maildrop
-    mode: u=rwx,g=rwx,+t
+    #mode: u=rwx,g=rwx,+t
+    mode: 0755
     recurse: yes
   notify: restart postfix
   tags:
+    - maildrop-perm
     - telegraf

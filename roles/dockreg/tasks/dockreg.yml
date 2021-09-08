@@ -25,6 +25,7 @@
     user: "{{ systemuserlist.dockreg.uid }}:{{ systemuserlist.dockreg.gid }}"
     env:
       REGISTRY_HTTP_ADDR: "{{ bridgewithdns.dockreg }}:{{ dockreg_port }}"
+    network_mode: bridgewithdns
     networks:
       - name: bridgewithdns
         ipv4_address: "{{ bridgewithdns.dockreg }}"
