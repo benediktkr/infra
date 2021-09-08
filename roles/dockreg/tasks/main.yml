@@ -1,0 +1,3 @@
+---
+ - include: dockreg.yml
+   tags: dockreg

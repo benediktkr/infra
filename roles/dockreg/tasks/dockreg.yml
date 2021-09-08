@@ -1,0 +1,38 @@
+---
+
+
+- name: make dirs
+  file:
+    path: "{{ systemuserlist.dockreg.home }}/{{ item.name }}"
+    state: directory
+    mode: "{{ item.mode|default(750) }}"
+    owner: "{{ item.owner|default('dockreg') }}"
+    group: dockreg
+  with_items:
+    - name: registry
+
+- name: start registry container
+  docker_container:
+    name: dockreg
+    image: registry:2
+    auto_remove: no
+    detach: yes
+    pull: yes
+    restart_policy: "unless-stopped"
+    state: started
+    container_default_behavior: compatibility
+    networks_cli_compatible: no
+    user: "{{ systemuserlist.dockreg.uid }}:{{ systemuserlist.dockreg.gid }}"
+    env:
+      REGISTRY_HTTP_ADDR: "{{ bridgewithdns.dockreg }}:{{ dockreg_port }}"
+    networks:
+      - name: bridgewithdns
+        ipv4_address: "{{ bridgewithdns.dockreg }}"
+    mounts:
+      - type: bind
+        source: "{{ systemuserlist.dockreg.home }}/registry"
+        target: /var/lib/registry
+        read_only: no
+  tags:
+    - dockreg-container
+    - docker-containers

@@ -104,6 +104,7 @@
   tags:
     - nginx-config
     - nginx-vhosts
+    - nginx-vhost-proxies
   notify: reload nginx
 
 - name: copy vhosts (specific roles copy/template their own)
