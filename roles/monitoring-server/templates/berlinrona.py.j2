@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 """data from: https://daten.berlin.de/datensaetze/covid-19-berlin-verteilung-den-bezirken
+              https://daten.berlin.de/datensaetze/covid-19-berlin-verteilung-nach-altersgruppen
 """
 
 from datetime import datetime, timezone
@@ -27,7 +28,7 @@ logger.add(
     compression="zip"
 )
 
-url = "https://www.berlin.de/lageso/gesundheit/infektionsepidemiologie-infektionsschutz/corona/tabelle-bezirke/index.php/index/all.json?q="
+url = "https://www.berlin.de/lageso/gesundheit/infektionskrankheiten/corona/tabelle-bezirke/index.php/index/all.json?q="
 
 if __name__ == "__main__":
 
