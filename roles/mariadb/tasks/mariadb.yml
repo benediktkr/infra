@@ -7,6 +7,7 @@
     name:
       - mariadb-server
       - mariadb-client
+      - python3-pymysql
     state: present
   tags:
     - packages
@@ -16,14 +17,6 @@
     src: 50-server.cnf.j2
     dest: /etc/mysql/mariadb.conf.d/50-server.cnf
   notify: restart mariadb
-
-- name: mariadb users and dbs
-  template:
-    src: users.sql.j2
-    dest: /usr/local/etc/users.sql
-  notify: reload mariadb users
-  tags:
-    - users
 
 - name: create dump destination
   file:
@@ -35,6 +28,47 @@
   when: mariadb_dump_path is defined
 
 
+- name: create dbs
+  mysql_db:
+    name: "{{ item.value.username }}"
+    encoding: utf8mb4
+    collation: utf8mb4_general_ci
+    login_unix_socket: /run/mysqld/mysqld.sock
+  with_dict: "{{ systemuserlist }}"
+  when: item.value.mariadb|default(False)
+  loop_control:
+    label: "{{ item.value.username }}"
+  tags:
+    - mariadb-users
+
+- name: mariadb users without password
+  mysql_user:
+    name: "{{ item.value.username }}"
+    priv: "{{ item.value.username }}.*:SELECT,INSERT,UPDATE,DELETE,CREATE,INDEX,DROP,ALTER,CREATE TEMPORARY TABLES,LOCK TABLES"
+    state: present
+    login_unix_socket: /run/mysqld/mysqld.sock
+  with_dict: "{{ systemuserlist }}"
+  when: item.value.mariadb|default(False)
+  loop_control:
+    label: "{{ item.value.username }}"
+  tags:
+    - mariadb-users
+
+- name: mariadb users with password
+  mysql_user:
+    name: "{{ item.value.username }}"
+    host_all: true
+    priv: "{{ item.value.username }}.*:SELECT,INSERT,UPDATE,DELETE,CREATE,INDEX,DROP,ALTER,CREATE TEMPORARY TABLES,LOCK TABLES"
+    password: "{{ item.value.mariadb_pass }}"
+    state: present
+    login_unix_socket: /run/mysqld/mysqld.sock
+  with_dict: "{{ systemuserlist }}"
+  when: item.value.mariadb_pass|default(False)
+  loop_control:
+    label: "{{ item.value.username }}"
+  tags:
+    - mariadb-users
+
 - name: backup script
   template:
     src: mariadb_backup.sh.j2
@@ -42,13 +76,19 @@
     owner: root
     group: root
     mode: 0770
-  when: mariadb_dump_path is defined
   tags:
     - backup
-    - users
+    - mysql-users
 
 - name: backup cron
   template:
     src: mariadb_backup_cron.j2
     dest: /etc/cron.d/mariadb_backup_cron
-  when: mariadb_dump_path is defined
+  tags:
+    - backup
+    - mysql-users
+
+- name: cleanup
+  file:
+    path: users.sql.j2
+    state: absent
