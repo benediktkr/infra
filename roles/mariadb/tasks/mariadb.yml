@@ -61,9 +61,9 @@
 - name: mariadb users with password
   mysql_user:
     name: "{{ item.value.username }}"
-    host_all: true
-    priv: "{{ item.value.username }}.*:ALL"
     password: "{{ item.value.mariadb_pass }}"
+    host: "{{ item.value.mariadb_host | default(mariadb_bridgewithdns) }}"
+    priv: "{{ item.value.username }}.*:ALL"
     state: present
     login_unix_socket: /run/mysqld/mysqld.sock
   with_dict: "{{ systemuserlist }}"
