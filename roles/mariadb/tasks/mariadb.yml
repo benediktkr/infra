@@ -18,6 +18,11 @@
     dest: /etc/mysql/mariadb.conf.d/50-server.cnf
   notify: restart mariadb
 
+- name: ensure mariadb service is running
+  service:
+    name: mariadb
+    state: started
+
 - name: create dump destination
   file:
     state: directory
@@ -26,7 +31,6 @@
     mode: 0770
     path: "{{ mariadb_dump_path }}"
   when: mariadb_dump_path is defined
-
 
 - name: create dbs
   mysql_db:
@@ -44,7 +48,7 @@
 - name: mariadb users without password
   mysql_user:
     name: "{{ item.value.username }}"
-    priv: "{{ item.value.username }}.*:SELECT,INSERT,UPDATE,DELETE,CREATE,INDEX,DROP,ALTER,CREATE TEMPORARY TABLES,LOCK TABLES"
+    priv: "{{ item.value.username }}.*:ALL"
     state: present
     login_unix_socket: /run/mysqld/mysqld.sock
   with_dict: "{{ systemuserlist }}"
@@ -58,7 +62,7 @@
   mysql_user:
     name: "{{ item.value.username }}"
     host_all: true
-    priv: "{{ item.value.username }}.*:SELECT,INSERT,UPDATE,DELETE,CREATE,INDEX,DROP,ALTER,CREATE TEMPORARY TABLES,LOCK TABLES"
+    priv: "{{ item.value.username }}.*:ALL"
     password: "{{ item.value.mariadb_pass }}"
     state: present
     login_unix_socket: /run/mysqld/mysqld.sock

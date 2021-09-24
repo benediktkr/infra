@@ -25,10 +25,13 @@ tmpdir                  = /tmp
 lc-messages-dir         = /usr/share/mysql
 #skip-external-locking
 
+# disable reverse dns lookups
+skip-name-resolve
+
 # Instead of skip-networking the default is now to listen only on
 # localhost which is more compatible and is not less secure.
-{% if 'iptables' in group_names %}
-bind-address            = 0.0.0.0
+{% if mariadb_bind_all|default(False) %}
+bind-address            = {{ mariadb_bind_all }}
 {% elif ansible_docker0 is defined %}
 bind-address            = {{ ansible_docker0.ipv4.address }}
 {% else %}
