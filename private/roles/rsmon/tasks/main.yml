@@ -1,4 +1,0 @@
----
-# file: roles/rsmon/tasks/main.yml
-- include: rsmon.yml
-  tags: rsmon
