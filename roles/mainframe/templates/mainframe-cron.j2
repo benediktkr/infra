@@ -21,7 +21,7 @@
 {% endif %}
 {% endfor %}
 
-14 09 * * * {{ myusername }} /usr/local/bin/youtube-dl-mirrors.sh >> /tmp/youtube-dl-mirrors.log
-13 7 * * * {{ myusername }} /usr/local/bin/reddit-archives.sh >> /tmp/reddit-archives.log
+14 09 * * * {{ myusername }} /usr/local/bin/youtube-dl-mirrors.sh >> {{ userlist[myusername].home }}/.local/log/youtube-dl-mirrors.log
+13 7 * * * {{ myusername }} /usr/local/bin/reddit-archives.sh >> {{ userlist[myusername].home }}/.local/log/reddit-archives.log
 
 #

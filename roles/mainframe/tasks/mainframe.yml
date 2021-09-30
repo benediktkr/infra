@@ -29,6 +29,7 @@
       - weechat-matrix
       - zip
       - httrack
+      - pwgen
   tags:
     - packages
     - packages-mainframe
@@ -45,12 +46,23 @@
       - youtube-dl
       - bdfr
       - matrix_client
+      - internetarchive
     state: latest
     executable: pip3
   tags:
     - archive
     - pip
     - packages
+
+- name: make local log dir for {{ myusername }}
+  file:
+    state: directory
+    path: "{{ userlist[myusername].home }}/.local/log/"
+    owner: "{{ myusername }}"
+    group: "{{ myusername }}"
+    mode: 0770
+  tags:
+    - archive
 
 - name: template config files for scripts
   template:

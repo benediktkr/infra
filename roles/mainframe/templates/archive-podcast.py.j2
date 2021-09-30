@@ -76,16 +76,18 @@ def main():
     args = parser.parse_args()
 
     with open('/usr/local/etc/podcast.json', 'r') as f:
-        config = json.load(f)[args.name]
+        try:
+            config = json.load(f)[args.name]
+        except KeyError:
+            logger.error(f"no podcast '{args.name}' configured")
+            raise SystemExit(1)
 
     if not args.debug:
-        stderr_loglevel = config.get("stderr_loglevel", "INFO")
         logger.remove()
-        logger.add(sys.stderr, level=stderrloglevel)
+        logger.add(sys.stderr, level=config.get("stderr_loglevel", "INFO"))
     else:
         # do nothing, --debug causes DEBUG logs to stderr
         logger.debug(f"{args.name}: {config['path']}")
-
 
     if 'logfile' in config:
         logfile_loglevel = config.get("logfile_loglevel", "INFO")
