@@ -1,3 +1,5 @@
+# distributed from ansible
+
 ### Welcome to the InfluxDB configuration file.
 
 # The commented out lines are the configuration field and the default
@@ -5,7 +7,7 @@
 
 # Once every 24 hours InfluxDB will report usage data to usage.influxdata.com
 # unless tihs is set
-reporting-disabled = false
+reporting-disabled = true
 
 # Bind address to use for the RPC service for backup and restore.
 bind-address = "{{ influxdb_rpc_bind }}"

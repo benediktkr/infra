@@ -2,9 +2,7 @@
 
 # m h dom mon dow
 
-9 9 * * * root /usr/bin/influxd backup -portable -host {{ influxdb_rpc_bind }} {{ influxdb_backup_path }} > /dev/null
-
-5 */1 * * * root /usr/bin/find {{ influxdb_backup_path }}/* -mtime +2 -exec rm {} \;
-
+# takes a few mins
+9 9 * * * root /usr/local/bin/influxdb_backup.sh > /dev/null
 
 #

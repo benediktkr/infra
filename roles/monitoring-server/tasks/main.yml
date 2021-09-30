@@ -54,6 +54,30 @@
     - restart influxdb
     - restart grafana
 
+- name: create dir for influxdb systemd override file
+  file:
+    path: /etc/systemd/system/influxdb.service.d
+    state: directory
+  tags:
+    - influxdb-systemd
+
+- name: template influxdb systemd override file to set longer startup timeout
+  template:
+    src: influxdb-override.conf.j2
+    dest: /etc/systemd/system/influxdb.service.d/override.conf
+  tags:
+    - influxdb-systemd
+  notify: daemon-reload
+
+- name: sleep longer before doing healthcheck in startup script from package
+  lineinfile:
+    path: /usr/lib/influxdb/scripts/influxd-systemd-start.sh
+    state: present
+    regexp: '^.*sleep 1$'
+    line: '  sleep 10'
+  tags:
+    - influxdb-systemd
+
 - include: influxdb.yml
   tags:
     #- monitoring-server

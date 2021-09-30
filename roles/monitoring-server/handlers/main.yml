@@ -1,5 +1,8 @@
 ---
 
+- name: daemon-reload
+  command: systemctl daemon-reload
+
 - name: restart influxdb
   service:
     name: influxdb

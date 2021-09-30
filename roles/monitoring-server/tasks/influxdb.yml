@@ -21,7 +21,6 @@
     - packages
     - influxdb-scripts
 
-
 - name: nginx vhost
   template:
     src: 01-influxdb.j2
@@ -85,19 +84,21 @@
   tags:
     - influxdb-config
 
-- name: template data collection scripts
+- name: template scripts
   template:
     src: "{{ item }}.j2"
     dest: /usr/local/bin/{{ item }}
     mode: 0775
   tags:
     - influxdb-scripts
+    - influxdb-backup
   with_items:
     - hospital.py
     - berlinrona.py
     - nextcloud-influx.py
     - sdfcheck.py
     - impfstoff.py
+    - influxdb_backup.sh
 
 - name: template cronjobs fr data collection scripts
   template:

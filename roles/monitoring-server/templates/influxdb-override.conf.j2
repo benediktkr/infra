@@ -1,0 +1,8 @@
+# distributed from ansible
+
+# https://github.com/influxdata/influxdb/issues/22004
+#
+# after an apt upgrade, systemd was restarting influxdb before it was ready
+
+[Service]
+TimeoutStartSec=60
