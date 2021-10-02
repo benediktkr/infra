@@ -2,15 +2,16 @@ server {
    listen 443 ssl;
    listen   [::]:443 ssl; # listen for ipv6
 
-   {% for cidr in my_local_cidrs -%}
-   allow {{ cidr }};
-   {% endfor -%}
-   deny all;
+   {# {% for cidr in my_local_cidrs -%}
+    # allow {{ cidr }};
+    # {% endfor -%}
+    # deny all; #}
 
-   server_name {{ pihole_url }};
+   server_name {{ pihole_url }} {{ inventory_hostname }};
+
 
    location / {
-     return 301 https://$host/admin;
+     return 301 https://$host/pihole;
    }
 
    location /admin/ {

@@ -1,5 +1,8 @@
 ---
 
+# authelia: https://github.com/linuxserver/reverse-proxy-confs/blob/master/pihole.subfolder.conf.sample
+# also has generally better reverse proxy config
+
 - name: template nginx vhost
   template:
     src: pihole-vhost.j2
@@ -21,6 +24,7 @@
   with_items:
     - { dir: "etc/pihole" }
     - { dir: "etc/dnsmasq.d" }
+    - { dir: "etc/unbound" }
   tags: docker
   register: piholedocker
 
@@ -45,6 +49,16 @@
   tags:
     - pihole-config
   when: pihole_dhcp
+
+- name: template unbound config
+  template:
+    src: unbound.conf.j2
+    dest: "{{ pihole_root }}/etc/unbound/unbound.conf"
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - unbound
 
 - name: disable systemd-resolved or named if they are active
   service:
@@ -78,6 +92,10 @@
         read_only: true
         source: /dev/null
         target: /opt/unbound/etc/unbound/forward-records.conf
+      - type: bind
+        read_only: true
+        source: "{{ pihole_root }}/etc/unbound/unbound.conf"
+        target: /opt/unbound/etc/unbound/unbound.conf
     container_default_behavior: compatibility
     networks_cli_compatible: false
     networks:
