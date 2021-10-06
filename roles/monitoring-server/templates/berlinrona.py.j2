@@ -12,6 +12,12 @@ import requests
 from influxdb import InfluxDBClient
 from loguru import logger
 
+def valorzero(value):
+    if value is None:
+        return 0
+    else:
+        return value
+
 logger.remove()
 logger.add(
     "{{ userlist[myusername].home }}/berlinrona-api.log",
@@ -48,10 +54,10 @@ if __name__ == "__main__":
             },
             'time': time,
             'fields': {
-                'recovered': int(item['genesen']),
-                'cases':  int(item['fallzahl']),
-                'incidence': float(item['inzidenz']),
-                'diff': float(item['differenz'])
+                'recovered': int(valorzero(item.get('genesen'))),
+                'cases':  int(valorzero(item.get('fallzahl'))),
+                'incidence': float(valorzero(item.get('inzidenz'))),
+                'diff': float(valorzero(item.get('differenz')))
             }
         }
         logger.bind(datapoint=True).info(point)

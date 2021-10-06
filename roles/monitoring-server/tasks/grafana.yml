@@ -27,9 +27,18 @@
     ds_type: "influxdb"
     ds_url: "http://localhost:{{ influxdb_port}}"
     database: "{{ item.key }}"
-    basic_auth_user: "{{ influxdb_admin_user }}"
-    basic_auth_password: "{{ influxdb_admin_password }}"
-    time_interval: ">10s"
+    user: "{{ item.key }}"
+    org_id: 1
+    additional_secure_json_data:
+      password: "{{ item.value }}"
+    #password: "{{ item.value }}"
+    #basic_auth_user: "{{ item.key }}"
+    #basic_auth_password: "{{ item.value }}"
+    #user: "{{ influxdb_admin_user }}"
+    #password: "{{ influxdb_admin_password }}"
+    #basic_auth_user: "{{ influxdb_admin_user }}"
+    #basic_auth_password: "{{ influxdb_admin_password }}"
+    #time_interval: ">10s"
   with_items: "{{ influxdb_user_database | dict2items }}"
   loop_control:
     label: "{{ item.key }}"
