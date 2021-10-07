@@ -2,45 +2,45 @@
 
 import argparse
 from datetime import datetime, timezone
-from subprocess import run, CalledProcessError
+import subprocess
 from os import path, stat, listdir
 import sys
+import json
 
 from loguru import logger
 
 import sudoisinflux
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--interval", default="alpha")
-parser.add_argument("--debug", action="store_true")
-parser.add_argument("--dry-run", action="store_true", help="dont run rsnapshot")
+parser = argparse.ArgumentParser(
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    description="rsnapshot+metrics"
+)
+parser.add_argument("action", choices=["metrics", "backup"])
+parser.add_argument("-q", "--quiet", action="store_true", help="dont print to stdout/stderr")
+parser.add_argument("--interval", default="alpha", help="rsnapshot interval")
+parser.add_argument("--debug", action="store_true", help="debug logs")
+parser.add_argument("--logfile", default="/var/log/backup.log")
 parser.add_argument("--force-yes-i-know-what-im-doing", action="store_true")
-parser.add_argument("--metrics-only", action="store_true")
 args = parser.parse_args()
-
-if not args.debug and not args.dry_run:
-    logger.remove()
-    logger.add(sys.stderr, level="WARNING")
-else:
-    logger.success("verbose output")
 
 rsnapshot_bin = "/usr/bin/rsnapshot"
 date_bin = "/usr/bin/date"
-du_bin = "/usr/bin/du"
 
-marker_name = ".backup_age_marker"
+host_marker_name = ".backup_age_marker"
+successful_backup_marker_path = "/root/.last_succesful_backup"
 
 latest_path = path.join("{{ rsnapshot_root }}", f"{args.interval}.0")
-marker_path = path.join(latest_path, marker_name)
 
-mb = lambda bytes: int(bytes//1024)
-gb = lambda bytes: int(mb(bytes)//1024)
+logger.remove()
 
-def tags(host=None):
-    return {'host': '{{ inventory_hostname }}' if host is None else host,
-            'interval': args.interval,
-            'path': latest_path }
+if args.debug:
+    logger.add(sys.stdout, level="DEBUG")
+    logger.success("--debug: verbose output, not writing to logfile")
 
+else:
+    if not args.quiet:
+        logger.add(sys.stdout, level="INFO")
+    logger.add(args.logfile, level="INFO")
 
 def utc_now():
     return datetime.now(tz=timezone.utc)
@@ -48,123 +48,155 @@ def utc_now():
 def utc_isoformat():
     return utc_now().isoformat()
 
-def du(path):
-    du_cmd = [du_bin, "-s", path]
-    du = run(du_cmd, capture_output=True)
-
-    try:
-        return int(du.stdout.decode().split('\t')[0])
-    except ValueError as e:
-        logger.error(" ".join(du_cmd))
-        logger.error(du.stdout)
-        raise e
-
-def update_marker():
-    with open(marker_path, 'w') as f:
+def write_success_marker():
+    with open(successful_backup_marker_path, 'w') as f:
         f.write(utc_isoformat() + "\n")
 
-def read_host_marker(hostname):
-    host_marker = path.join(latest_path, hostname, "root", marker_name)
-    with open(host_marker, 'r') as f:
-        return datetime.fromisoformat(f.read().strip())
+def get_host_marker_age(hostname):
+    host_marker = path.join(latest_path, hostname, "root", host_marker_name)
+    return get_marker_age(host_marker)
 
-def get_hosts_in_backup():
-    return [a for a in listdir(latest_path) if a[0].isalpha()]
+def get_marker_age(marker_path):
+    with open(marker_path, 'r') as f:
+        # i dont remember why i didnt use mtime instead of reading
+        # a ISO formatted datestamp string from a file....
+        # that would have been easier i think.
+        marker_utc = datetime.fromisoformat(f.read().strip())
+
+    marker_age = utc_now() - marker_utc
+    return marker_age
 
 def rsnapshot():
-    try:
-        before = du(latest_path)
-        logger.debug(f"starting. current size: {gb(before)}G")
+    """runs rsnapshot.
 
-        if not args.dry_run:
-            run([rsnapshot_bin, args.interval])
+    returns subprocess.CompletedProcess
+    """
 
-        after = du(latest_path)
-        logger.debug(f"rsnapshot done, current size: {gb(after)}G")
+    cmd = [rsnapshot_bin, args.interval]
 
-        return after - before, after
+    # dont raise exception if rsnapshot fails
+    ps = subprocess.run(cmd, capture_output=True, text=True, check=False)
+    return ps
 
-    except CalledProcessError:
-        raise
 
 def read_all_host_markers():
+    """gets the timestamp from inside of each hosts' backup
+
+    made into a wrapper functoin because that made error handling cleaner
+    """
+
     now = utc_now()
-    for host in get_hosts_in_backup():
+    backed_up_hosts = [a for a in listdir(latest_path) if a[0].isalpha()]
+    for host in backed_up_hosts:
         try:
-            marker = read_host_marker(host)
-            age = now - marker
-            size = du(path.join(latest_path, host))
-            yield host, marker, age, size
+            marker_age = get_host_marker_age(host)
+            yield host, marker_age
         except (FileNotFoundError, ValueError) as e:
             logger.error(f"backup age marker missing/broken for {host}: {e}")
-            continue
+            yield host, None
 
-if __name__ == "__main__":
+def send_metrics():
+    all_backup_subdirs = read_all_host_markers()
+
+    # all backups/hosts with a backup marker file
+    backups = [a for a in all_backup_subdirs if a[1] is not None]
+    # there should be no backups/hosts without a marker file, this
+    # should always be 0
+    backups_without_marker = [a for a in all_backup_subdirs if a[1] is None]
+
+    try:
+        last_successful_backup = get_marker_age(successful_backup_marker_path)
+
+        last_successful = {
+            'tags': {
+                'host': "{{ inventory_hostname }}",
+                'interval': args.interval
+            },
+            'measurement': 'rsnapshot_job',
+            'time': utc_isoformat(),
+            'fields': {
+                'seconds_since_last_successful_run': int(last_successful_backup.total_seconds()),
+                'backups_count': len(backups),
+                'backups_without_marker_count': len(backups_without_marker)
+            }
+        }
+        sudoisinflux.write(last_successful, precision='h')
+        logger.debug(f"influxdb.write: {json.dumps(last_successful, indent=2)}")
+
+    except FileNotFoundError:
+        # if theres no marker for a succesful backup, it probably
+        # hasnt been taken yet, so dont send a datapoint about a successful
+        # backup that hasnt happened
+        logger.error(f"no file '{successful_backup_marker_path}' found")
+
+
+    for host, marker_age in read_all_host_markers():
+        # send one datapoint for each host that we have a backup directory for
+
+        age_seconds = int(marker_age.total_seconds())
+        datapoint = {
+            'tags': {
+                'host': "{{ inventory_hostname }}",
+                'interval': args.interval,
+                'backup_name': host,
+            },
+            'measurement': 'rsnapshot_backup',
+            'time': utc_isoformat(),
+            'fields': {
+                'backup_age_seconds': age_seconds,
+            }
+        }
+        sudoisinflux.write(datapoint, precision='h')
+        logger.debug(f"influxdb.write: {json.dumps(datapoint, indent=2)}")
+
+        # log a warning if its been missing one day, then start logging errors
+        if marker_age.days > 0:
+            logger.errror(f"backup for {host} is {days}d old")
+        else:
+            logger.debug(f"{host}: {age_seconds//60}m")
+
+
+@logger.catch
+def main():
     if "{{ inventory_hostname }}" != "{{ rsnapshot_primary }}" and not args.force_yes_i_know_what_im_doing:
         logger.error(f"this is probably the wrong host, otherwise '--force-yes-i-know-what-im-doing'")
         raise SystemExit(13)
 
-    backup_path_exists = path.exists(latest_path)
-    if args.metrics_only:
-        if backup_path_exists:
-            marker = read_host_marker('{{ rsnapshot_primary }}')
-            age = utc_now() - marker
-            age_secs = age.total_seconds()
-            age_days = age.days
-        else:
-            age_secs: None
-            age_days: None
-
-        sudoisinflux.write({
-            'tags': tags(),
-            'measurement': 'backup_health',
-            'time': utc_isoformat(),
-            'fields': {
-                'path_exists': int(backup_path_exists),
-                'age_secs': int(age_secs),
-                'age_days': int(age_days)
-            }}, precision='h')
-        raise SystemExit(0)
-
-    if not backup_path_exists:
+    if not path.exists(latest_path):
         logger.error(f"path '{latest_path}' doesnt exist")
-        raise SystemExit(1)
+        sys.exit(2)
+
+    if args.action == "metrics":
+        send_metrics()
+        sys.exit(0)
+
+    elif args.action == "backup":
+        logger.info("starting rsnapshot ...")
+
+        ps = rsnapshot()
+
+        # send the metrics asap, prints names of backups without marker files (if any)
+        send_metrics()
+
+        level = "INFO" if ps.returncode == 0 else "ERROR"
+        logger.log(level, f"`rsnapshot` returned status: '{ps.returncode}'")
+
+        # update the marker for a succesful backup only if rsnapshot
+        # exits without errors
+        if ps.returncode == 0:
+            write_success_marker()
+
+        if len(ps.stdout) > 0:
+            logger.warning(f"rsnapshot stdout: \n{ps.stdout}")
+        if len(ps.stderr) > 0:
+            logger.warning(f"rsnapshot stderr: \n{ps.stderr}")
+
+        # exit with the same returncode as `rsnapshot`
+        sys.exit(ps.returncode)
+
+    else:
+        raise SystemExit(f"invalid action: '{args.action}'")
 
 
-    diff, size = rsnapshot()
-
-    logger.info(f"diff: {mb(diff)}M")
-
-    for item in read_all_host_markers():
-        days = int(item[2].days)
-        secs = int(item[2].total_seconds())
-        mins = int(secs//60)
-        host_size_mb = int(mb(item[3]))
-        host = item[0]
-
-        sudoisinflux.write({'tags': tags(host),
-                            'measurement': 'rsnapshot',
-                            'time': utc_isoformat(),
-                            'fields': {'age_seconds': secs,
-                                       'host_size_mb': host_size_mb }},
-                           dry_run=args.dry_run)
-
-        if days > 0:
-            if days == 1:
-                level = "WARNING"
-            else:
-                level = "ERROR"
-            logger.log(level, f"backup for {host} is {days}d old")
-        else:
-            logger.info(f"{host}: {mins} mins")
-
-
-    sudoisinflux.write({'tags': tags(),
-                        'measurement': 'rsnapshot',
-                        'time': utc_isoformat(),
-                        'fields': {'total_size_mb': int(mb(size)) }},
-                       dry_run=args.dry_run)
-
-
-    # only update the marker if the full backup was succesful
-    update_marker()
+if __name__ == "__main__":
+    main()

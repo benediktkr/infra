@@ -33,6 +33,8 @@
   template:
     src: rsnapshot.conf.j2
     dest: /etc/rsnapshot.conf
+  tags:
+    - rsnapshot-config
 
 - name: template sdfbackup config
   template:
@@ -47,6 +49,7 @@
     src: backup-cron.j2
     dest: /etc/cron.d/backup
     mode: 0750
+  tags: backup_scripts
 
 - name: template backup scripts
   template:

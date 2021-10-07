@@ -63,7 +63,9 @@ lockfile	/var/run/rsnapshot.pid
 #rsync_short_args	-a
 #rsync_long_args	--delete --numeric-ids --relative --delete-excluded
 
-#ssh_args	-p 22
+# UserKnownHostsFile=
+
+ssh_args	-o ConnectTimeout=5
 
 # Default arguments for the "du" program (for disk space reporting).
 #du_args	-csh
