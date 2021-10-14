@@ -35,8 +35,12 @@
     name:
       - calibre
       - digikam
+      - xdotool
       - element-desktop
       - evince
+      - pdfshuffler
+      - exiftool
+      - krfb
       - gimp
       - gnome-disk-utility
       - gpodder
