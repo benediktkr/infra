@@ -34,10 +34,12 @@
   tags:
     - skel
 
-- name: set root shell to zsh
+- name: set root shell to bash
   user:
     name: root
-    shell: /bin/zsh
+    shell: /bin/bash
+  tags:
+    - rootbash
 
 - name: set authorized_keys for root
   template:
