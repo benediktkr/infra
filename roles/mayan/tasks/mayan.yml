@@ -23,7 +23,7 @@
 
 - name: postgres container
   docker_container:
-    name: "mayan_postgresql"
+    name: "mayan-postgresql"
     image: "postgres:10.15-alpine"
     auto_remove: no
     pull: yes
@@ -44,7 +44,7 @@
 
 - name: redis container
   docker_container:
-    name: "mayan_redis"
+    name: "mayan-redis"
     image: "redis:latest"
     auto_remove: no
     restart_policy: "unless-stopped"
@@ -55,7 +55,7 @@
     labels:
       dockerlogs_format: redis
     env:
-      REDIS_HOST: "mayan_redis"
+      REDIS_HOST: "mayan-redis"
     container_default_behavior: compatibility
     networks_cli_compatible: no
     networks:
@@ -86,3 +86,14 @@
   tags:
     - mayan-container
     - docker-containers
+
+- name: template nginx vhost
+  template:
+    src: 01-mayan.j2
+    dest: /etc/nginx/sites-enabled/01-mayan
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - nginx
+    - mayan-nginx
