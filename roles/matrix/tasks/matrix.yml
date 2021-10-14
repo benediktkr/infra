@@ -196,6 +196,7 @@
     container_default_behavior: compatibility
     networks_cli_compatible: no
     user: "{{ systemuserlist.matrix.uid }}:{{ systemuserlist.matrix.gid }}"
+    network_mode: bridgewithdns
     networks:
       - name: bridgewithdns
         ipv4_address: "{{ bridgewithdns.matrix_reg }}"
