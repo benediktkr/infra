@@ -1,5 +1,15 @@
 ---
 
+- name: install mergerfs, btrfs-progs
+  apt:
+    update_cache: true
+    name:
+      - mergerfs
+      - btrfs-progs
+    state: latest
+  tags:
+    - packages
+
 - name: fail if path has trailing slash
   fail:
     msg: "invalid path: '{{ item.path }}'"
