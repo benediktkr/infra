@@ -34,42 +34,40 @@
 
 - name: create dbs
   mysql_db:
-    name: "{{ item.value.username }}"
+    name: "{{ item.mariadb_username|default(item.username) }}"
     encoding: utf8mb4
     collation: utf8mb4_general_ci
     login_unix_socket: /run/mysqld/mysqld.sock
-  with_dict: "{{ systemuserlist }}"
-  when: item.value.mariadb|default(False)
+  with_items: "{{ systemuserlist.values() | selectattr('mariadb', 'true') }}"
   loop_control:
-    label: "{{ item.value.username }}"
+    label: "{{ item.username }}"
   tags:
     - mariadb-users
 
 - name: mariadb users without password
   mysql_user:
-    name: "{{ item.value.username }}"
-    priv: "{{ item.value.username }}.*:ALL"
+    name: "{{ item.mariadb_username|default(item.username) }}"
+    priv: "{{ item.mariadb_username|default(item.username) }}.*:ALL"
     state: present
     login_unix_socket: /run/mysqld/mysqld.sock
-  with_dict: "{{ systemuserlist }}"
-  when: item.value.mariadb|default(False)
+  with_items: "{{ systemuserlist.values() | selectattr('mariadb', 'true') }}"
   loop_control:
-    label: "{{ item.value.username }}"
+    label: "{{ item.username }}"
   tags:
     - mariadb-users
 
 - name: mariadb users with password
   mysql_user:
-    name: "{{ item.value.username }}"
-    password: "{{ item.value.mariadb_pass }}"
-    host: "{{ item.value.mariadb_host | default(mariadb_bridgewithdns) }}"
-    priv: "{{ item.value.username }}.*:ALL"
+    name: "{{ item.mariadb_username|default(item.username) }}"
+    password: "{{ item.mariadb_pass }}"
+    host: "{{ item.mariadb_host | default(mariadb_bridgewithdns) }}"
+    priv: "{{ item.mariadb_username|default(item.username) }}.*:ALL"
     state: present
     login_unix_socket: /run/mysqld/mysqld.sock
-  with_dict: "{{ systemuserlist }}"
-  when: item.value.mariadb_pass|default(False)
+  with_items: "{{ systemuserlist.values() | selectattr('mariadb', 'true') }}"
+  when: '"mariadb_pass" in item '
   loop_control:
-    label: "{{ item.value.username }}"
+    label: "{{ item.username }}"
   tags:
     - mariadb-users
 
