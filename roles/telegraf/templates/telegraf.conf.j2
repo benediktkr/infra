@@ -261,9 +261,6 @@
 [[inputs.net]]
 
 
-[[inputs.postfix]]
-    queue_directory = "/var/spool/postfix"
-
 {% if telegraf_smart_disks %}
 [[inputs.smart]]
     use_sudo = true
