@@ -16,9 +16,16 @@ server {
   server_name {{ item.name }} {{ item.aliases | default([]) |join (" ") }};
 
   root /var/www/{{ item.name }};
+
+  {% if item.require_auth | default(False) -%}
+  include /etc/nginx/authelia_internal.conf;
+  include /etc/nginx/require_auth.conf;
+  {% endif %}
+
   location / {
     index index.html index.htm;
   }
+
 
   location ~ ^(.*)/$ {
     autoindex {{ item.autoindex|default('on') }};

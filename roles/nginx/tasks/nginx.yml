@@ -1,21 +1,21 @@
 ---
 
-- name: add apt key
-  apt_key:
-    url: https://nginx.org/keys/nginx_signing.key
-    state: present
-  when: ansible_lsb.id == "Debian" and ansible_lsb.codename != "bullseye"
-  tags:
-    - packages
+# - name: add apt key
+#   apt_key:
+#     url: https://nginx.org/keys/nginx_signing.key
+#     state: present
+#   when: ansible_lsb.id == "Debian" and ansible_lsb.codename != "bullseye"
+#   tags:
+#     - packages
 
-- name: add repo for debian (except bullseye)
-  apt_repository:
-    repo: "deb http://nginx.org/packages/mainline/debian {{ ansible_distribution_release }} nginx"
-    state: present
-    update_cache: yes
-  when: ansible_lsb.id == "Debian" and ansible_lsb.codename != "bullseye"
-  tags:
-    - packages
+# - name: add repo for debian (except bullseye)
+#   apt_repository:
+#     repo: "deb http://nginx.org/packages/mainline/debian {{ ansible_distribution_release }} nginx"
+#     state: present
+#     update_cache: yes
+#   when: ansible_lsb.id == "Debian" and ansible_lsb.codename != "bullseye"
+#   tags:
+#     - packages
 
 - name: install nginx and wwwsudois
   apt:
@@ -48,31 +48,24 @@
     state: absent
   notify: reload nginx
 
-- name: copy nginx.conf
-  copy:
-    src: nginx.conf
-    dest: /etc/nginx/nginx.conf
-  notify: reload nginx
-  tags:
-    - nginx-config
-    - nginxconf
-
 - name: template uploadsize.conf
   template:
-    src: nginx-uploadsize.conf.j2
+    src: "uploadsize.conf.j2"
     dest: /etc/nginx/conf.d/uploadsize.conf
-  tags:
-    - nginx
   notify: reload nginx
 
-# - name: copy conf.d files
-#   copy:
-#     src: "{{ item }}"
-#     dest: "/etc/nginx/conf.d/{{ item }}"
-#   with_items:
-#     ## - hardening.conf
-#   notify: reload nginx
-#   when: False
+- name: template config files
+  template:
+    src: "{{ item }}.j2"
+    dest: /etc/nginx/{{ item }}
+  with_items:
+    - nginx.conf
+    - require_auth.conf
+    - require_auth_proxy.conf
+    - authelia_internal.conf
+  tags:
+    - authelia-nginx
+  notify: reload nginx
 
 - name: template default index.html
   template:
@@ -86,7 +79,7 @@
   notify: reload nginx
   tags:
     - nginx-config
-    - default-vhost
+    - nginx-default-vhost
 
 - name: cleanup
   file:
