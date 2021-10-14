@@ -1,16 +1,17 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="utf-8"?>
 <PluginConfiguration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <LdapServer>{{ openldap_url }}</LdapServer>
   <LdapBaseDn>{{ openldap_dc }}</LdapBaseDn>
-  <LdapPort>636</LdapPort>
+  <LdapPort>389</LdapPort>
   <LdapSearchAttributes>uid, cn, mail, displayName</LdapSearchAttributes>
   <LdapUsernameAttribute>uid</LdapUsernameAttribute>
-  <LdapSearchFilter>(&amp;(|(objectclass=inetOrgPerson))(|(memberof=cn=notflix,ou=services,{{ openldap_dc }})))</LdapSearchFilter>
-  <LdapAdminFilter>(&amp;(|(objectclass=inetOrgPerson))(|(memberof=cn=notflix-admin,ou=services,{{ openldap_dc }})))</LdapAdminFilter>
+  <LdapSearchFilter>(&amp;(|(objectclass=inetOrgPerson))(|(memberof=cn=notflix,ou=groups,{{ openldap_dc }})))</LdapSearchFilter>
+  <LdapAdminFilter>(&amp;(|(objectclass=inetOrgPerson))(|(memberof=cn=admin,ou=groups,{{ openldap_dc }})))</LdapAdminFilter>
   <LdapBindUser>cn=readonly,{{ openldap_dc }}</LdapBindUser>
-  <LdapBindPassword>readonly</LdapBindPassword>
+  <LdapBindPassword>{{ openldap_readonly_pass }}</LdapBindPassword>
   <CreateUsersFromLdap>true</CreateUsersFromLdap>
-  <UseSsl>true</UseSsl>
+  <UseSsl>false</UseSsl>
   <UseStartTls>false</UseStartTls>
-  <SkipSslVerify>true</SkipSslVerify>
+  <SkipSslVerify>false</SkipSslVerify>
+  <EnableCaseInsensitiveUsername>false</EnableCaseInsensitiveUsername>
 </PluginConfiguration>
