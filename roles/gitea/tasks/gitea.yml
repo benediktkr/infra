@@ -38,13 +38,25 @@
     group: git
     mode: 0644
 
+- name: template nginx vhost
+  template:
+    src: 01-gitea.j2
+    dest: /etc/nginx/sites-enabled/01-gitea
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - nginx
+    - gitea-nginx
+  notify: reload nginx
+
 - name: start container
   docker_container:
     name: gitea
-    image: gitea/gitea:1.13
+    image: gitea/gitea:latest
     detach: yes
     pull: yes
-    restart_policy: "no"
+    restart_policy: "unless-stopped"
     state: "{{ container_state | default('started') }}"
     container_default_behavior: compatibility
     ports:
@@ -62,7 +74,8 @@
       DB_USER: gitea
       DB_PASSWD: "{{ systemuserlist.git.mariadb_pass }}"
       DISABLE_REGISTRATION: "true"
-    networks_cli_compatible: no
+    networks_cli_compatible: false
+    network_mode: bridgewithdns
     networks:
       - name: bridgewithdns
         ipv4_address: "{{ bridgewithdns.gitea }}"
@@ -75,3 +88,4 @@
     src: "{{ systemuserlist.git.home }}/data/git/.ssh"
     dest: "{{ systemuserlist.git.home }}/.ssh"
     state: link
+    force: yes
