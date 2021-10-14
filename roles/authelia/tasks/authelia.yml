@@ -1,0 +1,84 @@
+---
+
+- name: make dirs
+  file:
+    path: "{{ systemuserlist.authelia.home }}/config"
+    state: directory
+    mode: 0750
+    owner: authelia
+    group: authelia
+
+- name: template authelia config
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ systemuserlist.authelia.home }}/config/{{ item }}"
+    owner: authelia
+    group: authelia
+    mode: 0750
+  with_items:
+    - config.yml
+  notify: restart authelia container
+
+- name: template nginx vhost
+  template:
+    src: 01-authelia.conf.j2
+    dest: /etc/nginx/sites-enabled/01-authelia
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - nginx
+    - authelia-nginx
+  notify: reload nginx
+
+- name: redis container for authelia
+  docker_container:
+    name: authelia-redis
+    image: "redis:latest"
+    restart_policy: "unless-stopped"
+    auto_remove: no
+    detach: yes
+    pull: yes
+    state: started
+    container_default_behavior: compatibility
+    env:
+      REDIS_HOST: authelia-redis
+    networks_cli_compatible: no
+    network_mode: bridgewithdns
+    networks:
+      - name: bridgewithdns
+  tags:
+    - authelia-container
+    - docker-containers
+
+- name: start container
+  docker_container:
+    name: authelia
+    image: authelia/authelia:latest
+    restart_policy: "unless-stopped"
+    auto_remove: false
+    detach: true
+    pull: true
+    state: started
+    container_default_behavior: compatibility
+    user: "{{ systemuserlist.authelia.uid }}:{{ systemuserlist.authelia.gid }}"
+    networks_cli_compatible: false
+    network_mode: bridgewithdns
+    networks:
+      - name: bridgewithdns
+        ipv4_address: "{{ bridgewithdns.authelia }}"
+    mounts:
+      - type: bind
+        source: "{{ systemuserlist.authelia.home }}/config"
+        target: /config
+        read_only: no
+    healthcheck:
+      interval: 30s
+      timeout: 3s
+      start_period: 1m
+      test: ["/app/healthcheck.sh"]
+    # bypass entrypoint file to handle uid/gid
+    entrypoint: ["authelia", "--config", "/config/config.yml"]
+  tags:
+    - authelia-container
+    - docker-containers

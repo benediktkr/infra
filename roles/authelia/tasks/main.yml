@@ -1,0 +1,3 @@
+---
+ - include: authelia.yml
+   tags: authelia

@@ -1,0 +1,128 @@
+server {
+
+  listen 443 ssl;
+
+  server_name {{ authelia_login_url }};
+
+  ssl_session_timeout 5m;
+  ssl_certificate /etc/letsencrypt/live/{{ domain }}/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/{{ domain }}/privkey.pem;
+
+  location / {
+
+    proxy_pass         http://{{ bridgewithdns.authelia }}:{{ authelia_port }};
+
+    client_body_buffer_size 128k;
+
+    proxy_next_upstream error timeout invalid_header http_500 http_502 http_503;
+
+    send_timeout 5m;
+    proxy_read_timeout 360;
+    proxy_send_timeout 360;
+    proxy_connect_timeout 360;
+
+    # Basic Proxy Config
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-Host $http_host;
+    proxy_set_header X-Forwarded-Uri $request_uri;
+    proxy_set_header X-Forwarded-Ssl on;
+    proxy_redirect  http://  $scheme://;
+    proxy_http_version 1.1;
+    proxy_set_header Connection "";
+    proxy_cache_bypass $cookie_session;
+    proxy_no_cache $cookie_session;
+    proxy_buffers 64 256k;
+  }
+
+
+  {#   proxy_redirect     off;
+   #   proxy_set_header   Host $host;
+   #   proxy_set_header   X-Real-IP $remote_addr;
+   #   proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+   #   proxy_set_header   X-Forwarded-Host $server_name;
+   #   proxy_set_header   X-Forwarded-Proto $scheme;
+   # #}
+
+  location /api/verify {
+    return 401;
+  }
+
+  access_log /var/log/nginx/access_{{ authelia_login_url }}.log main;
+  error_log /var/log/nginx/error_{{ authelia_login_url }}.log warn;
+
+  {# add_header Referrer-Policy "no-referrer" always;
+   # add_header X-Content-Type-Options "nosniff" always;
+   # add_header X-Download-Options "noopen" always;
+   # add_header X-Frame-Options "SAMEORIGIN" always;
+   # add_header X-Permitted-Cross-Domain-Policies "none" always;
+   # add_header X-Robots-Tag "none" always;
+   # add_header X-XSS-Protection "1; mode=block" always;
+   #
+   # fastcgi_hide_header X-Powered-By; #}
+}
+
+server {
+
+  #listen 443 ssl;
+
+  {% if inventory_hostname in wireguard_clients -%}
+  listen {{ wireguard_clients[inventory_hostname].ip }}:443 ssl;
+  {% endif -%}
+
+  {% for cidr in my_local_cidrs -%}
+  allow {{ cidr }};
+  {% endfor -%}
+  {% for name, ip in my_public_ips.items() -%}
+  #allow {{ ip }}/32; # {{ name }}
+  {% endfor %}
+
+  deny all;
+
+  server_name {{ authelia_api_url }};
+
+  ssl_session_timeout 5m;
+  ssl_certificate /etc/letsencrypt/live/{{ domain }}/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/{{ domain }}/privkey.pem;
+
+  location / {
+    return 404;
+  }
+
+  location /api/verify {
+    proxy_pass         http://{{ bridgewithdns.authelia }}:{{ authelia_port }};
+
+    # [REQUIRED] Needed by Authelia to check authorizations of the resource.
+    # Provide either X-Original-URL and X-Forwarded-Proto or
+    # X-Forwarded-Proto, X-Forwarded-Host and X-Forwarded-Uri or both.
+    # Those headers will be used by Authelia to deduce the target url of the user.
+    # Basic Proxy Config
+    client_body_buffer_size 128k;
+    proxy_set_header Host $host;
+    proxy_set_header X-Original-URL $scheme://$http_host$request_uri;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-Method $request_method;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-Host $http_host;
+    proxy_set_header X-Forwarded-Uri $request_uri;
+    proxy_set_header X-Forwarded-For $remote_addr;
+    proxy_set_header X-Forwarded-Ssl on;
+    proxy_redirect  http://  $scheme://;
+    proxy_http_version 1.1;
+    proxy_set_header Connection "";
+    proxy_cache_bypass $cookie_session;
+    proxy_no_cache $cookie_session;
+    proxy_buffers 4 32k;
+
+    # Advanced Proxy Config
+    send_timeout 5m;
+    proxy_read_timeout 240;
+    proxy_send_timeout 240;
+    proxy_connect_timeout 240;
+  }
+
+  access_log /var/log/nginx/access_{{ authelia_api_url }}.log main;
+  error_log /var/log/nginx/error_{{ authelia_api_url }}.log warn;
+}

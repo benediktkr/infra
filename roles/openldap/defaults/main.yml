@@ -3,3 +3,11 @@
 openldap_uid: "{{systemuserlist.openldap.uid}}"
 openldap_gid: "{{systemuserlist.openldap.gid}}"
 openldap_root: "{{ systemuserlist.openldap.home }}"
+
+ldap_users: "{{ userlist.values()|selectattr('ldap_enabled', 'true') }}"
+ldap_usernames: "{{ ldap_users | map(attribute='username') | list }}"
+ldap_users_in_groups: "{{ ldap_users | selectattr('ldap_groups') }}"
+
+ldap_usernames_disabled_ldap: "{{ userlist.values()|selectattr('ldap_enabled', 'false') | map(attribute='username') | unique }}"
+ldap_usernames_disabled_system: "{{ userlist.values()|selectattr('enabled', 'false') | map(attribute='username') | unique }}"
+ldap_usernames_disabled: "{{ ldap_usernames_disabled_ldap + ldap_usernames_disabled_system }}"

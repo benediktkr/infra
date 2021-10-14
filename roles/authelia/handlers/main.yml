@@ -1,0 +1,13 @@
+---
+
+- name: reload nginx
+  service:
+    name: nginx
+    state: reloaded
+
+- name: restart authelia container
+  docker_container:
+    name: authelia
+    image: authelia/authelia
+    state: started
+    restart: true
