@@ -1,0 +1,3 @@
+#!/bin/bash
+
+/usr/bin/docker exec -i weblate_postgresql pg_dump -U {{ systemuserlist.weblate.username }} > {{ systemuserlist.weblate.home }}/postgres-backup.sql

@@ -1,0 +1,14 @@
+#!/bin/sh
+set -e
+
+{#
+ # original:
+if [ -f /app/data/ssl/privkey.pem ] ; then
+    curl --cacert /app/data/ssl/fullchain.pem https://localhost:4443/healthz/ || exit 1
+else
+    curl http://localhost:8080/healthz/ || exit 1
+fi
+ # https://github.com/WeblateOrg/docker/blob/main/health_check
+#}
+
+curl --max-time 10  http://localhost:{{ weblate_uwsgi_http_socket_port }}/healthz/ || exit 1

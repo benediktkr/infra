@@ -1,0 +1,232 @@
+---
+
+- name: create weblate group
+  group:
+    state: present
+    name: "{{ systemuserlist.weblate.username }}"
+    gid: "{{ systemuserlist.weblate.gid | default(systemuserlist.weblate.uid) }}"
+  tags:
+    - users
+
+- name: create weblate user
+  user:
+    state: present
+    name: "{{ systemuserlist.weblate.username }}"
+    uid: "{{ systemuserlist.weblate.uid }}"
+    group: "{{ systemuserlist.weblate.username }}"
+    shell: /dev/null
+    system: true
+    create_home: true
+    home: /srv/{{ systemuserlist.weblate.username }}
+    append: true
+    groups: []
+    force: false
+  tags: users
+
+- name: make dirs
+  file:
+    path: "{{ systemuserlist.weblate.home }}/{{ item.name }}"
+    state: directory
+    mode: "{{ item.mode | default('0755') }}"
+    owner: "{{ item.owner | default(systemuserlist.weblate.username) }}"
+    group: "{{ item.group | default(systemuserlist.weblate.username) }}"
+  with_items:
+    - name: data
+    - name: etc
+    - name: postgres
+      owner: 70
+      mode: 700
+    - name: cache
+
+- name: redis container for weblate
+  docker_container:
+    name: weblate_redis
+    image: "redis:latest"
+    restart_policy: "unless-stopped"
+    auto_remove: no
+    detach: yes
+    pull: yes
+    state: started
+    container_default_behavior: compatibility
+    env:
+      REDIS_HOST: weblate_redis
+    networks_cli_compatible: no
+    network_mode: bridgewithdns
+    networks:
+      - name: bridgewithdns
+  tags:
+    - weblate-container
+    - docker-containers
+
+- name: postgres container for weblate
+  docker_container:
+    name: weblate_postgresql
+    image: docker.io/postgres:13-alpine
+    state: started
+    container_default_behavior: compatibility
+    restart_policy: "unless-stopped"
+    networks_cli_compatible: no
+    networks:
+      - name: bridgewithdns
+    env:
+      POSTGRES_USER: "{{ systemuserlist.weblate.username }}"
+      POSTGRES_PASSWORD: "{{ systemuserlist.weblate.postgres_passwd }}"
+      POSTGRES_DATABASE: "{{ systemuserlist.weblate.username }}"
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    mounts:
+      - type: bind
+        source: "{{ systemuserlist.weblate.home }}/postgres"
+        target: /var/lib/postgresql/data
+  tags:
+    - weblate-container
+    - docker-containers
+
+- name: template db backup script
+  template:
+    src: weblate-postgres-backup.sh.j2
+    dest: /usr/local/bin/weblate-postgres-backup.sh
+    mode: 0750
+    owner: root
+    group: root
+  tags:
+    - backup
+
+- name: cron file
+  template:
+    src: weblate-cron.j2
+    dest: /etc/cron.d/weblate
+    mode: 0600
+    owner: root
+    group: root
+  tags:
+    - backup
+    - cron
+
+- name: template supervisor config without nginx
+  template:
+    src: supervisor-web.conf.j2
+    dest: "{{ systemuserlist.weblate.home }}/etc/supervisor-web.conf"
+    mode: 0755
+    owner: root
+    group: root
+
+- name: template uwsgi config to listen on network socket (and http for
+  template:
+    src: uwsgi-weblate.ini.j2
+    dest: "{{ systemuserlist.weblate.home }}/etc/uwsgi-weblate.ini.j2"
+    mode: 0755
+    owner: root
+    group: root
+
+- name: template health_check script
+  template:
+    src: health_check.j2
+    dest: "{{ systemuserlist.weblate.home }}/health_check"
+    mode: 0755
+    owner: root
+    group: root
+
+- name: template nginx vhost
+  template:
+    src: 01-weblate.conf.j2
+    dest: /etc/nginx/sites-enabled/01-weblate.conf
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - nginx
+    - weblate-nginx
+  notify: reload nginx
+
+- name: weblate docker container
+  docker_container:
+    name: weblate
+    image: weblate/weblate:latest
+    auto_remove: no
+    detach: yes
+    pull: yes
+    restart_policy: "unless-stopped"
+    state: started
+    user: "{{ systemuserlist.weblate.uid }}" # leaves GID as default
+    container_default_behavior: compatibility
+    networks_cli_compatible: no
+    networks:
+      - name: bridgewithdns
+        ipv4_address: "{{ bridgewithdns.weblate }}"
+    network_mode: bridgewithdns
+    mounts:
+      - type: bind
+        source: "{{ systemuserlist.weblate.home }}/data"
+        target: /app/data
+        read_only: no
+
+      - type: bind
+        source: "{{ systemuserlist.weblate.home }}/etc/supervisor-web.conf"
+        target: /etc/supervisor/conf.d/web.conf
+        read_only: yes
+
+      - type: bind
+        source: "{{ systemuserlist.weblate.home }}/etc/uwsgi-weblate.ini.j2"
+        target: /etc/uwsgi/apps-enabled/weblate.ini
+        read_only: yes
+
+      - type: bind
+        source: "{{ systemuserlist.weblate.home }}/health_check"
+        target: /app/bin/health_check
+        read_only: yes
+
+      # entrypoint script needs to write here
+      - type: bind
+        source: "{{ systemuserlist.weblate.home }}/cache"
+        target: /app/cache
+        read_only: no
+      # - type: tmpfs
+      #   target: /run
+      #   read_only: no
+      # - type: tmpfs
+      #    target: /var/log/nginx
+      #   read_only: no
+      # - type: tmpfs
+      #   target: /etc/nginx/sites-available
+      #   read_only: no
+
+    env:
+      WEBLATE_DEBUG: "0"
+      WEBLATE_LOGLEVEL: "{{ weblate_loglevel }}"
+
+      WEBLATE_SITE_DOMAIN: "{{ weblate_url }}"
+      WEBLATE_SITE_TITLE: "{{ weblate_site_title }}"
+
+      WEBLATE_ADMIN_NAME: "{{ weblate_admin_name }}"
+      WEBLATE_ADMIN_EMAIL: "weblate@{{ domain }}"
+      WEBLATE_ADMIN_PASSWORD: "{{ weblate_admin_pass }}"
+
+      WEBLATE_SERVER_EMAIL: "weblate@{{ domain }}"
+      WEBLATE_DEFAULT_FROM_EMAIL: "weblate@{{ domain }}"
+      WEBLATE_EMAIL_HOST: "{{ smtp_server }}"
+      WEBLATE_EMAIL_PORT: "{{ smtp_port_starttls | string }}"
+      WEBLATE_EMAIL_HOST_USER: "{{ smtp_username }}"
+      WEBLATE_EMAIL_HOST_PASSWORD: "{{ smtp_passwd }}"
+      WEBLATE_EMAIL_USE_SSL: "0"
+      WEBLATE_EMAIL_USE_TLS: "1"
+
+      WEBLATE_REGISTRATION_OPEN: "0"
+      WEBLATE_REQUIRE_LOGIN: "1"
+      WEBLATE_SESSION_COOKIE_SECURE: "1"
+      WEBLATE_GET_HELP_URL: "/helpdogs"
+      WEBLATE_STATUS_URL: "/statusdogs"
+      WEBLATE_LEGAL_URL: "/legaldogs"
+      WEBLATE_PRIVACY_URL: "/privatedogs"
+      WEBLATE_MT_MICROSOFT_TERMINOLOGY_ENABLED: "1"
+
+      POSTGRES_USER: "{{ systemuserlist.weblate.username }}"
+      POSTGRES_PASSWORD: "{{ systemuserlist.weblate.postgres_passwd }}"
+      POSTGRES_DATABASE: "{{ systemuserlist.weblate.username }}"
+      POSTGRES_PORT: "5432"
+      POSTGRES_HOST: "weblate_postgresql"
+
+      REDIS_HOST: "weblate_redis"
+      REDIS_PORT: "6379"
+  tags:
+    - weblate-container
+    - docker-containers

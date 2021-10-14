@@ -1,0 +1,42 @@
+server {
+
+
+    listen 443 ssl http2;
+    #listen [::]:443 ssl http2;
+
+    server_name {{ weblate_url }};
+    # Not used
+    #root /var/www/html;
+
+    ssl_certificate /etc/letsencrypt/live/{{ domain }}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/{{ domain }}/privkey.pem;
+
+    access_log /var/log/nginx/access_{{ weblate_url }}.log main;
+    error_log /var/log/nginx/error_{{ weblate_url }}.log warn;
+    location ~ ^/favicon.ico$ {
+        # DATA_DIR/static/favicon.ico
+        alias {{ systemuserlist.weblate.home }}/static/favicon.ico;
+        expires 30d;
+    }
+
+    location /static/ {
+        # DATA_DIR/static/
+        alias {{ systemuserlist.weblate.home }}/cache/static/;
+        expires 30d;
+    }
+
+    {# location /media/ {
+     #     # DATA_DIR/media/
+     #     alias /home/weblate/data/media/;
+     #     expires 30d;
+     # } #}
+
+    location / {
+        include uwsgi_params;
+        # Needed for long running operations in admin interface
+        uwsgi_read_timeout 3600;
+        # Adjust based to uwsgi configuration:
+        #uwsgi_pass unix:///run/uwsgi/app/weblate/socket;
+        uwsgi_pass {{ bridgewithdns.weblate }}:{{ weblate_uwsgi_socket_port }};
+    }
+}
