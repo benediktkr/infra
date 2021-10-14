@@ -1,8 +1,8 @@
 # distributed from ansible
 
 # m h dom mon dow
-13 */1 * * * {{ myusername }} /usr/local/bin/berlinrona.py
-23,53 */1 * * * {{ myusername }} /usr/local/bin/sdfcheck.py
-*/5 * * * * {{ myusername }} /usr/local/bin/nextcloud-influx.py
-*/15 * * * * {{ myusername }} /usr/local/bin/hospital.py
-#* * * * * {{ myusername }} /usr/local/bin/impfstoff.py
+13 */1 * * * {{ myusername }} /usr/local/bin/berlinrona.py >> /tmp/berlinrona.log 2>&1
+23,53 */1 * * * {{ myusername }} /usr/local/bin/sdfcheck.py >> /tmp/sdfcheck.log 2>&1
+*/5 * * * * {{ myusername }} /usr/local/bin/nextcloud-influx.py >> /tmp/nextcloud-influx.log 2>&1
+*/15 * * * * {{ myusername }} /usr/local/bin/hospital.py >> /tmp/hospital.log 2>&1
+#* * * * * {{ myusername }} /usr/local/bin/impfstoff.py >> /tmp/impfstoff.log 2>&1

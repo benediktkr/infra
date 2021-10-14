@@ -38,7 +38,7 @@
     #password: "{{ influxdb_admin_password }}"
     #basic_auth_user: "{{ influxdb_admin_user }}"
     #basic_auth_password: "{{ influxdb_admin_password }}"
-    #time_interval: ">10s"
+    time_interval: "1m"
   with_items: "{{ influxdb_user_database | dict2items }}"
   loop_control:
     label: "{{ item.key }}"

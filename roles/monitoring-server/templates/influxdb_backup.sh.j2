@@ -3,6 +3,6 @@
 
 set -e
 
-/usr/bin/find {{ influxdb_backup_path }} -mmin +60 -exec rm {} \;
+/usr/bin/find {{ influxdb_backup_path }} -type f -mmin +60 -exec rm {} \;
 
 /usr/bin/influxd backup -portable -host {{ influxdb_rpc_bind }} {{ influxdb_backup_path }}
