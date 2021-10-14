@@ -1,6 +1,8 @@
 #!/bin/bash
 
-set -e
+# errors like "sign in to confirm your age" makes youtube-dl return non-zero so
+# this does not work
+#set -e
 
 LOCKFILE=/tmp/youtube-dl-mirrors.lock
 lockfile -r 0 $LOCKFILE || exit 1
@@ -12,6 +14,7 @@ du -sh {{ archives.youtube.path }}
 {% for channel in archives.youtube.channels %}
 
 (
+    echo "{{ channel.name }}"
     mkdir -p {{ archives.youtube.path }}/{{ channel.name }}/
     cd {{ archives.youtube.path }}/{{ channel.name }}/
     youtube-dl --no-warnings --user-agent "{{ UA }}" -i {{ channel.url }} > /dev/null
