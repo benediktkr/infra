@@ -151,7 +151,7 @@ def send_metrics():
 
         # log a warning if its been missing one day, then start logging errors
         if marker_age.days > 0:
-            logger.errror(f"backup for {host} is {marker_age.days}d old")
+            logger.error(f"backup for {host} is {marker_age.days}d old")
         else:
             logger.debug(f"{host}: {age_seconds//60}m")
 
