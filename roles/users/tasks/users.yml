@@ -92,6 +92,56 @@
   tags: groups
 
 
+- name: set up system users
+  block:
+
+    - name: create system user groups
+      group:
+        state: present
+        name: "{{ item.key }}"
+        gid: "{{ item.value.gid | default(item.value.uid) }}"
+      with_dict: "{{ systemuserlist }}"
+      loop_control:
+        label: "{{ item.key }}"
+
+    - name: create system users
+      user:
+        state: present
+        name: "{{ item.key }}"
+        group: "{{ item.key }}"
+        groups: "{{ item.value.groups | default([]) }}"
+        shell: "{{ item.value.shell | default('/dev/null') }}"
+        uid: "{{ item.value.uid }}"
+        create_home: "{{ 'home' in item.value | default(False) }}"
+        home: "{{ item.value.home | default('/var/lib/' + item.key) }}"
+        move_home: yes
+        append: yes
+        system: yes
+        force: no
+      loop_control:
+        label: "{{ item.key }}"
+      with_dict: "{{ systemuserlist }}"
+
+    - name: set authorized_keys for tunnel user
+      template:
+        src: private/sshkeys/tunnel.authorized_keys
+        dest: /home/.system/tunnel/.ssh/authorized_keys
+        owner: tunnel
+        group: tunnel
+        mode: 0700
+      tags:
+        - sshkeys
+
+    - name: set authorized_keys for jenkins user if jenkins server
+      template:
+        src: private/sshkeys/jenkins.authorized_keys
+        dest: "{{ systemuserlist.jenkins.home }}/.ssh/authorized_keys"
+        owner: jenkins
+        group: jenkins
+        mode: 0700
+      tags:
+        - sshkeys
+
 - name: create human users
   user:
     name: "{{ userlist[item]['username'] }}"
@@ -149,55 +199,6 @@
     - "{{ myusername }}"
     - root
 
-- name: set up system users
-  block:
-
-    - name: create system user groups
-      group:
-        state: present
-        name: "{{ item.key }}"
-        gid: "{{ item.value.gid | default(item.value.uid) }}"
-      with_dict: "{{ systemuserlist }}"
-      loop_control:
-        label: "{{ item.key }}"
-
-    - name: create system users
-      user:
-        state: present
-        name: "{{ item.key }}"
-        group: "{{ item.key }}"
-        groups: "{{ item.value.groups | default([]) }}"
-        shell: "{{ item.value.shell | default('/dev/null') }}"
-        uid: "{{ item.value.uid }}"
-        create_home: "{{ 'home' in item.value | default(False) }}"
-        home: "{{ item.value.home | default('/var/lib/' + item.key) }}"
-        move_home: yes
-        append: yes
-        system: yes
-        force: no
-      loop_control:
-        label: "{{ item.key }}"
-      with_dict: "{{ systemuserlist }}"
-
-    - name: set authorized_keys for tunnel user
-      template:
-        src: private/sshkeys/tunnel.authorized_keys
-        dest: /home/.system/tunnel/.ssh/authorized_keys
-        owner: tunnel
-        group: tunnel
-        mode: 0700
-      tags:
-        - sshkeys
-
-    - name: set authorized_keys for jenkins user if jenkins server
-      template:
-        src: private/sshkeys/jenkins.authorized_keys
-        dest: "{{ systemuserlist.jenkins.home }}/.ssh/authorized_keys"
-        owner: jenkins
-        group: jenkins
-        mode: 0700
-      tags:
-        - sshkeys
 
 - name: set up deadspace
   block:

@@ -26,3 +26,4 @@
     mode: 0600
   tags:
     - cron
+    - xmrig-cron

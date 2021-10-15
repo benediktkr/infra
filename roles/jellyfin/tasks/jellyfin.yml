@@ -11,6 +11,7 @@
     group: jellyfin
   with_items:
     - config
+    - config/plugins/configurations
     - cache
   tags: jellyfin-dirs
 
