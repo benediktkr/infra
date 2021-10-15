@@ -6,6 +6,8 @@
 # */15 * * * * root /usr/bin/docker exec --user www-data {{ item.name }} php occ preview:pre-generate >> {{ item.root }}/preview.log 2>&1
 
 12 12 * * * root /usr/bin/docker exec --user www-data {{ item.name }} php occ app:update --all
+
+*/5 * * * * {{ myusername }} /usr/local/bin/nextcloud-influx.py >> /tmp/nextcloud-influx.log 2>&1
 {% endif %}
 
 {% endfor %}

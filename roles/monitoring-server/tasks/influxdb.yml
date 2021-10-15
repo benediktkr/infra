@@ -95,7 +95,6 @@
   with_items:
     - hospital.py
     - berlinrona.py
-    - nextcloud-influx.py
     - sdfcheck.py
     - impfstoff.py
     - influxdb_backup.sh

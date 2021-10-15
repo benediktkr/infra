@@ -12,21 +12,22 @@
   with_nested:
     - - dir: html
         owner: www-data
-        group: root # will be automatically change to this
+        group: root # changes back otherwise
       - dir: data
         owner: www-data
         group: www-data
     - "{{ nextclouds }}"
 
-
-# test this
-- name: template script to write version string to txt file
+- name: template scripts
   template:
-    src: nextcloudversion.sh.j2
-    dest: /usr/local/bin/nextcloudversion.sh
-    mode: 0750
+    src: "{{ item }}.j2"
+    dest: /usr/local/bin/{{ item }}
+    mode: 0775
     owner: root
     group: root
+  with_items:
+    - nextcloudversion.sh
+    - nextcloud-influx.py
 
 - name: versions to variable
   command: /usr/local/bin/nextcloudversion.sh
