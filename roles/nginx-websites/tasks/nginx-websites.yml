@@ -7,6 +7,8 @@
     group: www-data
     mode: 0755
     path: "/var/www/{{ item.name }}"
+  when:
+    - item.root_dir is not defined
   loop_control:
     label: "{{ item.name }}"
   with_items: "{{ static_sites }}"
@@ -20,6 +22,7 @@
   when:
     - item.name != "www.sudo.is"
     - item.custom_autoindex|default(True)
+    - item.root_dir is not defined
   with_items: "{{ static_sites }}"
   loop_control:
     label: "{{ item.name }}"
@@ -31,6 +34,7 @@
   when:
     - item.name != "www.sudo.is"
     - item.custom_autoindex|default(True) != True
+    - item.root_dir is not defined
   with_items: "{{ static_sites }}"
   loop_control:
     label: "{{ item.name }}"

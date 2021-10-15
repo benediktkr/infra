@@ -1,0 +1,136 @@
+#!/usr/bin/env python3
+#
+
+import argparse
+import subprocess
+import sys
+import os
+import urllib
+from contextlib import contextmanager
+
+
+import waybackpy
+from loguru import logger
+
+REMOVE_DOMAINS = [
+    'nedstatbasic.net'
+]
+
+
+UA = "archiving data i find important - {{ myemail }}/@{{ myusername }}:{{ domain }}"
+wget = f'wget --convert-links --mirror --no-parent -U "{UA}" -w 1 --adjust-extension --page-requisites --quiet --show-progress --include-directories=/includes,/web,/_static --domains=archive.org,coyote.leenks.com --span --continue' # -P --base=/
+
+'''
+waybackpy --url "https://www.berlin.de/polizei/polizeimeldungen/pressemitteilung.931311.php" --near --year 2020 --month 11 --day 28 | xargs wget --convert-links --mirror --no-parent --continue -U "eye02" -w 1 --adjust-extension --page-requisites --quiet --show-progress # -P
+'''
+
+@contextmanager
+def cwd(path):
+    oldpwd = os.getcwd()
+    os.chdir(path)
+    logger.debug(f"chdir to {path}")
+    try:
+        yield
+    finally:
+        os.chdir(oldpwd)
+        logger.debug(f"chdir to {path}")
+
+def url(value):
+    if not value.startswith("http"):
+        return f"https://{value}"
+    else:
+        return value
+
+@logger.catch
+def main():
+    parser = argparse.ArgumentParser(
+        description=f'User-Agent: "{UA}"',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+    parser.add_argument('url', type=url)
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("--newest", action="store_true")
+    group.add_argument("--oldest", action="store_true")
+    group.add_argument("--date", type=str, help="YYYY-MM-DD")
+    parser.add_argument('--debug', action="store_true", help="print DEBUG to stderr")
+    parser.add_argument('--path', type=str, default="{{ archives_pub }}")
+    parser.add_argument('--skip-wget', action="store_true")
+    args = parser.parse_args()
+
+    logger.debug(f"url: {args.url}")
+
+    if not args.debug:
+        logger.remove()
+        logger.add(sys.stdout, level="INFO")
+        logger.add(os.path.join(os.environ['HOME'], '.local/log/archive-wayback.log'), level="INFO")
+
+    client = waybackpy.Url(args.url, UA)
+
+    if args.date:
+        # {'year': '2004', 'month': '07', 'day': '29'}
+        wayback_date = dict(zip(['year', 'month', 'day'], args.date.split('-')))
+        wayback = client.near(**wayback_date)
+
+
+    elif args.newest:
+        wayback = client.newest()
+
+    elif args.oldest:
+        wayback = client.oldest()
+
+    # returns the html
+    # wayback.get()
+
+    # returns urls that archive.org told are there
+    # list(wayback.known_urls())
+
+    wget_url = wayback.archive_url.replace(":443/", "/").replace(":80/", "/")
+    logger.debug(wget_url)
+
+    version = wayback.archive_url.split('/')[4]
+    domain = urllib.parse.urlparse(args.url).netloc
+    proto = wayback.archive_url.split('/')[5]
+    wayback_symlink = os.path.join(args.path, domain, version)
+
+    logger.info(wayback.timestamp)
+
+    with cwd(args.path):
+        cmd = wget.split(' ')
+        cmd.append(wget_url)
+        if args.skip_wget:
+            logger.warning("wget will NOT be executed")
+        else:
+            logger.debug(f"executing wget: \n{wget} {wget_url}")
+            subprocess.run(cmd)
+
+        #wget_domains = os.listdir(os.path.join(args.path, "web.archive.org/web", version, proto))
+        #wget_domain = [a for a in wget_domains if domain.endswith(a)][0]
+        wget_domain = domain
+        wget_path = os.path.join(args.path, "web.archive.org/web", version, proto, wget_domain)
+
+        logger.debug(f"wget_path: '{wget_path}'")
+        logger.debug("removing bad domains with 'grep' and 'sed'")
+        for remove_domain in REMOVE_DOMAINS:
+            regex = f"http.*{remove_domain}"
+            # if this isnt wide enough, i can replace wget_path in the grep cmd with "."
+            _grep_cmd = ['grep', '-rl', regex, wget_path]
+            grep = subprocess.run(_grep_cmd, capture_output=True, text=True, check=False)
+            for fname in grep.stdout.splitlines():
+                # paralell seemed to cause issues, try again later
+                _sed_cmd = [ 'sed', '-i', f's/{regex}/REMOVED_URL/g', fname]
+                subprocess.run(_sed_cmd)
+
+
+    logger.debug('symlinking')
+    os.makedirs(os.path.join(args.path, domain), exist_ok=True)
+    try:
+        os.symlink(wget_path, wayback_symlink)
+    except FileNotFoundError:
+        logger.info("not sure why this happens, but the symlink was created")
+    except FileExistsError:
+        logger.warning("symlink already exist")
+
+    logger.success("done")
+
+if __name__ == "__main__":
+    main()

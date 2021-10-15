@@ -27,6 +27,7 @@
       - simple-cdd
       - libcurl4-gnutls-dev
       - weechat-matrix
+      - parallel
       - zip
       - httrack
       - pwgen
@@ -47,6 +48,7 @@
       - bdfr
       - matrix_client
       - internetarchive
+      - waybackpy
     state: latest
     executable: pip3
   tags:
@@ -87,6 +89,7 @@
     mode: 0755
   with_items:
     - archive-podcast.py
+    - archive-wayback.py
     - youtube-dl-mirrors.sh
     - reddit-archives.sh
     - matrixmsg.py

@@ -24,12 +24,6 @@ def get_file_url(links):
 def download_file(url, dest):
     subprocess.run(['wget', '-c', '--content-disposition', '-q', '-P', dest, url])
 
-def parse_feed(url, path):
-    d = feedparser.parse(url)
-
-    for item in d['entries']:
-        download_episode(item, path)
-
 def download_episode(item, path):
     podcastpath = os.path.join(path, item['title'])
     if os.path.exists(podcastpath):
@@ -77,25 +71,29 @@ def main():
 
     with open('/usr/local/etc/podcast.json', 'r') as f:
         try:
-            config = json.load(f)[args.name]
+            podcast_config = json.load(f)[args.name]
         except KeyError:
             logger.error(f"no podcast '{args.name}' configured")
             raise SystemExit(1)
 
     if not args.debug:
         logger.remove()
-        logger.add(sys.stderr, level=config.get("stderr_loglevel", "INFO"))
+        logger.add(sys.stderr, level=podcast_config.get("stderr_loglevel", "INFO"))
     else:
         # do nothing, --debug causes DEBUG logs to stderr
-        logger.debug(f"{args.name}: {config['path']}")
+        logger.debug(f"{args.name}: {podcast_config['path']}")
 
-    if 'logfile' in config:
-        logfile_loglevel = config.get("logfile_loglevel", "INFO")
-        logger.add(config['logfile'], level=logfile_loglevel)
+    if 'logfile' in podcast_config:
+        logfile_loglevel = podcast_config.get("logfile_loglevel", "INFO")
+        logger.add(podcast_config['logfile'], level=logfile_loglevel)
 
 
-    os.makedirs(config['path'], exist_ok=True)
-    parse_feed(config['rss_url'], config['path'])
+    os.makedirs(podcast_config['path'], exist_ok=True)
+
+    rss = feedparser.parse(podcast_config['rss_url'])
+    for item in rss['entries']:
+        download_episode(item, podcast_config['path'])
+
 
 if __name__ == "__main__":
     main()
