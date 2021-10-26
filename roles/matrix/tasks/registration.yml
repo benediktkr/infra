@@ -1,0 +1,34 @@
+---
+
+- name: matrix-registration config
+  template:
+    src: registration-config.yml.j2
+    dest: "{{ systemuserlist.matrix.home }}/registration/config.yaml"
+    owner: root
+    group: root
+    mode: 0644
+
+- name: start matrix-registration container
+  docker_container:
+    name: matrix-registration
+    image: zeratax/matrix-registration:{{ matrix_registration_tag }}
+    auto_remove: no
+    detach: yes
+    pull: yes
+    restart_policy: "unless-stopped"
+    state: started
+    container_default_behavior: compatibility
+    user: "{{ systemuserlist.matrix.uid }}:{{ systemuserlist.matrix.gid }}"
+    networks_cli_compatible: no
+    networks:
+      - name: bridgewithdns
+        ipv4_address: "{{ bridgewithdns.matrix_reg }}"
+    mounts:
+      - type: bind
+        source: "{{ systemuserlist.matrix.home }}/registration"
+        target: /data
+        read_only: no
+    command: serve
+  tags:
+    - matrix-registration-container
+    - docker-containers

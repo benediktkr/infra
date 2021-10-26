@@ -1,0 +1,102 @@
+# ansible managed
+matrix:
+  homeserverUrl: "https://{{ matrix_url }}"
+  accessToken: "{{ matrix_bots['email-bridge']['token'] }}"
+  storagePath: "/data/storage"
+
+mail:
+  enabled: true
+  port: 25
+  domains:
+    - "{{ matrix_smtp_url }}"
+    - "bear.s21.sudo.is"
+    - "testbear.s21.sudo.is"
+    - "mainframe.sudo.is"
+    - "freespace.sudo.is"
+
+  allowAnyDomain: true
+
+web:
+  port: 80
+  bindIp: '0.0.0.0'
+  secret: "{{ matrix_bridge_smtp_local_agent_secret }}"
+
+defaultMailTargets:
+  - "{{ matrix_bridge_smtp_default_room }}"
+customMailTargets: {}
+
+defaultRoomConfig:
+  allowFromAnyone: {{ matrix_bridge_smtp_anyone | default('false') }}
+
+  allowedSenders: {{ matrix_bridge_smtp_allowed }}
+  blockedSenders: {{ matrix_bridge_smtp_blocked }}
+
+  # If true, the message will skip the database and get posted to the room immediatly. The
+  # message won't have an ID and cannot be viewed in a web browser.
+  skipDatabase: false
+
+  useCcAsTarget: true
+  useBccAsTarget: true
+  useToAsTarget: true
+
+  # If true, the bot won't post an HTML message to the Matrix room, instead posting a plain
+  # text message. It is recommended to use $text_body in your formatting to avoid HTML tags
+  # being posted in the rough to the room.
+  plaintextOnly: false
+
+  attachments:
+    post: true
+
+    allowAllTypes: false
+    contentMapping:
+      "image/jpeg": "m.image"
+      "image/jpg": "m.image"
+      "image/png": "m.image"
+      "image/gif": "m.image"
+      "video/mp4": "m.video"
+      "audio/aac": "m.audio"
+    allowedTypes:
+    - 'image/png'
+    - 'image/jpeg'
+    - 'image/jpg'
+    - 'image/gif'
+    - 'application/pdf'
+    blockedTypes:
+    - 'application/exe'
+
+  # If true, the bot will post fragments to the room. Fragments are replies, quoted parts of
+  # the message, signatures, and other parts that don't appear to be part of the "primary"
+  # message. By default this is turned off to avoid flooding the room with quoted messages.
+  postReplies: false
+
+  # The message format for messages posted to the room. This format only applies to the first
+  # message, all other messages (replies, signatures, etc) will use the fragmentFormat. Valid
+  # variables are:
+  # $from_name       - The name of the person who sent the email (may be empty)
+  # $from_email      - The email of the person who sent the email
+  # $to_name         - The name given to the room's email address by the sender (may be empty)
+  # $to_email        - The actual email address that was accepted for the message (the room's
+  #                    email address)
+  # $subject         - The subject of the email
+  # $html_body       - The HTML formatted body (includes tags and fragments)
+  # $text_body       - The plain text body for the email (may be calculated if the sender didn't
+  #                    send a proper plain text body)
+  # $full_text_body  - The full body (including all fragments) as plain text
+  messageFormat: "<p><b>From</b>: <code>$from_email</code> [<a href='https://{{ matrix_url }}/m/$id'>open</a>]<br><b>To</b>: <code>$to_email</code><br><b>Subject</b>: <code>$subject</code><br><pre>$text_body</pre></p>"
+
+  # The format used for fragments (replies, etc). Same condition variables as messageFormat.
+  fragmentFormat: "$text_body"
+
+  # These next two are optional, and are disabled by default to avoid conflicts in messaging.
+  # They are used to represent the 'plain text' version of the message. These are used over
+  # the above two formats when sending plain text only messages and when sending the plain
+  # text version of the matrix event (which is used by bridges, such as the IRC bridge).
+  #messagePlainFormat: "$subject | https://{{ matrix_url }}/m/$id"
+  #fragmentPlainFormat: "$text_body"
+
+  antispam:
+    maxScore: -1
+    blockFailedDkim: false
+    blockFailedSpf: false
+
+roomConfigs: {}

@@ -1,0 +1,33 @@
+---
+
+- name: element config
+  template:
+    src: element-config.json.j2
+    dest: "{{ systemuserlist.matrix.home }}/element/config.json"
+    owner: matrix
+    group: matrix
+    mode: 0664
+
+- name: start matrix-element container
+  docker_container:
+    name: matrix-element
+    image: bubuntux/element-web:latest
+    auto_remove: no
+    detach: yes
+    pull: yes
+    restart_policy: "unless-stopped"
+    state: started
+    container_default_behavior: compatibility
+    networks_cli_compatible: no
+    network_mode: bridgewithdns
+    networks:
+      - name: bridgewithdns
+        ipv4_address: "{{ bridgewithdns.element }}"
+    mounts:
+      - type: bind
+        source: "{{ systemuserlist.matrix.home }}/element/config.json"
+        target: /etc/element-web/config.json
+        read_only: yes
+  tags:
+    - element-container
+    - docker-containers

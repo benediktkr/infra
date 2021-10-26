@@ -9,3 +9,19 @@
   service:
     name: telegraf
     state: restarted
+
+
+- name: restart matrix-bridge-smtp container
+  docker_container:
+    name: matrix-bridge-smtp
+    #image: dockreg.sudo.is/matrix-email-bot:latest
+    state: started
+    restart: true
+
+
+# - name: restart matrix-maubot container
+#   docker_container:
+#     name: matrix-maubot
+#     image: dockreg.sudo.is/matrix-email-bot:latest
+#     state: started
+#     restart: true

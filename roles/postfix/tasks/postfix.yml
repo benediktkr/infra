@@ -7,20 +7,11 @@
       - libsasl2-modules
     state: latest
     update_cache: yes
+  when: not skip_apt|default(false)|bool
   notify:
     - restart postfix
   tags:
     - packages
-
-- name: get docker network cidr (if installed)
-  set_fact:
-    docker_cidr_mask: "{{ ip | ipaddr('prefix') }}"
-  vars:
-    ip: "{{ ansible_docker0.ipv4.network }}/{{ ansible_docker0.ipv4.netmask }}"
-  when: ansible_docker0.ipv4 is defined
-
-- name: include secrets
-  include_vars: private/postfix.yml
 
 - name: set /etc/mailname
   copy:
@@ -33,16 +24,27 @@
 
 - name: template config
   template:
-    src: "{{ item['name'] }}.j2"
-    dest: "/etc/postfix/{{ item['name'] }}"
-    owner: "{{ item['owner'] }}"
-    mode: "{{ item['mode'] }}"
+    src: "{{ item }}.j2"
+    dest: "/etc/postfix/{{ item }}"
+    owner: root
+    group: root
+    mode: 0644
   notify:
     - restart postfix
-    - postmap sasl_passwd
   with_items:
-    - {name: sasl_passwd, mode: '0700', owner: root}
-    - {name: main.cf, mode: '0644', owner: root}
+    - main.cf
+    - master.cf
+
+- name: cleanup files
+  file:
+    path: "/etc/postfix/{{ item }}"
+    state: absent
+  with_items:
+    - canonical
+    - canonical.db
+    - sasl
+    - sasl_passwd
+    - sasl_passwd.db
 
 - name: template aliases
   template:

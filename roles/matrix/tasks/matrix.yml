@@ -6,7 +6,7 @@
     state: directory
     mode: "{{ item.mode|default(750) }}"
     owner: "{{ item.owner|default('matrix') }}"
-    group: matrix
+    group: "{{ item.group|default('matrix') }}"
   with_items:
     - name: data
     - name: element
@@ -15,8 +15,10 @@
       owner: 70
       mode: 700
     - name: html
-      mode: 644
+      mode: 750
+      group: www-data
     - name: registration
+    - name: bridge-email
 
 - name: matrix index.html
   template:
@@ -24,29 +26,9 @@
     dest: "{{ systemuserlist.matrix.home }}/html/index.html"
     owner: matrix
     group: www-data
-    mode: 0644
+    mode: 0750
   tags:
     - matrix-html
-
-- name: element config
-  template:
-    src: element-config.json.j2
-    dest: "{{ systemuserlist.matrix.home }}/element/config.json"
-    owner: matrix
-    group: matrix
-    mode: 0664
-  tags:
-    - element
-
-- name: matrix-registration config
-  template:
-    src: registration-config.yml.j2
-    dest: "{{ systemuserlist.matrix.home }}/registration/config.yaml"
-    owner: root
-    group: root
-    mode: 0644
-  tags:
-    - matrix-registration
 
 - name: template nginx vhost
   template:
@@ -158,57 +140,6 @@
       SERVER_NAME: "{{ matrix_domain }}"
   tags:
     - matrix-container
-    - docker-containers
-
-- name: start element-web container
-  docker_container:
-    name: matrix_element
-    image: bubuntux/element-web:latest
-    auto_remove: no
-    detach: yes
-    pull: yes
-    restart_policy: "unless-stopped"
-    state: started
-    container_default_behavior: compatibility
-    networks_cli_compatible: no
-    networks:
-      - name: bridgewithdns
-        ipv4_address: "{{ bridgewithdns.element }}"
-    mounts:
-      - type: bind
-        source: "{{ systemuserlist.matrix.home }}/element/config.json"
-        target: /etc/element-web/config.json
-        read_only: yes
-  tags:
-    - element
-    - element-container
-    - docker-containers
-
-- name: start matrix-registration container
-  docker_container:
-    name: matrix_registration
-    image: zeratax/matrix-registration:{{ matrix_registration_tag }}
-    auto_remove: no
-    detach: yes
-    pull: yes
-    restart_policy: "unless-stopped"
-    state: started
-    container_default_behavior: compatibility
-    networks_cli_compatible: no
-    user: "{{ systemuserlist.matrix.uid }}:{{ systemuserlist.matrix.gid }}"
-    network_mode: bridgewithdns
-    networks:
-      - name: bridgewithdns
-        ipv4_address: "{{ bridgewithdns.matrix_reg }}"
-    mounts:
-      - type: bind
-        source: "{{ systemuserlist.matrix.home }}/registration"
-        target: /data
-        read_only: no
-    command: serve
-  tags:
-    - matrix-registration
-    - matrix-registration-container
     - docker-containers
 
 - name: template scripts

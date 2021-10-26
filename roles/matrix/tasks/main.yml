@@ -1,3 +1,29 @@
 ---
- - include: matrix.yml
-   tags: matrix
+- include: matrix.yml
+  tags: matrix
+
+- include: element.yml
+  tags:
+    - matrix
+    - matrix-element
+
+- include: registration.yml
+  tags:
+    - matrix
+    - matrix-registration
+
+# - include: maubot.yml
+#   tags:
+#     - matrix
+#     - matrix-maubot
+
+
+- include: bridge-smtp.yml
+  tags:
+    - matrix
+    - matrix-bridge-smtp
+
+# - include: bridge-email.yml
+#   tags:
+#     - matrix
+#     - matrix-bridge-email

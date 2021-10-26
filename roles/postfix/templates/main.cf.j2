@@ -21,59 +21,29 @@ readme_directory = no
 # fresh installs.
 compatibility_level = 2
 
-# TLS parameters
-#smtpd_tls_cert_file=/etc/letsencrypt/live/{{ inventory_hostname }}/cert.pem
-#smtpd_tls_key_file=/etc/letsencrypt/live/{{ inventory_hostname }}/privkey.pem
-#smtpd_use_tls=yes
-#smtpd_tls_session_cache_database = btree:${data_directory}/smtpd_scache
-#smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache
 
-# See /usr/share/doc/postfix/TLS_README.gz in the postfix-doc package for
-# information on enabling SSL in the smtp client.
+
+# TLS parameters
+smtpd_tls_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem
+smtpd_tls_key_file=/etc/ssl/private/ssl-cert-snakeoil.key
+smtpd_tls_security_level=may
+
+smtp_tls_CApath=/etc/ssl/certs
+smtp_tls_security_level=may
+smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache
+
 
 smtpd_relay_restrictions = permit_mynetworks permit_sasl_authenticated defer_unauth_destination
 myhostname = {{ inventory_hostname }}
-mydomain = {{ postfix_mydomain }}
 alias_maps = hash:/etc/aliases
 alias_database = hash:/etc/aliases
-#myorigin = /etc/mailname
-myorigin = {{ inventory_hostname }}
-#myorigin =
-
-# postfix uses /etc/aliases for everything sent to these things
-#mydestination = {{ ansible_fqdn }}
-
-# so only emails sent to known local mailboxes work, but everything with
-# an @ gets relayed
-mydestination = {{ inventory_hostname }}, localhost, localhost.localdomain{% if ansible_fqdn != inventory_hostname %}, {{ ansible_fqdn }}{% endif %}
-#mydestination=
-
-fallback_transport = relay
-
-
-relayhost = [{{ smtp_server }}]:{{ smtp_port }}
-smtp_tls_wrappermode = yes
-smtp_tls_security_level = encrypt
-{% if ansible_docker0.ipv4 is defined %}
-mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128 {{ ansible_docker0.ipv4.network }}/{{ docker_cidr_mask }}
-inet_interfaces = 127.0.0.1, {{ ansible_docker0.ipv4.address }}
-{% else %}
-mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128
-inet_interfaces = loopback-only
-{% endif %}
+myorigin = /etc/mailname
+mydestination =
+relayhost = {{ matrix_smtp_url }}
+mynetworks = 127.0.0.0/8
+mailbox_command =
 mailbox_size_limit = 0
 recipient_delimiter = +
-inet_protocols = all
-
-# if no alias matches
-luser_relay = {{ systems_email }}
-local_recipient_maps =
-
-
-## to connect to my smtp provider
-smtp_sasl_auth_enable = yes
-smtp_sasl_security_options = noanonymous
-smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd
-# (smtpd_use_tls set above, note smtpD_....)
-smtp_use_tls=yes
-smtp_tls_CAfile = /etc/ssl/certs/ca-certificates.crt
+inet_interfaces = loopback-only
+inet_protocols = ipv4
+#sender_canonical_maps = regexp:/etc/postfix/canonical
