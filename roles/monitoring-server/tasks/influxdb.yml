@@ -26,7 +26,9 @@
     src: 01-influxdb.j2
     dest: /etc/nginx/sites-enabled/01-influxdb
   notify: reload nginx
-  tags: nginx-config
+  tags:
+    - nginx-config
+    - nginx-influxdb
 
 # fails after the first time, since after that
 - name: create influxdb admin user

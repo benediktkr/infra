@@ -15,6 +15,7 @@
     dest: /etc/nginx/sites-enabled/01-grafana
   tags:
     - grafana-config
+    - nginx-grafana
   notify: reload nginx
 
 - name: Create influxdb datasources

@@ -1,30 +1,45 @@
 server {
-   listen 443 ssl;
-   listen   [::]:443 ssl; # listen for ipv6
+  listen 443 ssl;
+  listen   [::]:443 ssl; # listen for ipv6
 
-   server_name {{ grafana_url }};
+  server_name {{ grafana_url }};
 
-    location / {
-        proxy_pass         http://127.0.0.1:{{ grafana_port }}/;
+  location ~ ^/api/health {
+    allow 127.0.0.1;
+    allow {{ my_public_ips[inventory_hostname] }}/32;
+    allow {{ my_public_ips[ansible_control_host] }}/32;
+    deny all;
 
-        proxy_redirect     off;
-        proxy_set_header   Host $host;
-        proxy_set_header   X-Real-IP $remote_addr;
-        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header   X-Forwarded-Host $server_name;
-    }
+    proxy_pass         http://127.0.0.1:{{ grafana_port }};
 
-    access_log /var/log/nginx/access_{{ grafana_url }}.log main;
-    error_log /var/log/nginx/error_{{ grafana_url }}.log warn;
+    proxy_redirect     off;
+    proxy_set_header   Host $host;
+    proxy_set_header   X-Real-IP $remote_addr;
+    proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header   X-Forwarded-Host $server_name;
+  }
 
-    ssl_session_timeout 5m;
+  location / {
+    proxy_pass         http://127.0.0.1:{{ grafana_port }}/;
 
-    ssl_certificate /etc/letsencrypt/live/{{ grafana_url.split('.')[-2:] | join(".")  }}/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/{{ grafana_url.split('.')[-2:] | join(".")  }}/privkey.pem;
+    proxy_redirect     off;
+    proxy_set_header   Host $host;
+    proxy_set_header   X-Real-IP $remote_addr;
+    proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header   X-Forwarded-Host $server_name;
+  }
 
-    add_header Referrer-Policy "no-referrer" always;
-    add_header X-Download-Options "noopen" always;
-    add_header X-Robots-Tag "none" always;
+  access_log /var/log/nginx/access_{{ grafana_url }}.log main;
+  error_log /var/log/nginx/error_{{ grafana_url }}.log warn;
 
-    fastcgi_hide_header X-Powered-By;
+  ssl_session_timeout 5m;
+
+  ssl_certificate /etc/letsencrypt/live/{{ grafana_url.split('.')[-2:] | join(".")  }}/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/{{ grafana_url.split('.')[-2:] | join(".")  }}/privkey.pem;
+
+  add_header Referrer-Policy "no-referrer" always;
+  add_header X-Download-Options "noopen" always;
+  add_header X-Robots-Tag "none" always;
+
+  fastcgi_hide_header X-Powered-By;
 }

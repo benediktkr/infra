@@ -448,12 +448,11 @@ enabled = false
 
 #################################### SMTP / Emailing ##########################
 [smtp]
-;enabled = false
+enabled = true
 # postfix is then configured to send on to fastmail
-host = localhost:25
-;user =
-# If the password contains # or ; you have to wrap it with triple quotes. Ex """#password;"""
-;password =
+host = {{ smtp_server }}:{{ smtp_port_starttls }}
+user = {{ smtp_username }}
+password = {{ smtp_passwd }}"
 ;cert_file =
 ;key_file =
 ;skip_verify = false
@@ -462,7 +461,7 @@ from_address = {{ systems_email }}
 # EHLO identity in SMTP dialog (defaults to instance_name)
 ;ehlo_identity = dashboard.example.com
 # SMTP startTLS policy (defaults to 'OpportunisticStartTLS')
-;startTLS_policy = NoStartTLS
+startTLS_policy = MandatoryStartTLS
 
 [emails]
 ;welcome_email_on_sign_up = false
