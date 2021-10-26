@@ -35,9 +35,11 @@ server {
     {% endif -%}
     {% if ansible_default_ipv6 is defined and 'address' in ansible_default_ipv6 -%}
     allow {{ ansible_default_ipv6.address }};
-    {%endif -%}
+    {% endif -%}
+    allow {{ bridgewithdns_cidr }};
     deny all;
   }
+
 
   {% for item in nginx_redirect|default([]) %}
   location = {{ item.src }} {

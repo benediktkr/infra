@@ -59,9 +59,13 @@ server {
   {# a .php file here is probably actually a html file, since this -#}
   {# vhost should only by servering static content -#}
   {# actual php would be proxied to fpm or apache or something -#}
+  {% if item.name == archives_url -%}
+
   location ~* ^.+\.php$ {
     default_type text/html;
   }
+
+  {% endif -%}
 
   location ~* ^.+\.(whois|log|grep|pub)$ {
     add_header Content-Type text/plain;
@@ -70,18 +74,34 @@ server {
     add_header Content-Type application/json;
   }
 
-  {% if 'matrix' in item %}
+  {% if item.name == www_domain or item.name == domain %}
+
+  # we are handling the top-level {{ domain }}
   location = /.well-known/matrix/server {
     default_type application/json;
     add_header Access-Control-Allow-Origin *;
-    return 200 '{"m.server": "{{ item.matrix.server }}:{{item.matrix.port}}"}';
+    return 200 '{"m.server": "{{ matrix_url }}:443"}';
   }
   location = /.well-known/matrix/client {
     default_type application/json;
     add_header Access-Control-Allow-Origin *;
-    return 200 '{"m.homeserver":{"base_url":"https://{{ item.matrix.server }}"}}';
+    return 200 '{"m.homeserver":{"base_url":"https://{{ matrix_url }}"}}';
   }
+
+  # sometimes clients misbehave and contact the top level domain when they
+  # shouldnt so we point them to {{ matrix_url }} instead
+  location ~* "^/_matrix.*" {
+    return 301 https://{{ matrix_url }}$request_uri;
+  }
+  location = /.well-known/carddav {
+    return 301 https://{{ nextcloud_url }}/remote.php/dav;
+  }
+  location = /.well-known/caldav {
+    return 301 https://{{ nextcloud_url }}/remote.php/dav;
+  }
+
   {% endif %}
+
   {% if item.force_download | default(false) %}
 
   add_header Content-disposition "attachment; filename=$1";

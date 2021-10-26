@@ -31,6 +31,7 @@
     state: latest
   environment:
     PATH: "{{ ansible_env.PATH }}:/sbin:/usr/sbin"
+  when: not skip_apt|default(false)
   tags:
     - packages
     - wwwsudois
@@ -47,6 +48,7 @@
     path: /etc/nginx/sites-enabled/default
     state: absent
   notify: reload nginx
+  tags: nginx-default-vhost
 
 - name: template uploadsize.conf
   template:
