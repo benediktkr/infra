@@ -1,0 +1,3 @@
+---
+ - include: matrix-bridge-smtp.yml
+   tags: matrix-bridge-smtp, matrix

@@ -1,0 +1,8 @@
+---
+
+- name: restart matrix-bridge-smtp container
+  docker_container:
+    name: matrix-bridge-smtp
+    #image: dockreg.sudo.is/matrix-email-bot:latest
+    state: started
+    restart: true

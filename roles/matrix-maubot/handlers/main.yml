@@ -1,0 +1,8 @@
+---
+
+# - name: restart matrix-maubot container
+#   docker_container:
+#     name: matrix-maubot
+#     image: dockreg.sudo.is/matrix-email-bot:latest
+#     state: started
+#     restart: true
