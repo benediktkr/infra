@@ -43,14 +43,8 @@
   notify:
     - call exportfs
 
-# - name: enable nfs-kernel-server
-#   service:
-#     name: nfs-kernel-server
-#     enabled: true
-#     state: started
-
-- name: DISABLE nfs-kernel-server
+- name: enable nfs-kernel-server
   service:
     name: nfs-kernel-server
-    enabled: false
-    state: stopped
+    enabled: true
+    state: started
