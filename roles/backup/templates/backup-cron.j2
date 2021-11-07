@@ -1,14 +1,8 @@
 # distributed from ansible
 
 # m h dom mon dow
-{% if inventory_hostname == rsnapshot_primary %}
-{{ rsnapshot_cron }} root /usr/local/bin/sudoisrsnapshot.py backup --quiet
-{{ rsnapshot_cron_metrics }} root /usr/local/bin/sudoisrsnapshot.py metrics --quiet
-{% endif %}
-
-{% if inventory_hostname == sdfbackup_opts.primary %}
-{{ sdfbackup_cron }} root /usr/local/bin/sdfbackup.py
-{% endif %}
+20 4 * * * root /usr/local/bin/full_backup.sh
+*/1 * * * * root /usr/local/bin/sudoisrsnapshot.py metrics --quiet
 
 
 #

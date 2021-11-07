@@ -12,6 +12,8 @@ from loguru import logger
 
 #import sudoisinflux
 
+### https://ruderich.org/simon/notes/encrypted-remote-backups
+
 class SDF(object):
     def __exit__(self, exc_type, exc_value, traceback):
         self.unmount()
@@ -50,7 +52,7 @@ class SSHMount(SDF):
         #self.assert_unmounted()
 
         p = subprocess.run(
-            ["sshfs", "-o", "idmap=user", self.destination, self.mountpoint],
+            ["sshfs", "-o", "idmap=user,gid=0", self.destination, self.mountpoint],
             check=True
         )
 
@@ -135,7 +137,7 @@ class LUKSMount(SDF):
 
     def _rsync(self, path):
         rsync_cmd = [
-            "/usr/bin/rsync", "-rahS", "--numeric-ids",
+            "/usr/bin/rsync", "-rah", "--numeric-ids",
             "--exclude", "ruv-dl",   # move to config
             "--delete-after", path, self.mountpoint
         ]
@@ -154,15 +156,10 @@ def main():
     key_path = config['luks_args']['key_path']
 
 
-    if 'logfile' in config:
-        if '-v' not in sys.argv:
-            logger.remove()
-            logger.add(sys.stderr, level="WARNING")
-        logger.add(config['logfile'])
-
-    if socket.gethostname() != config['primary']:
-        logger.error("wrong host")
-        raise SystemExit(13)
+    if '-v' not in sys.argv:
+        logger.remove()
+        logger.add(sys.stderr, level="WARNING")
+    logger.add("/var/log/sdfbackup.log")
 
     if "--open" in sys.argv:
         # mount the sshfs and luks, exit and leave it open
@@ -183,13 +180,32 @@ def main():
         path = os.path.join(ssh.mountpoint, config['luks_args']['luks_img'])
 
         with LUKSMount(path, luks_mountpoint, key_path) as luks:
+            df0 = subprocess.run(["df", "-h", luks_mountpoint], capture_output=True).stdout.splitlines()[1]
+            logger.debug(df0)
+
             luks.rsync(config['src_root'], config['paths'])
+
+            df1 = subprocess.run(["df", "-h", luks_mountpoint], capture_output=True).stdout.decode().splitlines()[1]
+            used_percent = df1.split()[-2][:-1]
+            avail_gb = df1.split()[-3][:-1]
+            used_gb = df1.split()[-4][:-1]
+            logger.debug(df1)
+
+            with open("/root/.sdfbackup.json", 'w') as f:
+                f.write(json.dumps({
+                    'used_percent': int(used_percent),
+                    'avail_gb': int(avail_gb),
+                    'used_gb': int(used_gb)
+                }))
+
             logger.debug("tree: start")
             treecmd = [
                 "tree", luks_mountpoint, "-L", "8", "-o", "/root/sdftree.txt"
             ]
             subprocess.run(treecmd, check=True)
             logger.debug("tree finished")
+
+
 
     logger.debug("exiting sdfbackup.py..")
 

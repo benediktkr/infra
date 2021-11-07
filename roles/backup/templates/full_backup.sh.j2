@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# ansible_distributed
+
+# dont continue even if the first fails
+set +e
+
+/usr/local/bin/sudoisrsnapshot.py backup
+sleep 10
+/usr/local/bin/sdfbackup.py -v

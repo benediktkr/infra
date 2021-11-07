@@ -59,10 +59,10 @@
     owner: root
     group: root
   with_items:
-    - sdfbackup.sh
     - sdfbackup.py
     - sdfcleanup.sh
     - sudoisrsnapshot.py
+    - full_backup.sh
   tags: backup_scripts
 
 - name: luks key for sdf

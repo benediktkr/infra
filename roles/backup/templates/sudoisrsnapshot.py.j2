@@ -19,7 +19,7 @@ parser.add_argument("action", choices=["metrics", "backup"])
 parser.add_argument("-q", "--quiet", action="store_true", help="dont print to stdout/stderr")
 parser.add_argument("--interval", default="alpha", help="rsnapshot interval")
 parser.add_argument("--debug", action="store_true", help="debug logs")
-parser.add_argument("--logfile", default="/var/log/backup.log")
+parser.add_argument("--logfile", default="/var/log/sudoisrsnapshot.log")
 parser.add_argument("--force-yes-i-know-what-im-doing", action="store_true")
 args = parser.parse_args()
 
@@ -28,6 +28,7 @@ date_bin = "/usr/bin/date"
 
 host_marker_name = ".backup_age_marker"
 successful_backup_marker_path = "/root/.last_succesful_backup"
+sdfbackup_json_path = "/root/.sdfbackup.json"
 
 latest_path = path.join("{{ rsnapshot_root }}", f"{args.interval}.0")
 
@@ -48,8 +49,8 @@ def utc_now():
 def utc_isoformat():
     return utc_now().isoformat()
 
-def write_success_marker():
-    with open(successful_backup_marker_path, 'w') as f:
+def write_marker(marker_path):
+    with open(marker_path, 'w') as f:
         f.write(utc_isoformat() + "\n")
 
 def get_host_marker_age(hostname):
@@ -104,6 +105,10 @@ def send_metrics():
     # should always be 0
     backups_without_marker = [a for a in all_backup_subdirs if a[1] is None]
 
+    with open(sdfbackup_json_path, "r") as f:
+        sdfbackup = json.loads(f.read())
+
+
     try:
         last_successful_backup = get_marker_age(successful_backup_marker_path)
 
@@ -117,17 +122,20 @@ def send_metrics():
             'fields': {
                 'seconds_since_last_successful_run': int(last_successful_backup.total_seconds()),
                 'backups_count': len(backups),
-                'backups_without_marker_count': len(backups_without_marker)
+                'backups_without_marker_count': len(backups_without_marker),
+                'sdf_used_percent': sdfbackup['used_percent'],
+                'sdf_avail_gb': sdfbackup['avail_gb'],
+                'sdf_used_gb': sdfbackup['used_gb']
             }
         }
         sudoisinflux.write(last_successful, precision='h')
         logger.debug(f"influxdb.write: {json.dumps(last_successful, indent=2)}")
 
-    except FileNotFoundError:
+    except FileNotFoundError as e:
         # if theres no marker for a succesful backup, it probably
         # hasnt been taken yet, so dont send a datapoint about a successful
         # backup that hasnt happened
-        logger.error(f"no file '{successful_backup_marker_path}' found")
+        logger.error(e)
 
 
     for host, marker_age in read_all_host_markers():
@@ -158,10 +166,6 @@ def send_metrics():
 
 @logger.catch
 def main():
-    if "{{ inventory_hostname }}" != "{{ rsnapshot_primary }}" and not args.force_yes_i_know_what_im_doing:
-        logger.error(f"this is probably the wrong host, otherwise '--force-yes-i-know-what-im-doing'")
-        raise SystemExit(13)
-
     if not path.exists(latest_path):
         logger.error(f"path '{latest_path}' doesnt exist")
         sys.exit(2)
@@ -184,7 +188,7 @@ def main():
         # update the marker for a succesful backup only if rsnapshot
         # exits without errors
         if ps.returncode == 0:
-            write_success_marker()
+            write_marker(successful_backup_marker_path)
 
         if len(ps.stdout) > 0:
             logger.warning(f"rsnapshot stdout: \n{ps.stdout}")

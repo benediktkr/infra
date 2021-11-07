@@ -1,5 +1,5 @@
 
 
-umount -l /metaarray/backup
-cryptsetup luksClose metaarray-mainframe
-umount -l /sshfs/metaarray
+umount -l {{ sdfbackup_opts.luks_args.mountpoint }} || true
+cryptsetup luksClose {{ sdfbackup_opts.luks_args.luks_img.split('.')[0] }} || true
+umount -l {{ sdfbackup_opts.ssh_args.mountpoint }} || true

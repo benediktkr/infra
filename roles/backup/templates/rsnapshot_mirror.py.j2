@@ -20,10 +20,6 @@ if __name__ == "__main__":
     else:
         logger.success("verbose output")
 
-    if "{{ inventory_hostname }}" == "{{ rsnapshot_primary }}" and not args.force_yes_i_know_what_im_doing:
-        logger.error(f"this is probably the wrong host, otherwise '--force-yes-i-know-what-im-doing'")
-        raise SystemExit(13)
-
     if not path.exists("{{ rsnapshot_mirror_root }}"):
         logger.error(f"{{ rsnapshot_mirror_root }} desnt exist")
         raise SystemExit(1)
