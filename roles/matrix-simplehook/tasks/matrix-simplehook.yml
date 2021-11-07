@@ -1,0 +1,26 @@
+---
+
+- name: start matrix-simplehook
+  docker_container:
+    name: matrix-simplehook
+    image: nim65s/matrix-webhook
+    auto_remove: false
+    detach: true
+    pull: true
+    restart_policy: "unless-stopped"
+    state: started
+    container_default_behavior: compatibility
+    user: "{{ systemuserlist.matrix.uid }}:{{ systemuserlist.matrix.gid }}"
+    networks_cli_compatible: no
+    env:
+      PORT: "{{ matrix_simplehook_port }}"
+      MATRIX_URL: "https://{{ matrix_url }}"
+      MATRIX_ID: "{{ matrix_bots['simplehook']['user'] }}"
+      MATRIX_PW: "{{ matrix_bots['simplehook']['passwd'] }}"
+      API_KEY: "{{ matrix_simplehook_api_key }}"
+    networks:
+      - name: bridgewithdns
+        ipv4_address: "{{ bridgewithdns.matrix_simplehook }}"
+  tags:
+    - matrix-simplehook-envcontainer
+    - docker-containers

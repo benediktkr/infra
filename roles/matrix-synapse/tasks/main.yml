@@ -1,0 +1,3 @@
+---
+- include: matrix-synapse.yml
+  tags: matrix-synapse

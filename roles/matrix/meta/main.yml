@@ -1,0 +1,8 @@
+---
+
+dependencies:
+  - matrix-synapse
+  - matrix-element
+  - matrix-registration
+  - matrix-bridge-smtp
+  - matrix-simplehook
