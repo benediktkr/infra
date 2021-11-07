@@ -175,3 +175,12 @@
 #     host: "{{ jellyfin_ip.stdout }}"
 #   tags:
 #     - jellyfin-container
+
+- name: telegraf file
+  template:
+    src: jellyfin-telegraf.conf.j2
+    dest: /etc/telegraf/telegraf.d/jellyfin.conf
+  notify:
+    - restart telegraf
+  tags:
+    - telegraf-config

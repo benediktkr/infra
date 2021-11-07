@@ -58,6 +58,11 @@ server {
         #proxy_buffering off;
     }
 
+    location /metrics {
+        return 403;
+    }
+
+
     # location block for /web - This is purely for aesthetics so
     # /web/#!/ works instead of having to go to /web/index.html/#!/
     location ~ ^/web/$ {
