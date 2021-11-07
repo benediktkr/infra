@@ -3,5 +3,10 @@
 # m h dom mon dow
 13 */1 * * * {{ myusername }} /usr/local/bin/berlinrona.py >> /tmp/berlinrona.log 2>&1
 23 */1 * * * {{ myusername }} /usr/local/bin/sdfcheck.py >> /tmp/sdfcheck.log 2>&1
+33 */1 * * * {{ myusername }} /usr/local/bin/matrix-federation.py >> /tmp/matrix-federation.log 2>&1
+
+
 */15 * * * * {{ myusername }} /usr/local/bin/hospital.py >> /tmp/hospital.log 2>&1
 #* * * * * {{ myusername }} /usr/local/bin/impfstoff.py >> /tmp/impfstoff.log 2>&1
+
+#
