@@ -18,11 +18,16 @@ def check():
     federation_ok = int(j['FederationOK'])
     assert federation_ok == 0 or federation_ok == 1
 
+    addr = j['DNSResult']['Addrs'][0]
+    ssl_valid_until_ts = j['ConnectionReports'][addr]['Keys']['valid_until_ts']
+
     tags = {
-        "matrix_domain": "{{ matrix_domain }}"
+        "matrix_domain": "{{ matrix_domain }}",
+        "addr": addr
     }
     fields = {
         "federation_ok": int(federation_ok),
+        "ssl_valid_util_ts": int(ssl_valid_until_ts)
     }
 
     sudoisinflux.write_datapoint("matrix_federation", tags, fields, precision="h")
