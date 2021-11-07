@@ -19,7 +19,8 @@ trap cleanup EXIT
 {% set user = deadspace_user %}
 
 IGNORE="{% for excl in deadspace_ignore %}--exclude {{ excl }} {% endfor %}"
-PARAMS="-rahS --numeric-ids --delete-after --safe-links "
+# -S, --sparse: slows it down
+PARAMS="-rah --numeric-ids --delete-after --safe-links "
 if [[ "$1" == "-v" ]]; then
     PARAMS="$PARAMS --info=progress2"
 fi
@@ -27,7 +28,8 @@ fi
 {% for origin in deadspace %}
 {%   for item in deadspace[origin] %}
 {%     if origin != inventory_hostname and inventory_hostname in item.replicas %}
-if [[ "$1" == "-v" ]]; then echo "{{ origin }}:{{ item.path }}"; fi
+{%       set hostname = item.ssh_hostname | default(origin) %}
+if [[ "$1" == "-v" ]]; then echo "{{ hostname }}:{{ item.path }}"; fi
 
 {% if 'rsnapshot/' in item.path %}
 EXCLUDE="$IGNORE --exclude {{ inventory_hostname }}/"
@@ -38,11 +40,14 @@ EXCLUDE="$IGNORE "
 mkdir -p {{ item.path }}
 stat {{ item.path }} > /dev/null
 
+{% if not item.skip_chattr|default(false) %}
 chattr -fR -i {{ item.path }} || true
 
-rsync -e "ssh -i {{ deadspace_sshkey }}" $PARAMS $EXCLUDE {{ user }}@{{ origin }}:{{ item.path }}/ {{ item.path }}/ || true
+{% endif %}
 
-echo "origin: {{ origin }}
+rsync -e "ssh -i {{ deadspace_sshkey }}" $PARAMS $EXCLUDE {{ user }}@{{ hostname }}:{{ item.path }}/ {{ item.path }}/ || true
+
+echo "origin: {{ hostname }}
 path: {{ item.path }}
 state: replica
 comment: {{ item.comment|default("") }}
@@ -54,7 +59,11 @@ echo "did not rsync my own backup from origin" > {{ item.path }}/{{ inventory_ho
 
 {% endif -%}
 
+{% if not item.skip_chattr|default(false) %}
 chattr -fR +i {{ item.path }} || true
+
+{% endif %}
+
 
 {%     endif %}
 {%   endfor %}
