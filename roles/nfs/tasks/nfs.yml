@@ -1,0 +1,56 @@
+---
+
+- name: install nfs
+  apt:
+    name:
+      - nfs-common
+      - nfs-kernel-server
+    state: latest
+    update_cache: true
+  tags:
+    - packages
+
+- name: template /etc/exports
+  template:
+    src: exports.j2
+    dest: /etc/exports
+    owner: root
+    group: root
+  notify:
+    - call exportfs
+    - reload nfs-kernel-server
+
+- name: template config
+  template:
+    src: "{{ item }}.j2"
+    dest: /etc/default/{{ item }}
+    owner: root
+    group: root
+  with_items:
+    - rpcbind
+    - nfs-kernel-server
+  notify:
+    - call exportfs
+    - reload nfs-kernel-server
+    - restart rpcbind
+
+- name: template /etc/exports
+  template:
+    src: exports.j2
+    dest: /etc/exports
+    owner: root
+    group: root
+  notify:
+    - call exportfs
+
+# - name: enable nfs-kernel-server
+#   service:
+#     name: nfs-kernel-server
+#     enabled: true
+#     state: started
+
+- name: DISABLE nfs-kernel-server
+  service:
+    name: nfs-kernel-server
+    enabled: false
+    state: stopped

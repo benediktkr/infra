@@ -1,0 +1,7 @@
+# ansible_distributed
+# /etc/init.d/rpcbind
+
+OPTIONS="-w -h {{ wireguard_clients[inventory_hostname]['ip'] }} -h 127.0.0.1 -l "
+
+# Uncomment the following line to enable libwrap TCP-Wrapper connection logging
+# OPTIONS="${OPTIONS} -l "

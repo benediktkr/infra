@@ -1,0 +1,9 @@
+
+{% for item in deadspace[inventory_hostname] -%}
+{% if item.nfs|default(False) -%}
+{% set fsid = loop.index0 %}
+{% for allowed in item.nfs_allow|default('*') %}
+{{ item.path }}     {{ allowed }}(fsid={{ fsid }},rw,sync,subtree_check)
+{% endfor %}
+{% endif %}
+{% endfor %}
