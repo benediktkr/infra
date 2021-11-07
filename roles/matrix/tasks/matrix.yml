@@ -66,7 +66,7 @@
 
 - name: redis container for matrix synapse
   docker_container:
-    name: matrix_redis
+    name: matrix-redis
     image: "redis:latest"
     restart_policy: "unless-stopped"
     auto_remove: no
@@ -75,7 +75,7 @@
     state: started
     container_default_behavior: compatibility
     env:
-      REDIS_HOST: matrix_redis
+      REDIS_HOST: matrix-redis
     networks_cli_compatible: no
     networks:
       - name: bridgewithdns
@@ -85,7 +85,7 @@
 
 - name: postgres container for matrix synapse
   docker_container:
-    name: matrix_postgresql
+    name: matrix-postgresql
     state: started
     image: docker.io/postgres:12-alpine
     container_default_behavior: compatibility

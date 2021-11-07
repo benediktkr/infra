@@ -775,7 +775,7 @@ database:
     user: "{{ systemuserlist.matrix.username }}"
     password: "{{ systemuserlist.matrix.postgres_passwd }}"
     database: "{{ systemuserlist.matrix.username }}"
-    host: matrix_postgresql
+    host: matrix-postgresql
 #    cp_min: 5
 #    cp_max: 10
 #
@@ -2839,7 +2839,7 @@ redis:
   # Optional host and port to use to connect to redis. Defaults to
   # localhost and 6379
   #
-  host: matrix_redis
+  host: matrix-redis
   port: 6379
 
   # Optional password if configured on the Redis instance
