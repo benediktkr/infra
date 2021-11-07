@@ -2,7 +2,12 @@
 {% set domain = jellyfin_url.split('.')[1:] | join(".")  %}
 
 server {
-    listen 80;
+   listen 80;
+   server_name {{ jellyfin_url }};
+   return 301 https://$host$request_uri;
+}
+
+server {
     listen 443 ssl http2;
     # listen [::]:443 ssl http2;
     server_name {{ jellyfin_url }};
@@ -10,10 +15,6 @@ server {
     # use a variable to store the upstream proxy
     # set $jellyfin jellyfin;
     # resolver 127.0.0.1 valid=30;
-
-    if ($scheme != "https") {
-      return 301 https://$host$request_uri;
-    }
 
     #access_log /var/log/nginx/access_{{ jellyfin_url }}.log main;
     error_log /var/log/nginx/error_{{ jellyfin_url }}.log warn;
@@ -28,24 +29,22 @@ server {
     proxy_max_temp_file_size 0;
 
     # Security / XSS Mitigation Headers
-    add_header X-Frame-Options "SAMEORIGIN";
-    add_header X-XSS-Protection "1; mode=block";
-    add_header X-Content-Type-Options "nosniff";
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header X-Content-Type-Options "nosniff" always;
 
     # Content Security Policy
     # See: https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP
     # External Javascript (such as cast_sender.js for Chromecast) must
     # be whitelisted.
-
-    add_header Content-Security-Policy "default-src https: data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' https://www.gstatic.com/cv/js/sender/v1/cast_sender.js blob:; worker-src 'self' blob:; connect-src 'self'; object-src 'none'; frame-ancestors 'self'";
-
+    add_header Content-Security-Policy "default-src https: data: blob: http://image.tmdb.org; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' https://www.gstatic.com/cv/js/sender/v1/cast_sender.js https://www.gstatic.com/eureka/clank/cast_sender.js https://www.gstatic.com/eureka/clank/94/cast_sender.js https://www.gstatic.com/eureka/clank/95/cast_sender.js https://www.youtube.com blob:; worker-src 'self' blob:; connect-src 'self'; object-src 'none'; frame-ancestors 'self'" always;
 
 
     location / {
         include /etc/nginx/jellyfin/jellyfin_auth.conf;
 
         # Proxy main Jellyfin traffic
-        proxy_pass http://127.0.0.1:8096;
+        proxy_pass http://127.0.0.1:{{ jellyfin_port }};
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -62,7 +61,7 @@ server {
     # location block for /web - This is purely for aesthetics so
     # /web/#!/ works instead of having to go to /web/index.html/#!/
     location ~ ^/web/$ {
-        proxy_pass http://127.0.0.1:8096; # /web/index.html/;
+        proxy_pass http://127.0.0.1:{{ jellyfin_port }}; # /web/index.html/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -73,7 +72,7 @@ server {
 
     location /socket {
         # Proxy Jellyfin Websockets traffic
-        proxy_pass http://127.0.0.1:8096;
+        proxy_pass http://127.0.0.1:{{ jellyfin_port }};
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
