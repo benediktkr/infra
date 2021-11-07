@@ -182,7 +182,6 @@
       cn: "{{ item.username }}"
       mail:  "{{ item.email }}"
       displayName: "{{ item.username }}"
-      userPassword: "{{ item.ldap_initial_pass }}"
     server_uri: ldap://{{ openldap_url }}/
     bind_dn: "{{ openldap_admin_user }}"
     bind_pw: "{{ openldap_admin_pass }}"
