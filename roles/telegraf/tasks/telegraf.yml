@@ -33,24 +33,17 @@
   notify: restart telegraf
   tags: users
 
-- name: get list of existing groups
-  shell: "/usr/bin/getent group | awk -F':' '{print $1}'"
-  register: etc_groups
-  check_mode: no
-  changed_when: false
-  tags: users
-
-- name: adding telegraf user to groups that exist on this system"
-  user:
-    name: "{{ systemuserlist.telegraf.username }}"
-    groups: "{{ item }}"
-    append: yes
-  with_items: "{{ systemuserlist.telegraf.groups }}"
-  tags: users
-  when: 'item in etc_groups.stdout_lines'
-  loop_control:
-    label: "{{ systemuserlist.telegraf.username }} {{ item }}"
-  notify: restart telegraf
+# - name: get list of existing groups
+#   shell: "/usr/bin/getent group | awk -F':' '{print $1}'"
+#   register: etc_groups
+#   check_mode: no
+#   changed_when: false
+#   tags: users
+#
+# use with:
+#
+#  with_items: "{{ systemuserlist.telegraf.groups }}"
+#  when: 'item in etc_groups.stdout_lines'
 
 - name: add apt key for influxdata to install telegraf
   apt_key:
@@ -69,10 +62,10 @@
     distro: "{{ ansible_lsb.id }}"
   when: ansible_lsb.id != "Raspbian"
 
-- name: set codename to buster if bullseye
+- name: set codename to bullseye if bookworm
   set_fact:
-    codename: buster
-  when: ansible_lsb.codename == "bullseye"
+    codename: bullseye
+  when: ansible_lsb.codename == "bookworm"
 
 - name: set codename to focal if hirsute
   set_fact:
@@ -83,13 +76,14 @@
   set_fact:
     codename: "{{ ansible_lsb.codename }}"
   when:
-    - ansible_lsb.codename != "bullseye"
+    - ansible_lsb.codename != "bookworm"
     - ansible_lsb.codename != "hirsute"
 
 - name: add repo for influxdata to install telegraf
   apt_repository:
     repo: deb https://repos.influxdata.com/{{ distro | lower }} {{ codename }} stable
     state: present
+  when: not skip_apt|default(false)
   tags:
     - packages
 
@@ -98,6 +92,7 @@
     name: telegraf
     state: latest
     update_cache: true
+  when: not skip_apt|default(false)
   tags:
     - packages
   notify: restart telegraf
