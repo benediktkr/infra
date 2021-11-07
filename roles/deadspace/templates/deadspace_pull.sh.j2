@@ -28,7 +28,7 @@ fi
 {% for origin in deadspace %}
 {%   for item in deadspace[origin] %}
 {%     if origin != inventory_hostname and inventory_hostname in item.replicas %}
-{%       set hostname = item.ssh_hostname | default(origin) %}
+{%       set hostname = item.hostname | default(origin) %}
 if [[ "$1" == "-v" ]]; then echo "{{ hostname }}:{{ item.path }}"; fi
 
 {% if 'rsnapshot/' in item.path %}
