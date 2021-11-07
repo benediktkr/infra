@@ -10,13 +10,11 @@
 
 - name: template authelia config
   template:
-    src: "{{ item }}.j2"
-    dest: "{{ systemuserlist.authelia.home }}/config/{{ item }}"
+    src: "private/authelia-config.yml.j2"
+    dest: "{{ systemuserlist.authelia.home }}/config/config.yml"
     owner: authelia
     group: authelia
     mode: 0750
-  with_items:
-    - config.yml
   notify: restart authelia container
 
 - name: template nginx vhost
