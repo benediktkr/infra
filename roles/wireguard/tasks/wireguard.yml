@@ -16,7 +16,6 @@
     sysctl_set:
     state: present
     reload: yes
-  when: wireguard_local_nat is defined
 
   #shell: "bash -c 'echo 1 > /proc/sys/net/ipv4/ip_forward'"
 
@@ -26,7 +25,6 @@
     regexp: '^#net.ipv4.ip_forward.*$'
     replace: 'net.ipv4.ip_forward=1'
   notify: systemctl daemon reload
-  when: wireguard_local_nat is defined
 
 - name: enable ip_forward in proc
   sysctl:
@@ -35,17 +33,6 @@
     sysctl_set: yes
     state: present
     reload: yes
-  when: wireguard_local_nat is defined
-
-- name: install openresolv if needed
-  apt:
-    name: openresolv
-  when:
-    - inventory_hostname in wireguard_clients
-    - wireguard_clients[inventory_hostname]['vpn_dns'] | default(false)
-  tags:
-    - resolvconf
-    - packages
 
 - name: install wireguard
   apt:
@@ -69,7 +56,6 @@
     owner: root
     group: root
   tags: wg-scripts
-  notify: restart wireguard
 
 - name: template wg0 config
   template:
@@ -80,9 +66,7 @@
     mode: 0700
   notify: restart wireguard
   tags:
-    - wg-config
-    - wireguard_clients
-    - wireguard-clients
+    - wg0.conf
 
 - name: enable wireguard server with wg-quick
   service:

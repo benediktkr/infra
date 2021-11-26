@@ -1,0 +1,33 @@
+#!/bin/bash
+
+set -e
+
+{% if wg_clients[inventory_hostname]['listen'] | default(false) %}
+iptables -t nat -D POSTROUTING -s {{ wireguard_cidr }} -o {{ ansible_default_ipv4.interface  }} -j MASQUERADE || true
+iptables -t nat -A POSTROUTING -s {{ wireguard_cidr }} -o {{ ansible_default_ipv4.interface  }} -j MASQUERADE
+{% endif %}
+
+{% if wg_post_up_dns_route|default(false) %}
+sleep 5
+
+dgw=$(ip r | grep default | awk '{print $3}' | head -n 1)
+
+ip route del 208.67.222.222/32 via $dgw metric 0 || true
+ip route del 208.67.220.220/32 via $dgw metric 0 || true
+
+ip route add 208.67.222.222/32 via $dgw metric 0
+ip route add 208.67.220.220/32 via $dgw metric 0
+
+{% endif %}
+
+{# sleep 5
+#
+# {% for host in wireguard_endpoints.values() %}
+# {%   if 'endpoint_for' in wg_clients[host] %}
+# {%     set serverip = wg_clients[host]['ip'] %}
+# ping -c 1 {{ serverip }} || true
+# {%   endif %}
+ # {% endfor %}
+#}
+
+exit 0

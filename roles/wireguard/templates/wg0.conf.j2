@@ -1,0 +1,58 @@
+{% set wg = wg_clients[inventory_hostname] %}
+
+## NEW
+
+[Interface]
+Address = {{ wg.ip }}/32
+{% if wg.listen|default(false) %}
+ListenPort = {{ wireguard_port }}
+{% endif %}
+PrivateKey = {{ lookup('file', 'private/wireguard/' + inventory_hostname ) }}
+#SaveConfig = true
+PostUp = /usr/local/bin/wg-post-up.sh
+
+
+{% if not wg.listen|default(false) %}
+{% set endpoint = wg.endpoint|default(wg_endpoint) %}
+## connect via: {{ endpoint }}
+
+[Peer]
+Endpoint = {{ wg.endpoint_addr|default(endpoint) }}:{{ wireguard_port }}
+PublicKey = {{ lookup('file', 'private/wireguard/' + endpoint + '.pub' ) }}
+AllowedIPs = {{ wireguard_cidr }}, {{ s21_cidr }}
+PersistentKeepalive = 25
+{% else %}
+
+## connections to other peers
+  {% for peer_name, peer in wg_clients.items() %}
+    {% if peer.listen|default(false) and peer_name != inventory_hostname %}
+
+# {{ peer_name }}
+[Peer]
+Endpoint = {{ peer_name }}:{{ wireguard_port }}
+PublicKey = {{ lookup('file', 'private/wireguard/' + peer_name + '.pub' ) }}
+{% if 'allowed' in peer %}
+AllowedIPs = {{ peer.ip }}/32, {{ peer.allowed|join(", ") }}
+{% else %}
+AllowedIPs = {{ peer.ip }}/32
+{% endif %}
+PersistentKeepalive = 25
+
+    {% endif %}
+  {% endfor %}
+{% endif %}
+
+
+{% for peer_name in wg['clients'] | default([]) %}
+{% set inbound_peer = wg_clients[peer_name] %}
+# inbound peer: {{ peer_name }}
+[Peer]
+PublicKey = {{ lookup('file', 'private/wireguard/' + peer_name + '.pub' ) }}
+{% if 'allowed' in inbound_peer %}
+AllowedIPs = {{ inbound_peer.ip }}/32, {{ inbound_peer.allowed|join(", ") }}
+{% else %}
+AllowedIPs = {{ inbound_peer.ip }}/32
+{% endif %}
+PersistentKeepalive = 25
+
+{% endfor %}
