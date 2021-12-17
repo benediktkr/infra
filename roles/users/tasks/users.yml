@@ -9,6 +9,7 @@
         - systemusers
         - humanusers
         - sshkeys
+        - human
 
     - name: list human users
       debug:
@@ -21,6 +22,7 @@
   tags:
     - systemusers
     - humanusers
+    - human
     - users
     - sshkeys
 
@@ -61,9 +63,9 @@
     - ec2user
     - ubuntu
     - opc
+    - doe
+    - ted
   tags: defaultusers
-  when:
-    - not keep_default_users|default(False)|bool
 
 - name: remove lingering /home dirs for stupid default users
   file:
@@ -74,6 +76,9 @@
     - ec2user
     - ubuntu
     - opc
+    - doe
+    - ted
+  tags: defaultusers
 
 - name: create user groups
   group:
@@ -149,7 +154,10 @@
     groups: "{{ userlist[item]['groups'] | default([]) }}"
     shell: "{{ userlist[item]['shell'] | default('/bin/zsh') }}"
     uid: "{{ userlist[item]['uid'] }}"
-    append: yes
+    append: true
+    create_home: true
+    home: "{{ userlist[item]['home'] | default('/home/' + userlist[item]['home'] ) }}"
+    move_home: false
   with_items: "{{ human_users }}"
   tags: human
 
@@ -186,6 +194,7 @@
     - userlist[item]['sshkey']
   tags:
     - sshkeys
+    - human
 
 - name: set a password for {{ myusername }} and root
   user:
