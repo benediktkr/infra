@@ -1,5 +1,5 @@
 # m h  dom mon dow   command
 
-30 7 * * * root /usr/local/bin/synapse-postgres-backup.sh
+30 7 * * * {{ systemuserlist.matrix.username }} /usr/local/bin/synapse-postgres-backup.sh
 
 #

@@ -11,9 +11,9 @@
     - name: data
     - name: element
       mode: 644
-    - name: postgres
-      owner: 70
-      mode: 700
+    # - name: postgres
+    #   owner: 70
+    #   mode: 700
     - name: html
       mode: 750
       group: www-data
@@ -83,29 +83,32 @@
     - matrix-container
     - docker-containers
 
-- name: postgres container for matrix synapse
-  docker_container:
-    name: matrix-postgresql
-    state: started
-    image: docker.io/postgres:12-alpine
-    container_default_behavior: compatibility
-    restart_policy: "unless-stopped"
-    networks_cli_compatible: no
-    networks:
-      - name: bridgewithdns
-    env:
-      POSTGRES_USER: "{{ systemuserlist.matrix.username }}"
-      POSTGRES_PASSWORD: "{{ systemuserlist.matrix.postgres_passwd }}"
-      # ensure the database gets created correctly
-      # https://github.com/matrix-org/synapse/blob/master/docs/postgres.md#set-up-database
-      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
-    mounts:
-      - type: bind
-        source: "{{ systemuserlist.matrix.home }}/postgres"
-        target: /var/lib/postgresql/data
+- name: postgresql user
+  postgresql_user:
+    name: "{{ systemuserlist.matrix.username }}"
+    password: "{{ systemuserlist.matrix.postgres_passwd }}"
+    encrypted: true
+    state: present
+  become_user: postgres
   tags:
-    - matrix-container
-    - docker-containers
+    - users
+    - postgresql
+    - postgresql-users
+
+- name: postgresql database
+  postgresql_db:
+    name: "{{ systemuserlist.matrix.username }}"
+    encoding: UTF8
+    template: template0
+    state: present
+    lc_ctype: "C"
+    lc_collate: "C"
+  become_user: postgres
+  tags:
+    - users
+    - postgresql
+    - postgresql-users
+
 
 # register_new_matrix_user -u $username -t bot -c /data/homeserver.yaml http://localhost:8008
 
@@ -113,14 +116,14 @@
   docker_container:
     name: matrix
     image: avhost/docker-matrix:latest
-    auto_remove: no
-    detach: yes
-    pull: yes
+    auto_remove: false
+    detach: true
+    pull: true
     restart_policy: "unless-stopped"
     state: started
     user: "{{ systemuserlist.matrix.uid }}:{{ systemuserlist.matrix.gid }}"
     container_default_behavior: compatibility
-    networks_cli_compatible: no
+    networks_cli_compatible: false
     networks:
       - name: bridgewithdns
         ipv4_address: "{{ bridgewithdns.matrix }}"
@@ -129,11 +132,11 @@
         source: "{{ systemuserlist.matrix.home }}/data"
         target: /data
       - type: bind
-        read_only: yes
+        read_only: true
         source: /etc/letsencrypt/live/{{ matrix_domain }}/fullchain.pem
         target: /data/{{ matrix_domain }}.crt
       - type: bind
-        read_only: yes
+        read_only: true
         source: /etc/letsencrypt/live/{{ matrix_domain }}/privkey.pem
         target: /data/{{ matrix_domain }}.key
     env:
@@ -142,11 +145,31 @@
     - matrix-container
     - docker-containers
 
+- name: start synapse-admin container
+  docker_container:
+    name: matrix-admin
+    image: awesometechnologies/synapse-admin:latest
+    auto_remove: false
+    detach: true
+    pull: true
+    restart_policy: "unless-stopped"
+    state: started
+    container_default_behavior: compatibility
+    networks_cli_compatible: false
+    networks:
+      - name: bridgewithdns
+        ipv4_address: "{{ bridgewithdns.matrix_admin }}"
+  tags:
+    - matrix-container
+    - matrix-admin-container
+    - matrix-admin
+    - docker-containers
+
 - name: template scripts
   template:
     src: "{{ item }}.j2"
     dest: /usr/local/bin/{{ item }}
-    mode: 0750
+    mode: 0755
     owner: root
     group: root
   tags:
@@ -180,3 +203,14 @@
     - restart telegraf
   tags:
     - telegraf-config
+
+- name: template filebeat config
+  template:
+    src: filebeat-synapse.yml.j2
+    dest: "/etc/filebeat/inputs.d/synapse.yml"
+    owner: root
+    group: root
+    mode: 0600
+  tags:
+    - filebeat
+  notify: restart filebeat

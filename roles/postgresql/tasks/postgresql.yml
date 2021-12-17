@@ -1,0 +1,89 @@
+---
+
+- name: install postgresql
+  apt:
+    name:
+      - postgresql
+      - libpq-dev
+      - python3-psycopg2
+    state: latest
+  tags:
+    - packages
+
+- name: enable service
+  service:
+    name: postgresql
+    state: started
+    enabled: true
+
+- name: template postgres config
+  template:
+    src: postgresql.conf.j2
+    dest: /etc/postgresql/12/main/postgresql.conf
+    owner: postgres
+    group: postgres
+    mode: 0644
+  notify: restart postgresql
+
+- name: template pg_hba.conf
+  template:
+    src: pg_hba.conf.j2
+    dest: /etc/postgresql/12/main/pg_hba.conf
+    owner: postgres
+    group: postgres
+    mode: 0640
+  notify: restart postgresql
+
+- name: postgresql default users with password
+  postgresql_user:
+    name: "{{ item.username }}"
+    password: "{{ item.postgres_passwd }}"
+    encrypted: true
+    state: present
+  with_items: "{{ systemuserlist.values() | selectattr('postgres_default', 'true') }}"
+  when: '"postgres_passwd" in item '
+  become_user: postgres
+  loop_control:
+    label: "{{ item.username }}"
+  tags:
+    - postgres-users
+
+- name: postgresql databases
+  postgresql_db:
+    name: "{{ item.username }}"
+    encoding: UTF8
+    template: template0
+    state: present
+    lc_ctype: "C"
+    lc_collate: "C"
+  with_items: "{{ systemuserlist.values() | selectattr('postgres_default', 'true') }}"
+  when: item.postgres_default_db|default(false)
+  become_user: postgres
+  loop_control:
+    label: "{{ item.username }}"
+  tags:
+    - postgres-users
+
+- name: enable filebeat postgresql module
+  command: filebeat modules enable postgresql
+  register: filebeat_enable_postgresql
+  changed_when: "'Enabled postgresql' in filebeat_enable_postgresql.stdout"
+
+- name: template filebeat module
+  template:
+    src: filebeat-postgresql.yml.j2
+    dest: "/etc/filebeat/modules.d/postgresql.yml"
+    owner: root
+    group: root
+    mode: 0600
+  tags:
+    - filebeat
+  notify: restart filebeat
+
+- name: template telegraf file
+  template:
+    src: telegraf-postgresql.conf.j2
+    dest: /etc/telegraf/telegraf.d/postgresql.conf
+  notify: restart telegraf
+  tags:
+    - telegraf-config

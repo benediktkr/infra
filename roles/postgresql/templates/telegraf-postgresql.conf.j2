@@ -1,0 +1,3 @@
+[[inputs.postgresql]]
+  address = "postgres://telegraf:{{ systemuserlist.telegraf.postgres_passwd }}@localhost/postgres"
+  ignored_databases = ["template0", "tempalte1", "postgres", "postgres_global"]

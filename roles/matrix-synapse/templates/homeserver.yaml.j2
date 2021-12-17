@@ -775,9 +775,9 @@ database:
     user: "{{ systemuserlist.matrix.username }}"
     password: "{{ systemuserlist.matrix.postgres_passwd }}"
     database: "{{ systemuserlist.matrix.username }}"
-    host: matrix-postgresql
-#    cp_min: 5
-#    cp_max: 10
+    host: 172.17.0.1
+    cp_min: 5
+    cp_max: 10
 #
 # For more information on using Synapse with Postgres, see `docs/postgres.md`.
 #
@@ -1425,7 +1425,7 @@ metrics_flags:
 # Whether or not to report anonymized homeserver usage statistics.
 #
 # https://matrix.org/blog/2017/06/22/synapse-0-21-1-released
-report_stats: true
+report_stats: false
 
 # The endpoint to report the anonymized homeserver usage statistics to.
 # Defaults to https://matrix.org/report-usage-stats/push
@@ -1512,7 +1512,6 @@ old_signing_keys:
 # warning on start-up. To suppress this warning, set
 # 'suppress_key_server_warning' to true.
 
-suppress_key_server_warning: true
 #
 # Options for each entry in the list include:
 #
@@ -1544,7 +1543,7 @@ trusted_key_servers:
 # Uncomment the following to disable the warning that is emitted when the
 # trusted_key_servers include 'matrix.org'. See above.
 #
-#suppress_key_server_warning: true
+suppress_key_server_warning: true
 
 # The signing keys to use when acting as a trusted key server. If not specified
 # defaults to the server signing key.
@@ -2659,7 +2658,7 @@ stats:
 #server_notices:
 #  system_mxid_localpart: notices
 #  system_mxid_display_name: "Server Notices"
-#  system_mxid_avatar_url: "mxc://server.com/oumMVlgDnLYFaPVkExemNVVZ"
+#  system_mxid_avatar_url: "mxc://{{ matrix_domain }}/oumMVlgDnLYFaPVkExemNVVZ"
 #  room_name: "Server Notices"
 
 

@@ -1,0 +1,8 @@
+# Module: postgresql
+# Docs: https://www.elastic.co/guide/en/beats/filebeat/current/filebeat-module-postgresql.html
+
+- module: postgresql
+  log:
+    enabled: true
+    var.paths:
+      - /var/log/postgresql/*.log

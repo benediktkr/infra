@@ -14,12 +14,21 @@ version: 1
 formatters:
     precise:
         format: '%(asctime)s - %(name)s - %(lineno)d - %(levelname)s - %(request)s - %(message)s'
+    structured:
+        class: synapse.logging.TerseJsonFormatter
 
 handlers:
     file:
         class: logging.handlers.TimedRotatingFileHandler
         formatter: precise
         filename: /data/homeserver.log
+        when: midnight
+        backupCount: 3  # Does not include the current log file.
+        encoding: utf8
+    json:
+        class: logging.handlers.TimedRotatingFileHandler
+        formatter: structured
+        filename: /data/homeserver.json
         when: midnight
         backupCount: 3  # Does not include the current log file.
         encoding: utf8
@@ -53,7 +62,9 @@ loggers:
         # We send the twisted logging directly to the file handler,
         # to work around https://github.com/matrix-org/synapse/issues/3471
         # when using "buffer" logger. Use "console" to log to stderr instead.
-        handlers: [file]
+        handlers:
+          - file
+          - json
         propagate: false
 
 root:
@@ -66,6 +77,8 @@ root:
     # also need to update the configuration for the `twisted` logger above, in
     # this case.)
     #
-    handlers: [buffer]
+    handlers:
+      - buffer
+      - json
 
 disable_existing_loggers: false

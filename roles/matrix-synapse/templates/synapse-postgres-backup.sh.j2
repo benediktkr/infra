@@ -1,3 +1,5 @@
 #!/bin/bash
 
-/usr/bin/docker exec -i matrix-postgresql pg_dump -U {{ systemuserlist.matrix.username }} > {{ systemuserlist.matrix.home }}/postgres-backup.sql
+# run as matrix user
+
+/usr/bin/pg_dump -U {{ systemuserlist.matrix.username }} > {{ systemuserlist.matrix.home }}/postgres-backup.sql
