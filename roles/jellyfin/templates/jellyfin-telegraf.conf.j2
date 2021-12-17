@@ -1,2 +1,3 @@
-#[[inputs.prometheus]]
-#  urls = ["http://localhost:{{ jellyfin_port }}/metrics"]
+[[inputs.prometheus]]
+  urls = ["http://localhost:{{ jellyfin_port }}/metrics"]
+  name_prefix = "jellyfin_"

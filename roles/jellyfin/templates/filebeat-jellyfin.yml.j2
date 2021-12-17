@@ -1,0 +1,21 @@
+---
+
+- type: log
+  paths:
+    - {{ jellyfin_root }}/config/log/beats_*.log
+
+  scan_frequency: 10s
+  enabled: true
+
+  # take all the lines that do not start with [ and combines them with the previous line that does
+  multiline.type: pattern
+  multiline.pattern: '^\['
+  multiline.negate: true
+  multiline.match: after
+
+  fields_under_root: true
+  fields:
+    service.type: jellyfin
+
+  tags:
+    - jellyfin

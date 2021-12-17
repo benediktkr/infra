@@ -1,0 +1,49 @@
+ {
+     "Serilog": {
+        // "Using": [ "Serilog.Sinks.Http" ],
+        "MinimumLevel": {
+            "Default": "Information",
+            "Override": {
+                "Microsoft": "Warning",
+                "System": "Warning"
+            }
+        },
+        "WriteTo": [
+            {
+                "Name": "Async",
+                "Args": {
+                    //"bufferSize": 10000000,
+                    "configure": [
+                        {
+                            "Name": "File",
+                            "Args": {
+                                "path": "%JELLYFIN_LOG_DIR%//beats_.log",
+                                "rollingInterval": "Day",
+                                "retainedFileCountLimit": 3,
+                                "rollOnFileSizeLimit": true,
+                                "fileSizeLimitBytes": 100000000,
+                                //"outputTemplate": "{\"@timestamp\":\"{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz}\",\"level\":\"{Level:u3}\",\"thread_id\":\"{ThreadId}\",\"logger_name\":\"{SourceContext}\",\"message\":\"{Message:lj}\",\"exception\":\"{Exception:lj}\"} {NewLine}"
+                                "outputTemplate": "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz}] [{Level:u4}] [{ThreadId}] {SourceContext}: {Message}{NewLine}{Exception}"
+
+                            }
+                        } // ,
+                        // {
+                        //     "Name": "Http",
+                        //     "Args":
+                        //     {
+                        //         //"outputTemplate": "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz}] [{Level:u3}] [{ThreadId}] {SourceContext}: {Message}{NewLine}{Exception}"
+                        //         "outputTemplate": "{\"@timestamp\":\"{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz}\",\"level\":\"{Level:u3}\",\"thread_id\":\"{ThreadId}\",\"logger_name\":\"{SourceContext}\",\"message\":\"{Message:lj}\",\"exception\":\"{Exception:lj}\"} {NewLine}",
+
+                        //         "requestUri": "http://{{ logstash_url }}:{{ logstash_http }}",
+                        //         "textFormatter": "Serilog.Formatting.Elasticsearch.ElasticsearchJsonFormatter, Serilog.Formatting.Elasticsearch",
+                        //         "batchFormatter": "Serilog.Sinks.Http.BatchFormatters.ArrayBatchFormatter, Serilog.Sinks.Http"
+                        //     }
+                        // }
+                    ]
+                }
+            }
+        ],
+        "Enrich": [ "FromLogContext", "WithThreadId" ]
+     },
+     "AllowedHosts": "*"
+}

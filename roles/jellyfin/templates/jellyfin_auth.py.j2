@@ -96,8 +96,9 @@ def tail(filename):
 def main():
     state = IpState.read(STATE)
     write_acl(ACL, state.ipset)
-    for ip in state.ipset:
-        logmsg(f"allow listed known ip {ip}")
+    #for ip in state.ipset:
+    #    logmsg(f"allow listed known ip {ip}")
+    logmsg(f"wrote {len(state.ipset)} rules to acl")
     reload_nginx()
 
     for line in tail(LOGFILE):

@@ -15,7 +15,16 @@
     - cache
   tags: jellyfin-dirs
 
-- name: make dirs
+- name: create nginx cache dir
+  file:
+    path: "{{ jellyfin_root }}/nginx-cache"
+    state: directory
+    mode: 0750
+    owner: www-data
+    group: jellyfin
+  tags: jellyfin-dirs
+
+- name: make dirs for auth stuff
   file:
     state: directory
     path: "{{ jellyfin_auth_path }}"
@@ -40,6 +49,14 @@
   tags:
     - nginx-config
     - jellyfin-conf
+
+- name: template jellyfin-web/config.json
+  template:
+    src: jellyfin-web-config.json.j2
+    dest: "{{ jellyfin_root }}/jellyfin-web/config.json"
+    owner: www-data
+    group: www-data
+    mode: 0755
 
 - name: start container
   docker_container:
@@ -71,6 +88,9 @@
       - type: bind
         source: "{{ jellyfin_media }}"
         target: /media
+      - type: bind
+        source: "{{ jellyfin_root }}/jellyfin-web/config.json"
+        target: /jellyfin/jellyfin-web/config.json
       # - type: bind
       #   source: "{{ jellyfin_root }}/index.html"
       #   target: /jellyfin/jellyfin-web/index.html
@@ -100,6 +120,14 @@
     - ldap
     - openldap
     - jellyfin-ldap
+
+- name: template logging.json
+  template:
+    src: logging.json.j2
+    dest: "{{ jellyfin_root }}/config/config/logging.json"
+    owner: jellyfin
+    group: jellyfin
+    mode: 0644
 
 - name: jellyfin nginx dir
   file:
@@ -148,11 +176,11 @@
   tags:
     - jellyfin-auth
 
-- name: enable jellyfin_auth
+- name: disable jellyfin_auth
   systemd:
-    state: started
-    enabled: yes
-    daemon_reload: yes
+    state: stopped
+    enabled: false
+    daemon_reload: true
     name: jellyfin_auth
 
 
@@ -184,3 +212,14 @@
     - restart telegraf
   tags:
     - telegraf-config
+
+- name: template filebeat config
+  template:
+    src: filebeat-jellyfin.yml.j2
+    dest: "/etc/filebeat/inputs.d/jellyfin.yml"
+    owner: root
+    group: root
+    mode: 0600
+  tags:
+    - filebeat
+  notify: restart filebeat
