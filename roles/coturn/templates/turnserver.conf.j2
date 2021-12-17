@@ -16,7 +16,7 @@ denied-peer-ip=172.16.0.0-172.31.255.255
 
 # special case the turn server itself so that client->TURN->TURN->client
 # flows work
-allowed-peer-ip={{ wireguard_clients[inventory_hostname]['ip'] }}
+allowed-peer-ip={{ wg_clients[inventory_hostname]['ip'] }}
 
 # its possible to limit the quota of relayed streams per user (or
 total) to avoid risk of DoS.
