@@ -1,0 +1,13 @@
+# Module: mysql
+# Docs: https://www.elastic.co/guide/en/beats/filebeat/7.15/filebeat-module-mysql.html
+
+- module: mysql
+  error:
+    enabled: true
+    var.paths:
+      - /var/log/mysql/error.log
+
+  slowlog:
+    enabled: true
+    var.paths:
+      - /var/log/mysql/mariadb-slow.log

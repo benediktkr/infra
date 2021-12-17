@@ -94,3 +94,19 @@
   file:
     path: users.sql.j2
     state: absent
+
+- name: enable filebeat mysql module
+  command: filebeat modules enable mysql
+  register: filebeat_enable_mysql
+  changed_when: "'Enabled mysql' in filebeat_enable_mysql.stdout"
+
+- name: template filebeat module
+  template:
+    src: filebeat-mysql.yml.j2
+    dest: "/etc/filebeat/modules.d/mysql.yml"
+    owner: root
+    group: root
+    mode: 0600
+  tags:
+    - filebeat
+  notify: restart filebeat

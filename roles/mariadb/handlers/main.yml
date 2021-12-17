@@ -8,3 +8,8 @@
   service:
     name: mariadb
     state: reloaded
+
+- name: restart filebeat
+  service:
+    name: filebeat
+    state: restarted
