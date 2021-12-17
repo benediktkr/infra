@@ -11,7 +11,7 @@
     - pip
     - packages
 
-- name: add apt key for element
+- name: add apt keys for element
   apt_key:
     url: https://packages.riot.im/debian/riot-im-archive-keyring.gpg
     state: present
@@ -30,6 +30,7 @@
   tags:
     - packages
 
+# wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
 - name: packages
   apt:
     name:
@@ -64,6 +65,8 @@
       - tor
       - tumbler-plugins-extra
       - vlc
+      - dotnet-sdk-6.0
+      #- yarn
     state: latest
     update_cache: yes
   tags:
