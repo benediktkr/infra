@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DHCPHELPER_OPTS="-b {{ ansible_docker0.device }} -i {{ ansible_eth0.device }} {% if inventory_hostname in wireguard_clients %}-e wg0{% endif %}"
+DHCPHELPER_OPTS="-b {{ ansible_docker0.device }} -i {{ ansible_eth0.device }} {% if inventory_hostname in wg_clients %}-e wg0{% endif %}"
 
 MAX=20
 
@@ -22,7 +22,7 @@ while ! /bin/ip a show $docker0; do
     /bin/sleep 5
 done
 
-{% if inventory_hostname in wireguard_clients %}
+{% if inventory_hostname in wg_clients %}
 echo "waiting for wg0"
 
 while ! /bin/ip a show wg0; do

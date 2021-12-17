@@ -52,13 +52,16 @@
 
 - name: template unbound config
   template:
-    src: unbound.conf.j2
-    dest: "{{ pihole_root }}/etc/unbound/unbound.conf"
+    src: "{{ item }}.j2"
+    dest: "{{ pihole_root }}/etc/unbound/{{ item }}"
     owner: root
     group: root
     mode: 0644
   tags:
     - unbound
+  with_items:
+    - unbound.conf
+    - a-records.conf
 
 - name: disable systemd-resolved or named if they are active
   service:
@@ -96,6 +99,10 @@
         read_only: true
         source: "{{ pihole_root }}/etc/unbound/unbound.conf"
         target: /opt/unbound/etc/unbound/unbound.conf
+      - type: bind
+        read_only: true
+        source: "{{ pihole_root }}/etc/unbound/a-records.conf"
+        target: /opt/unbound/etc/unbound/a-records.conf
     container_default_behavior: compatibility
     networks_cli_compatible: false
     networks:
@@ -144,7 +151,8 @@
     ports:
       - 127.0.0.1:53:53/udp
       - 127.0.0.1:53:53/tcp
-      - "{{ pihole_nginx_interface }}:53:53/udp"
+      #- "{{ pihole_nginx_interface }}:53:53/udp"
+      - "{{ wg_clients[inventory_hostname]['ip'] }}:53:53/udp"
       - 127.0.0.1:{{pihole_http_port}}:{{pihole_http_port}}
     network_mode: bridge
     purge_networks: yes
