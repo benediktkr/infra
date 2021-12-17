@@ -83,3 +83,4 @@ site.yml
 vpnservers.yml
 site2.yml
 mathom.yml
+haproxy.yml
