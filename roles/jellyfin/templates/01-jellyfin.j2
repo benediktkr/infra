@@ -1,11 +1,9 @@
 ## https://jellyfin.org/docs/general/networking/nginx.html
 {% set domain = jellyfin_url.split('.')[1:] | join(".")  %}
 
-server {
-   listen 80;
-   server_name {{ jellyfin_url }};
-   return 301 https://$host$request_uri;
-}
+{# proxy_cache_path  {{ jellyfin_root }}/nginx-cache levels=1:2 keys_zone=cWEB:50m inactive=90d max_size=35000m;
+ # map $request_uri $h264Level { ~(h264-level=)(.+?)& $2; }
+ # map $request_uri $h264Profile { ~(h264-profile=)(.+?)& $2; } #}
 
 server {
     listen 443 ssl http2;
@@ -16,7 +14,8 @@ server {
     # set $jellyfin jellyfin;
     # resolver 127.0.0.1 valid=30;
 
-    #access_log /var/log/nginx/access_{{ jellyfin_url }}.log main;
+    # access log is used by python script
+    access_log /var/log/nginx/access_{{ jellyfin_url }}.log main;
     error_log /var/log/nginx/error_{{ jellyfin_url }}.log warn;
 
     ssl_certificate /etc/letsencrypt/live/{{ domain }}/fullchain.pem;
@@ -41,7 +40,7 @@ server {
 
 
     location / {
-        include /etc/nginx/jellyfin/jellyfin_auth.conf;
+        #include /etc/nginx/jellyfin/jellyfin_auth.conf;
 
         # Proxy main Jellyfin traffic
         proxy_pass http://127.0.0.1:{{ jellyfin_port }};
@@ -61,6 +60,19 @@ server {
     location /metrics {
         return 403;
     }
+
+    location /health {
+        allow 127.0.0.1;
+        allow {{ my_public_ips[inventory_hostname] }}/32;
+        allow {{ my_public_ips[ansible_control_host] }}/32;
+        allow {{ wireguard_cidr }};
+        deny all;
+
+        proxy_pass http://127.0.0.1:{{ jellyfin_port }};
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
 
 
     # location block for /web - This is purely for aesthetics so
@@ -88,4 +100,25 @@ server {
         proxy_set_header X-Forwarded-Protocol $scheme;
         proxy_set_header X-Forwarded-Host $http_host;
     }
+
+    {# location /videos/ {
+     #     # cache video streams: https://jellyfin.org/docs/general/networking/nginx.html#cache-video-streams
+     #     proxy_cache cWEB;
+     #     proxy_cache_valid 200 301 302 30d;
+     #     proxy_ignore_headers Expires Cache-Control Set-Cookie X-Accel-Expires;
+     #     proxy_cache_use_stale error timeout invalid_header updating http_500 http_502 http_503 http_504;
+     #     proxy_connect_timeout 10s;
+     #     proxy_http_version 1.1;
+     #     #proxy_set_header Connection "";
+     #
+     #     proxy_pass http://localhost:{{ jellyfin_port }};
+     #     proxy_cache_key "{{ jellyfin_url }}$uri?MediaSourceId=$arg_MediaSourceId&VideoCodec=$arg_VideoCodec&AudioCodec=$arg_AudioCodec&AudioStreamIndex=$arg_AudioStreamIndex&VideoBitrate=$arg_VideoBitrate&AudioBitrate=$arg_AudioBitrate&SubtitleMethod=$arg_SubtitleMethod&TranscodingMaxAudioChannels=$arg_TranscodingMaxAudioChannels&RequireAvc=$arg_RequireAvc&SegmentContainer=$arg_SegmentContainer&MinSegments=$arg_MinSegments&BreakOnNonKeyFrames=$arg_BreakOnNonKeyFrames&h264-profile=$h264Profile&h264-level=$h264Level";
+     #     proxy_cache_valid 200 301 302 30d;
+     # } #}
+}
+
+server {
+   listen 80;
+   server_name {{ jellyfin_url }};
+   return 301 https://$host$request_uri;
 }
