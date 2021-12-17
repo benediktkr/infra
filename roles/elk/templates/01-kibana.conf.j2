@@ -1,0 +1,40 @@
+server {
+  listen 443 ssl;
+
+  server_name {{ kibana_url }};
+
+  include /etc/nginx/authelia_internal.conf;
+  include /etc/nginx/require_auth.conf;
+
+  location / {
+    proxy_pass         http://{{ bridgewithdns.kibana }}:{{ kibana_port }}/;
+
+    proxy_redirect     off;
+    proxy_set_header   Host $host;
+    proxy_set_header   X-Real-IP $remote_addr;
+    proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header   X-Forwarded-Host $server_name;
+    proxy_set_header   X-Forwarded-Proto $scheme;
+
+    include /etc/nginx/require_auth_proxy.conf;
+    add_header Content-Security-Policy "upgrade-insecure-requests";
+  }
+
+  access_log /var/log/nginx/access_{{ kibana_url }}.log main;
+  error_log /var/log/nginx/error_{{ kibana_url }}.log warn;
+
+  ssl_session_timeout 5m;
+
+  ssl_certificate /etc/letsencrypt/live/{{ domain }}/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/{{ domain }}/privkey.pem;
+
+  add_header Referrer-Policy "no-referrer" always;
+  add_header X-Content-Type-Options "nosniff" always;
+  add_header X-Download-Options "noopen" always;
+  add_header X-Frame-Options "SAMEORIGIN" always;
+  add_header X-Permitted-Cross-Domain-Policies "none" always;
+  add_header X-Robots-Tag "none" always;
+  add_header X-XSS-Protection "1; mode=block" always;
+
+  fastcgi_hide_header X-Powered-By;
+}

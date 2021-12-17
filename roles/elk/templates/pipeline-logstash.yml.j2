@@ -1,0 +1,99 @@
+input {
+  #tcp {
+  #  port => {{ logstash_tcp }}
+  #  codec => json
+  #}
+  #udp {
+  #  port => {{ logstash_udp }}
+  #  codec => json
+  #}
+  #http {
+  #  host => "0.0.0.0"
+  #  port => {{ logstash_http }}
+  #  codec => json
+  #}
+  beats {
+    port => {{ logstash_beats }}
+    ecs_compatibility => disabled
+    tags => [ "beats" ]
+    type => beats
+    ssl => true
+    ssl_certificate => "/etc/letsencrypt/live/{{ domain }}/fullchain.pem"
+    ssl_key => "/etc/letsencrypt/live/{{ domain }}/privkey.pem"
+  }
+  syslog {
+    port => {{ logstash_syslog_port }}
+    type => "syslog"
+    tags => [ "syslog" ]
+    #codec => "plain" #"json"
+  }
+}
+
+filter {
+  if "jellyfin" in [tags] {
+    grok {
+      match => ["message", "\[%{TIMESTAMP_ISO8601:timestamp}%{DATA}\] \[%{LOGLEVEL:level}\] \[%{NUMBER:thread_id}\] %{DATA:logger_name}\: %{GREEDYDATA:message}"]
+      overwrite => [ "message" ]
+    }
+    grok {
+      match => ["message", "Authentication request for \"%{WORD:jellyfin_user}\" has (%{WORD}%{SPACE})?%{WORD:jellyfin_login}(.*%{IPV4:remote_addr})?"]
+      add_tag => [ "jellyfin_login" ]
+    }
+    grok {
+      match => ["message", "WS \"%{IPV4:remote_addr}\""]
+    }
+  }
+  if "nextcloud" in [tags] {
+    mutate {
+        remove_field => [ "time" ]
+    }
+  }
+  if "authelia" in [tags] {
+    mutate {
+        remove_field => [ "time" ]
+        rename => {"msg" => "message"}
+    }
+    grok {
+      match => ["message", "username=%{WORD:auth_request_user} groups=%{GREEDYDATA:auth_request_group} ip=%{IPV4:auth_request_ip} and object %{URI:auth_request_object_url} \(method %{WORD:auth_request_method}\)"]
+    }
+  }
+  if [event][module] == "mysql" {
+    mutate {
+        add_tag => [ "mariadb" ]
+    }
+  }
+  if [type] == "syslog" {
+    mutate {
+      copy => { "logsource" => "hostname" }
+    }
+  }
+}
+
+output {
+  if [type] == "syslog" {
+    elasticsearch {
+      hosts => "elasticsearch:9200"
+      user => "{{ elk_users.elastic.user }}"
+      password => "{{ elk_users.elastic.passwd }}"
+      ecs_compatibility => disabled
+      index => "syslog-%{+YYYY.MM.dd}"
+    }
+  }
+  if [type] == "beats" {
+    elasticsearch {
+      hosts => "elasticsearch:9200"
+      user => "{{ elk_users.elastic.user }}"
+      password => "{{ elk_users.elastic.passwd }}"
+      ecs_compatibility => disabled
+      index => "beats-%{+YYYY.MM.dd}"
+    }
+  }
+  if "jellyfin_login" in [tags] {
+    file {
+      path => "/usr/share/logstash/logs/jellyfin_login-%{+YYYY-MM-dd}.json"
+    }
+  }
+  file {
+    path => "/usr/share/logstash/logs/logfile-%{+YYYY-MM-dd}.log"
+  }
+}
