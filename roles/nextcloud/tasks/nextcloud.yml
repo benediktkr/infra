@@ -71,8 +71,6 @@
     networks_cli_compatible: no
     networks:
       - name: bridgewithdns
-    labels:
-      dockerlogs_format: "redis"
   when: item.redis
   with_items: "{{ nextclouds }}"
   loop_control:
@@ -114,8 +112,6 @@
     networks:
       - name: bridgewithdns
         ipv4_address: "{{ item.docker_ip }}"
-    labels:
-      dockerlogs_format: "nextcloud"
   with_items: "{{ nextclouds }}"
   loop_control:
     label: "{{ item.name }} [{{ item.state }}]"
@@ -129,6 +125,7 @@
     dest: /etc/nginx/sites-enabled/01-nextcloud
   tags:
     - nginx
+    - nextcloud-nginx
   notify: reload nginx
 
 - name: template cron file
@@ -148,3 +145,14 @@
     label: "{{ item.name }}"
   tags:
     - docker
+
+- name: template filebeat config
+  template:
+    src: filebeat-nextcloud.yml.j2
+    dest: "/etc/filebeat/inputs.d/nextcloud.yml"
+    owner: root
+    group: root
+    mode: 0600
+  tags:
+    - filebeat
+  notify: restart filebeat

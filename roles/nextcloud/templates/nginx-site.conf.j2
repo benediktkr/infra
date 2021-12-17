@@ -29,7 +29,8 @@ server {
   add_header X-XSS-Protection "1; mode=block" always;
 
   # telling cloudflare to not proxy anything
-  add_header Cache-Control "private, max-age=3600" ;
+  # The private response directive indicates that the response can be stored only in a private cache (e.g. local caches in browsers).
+  add_header Cache-Control "private, max-age=3600" always;
 
   # Remove X-Powered-By, which is an information leak
   fastcgi_hide_header X-Powered-By;
@@ -43,7 +44,9 @@ server {
   ssl_certificate_key /etc/letsencrypt/live/{{ domain }}/privkey.pem;
 
   client_max_body_size 2G;
+  client_body_buffer_size 1024m;
   proxy_max_temp_file_size 2048m;
+  #proxy_max_temp_file_size 0;
   fastcgi_buffers 64 4K;
 
   location / {

@@ -80,3 +80,14 @@
   tags:
     - authelia-container
     - docker-containers
+
+- name: template filebeat config
+  template:
+    src: filebeat-authelia.yml.j2
+    dest: "/etc/filebeat/inputs.d/authelia.yml"
+    owner: root
+    group: root
+    mode: 0600
+  tags:
+    - filebeat
+  notify: restart filebeat

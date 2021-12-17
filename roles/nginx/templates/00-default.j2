@@ -50,6 +50,7 @@ server {
   {% for item in nginx_subdirs %}
   location ^~ /{{ item.dir }}/ {
     {% if item.require_auth | default(False) -%}
+    include /etc/nginx/require_auth.conf;
     include /etc/nginx/require_auth_proxy.conf;
     {% endif %}
 

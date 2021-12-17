@@ -1,0 +1,52 @@
+---
+
+- name: add apt key for elastic.co
+  apt_key:
+    url: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+    state: present
+  tags:
+    - packages
+
+- name: add elastic.co repo
+  apt_repository:
+    repo: "deb https://artifacts.elastic.co/packages/7.x/apt stable main"
+    state: present
+    filename: elastic.co
+    update_cache: true
+  tags:
+    - packages
+
+- name: install filebeat
+  apt:
+    name:
+      - filebeat
+    state: latest
+  tags:
+    - packages
+
+- name: ensure inputs.d exists
+  file:
+    path: /etc/filebeat/inputs.d
+    state: directory
+    mode: 0755
+    owner: root
+    group: root
+
+- name: template filebeat config
+  template:
+    src: filebeat.yml.j2
+    dest: "/etc/filebeat/filebeat.yml"
+    owner: root
+    group: root
+    mode: 0600
+  tags:
+    - filebeat
+  notify: restart filebeat
+
+- name: start and enable filebeat
+  service:
+    name: filebeat
+    state: started
+    enabled: true
+  tags:
+    - packages

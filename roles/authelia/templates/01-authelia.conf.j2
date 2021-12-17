@@ -68,8 +68,8 @@ server {
 
   #listen 443 ssl;
 
-  {% if inventory_hostname in wireguard_clients -%}
-  listen {{ wireguard_clients[inventory_hostname].ip }}:443 ssl;
+  {% if inventory_hostname in wg_clients -%}
+  listen {{ wg_clients[inventory_hostname].ip }}:443 ssl;
   {% endif -%}
 
   {% for cidr in my_local_cidrs -%}

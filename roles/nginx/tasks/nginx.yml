@@ -27,7 +27,7 @@
       - uwsgi-plugin-python3
       - apache2-utils
       - wwwsudois
-    update_cache: yes
+    update_cache: true
     state: latest
   environment:
     PATH: "{{ ansible_env.PATH }}:/sbin:/usr/sbin"
@@ -115,3 +115,15 @@
     name: nginx
     enabled: true
     state: started
+
+- name: template filebeat config
+  template:
+    src: filebeat-nginx.yml.j2
+    dest: "/etc/filebeat/inputs.d/nginx.yml"
+    owner: root
+    group: root
+    mode: 0600
+  tags:
+    - filebeat
+    - filebeat-nginx
+  notify: restart filebeat

@@ -11,3 +11,8 @@
     image: authelia/authelia
     state: started
     restart: true
+
+- name: restart filebeat
+  service:
+    name: filebeat
+    state: restarted
