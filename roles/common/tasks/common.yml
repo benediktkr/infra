@@ -78,7 +78,7 @@
 
 - name: Set timezone to Europe/Berlin
   timezone:
-    name: Europe/Berlin
+    name: UTC
   tags:
     - timezone
 
@@ -179,6 +179,7 @@
       - nethogs
       - nmap
       - openssl
+      - iputils-ping
       - procmail
       - rsync
       - smartmontools
