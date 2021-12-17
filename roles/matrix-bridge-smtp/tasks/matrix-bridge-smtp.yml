@@ -36,7 +36,7 @@
     user: "{{ systemuserlist.matrix.uid }}:{{ systemuserlist.matrix.gid }}"
     networks_cli_compatible: no
     ports:
-      - "{{ wireguard_clients[inventory_hostname].ip }}:25:25/tcp"
+      - "{{ wg_clients[inventory_hostname].ip }}:25:25/tcp"
       - "127.0.0.1:25:25/tcp"
     networks:
       - name: bridgewithdns
@@ -45,17 +45,17 @@
       - type: bind
         source: "{{ systemuserlist.matrix.home }}/bridge-smtp/config/production.yaml"
         target: /app/config/production.yaml
-        read_only: yes
+        read_only: true
       - type: bind
         source: "{{ systemuserlist.matrix.home }}/bridge-smtp/storage"
         target: /data/storage
-        read_only: no
+        read_only: false
 
       # workaround for "Error: EACCES: permission denied, mkdir '.tmp'"
       - type: bind
         source: "{{ systemuserlist.matrix.home }}/bridge-smtp/.tmp"
         target: /app/.tmp
-        read_only: no
+        read_only: false
   tags:
     - matrix-bridge-smtp-container
     - docker-containers
