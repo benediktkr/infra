@@ -8,3 +8,4 @@ dependencies:
   - matrix-bridge-smtp
   #- matrix-bridge-telegram
   - matrix-simplehook
+  - matrix-hydrogen

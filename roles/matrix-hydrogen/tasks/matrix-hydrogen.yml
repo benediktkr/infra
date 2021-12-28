@@ -1,0 +1,11 @@
+---
+
+- name: install hydrogen
+  apt:
+    name: sudois-hydrogen-web
+    update_cache: true
+    state: latest
+  when: not skip_apt|default(false)
+  tags:
+    - packages
+    - apt.sudo.is
