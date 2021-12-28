@@ -156,7 +156,7 @@
     uid: "{{ userlist[item]['uid'] }}"
     append: true
     create_home: true
-    home: "{{ userlist[item]['home'] | default('/home/' + userlist[item]['home'] ) }}"
+    home: "{{ userlist[item]['home'] | default('/home/' + userlist[item]['username'] ) }}"
     move_home: false
   with_items: "{{ human_users }}"
   tags: human
