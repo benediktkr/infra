@@ -175,14 +175,14 @@ def main():
         sys.exit(0)
 
     elif args.action == "backup":
-        logger.info("starting rsnapshot ...")
+        logger.debug("starting rsnapshot ...")
 
         ps = rsnapshot()
 
         # send the metrics asap, prints names of backups without marker files (if any)
         send_metrics()
 
-        level = "INFO" if ps.returncode == 0 else "ERROR"
+        level = "DEBUG" if ps.returncode == 0 else "ERROR"
         logger.log(level, f"`rsnapshot` returned status: '{ps.returncode}'")
 
         # update the marker for a succesful backup only if rsnapshot
