@@ -3,3 +3,5 @@
 # run as matrix user
 
 /usr/bin/pg_dump -U {{ systemuserlist.matrix.username }} > {{ systemuserlist.matrix.home }}/postgres-backup.sql
+
+# PGPASSWORD="{{ systemuserlist.matrix.postgres_passwd_bridge_telegram }}" /usr/bin/pg_dump -U matrix_bridge_telegram > {{ systemuserlist.matrix.home }}/bridge-telegram-postgres-backup.sql

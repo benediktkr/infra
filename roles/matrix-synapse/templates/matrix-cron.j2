@@ -2,4 +2,7 @@
 
 30 7 * * * {{ systemuserlist.matrix.username }} /usr/local/bin/synapse-postgres-backup.sh
 
+37 13 * * * root /usr/bin/docker restart matrix-simplehook > /dev/null
+38 13 * * * root /usr/bin/docker restart matrix-bridge-smtp > /dev/null
+
 #
