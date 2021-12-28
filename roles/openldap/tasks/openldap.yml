@@ -9,17 +9,34 @@
     recurse: false
   with_items:
     - ldap
-    - dhparam
+    - certs
     - slapd.d
     - ldif
+
+- name: copy certs that need to be owned by openldap user
+  copy:
+    src: "private/letsencrypt/{{ openldap_domain }}/{{ item }}"
+    dest: "{{ openldap_root }}/certs/{{ item }}"
+    owner: openldap
+    group: openldap
+    mode: 0600
+  tags:
+    - letsencrypt
+  #no_log: true
+  with_items:
+    - cert.pem
+    - chain.pem
+    - fullchain.pem
+    - privkey.pem
 
 - name: copy dhparam.pem
   copy:
     src: private/roles/openldap/files/dhparam.pem
-    dest: "{{ openldap_root }}/dhparam/dhparam.pem"
+    dest: "{{ openldap_root }}/certs/dhparam.pem"
     owner: openldap
     group: openldap
     mode: 0600
+  no_log: true
 
 - name: start openldap container
   docker_container:
@@ -43,12 +60,19 @@
         target: /etc/ldap/slapd.d
       - type: bind
         source: "/etc/letsencrypt/live/{{ openldap_domain }}"
-        #target: /container/service/slapd/assets/certs/
         target: /letsencrypt/
       - type: bind
-        source: "{{ openldap_root }}/dhparam/dhparam.pem"
+        source: "{{ openldap_root }}/certs/dhparam.pem"
         target: /container/service/slapd/assets/certs/dhparam.pem
-
+      - type: bind
+        source: "{{ openldap_root }}/certs/fullchain.pem"
+        target: /container/service/slapd/assets/certs/fullchain.pem
+      - type: bind
+        source: "{{ openldap_root }}/certs/cert.pem"
+        target: /container/service/slapd/assets/certs/cert.pem
+      - type: bind
+        source: "{{ openldap_root }}/certs/privkey.pem"
+        target: /container/service/slapd/assets/certs/privkey.pem
       # - type: bind
       #   source: "{{ openldap_root }}/ldif"
       #   target: /container/service/slapd/assets/config/bootstrap/ldif/custom
@@ -71,7 +95,7 @@
       LDAP_TLS_CRT_FILENAME: "cert.pem"
       LDAP_TLS_KEY_FILENAME: "privkey.pem"
       LDAP_TLS_DH_PARAM_FILENAME: "dhparam.pem"
-      LDAP_TLS_CA_CRT_FILENAME: "fullchain.crt"
+      LDAP_TLS_CA_CRT_FILENAME: "fullchain.pem"
       LDAP_TLS_ENFORCE: "false"
       # defaults to: SECURE256:+SECURE128:-VERS-TLS-ALL:+VERS-TLS1.2:-RSA:-DHE-DSS:-CAMELLIA-128-CBC:-CAMELLIA-256-CBC
       # based on Red Hat: https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/7/html/Security_Guide/sec-Hardening_TLS_Configuration.html
@@ -165,6 +189,7 @@
     - ldap-users
   with_items:
     - users
+    - usergroups
     - groups
     - services
     - hosts
@@ -176,18 +201,41 @@
     dn: "uid={{ item.username }},ou=users,{{ openldap_dc }}"
     objectClass:
       - inetOrgPerson
+      - posixAccount
     state: present
     attributes:
       sn: "{{ item.username }}"
       cn: "{{ item.username }}"
       mail:  "{{ item.email }}"
       displayName: "{{ item.username }}"
+      uidNumber: "{{ item.uid }}"
+      gidNumber: "{{ item.gid }}"
+      homeDirectory: "{{ item.home }}"
+      loginShell: "{{ item.shell }}"
     server_uri: ldap://{{ openldap_url }}/
     bind_dn: "{{ openldap_admin_user }}"
     bind_pw: "{{ openldap_admin_pass }}"
   loop_control:
     label: "{{ item.username }}"
   with_items: "{{ ldap_users }}" # see role/openldap/defaults/main.yml
+  tags:
+    - ldap-users
+
+- name: add inventory user groups
+  community.general.ldap_entry:
+    dn: "cn={{ item.username }},ou=usergroups,{{ openldap_dc }}"
+    objectClass:
+      - posixGroup
+    state: present
+    attributes:
+      gidNumber: "{{ item.gid }}"
+      memberUid: "{{ item.username }}"
+    server_uri: ldap://{{ openldap_url }}/
+    bind_dn: "{{ openldap_admin_user }}"
+    bind_pw: "{{ openldap_admin_pass }}"
+  loop_control:
+    label: "{{ item.username }}"
+  with_items: "{{ ldap_users }}"
   tags:
     - ldap-users
 
