@@ -176,3 +176,13 @@
     - nginx
     - kibana-nginx
   notify: reload nginx
+
+- name: cron file
+  template:
+    src: elk-cron.j2
+    dest: /etc/cron.d/elk
+    mode: 0600
+    owner: root
+    group: root
+  tags:
+    - cron

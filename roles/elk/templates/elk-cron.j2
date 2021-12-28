@@ -1,0 +1,3 @@
+# m h  dom mon dow   command
+
+30 7 * * * root /usr/bin/find {{ elk_root }}/logstash/logs/ -type f -mmin +2 -exec rm {} \;
