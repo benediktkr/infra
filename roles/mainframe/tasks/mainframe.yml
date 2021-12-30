@@ -9,6 +9,7 @@
     state: latest
     name:
       - autoconf # emacs-build
+      - emacs # from apt.sudo.is
       - ffmpeg
       - gnupg2
       - gnutls-bin # emacs-build
