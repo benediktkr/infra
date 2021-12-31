@@ -221,6 +221,27 @@
   tags:
     - ldap-users
 
+- name: add inventory ldap_only_users
+  community.general.ldap_entry:
+    dn: "uid={{ item.username }},ou=users,{{ openldap_dc }}"
+    objectClass:
+      - inetOrgPerson
+    state: present
+    attributes:
+      sn: "{{ item.username }}"
+      cn: "{{ item.username }}"
+      mail:  "{{ item.email }}"
+      displayName: "{{ item.username }}"
+    server_uri: ldap://{{ openldap_url }}/
+    bind_dn: "{{ openldap_admin_user }}"
+    bind_pw: "{{ openldap_admin_pass }}"
+  loop_control:
+    label: "{{ item.username }}"
+  with_items: "{{ ldap_only_users.values() }}"
+  tags:
+    - ldap-users
+
+
 - name: add inventory user groups
   community.general.ldap_entry:
     dn: "cn={{ item.username }},ou=usergroups,{{ openldap_dc }}"
@@ -272,6 +293,23 @@
     - "{{ ldap_users }}"
   # when:
   #   - item[1] in item[0].ldap_groups|default([])
+  tags:
+    - ldap-users
+
+- name: adding inventory ldap_only_users to groups
+  community.general.ldap_attrs:
+    dn: "cn={{ item[0] }},ou=groups,{{ openldap_dc }}"
+    attributes:
+      uniqueMember: "uid={{ item[1].username }},ou=users,{{ openldap_dc }}"
+    state: "{%if item[0] in item[1].ldap_groups|default([])%}present{%else%}absent{%endif%}"
+    server_uri: ldap://{{ openldap_url }}/
+    bind_dn: "{{ openldap_admin_user }}"
+    bind_pw: "{{ openldap_admin_pass }}"
+  loop_control:
+    label: "{{ item[1].username }}, group={{ item[0] }}, present={{ item[0] in item[1].ldap_groups|default([]) }}"
+  with_nested:
+    - "{{ openldap_groups }}"
+    - "{{ ldap_only_users.values() }}"
   tags:
     - ldap-users
 
