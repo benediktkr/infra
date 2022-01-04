@@ -22,7 +22,7 @@
     mode: 0600
   tags:
     - letsencrypt
-  #no_log: true
+  no_log: true
   with_items:
     - cert.pem
     - chain.pem
