@@ -94,8 +94,10 @@
     - youtube-dl-mirrors.sh
     - reddit-archives.sh
     - matrixmsg.py
+    - letsencrypt.sh
   tags:
     - scripts
+    - mainframe-scripts
     - archive
     - archive-scripts
 

@@ -10,8 +10,8 @@
 #13 3 * * * root /usr/local/sbin/ansible-convergence.sh sensors
 #17 */6 * * * root /usr/local/sbin/tf-convergence.sh
 
-# -q
-45 1 * * * root /usr/local/bin/certbot renew >> /var/log/certbot-cron.log 2>&1
+# letsencrypt
+45 1 * * * root /usr/local/bin/letsencrypt.sh
 
 
 # archives

@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# distributed from ansible
+
+set -e
+
+LOCKFILE="/tmp/letsencrypt.lock"
+lockfile -r 0 -l 3600  $LOCKFILE
+
+/usr/local/bin/certbot renew -q
+
+{% for item in letsencrypt_domains %}
+{%   for pemfile in ["cert.pem", "chain.pem", "fullchain.pem", "privkey.pem"] %}
+/usr/bin/cp /etc/letsencrypt/live/{{ item }}/{{ pemfile }} {{ letsencrypt_private_path }}/{{ item }}/{{ pemfile }}
+{%   endfor %}
+
+{% endfor %}
+
+rm -f $LOCKFILE
