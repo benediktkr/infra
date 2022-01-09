@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# run as invidious user
+
+/usr/bin/pg_dump -U invidious > {{ systemuserlist.invidious.home }}/postgres-backup.sql

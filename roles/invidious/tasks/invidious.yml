@@ -70,6 +70,8 @@
           password: {{ systemuserlist.invidious.postgres_passwd }}
           host: 172.17.0.1
           port: 5432
+        admins:
+          - {{ invidious_admin }}
         full_refresh: false
         https_only: true
         domain: {{ invidious_url }}
@@ -78,3 +80,24 @@
   tags:
     - invidious-container
     - docker-containers
+
+- name: template psql backup script
+  template:
+    src: invidious-postgres-backup.sh.j2
+    dest: /usr/local/bin/invidious-postgres-backup.sh
+    mode: 0750
+    owner: invidious
+    group: invidious
+  tags:
+    - backup
+
+- name: cron file
+  template:
+    src: invidious-cron.j2
+    dest: /etc/cron.d/invidious
+    mode: 0600
+    owner: root
+    group: root
+  tags:
+    - backup
+    - cron
