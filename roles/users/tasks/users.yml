@@ -109,9 +109,9 @@
       loop_control:
         label: "{{ item.key }}"
 
-    - name: create system users
+    - name: create (or remove) system users
       user:
-        state: present
+        state: "{{ item.state | default('present') }}"
         name: "{{ item.key }}"
         group: "{{ item.key }}"
         groups: "{{ item.value.groups | default([]) }}"
@@ -147,8 +147,9 @@
       tags:
         - sshkeys
 
-- name: create human users
+- name: create (or remove) human users
   user:
+    state: "{{ item.state | default('present') }}"
     name: "{{ userlist[item]['username'] }}"
     group: "{{ userlist[item]['username'] }}"
     groups: "{{ userlist[item]['groups'] | default([]) }}"
