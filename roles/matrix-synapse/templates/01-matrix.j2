@@ -64,6 +64,14 @@ server {
     include /etc/nginx/require_auth_proxy.conf;
     proxy_pass http://{{ bridgewithdns.matrix_smtp }}:80;
   }
+  location /_synapse/admin {
+    include /etc/nginx/require_auth.conf;
+
+    proxy_pass http://{{ bridgewithdns.matrix }}:{{ matrix_synapse_port }};
+    proxy_set_header X-Forwarded-For $remote_addr;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Host $host;
+  }
   location /_a/ {
     include /etc/nginx/require_auth.conf;
     include /etc/nginx/require_auth_proxy.conf;

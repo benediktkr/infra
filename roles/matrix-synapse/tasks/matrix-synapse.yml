@@ -159,6 +159,8 @@
     networks:
       - name: bridgewithdns
         ipv4_address: "{{ bridgewithdns.matrix_admin }}"
+    env:
+      REACT_APP_SERVER: "https://{{ matrix_url }}"
   tags:
     - matrix-container
     - matrix-admin-container

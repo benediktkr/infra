@@ -17,6 +17,7 @@
       - kpcli
       - libgnutls28-dev # emacs-build
       - libncurses-dev # emacs-build
+      - libolm-dev
       - pkg-config # emacs-build
       - texinfo  # emacs-build
       - libffi-dev
@@ -35,27 +36,30 @@
   tags:
     - packages
     - packages-mainframe
+    - mainframe-packages
 
 - name: install pip packages
   pip:
     name:
       - ansible
+      - bdfr
       - certbot
-      - netaddr
       - certbot-dns-cloudflare
       - feedparser
-      - loguru
-      - youtube-dl
-      - bdfr
-      - matrix_client
       - internetarchive
+      - loguru
+      - matrix_client
+      - netaddr
+      - virtualenv
       - waybackpy
+      - youtube-dl
     state: latest
     executable: pip3
   tags:
     - archive
     - pip
     - packages
+    - mainframe-packages
 
 - name: make local log dir for {{ myusername }}
   file:
