@@ -1,0 +1,80 @@
+---
+
+- name: template nginx vhost
+  template:
+    src: 01-invidious.j2
+    dest: /etc/nginx/sites-enabled/01-invidious
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - nginx
+    - invidious-nginx
+  notify: reload nginx
+
+- name: postgresql user
+  postgresql_user:
+    name: "{{ systemuserlist.invidious.username }}"
+    password: "{{ systemuserlist.invidious.postgres_passwd }}"
+    encrypted: true
+    state: present
+  become_user: postgres
+  tags:
+    - users
+    - postgresql
+    - postgresql-users
+
+- name: postgresql database
+  postgresql_db:
+    name: "{{ systemuserlist.invidious.username }}"
+    encoding: UTF8
+    template: template0
+    state: present
+    lc_ctype: "C"
+    lc_collate: "C"
+  become_user: postgres
+  tags:
+    - users
+    - postgresql
+    - postgresql-users
+
+- name: start container
+  docker_container:
+    name: invidious
+    image: quay.io/invidious/invidious:latest
+    restart_policy: "unless-stopped"
+    auto_remove: false
+    detach: true
+    pull: true
+    state: started
+    container_default_behavior: compatibility
+    # user: " systemuserlist.invidious.uid : systemuserlist.invidious.gid "
+    networks_cli_compatible: false
+    network_mode: bridgewithdns
+    networks:
+      - name: bridgewithdns
+        ipv4_address: "{{ bridgewithdns.invidious }}"
+    healthcheck:
+      interval: 30s
+      timeout: 3s
+      start_period: 1m
+      test: "wget -nv --tries=1 --spider http://127.0.0.1:3000/api/v1/comments/jNQXAC9IVRw || exit 1"
+    env:
+      INVIDIOUS_CONFIG: |
+        channel_threads: 1
+        check_tables: true
+        feed_threads: 1
+        db:
+          dbname: invidious
+          user: invidious
+          password: {{ systemuserlist.invidious.postgres_passwd }}
+          host: 172.17.0.1
+          port: 5432
+        full_refresh: false
+        https_only: true
+        domain: {{ invidious_url }}
+        external_port: 443
+        statistics_enabled: true
+  tags:
+    - invidious-container
+    - docker-containers
