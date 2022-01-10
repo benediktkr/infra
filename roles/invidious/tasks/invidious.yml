@@ -77,6 +77,9 @@
         domain: {{ invidious_url }}
         external_port: 443
         statistics_enabled: true
+        registration_enabled: false
+        popular_enabled: false
+        default_home: Subscriptions
   tags:
     - invidious-container
     - docker-containers
