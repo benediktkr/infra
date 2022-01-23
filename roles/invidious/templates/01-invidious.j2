@@ -16,7 +16,7 @@ server {
       allow {{ my_public_ips[ansible_control_host] }}/32;
       deny all;
 
-      proxy_pass http://{{ bridgewithdns.invidious }}:3000/;
+      proxy_pass http://{{ bridgewithdns.invidious }}:3000;
       proxy_set_header X-Forwarded-For $remote_addr;
       proxy_set_header Host $host;
       proxy_http_version 1.1;
