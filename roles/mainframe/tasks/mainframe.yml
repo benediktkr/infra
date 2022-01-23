@@ -48,8 +48,8 @@
       - feedparser
       - internetarchive
       - loguru
-      - matrix_client
       - netaddr
+      - requests
       - virtualenv
       - waybackpy
       - youtube-dl
