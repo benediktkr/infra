@@ -21,14 +21,14 @@ handlers:
     file:
         class: logging.handlers.TimedRotatingFileHandler
         formatter: precise
-        filename: /data/homeserver.log
+        filename: /log/homeserver.log
         when: midnight
         backupCount: 3  # Does not include the current log file.
         encoding: utf8
     json:
         class: logging.handlers.TimedRotatingFileHandler
         formatter: structured
-        filename: /data/homeserver.json
+        filename: /log/homeserver.json
         when: midnight
         backupCount: 3  # Does not include the current log file.
         encoding: utf8

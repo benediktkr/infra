@@ -8,39 +8,10 @@
     owner: "{{ item.owner|default('matrix') }}"
     group: "{{ item.group|default('matrix') }}"
   with_items:
-    - name: data
-    - name: element
-      mode: 644
-    # - name: postgres
-    #   owner: 70
-    #   mode: 700
-    - name: html
-      mode: 750
-      group: www-data
+    - name: log
     - name: registration
-    - name: bridge-email
-
-- name: matrix index.html
-  template:
-    src: index.html.j2
-    dest: "{{ systemuserlist.matrix.home }}/html/index.html"
-    owner: matrix
-    group: www-data
-    mode: 0750
-  tags:
-    - matrix-html
-
-- name: template nginx vhost
-  template:
-    src: 01-matrix.j2
-    dest: /etc/nginx/sites-enabled/01-matrix
-    owner: root
-    group: root
-    mode: 0644
-  tags:
-    - nginx
-    - matrix-nginx
-  notify: reload nginx
+    - name: element
+    - name: data/bridge-instagram
 
 - name: template config
   template:
@@ -79,9 +50,15 @@
     networks_cli_compatible: no
     networks:
       - name: bridgewithdns
+    healthcheck:
+      interval: 30s
+      timeout: 60s
+      start_period: 10s
+      test: "redis-cli --raw incr ping"
   tags:
     - matrix-container
     - docker-containers
+    - redis
 
 - name: postgresql user
   postgresql_user:
@@ -115,7 +92,7 @@
 - name: start synapse container
   docker_container:
     name: matrix
-    image: avhost/docker-matrix:latest
+    image: matrixdotorg/synapse:latest
     auto_remove: false
     detach: true
     pull: true
@@ -132,6 +109,9 @@
         source: "{{ systemuserlist.matrix.home }}/data"
         target: /data
       - type: bind
+        source: "{{ systemuserlist.matrix.home }}/log"
+        target: /log
+      - type: bind
         read_only: true
         source: /etc/letsencrypt/live/{{ matrix_domain }}/fullchain.pem
         target: /data/{{ matrix_domain }}.crt
@@ -139,8 +119,18 @@
         read_only: true
         source: /etc/letsencrypt/live/{{ matrix_domain }}/privkey.pem
         target: /data/{{ matrix_domain }}.key
+    healthcheck:
+      interval: 15s
+      timeout: 5s
+      start_period: 5s
+      test: "curl -fSs http://localhost:{{ matrix_synapse_port }}/health"
     env:
       SERVER_NAME: "{{ matrix_domain }}"
+      SYNAPSE_REPORT_STATS: "no"
+      LD_PRELOAD: "/usr/lib/x86_64-linux-gnu/libjemalloc.so.2"
+
+    # entrypoint script assumes container runs as root
+    entrypoint: /usr/local/bin/python -m synapse.app.homeserver --config-path /data/homeserver.yaml
   tags:
     - matrix-container
     - docker-containers

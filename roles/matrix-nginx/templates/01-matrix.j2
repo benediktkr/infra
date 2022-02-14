@@ -27,6 +27,18 @@ server {
   }
 
 
+  location /health {
+    allow 127.0.0.1;
+    allow {{ my_public_ips[inventory_hostname] }}/32;
+    allow {{ my_public_ips[ansible_control_host] }}/32;
+    allow {{ wireguard_cidr }};
+    deny all;
+    proxy_pass http://{{ bridgewithdns.matrix }}:{{ matrix_synapse_port }};
+    proxy_set_header X-Forwarded-For $remote_addr;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Host $host;
+
+  }
   location ~* ^(\/_matrix|\/_synapse\/client) {
     proxy_pass http://{{ bridgewithdns.matrix }}:{{ matrix_synapse_port }};
     proxy_set_header X-Forwarded-For $remote_addr;
@@ -45,9 +57,11 @@ server {
     proxy_pass http://{{ bridgewithdns.matrix_reg }}:{{ matrix_registration_port }};
   }
 
-  location /simplehook/ {
-    proxy_pass http://{{ bridgewithdns.matrix_simplehook }}:{{ matrix_simplehook_port }}/;
+  location /_webhook {
+    proxy_pass http://10.102.47.128:3033/_webhook;
     proxy_set_header X-Forwarded-For $remote_addr;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Host $host;
   }
 
   location /hydrogen {
@@ -59,11 +73,6 @@ server {
 
 
   include /etc/nginx/authelia_internal.conf;
-  location ~ ^/m/.* {
-    include /etc/nginx/require_auth.conf;
-    include /etc/nginx/require_auth_proxy.conf;
-    proxy_pass http://{{ bridgewithdns.matrix_smtp }}:80;
-  }
   location /_synapse/admin {
     include /etc/nginx/require_auth.conf;
 

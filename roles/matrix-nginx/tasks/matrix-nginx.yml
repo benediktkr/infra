@@ -1,0 +1,37 @@
+---
+
+- name: make dirs
+  file:
+    path: "{{ systemuserlist.matrix.home }}/{{ item.name }}"
+    state: directory
+    mode: "{{ item.mode|default(750) }}"
+    owner: "{{ item.owner|default('matrix') }}"
+    group: "{{ item.group|default('matrix') }}"
+  with_items:
+    - name: data
+      mode: 755
+    - name: html
+      mode: 750
+      group: www-data
+
+- name: matrix index.html
+  template:
+    src: index.html.j2
+    dest: "{{ systemuserlist.matrix.home }}/html/index.html"
+    owner: matrix
+    group: www-data
+    mode: 0750
+  tags:
+    - matrix-html
+
+- name: template nginx vhost
+  template:
+    src: 01-matrix.j2
+    dest: /etc/nginx/sites-enabled/01-matrix
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - nginx
+    - matrix-nginx
+  notify: reload nginx

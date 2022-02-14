@@ -1,7 +1,8 @@
 #!/bin/bash
 
-# run as matrix user
+# run as postgres user
 
-/usr/bin/pg_dump -U {{ systemuserlist.matrix.username }} > {{ systemuserlist.matrix.home }}/synapse-postgres-backup.sql
+/usr/bin/pg_dump {{ systemuserlist.matrix.username }} > {{ psql_dump_path}}/synapse-postgres-backup.sql
 
-# PGPASSWORD="{{ systemuserlist.matrix.postgres_passwd_bridge_telegram }}" /usr/bin/pg_dump -U matrix_bridge_telegram > {{ systemuserlist.matrix.home }}/bridge-telegram-postgres-backup.sql
+# databases for e.g. brides are here too for simplicity
+/usr/bin/pg_dump matrix_bridge_instagram > {{ psql_dump_path }}/bridge-instagram-postgres-backup.sql

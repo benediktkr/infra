@@ -1,52 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <link rel="stylesheet" type="text/css" href="https://www.sudo.is/dark/style.css" media="screen">
-    <title>matrix</title>
-    <style>
-      body {
-      max-width: 40em;
-      margin: auto;
-      text-align: center;
-      }
-      h1, p {
-      margin: 1.5em;
-      }
-      hr {
-      border: none;
-      background-color: #ccc;
-      color: #ccc;
-      height: 1px;
-      width: 7em;
-      margin-top: 4em;
-      }
-      .logo {
-      display: block;
-      width: 14em;
-      margin: 4em auto;
-      -webkit-filter: invert(100%);
-      filter: invert(100%);
-      }
-      .rabbit {
-      position:fixed;
-      left:0px;
-      bottom:10px;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="header" class="header">
-      <div class="logodiv">
-        <div class="righthead">
-          <a href="/hydrogen">hydrogen</a> |
-          <a href="https://talk.sudo.is/">element</a> ||
-          <a href="https://sudo.is/">home</a>
-        </div>
-      </div>
-    </div>
+{{ lookup("file", "/var/www/shared/header.html") }}
 
-    <div class="logo">
+    <div class="matrixlogo">
       <svg role="img" aria-label="[Matrix logo]" viewBox="0 0 200 85" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
         <g id="parent" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
           <g id="child" transform="translate(-122.000000, -6.000000)" fill="#000000" fill-rule="nonzero">
@@ -66,44 +20,51 @@
     </div>
     <hr>
     <p>
-      <small>
-        git mirrors: <a href="https://git.sudo.is/matrix" target="_blank" rel="noopener noreferrer">
-          git.sudo.is/matrix
-        </a>
 
-        {# <br />
-         # element: <a href="https://talk.sudo.is/" target="_blank" rel="noopener noreferrer">
-         #   talk.sudo.is
-         # </a> #}
+      <div class="terminal">
+        <ul class="centertext">
+          <li>
+            git mirrors:
+            <a href="https://git.sudo.is/matrix" target="_blank" rel="noopener noreferrer">
+              git.sudo.is/matrix
+            </a>
+          </li>
+          <li>
+            help:
+            <a href="https://matrix.to/#/#darkroom:sudo.is" target="_blank" rel="noopener noreferrer">
+              #darkroom:sudo.is
+            </a>
+          </li>
+          <li>
+            <a href="https://matrix.org" target="_blank" rel="noopener noreferrer">
+              matrix.org
+            </a>
+          </li>
 
-        {# <br />
-         # operator: <a href="https://matrix.to/#/@ben:sudo.is" target="_blank" rel="noopener noreferrer">
-         #   @ben:sudo.is
-         # </a> #}
-
-        <br />
-        help: <a href="https://matrix.to/#/#darkroom:sudo.is" target="_blank" rel="noopener noreferrer">
-          #darkroom:sudo.is
-        </a>
-      </small>
-    </p>
-    <p>
-      <small>
-        <a href="https://matrix.org" target="_blank" rel="noopener noreferrer">
-          matrix.org
-        </a>
-      </small>
-    </p>
-    <div id="rabbit" class="rabbit">
-      <div id="footer" class="footer">
-        <div class="footertext">
-          <span class="left"><i>Die Würde des Menschen ist unantastbar.</i></span>
-          <!-- <span class="right">follow the white rabbit..</span> -->
-        </div>
+        </ul>
       </div>
-    </div>
 
-  </body>
-</html>
+      <div class="terminal">
+        <div class="subpagetitle">> web clients</div>
+        <ul>
+          <li>
+            <a href="/hydrogen">hydrogen</a>
+          </li>
+          <li>
+            <a href="https://talk.sudo.is/">element</a>
+          <li>
+        </ul>
+      </div>
+
+    {# <div id="rabbit" class="rabbit">
+     #   <div id="footer" class="footer">
+     #     <div class="footertext">
+     #       <span class="right">follow the white rabbit..</span>
+     #     </div>
+     #   </div>
+     # </div> #}
+
 
 <!-- {{ inventory_hostname }} -->
+
+{{ lookup("file", "/var/www/shared/footer.html") }}

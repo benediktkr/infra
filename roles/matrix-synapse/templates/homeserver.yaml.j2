@@ -1325,8 +1325,7 @@ enable_3pid_changes: true
 # If the room already exists, make certain it is a publicly joinable
 # room. The join rule of the room must be set to 'public'.
 #
-auto_join_rooms:
-  - "#hello:{{ matrix_domain }}"
+auto_join_rooms: {{ matrix_auto_join_rooms }}
 
 # Where auto_join_rooms are specified, setting this flag ensures that the
 # the rooms exist by creating them when the first user on the
@@ -1447,9 +1446,9 @@ report_stats: false
 
 # A list of application service config files to use
 #
-#app_service_config_files:
-#  - app_service_1.yaml
-#  - app_service_2.yaml
+app_service_config_files:
+  - /data/bridge-instagram/registration.yaml
+
 
 # Uncomment to enable tracking of application service IP addresses. Implicitly
 # enables MAU tracking for application service users.
