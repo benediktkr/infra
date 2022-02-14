@@ -13,19 +13,10 @@
     - data/gitea/conf
     - data/git
 
-- name: create dir for ssh passthrough script
-  file:
-    path: "/app/gitea/"
-    state: directory
-    mode: 0755
-    owner: git
-    group: git
-    recurse: yes
-
 - name: template ssh passthrough script
   template:
     src: ssh-passthrough.j2
-    dest: /app/gitea/gitea
+    dest: /usr/local/bin/gitea
     mode: 0755
     owner: git
     group: git
@@ -63,6 +54,7 @@
       - "127.0.0.1:{{ gitea_ssh_port }}:22"
     volumes:
       - "{{ systemuserlist.git.home }}/data:/data"
+      - "{{ systemuserlist.git.home }}/.ssh/:/data/git/.ssh"
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     env:
@@ -83,9 +75,13 @@
     - gitea-container
     - docker-containers
 
-- name: symlink .ssh for git user
-  file:
-    src: "{{ systemuserlist.git.home }}/data/git/.ssh"
-    dest: "{{ systemuserlist.git.home }}/.ssh"
-    state: link
-    force: yes
+- name: template filebeat config
+  template:
+    src: filebeat-gitea.yml.j2
+    dest: "/etc/filebeat/inputs.d/gitea.yml"
+    owner: root
+    group: root
+    mode: 0600
+  tags:
+    - filebeat
+  notify: restart filebeat

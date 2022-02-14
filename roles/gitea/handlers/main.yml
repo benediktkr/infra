@@ -5,6 +5,11 @@
     name: nginx
     state: reloaded
 
+- name: restart filebeat
+  service:
+    name: filebeat
+    state: restarted
+
 # - name: restart gitea
 #   docker_container:
 #     name: gitea
