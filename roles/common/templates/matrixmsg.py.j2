@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 
 import argparse
-import fileinput
 import sys
 import json
+from socket import gethostname
 
 import requests
 
 URL = "https://{{ matrix_url }}/_webhook/incoming"
 TOKEN = "{{ matrix_webhook_token }}"
+
 
 def markdown_fmt(lines):
     return "\r\n".join(
@@ -24,6 +25,7 @@ def send(text, room=None):
 
     params = {'room': room}
     d = {
+        'prefix': gethostname(),
         'text': text,
         'token': TOKEN
     }
