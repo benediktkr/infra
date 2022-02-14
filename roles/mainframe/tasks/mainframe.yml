@@ -45,6 +45,9 @@
       - bdfr
       - certbot
       - certbot-dns-cloudflare
+      #- feedgen
+      - podgen
+      - mutagen # for podgen
       - feedparser
       - internetarchive
       - loguru
@@ -60,6 +63,22 @@
     - pip
     - packages
     - mainframe-packages
+    - mainframe-pip
+
+- name: template nginx vhost(s)
+  template:
+    src: "{{ item }}.j2"
+    dest: /etc/nginx/sites-enabled/{{ item }}
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - 01-archives.conf
+  tags:
+    - archives
+    - nginx
+    - mainframe-nginx
+  notify: reload nginx
 
 - name: make local log dir for {{ myusername }}
   file:
@@ -82,8 +101,11 @@
     - scripts
     - archive
     - archive-scripts
+    - archives
+    - archives-config
   with_items:
     - podcast.json
+    - archives.toml
 
 - name: template scripts
   template:
@@ -97,7 +119,6 @@
     - archive-wayback.py
     - youtube-dl-mirrors.sh
     - reddit-archives.sh
-    - matrixmsg.py
     - letsencrypt.sh
   tags:
     - scripts
@@ -117,6 +138,7 @@
     - mainframe-cron
     - archive
     - archive-scripts
+    - archives
 
 - name: convergence dir on {{ git_cron.tools_url }}
   file:
@@ -145,3 +167,56 @@
     - src: tf-convergence.sh.j2
       dest: /usr/local/sbin/tf-convergence.sh
       mode: 770
+
+- name: archives log dir and cache
+  file:
+    state: directory
+    path: /var/{{ item }}/archives
+    owner: "{{ systemuserlist.archives.username }}"
+    group: "{{ systemuserlist.archives.username }}"
+    mode: 0775
+  with_items:
+    - log
+    - cache
+  tags:
+    - archives
+    - archive
+
+- name: start archives
+  docker_container:
+    name: archives
+    image: dockreg.sudo.is/archives:latest
+    auto_remove: false
+    detach: true
+    pull: true
+    restart_policy: "unless-stopped"
+    state: started
+    container_default_behavior: compatibility
+    networks_cli_compatible: false
+    user: "{{ systemuserlist.archives.uid }}:{{ systemuserlist.archives.gid }}"
+    networks:
+      - name: bridgewithdns
+        ipv4_address: "{{ bridgewithdns.archives }}"
+    mounts:
+      - type: bind
+        source: "{{ archives_path }}"
+        target: "{{ archives_path }}"
+      - type: bind
+        source: /var/log/archives
+        target: /var/log/archives
+      - type: bind
+        source: /var/cache/archives
+        target: /var/cache/archives
+      - type: bind
+        source: /usr/local/etc/archives.toml
+        target: /etc/archives.toml
+        read_only: true
+        # works around havint the wwwsudois package up to date
+      - type: bind
+        source: /var/www/shared
+        target: /var/www/shared
+        read_only: true
+  tags:
+    - archives
+    - archives-container
+    - docker-containers
