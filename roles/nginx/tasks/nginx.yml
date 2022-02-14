@@ -38,6 +38,14 @@
     - www.sudo.is
     - apt.sudo.is
 
+- name: make cache dir
+  file:
+    state: directory
+    path: /var/cache/nginx
+    owner: www-data
+    group: root
+    mode: 0700
+
 # - name: create dh file
 #   command: openssl dhparam -out /etc/nginx/dhparam.pem 4096
 #   args:

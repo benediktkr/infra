@@ -33,6 +33,12 @@ location /_authelia {
   proxy_no_cache $cookie_session;
   proxy_buffers 4 32k;
 
+  {# # cache in case authelia goes down
+   # proxy_buffering        on;
+   # proxy_cache            AUTH;
+   # proxy_cache_valid      200  1s;
+   # proxy_cache_use_stale  error timeout invalid_header updating http_502 http_503 http_504; #}
+
   # Advanced Proxy Config
   send_timeout 5m;
   proxy_read_timeout 240;
