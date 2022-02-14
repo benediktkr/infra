@@ -1,3 +1,0 @@
----
- - include: bitcoind.yml
-   tags: bitcoind
