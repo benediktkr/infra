@@ -2,10 +2,10 @@
 
 dependencies:
   - postgresql
+  - matrix-nginx
   - matrix-synapse
   - matrix-element
   - matrix-registration
   - matrix-bridge-smtp
-  #- matrix-bridge-telegram
-  - matrix-simplehook
+  - matrix-bridge-instagram
   - matrix-hydrogen
