@@ -71,6 +71,11 @@
     networks_cli_compatible: no
     networks:
       - name: bridgewithdns
+    healthcheck:
+      interval: 30s
+      timeout: 60s
+      start_period: 10s
+      test: "redis-cli --raw incr ping"
   when: item.redis
   with_items: "{{ nextclouds }}"
   loop_control:
