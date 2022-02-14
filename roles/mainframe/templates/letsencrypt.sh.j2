@@ -7,13 +7,18 @@ set -e
 LOCKFILE="/tmp/letsencrypt.lock"
 lockfile -r 0 -l 3600  $LOCKFILE
 
-/usr/local/bin/certbot renew -q
+/usr/local/bin/certbot renew -q -n
 
 {% for item in letsencrypt_domains %}
 {%   for pemfile in ["cert.pem", "chain.pem", "fullchain.pem", "privkey.pem"] %}
 /usr/bin/cp /etc/letsencrypt/live/{{ item }}/{{ pemfile }} {{ letsencrypt_private_path }}/{{ item }}/{{ pemfile }}
 {%   endfor %}
 
+openssl rsa -inform pem -in /etc/letsencrypt/live/{{ item }}/privkey.pem -outform pem -out {{ letsencrypt_private_path }}/{{ item }}/rsa-privkey.pem > /dev/null 2>&1
+chown -R {{ myusername }}. {{ letsencrypt_private_path }}/{{ item }}/
+chmod -R 750 {{ letsencrypt_private_path }}/{{ item }}/
 {% endfor %}
+
+
 
 rm -f $LOCKFILE

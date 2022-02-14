@@ -1,0 +1,18 @@
+[http]
+port = {{ archives_port }}
+# breaks HEALTHCHECK currently:
+# host = {{ bridgewithdns.archives }}
+host = 0.0.0.0
+
+[jinja]
+template_shared_path = /var/www/shared
+
+[archives]
+path = {{ archives_path }}
+du_cache_file = /var/cache/archives/du_cache.json
+my_username = {{ myusername }}
+env = prod
+
+[log]
+level = INFO
+file = /var/log/archives/archives.log
