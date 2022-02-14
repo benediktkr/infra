@@ -43,6 +43,12 @@ filter {
       match => ["message", "WS \"%{IPV4:remote_addr}\""]
     }
   }
+  if "gitea" in [tags] {
+    grok {
+      match => ["message", "%{DATA:logger_name}\:%{NUMBER:lineno}\:%{DATA:function} \[%{LOGLEVEL:level}\] %{GREEDYDATA:message}"]
+      overwrite => [ "message" ]
+    }
+  }
   if "nextcloud" in [tags] {
     mutate {
         remove_field => [ "time" ]
