@@ -1,0 +1,93 @@
+
+server {
+    listen 443 ssl;
+    server_name www.{{ domain }} {{ domain }};
+
+    charset utf-8;
+    root /var/www/www.{{ domain }};
+
+    ssl_certificate /etc/letsencrypt/live/{{ domain }}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/{{ domain }}/privkey.pem;
+
+    include /etc/nginx/authelia_internal.conf;
+
+    autoindex on;
+    autoindex_exact_size off;
+
+    location {{ coolcats }} {
+        include /etc/nginx/require_auth.conf;
+        autoindex on;
+    }
+
+    location ~* ^.+\.json$ {
+        add_header Content-Type application/json;
+    }
+
+    location = /.well-known/matrix/server {
+        default_type application/json;
+        add_header Access-Control-Allow-Origin *;
+        return 200 '{"m.server": "{{ matrix_url }}:443"}';
+    }
+
+    location = /.well-known/matrix/client {
+        default_type application/json;
+        add_header Access-Control-Allow-Origin *;
+        return 200 '{"m.homeserver":{"base_url":"https://{{ matrix_url }}"}}';
+    }
+
+    location = /.well-known/carddav {
+        return 301 https://{{ nextcloud_url }}/remote.php/dav;
+    }
+
+    location = /.well-known/caldav {
+        return 301 https://{{ nextcloud_url }}/remote.php/dav;
+    }
+
+    # sometimes clients misbehave and contact the top level domain when they
+    # shouldnt so we point them to {{ matrix_url }} instead
+    location ~* "^/_matrix.*" {
+        return 301 https://{{ matrix_url }}$request_uri;
+    }
+
+    access_log /var/log/nginx/access_www.{{ domain }}.log main;
+    error_log /var/log/nginx/error_www.{{ domain }}.log warn;
+
+    add_header Referrer-Policy "no-referrer" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Download-Options "noopen" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Permitted-Cross-Domain-Policies "none" always;
+    add_header X-Robots-Tag "none" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+}
+
+server {
+    listen 443 ssl;
+    server_name static.{{ domain }} {{ static2_url }};
+
+    charset utf-8;
+    root /var/www/static.{{ domain }};
+
+    ssl_certificate /etc/letsencrypt/live/{{ domain }}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/{{ domain }}/privkey.pem;
+
+    include /etc/nginx/authelia_internal.conf;
+
+    autoindex on;
+    autoindex_exact_size off;
+
+    location ~* ^.+\.json$ {
+        add_header Content-Type application/json;
+    }
+
+    access_log /var/log/nginx/access_static.{{ domain }}.log main;
+    error_log /var/log/nginx/error_static.{{ domain }}.log warn;
+
+    add_header Referrer-Policy "no-referrer" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Download-Options "noopen" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Permitted-Cross-Domain-Policies "none" always;
+    add_header X-Robots-Tag "none" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+}
