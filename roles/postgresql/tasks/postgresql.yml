@@ -34,6 +34,14 @@
     mode: 0640
   notify: restart postgresql
 
+- name: dir for backups
+  file:
+    state: directory
+    path: "{{ psql_dump_path }}"
+    owner: postgres
+    group: postgres
+    mode: 0700
+
 - name: postgresql default users with password
   postgresql_user:
     name: "{{ item.username }}"
