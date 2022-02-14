@@ -8,6 +8,10 @@ server {
   ssl_certificate /etc/letsencrypt/live/{{ domain }}/fullchain.pem;
   ssl_certificate_key /etc/letsencrypt/live/{{ domain }}/privkey.pem;
 
+  if ( $request_method !~ ^(GET|POST|HEAD)$ ) {
+    return 405;
+  }
+
   location / {
 
     proxy_pass         http://{{ bridgewithdns.authelia }}:{{ authelia_port }};
@@ -91,6 +95,7 @@ server {
     return 404;
   }
 
+  # https://www.authelia.com/docs/deployment/supported-proxies/nginx.html
   location /api/verify {
     proxy_pass         http://{{ bridgewithdns.authelia }}:{{ authelia_port }};
 
@@ -100,27 +105,36 @@ server {
     # Those headers will be used by Authelia to deduce the target url of the user.
     # Basic Proxy Config
     client_body_buffer_size 128k;
-    proxy_set_header Host $host;
-    proxy_set_header X-Original-URL $scheme://$http_host$request_uri;
-    proxy_set_header X-Real-IP $remote_addr;
+    #proxy_set_header X-Original-URL $scheme://$http_host$request_uri;
     proxy_set_header X-Forwarded-Method $request_method;
+    #proxy_set_header Host $host;
+    #proxy_set_header X-Real-IP $remote_addr;
+    #proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto $scheme;
     proxy_set_header X-Forwarded-Host $http_host;
     proxy_set_header X-Forwarded-Uri $request_uri;
-    proxy_set_header X-Forwarded-For $remote_addr;
-    proxy_set_header X-Forwarded-Ssl on;
-    proxy_redirect  http://  $scheme://;
-    proxy_http_version 1.1;
-    proxy_set_header Connection "";
-    proxy_cache_bypass $cookie_session;
-    proxy_no_cache $cookie_session;
-    proxy_buffers 4 32k;
+    #proxy_set_header X-Forwarded-Ssl on;
+    #proxy_redirect  http://  $scheme://;
+    #proxy_http_version 1.1;
+    #proxy_set_header Connection "";
+    #proxy_cache_bypass $cookie_session;
+    #proxy_no_cache $cookie_session;
+    #proxy_buffers 64 256k;
 
     # Advanced Proxy Config
     send_timeout 5m;
-    proxy_read_timeout 240;
-    proxy_send_timeout 240;
-    proxy_connect_timeout 240;
+    #proxy_read_timeout 240;
+    #proxy_send_timeout 240;
+    #proxy_connect_timeout 240;
+
+    # fc00::7 is local unicast and
+    #set_real_ip_from fc00::/7;
+    {% for cidr in my_local_cidrs -%}
+    #set_real_ip_from {{ cidr }};
+    {% endfor -%}
+    #real_ip_header X-Forwarded-For;
+    #real_ip_recursive on;
+
   }
 
   access_log /var/log/nginx/access_{{ authelia_api_url }}.log main;

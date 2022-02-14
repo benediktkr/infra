@@ -8,9 +8,22 @@
     owner: authelia
     group: authelia
 
+- name: make redis dir
+  file:
+    path: "{{ systemuserlist.authelia.home }}/redis"
+    state: directory
+
+- name: copy jwt keys
+  copy:
+    src: "private/authelia/keys/"
+    dest: "{{ systemuserlist.authelia.home }}/config/keys/"
+    owner: authelia
+    group: authelia
+    mode: 0600
+
 - name: template authelia config
   template:
-    src: "private/authelia-config.yml.j2"
+    src: "private/authelia/config.yml.j2"
     dest: "{{ systemuserlist.authelia.home }}/config/config.yml"
     owner: authelia
     group: authelia
@@ -45,8 +58,18 @@
     network_mode: bridgewithdns
     networks:
       - name: bridgewithdns
+    healthcheck:
+      interval: 30s
+      timeout: 60s
+      start_period: 10s
+      test: "redis-cli --raw incr ping"
+    mounts:
+      - type: bind
+        source: "{{ systemuserlist.authelia.home }}/redis"
+        target: /data
   tags:
     - authelia-container
+    - redis
     - docker-containers
 
 - name: start container
@@ -70,6 +93,8 @@
         source: "{{ systemuserlist.authelia.home }}/config"
         target: /config
         read_only: no
+    env:
+      AUTHELIA_IDENTITY_PROVIDERS_OIDC_ISSUER_PRIVATE_KEY_FILE: /config/keys/key.pem
     healthcheck:
       interval: 30s
       timeout: 3s
