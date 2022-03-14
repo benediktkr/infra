@@ -1,6 +1,6 @@
 
 server {
-    listen 443 ssl;
+    listen 443 ssl http2;
     server_name www.{{ domain }} {{ domain }};
 
     charset utf-8;
@@ -62,7 +62,7 @@ server {
 }
 
 server {
-    listen 443 ssl;
+    listen 443 ssl http2;
     server_name static.{{ domain }} {{ static2_url }};
 
     charset utf-8;

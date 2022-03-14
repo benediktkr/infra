@@ -127,6 +127,15 @@
     enabled: true
     state: started
 
+- name: telegraf file
+  template:
+    src: telegraf-nginx.conf.j2
+    dest: /etc/telegraf/telegraf.d/nginx.conf
+  notify:
+    - restart telegraf
+  tags:
+    - telegraf
+
 - name: template filebeat config
   template:
     src: filebeat-nginx.yml.j2

@@ -1,0 +1,10 @@
+# ansible distributed
+
+[[inputs.nginx]]
+  urls = [
+  {% if 'address' in ansible_default_ipv4 %}
+    "https://{{ inventory_hostname }}/server_status"
+  {% else %}
+    "https://localhost/server_status"
+  {% endif %}
+  ]

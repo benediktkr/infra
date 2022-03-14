@@ -1887,33 +1887,31 @@ saml2_config:
 # use 'oidc' for the idp_id to ensure that existing users continue to be
 # recognised.)
 #
+{% set left_curly = "{{" %}
+{% set right_curly = "}}" %}
 oidc_providers:
   # Generic example
   #
-  #- idp_id: my_idp
-  #  idp_name: "My OpenID provider"
-  #  idp_icon: "mxc://example.com/mediaid"
-  #  discover: false
-  #  issuer: "https://accounts.example.com/"
-  #  client_id: "provided-by-your-issuer"
-  #  client_secret: "provided-by-your-issuer"
-  #  client_auth_method: client_secret_post
-  #  scopes: ["openid", "profile"]
-  #  authorization_endpoint: "https://accounts.example.com/oauth2/auth"
-  #  token_endpoint: "https://accounts.example.com/oauth2/token"
-  #  userinfo_endpoint: "https://accounts.example.com/userinfo"
-  #  jwks_uri: "https://accounts.example.com/.well-known/jwks.json"
-  #  skip_verification: true
-  #  user_mapping_provider:
-  #    config:
-  #      subject_claim: "id"
-  #      localpart_template: "\{\{ user.login \}\}"
-  #      display_name_template: "\{\{ user.name \}\}"
-  #      email_template: "\{\{ user.email \}\}"
-  #  attribute_requirements:
-  #    - attribute: userGroup
-  #      value: "synapseUsers"
-
+  - idp_id: authelia
+    idp_name: "{{ matrix_domain }}"
+    idp_icon: "mxc://{{ matrix_domain }}/KAMOFOFYDjYsrJzgMUeRyQCl"
+    discover: true
+    issuer: "https://{{ authelia_login_url }}/"
+    client_id: "{{ matrix_synapse_oidc_client_id }}"
+    client_secret: "{{ matrix_synapse_oidc_secret }}"
+    client_auth_method: client_secret_post
+    scopes: ["openid", "profile", "email", "groups"]
+    skip_verification: false
+    allow_existing_users: true
+    user_mapping_provider:
+      config:
+        subject_claim: "preferred_username"
+        localpart_template: "{{left_curly}} user.preferred_username {{right_curly}}"
+        display_name_template: "{{left_curly}} user.name {{right_curly}}"
+        email_template: "{{left_curly}} user.email {{right_curly}}"
+      attribute_requirements:
+        - attribute: groups
+          value: "matrix"
 
 # Enable Central Authentication Service (CAS) for registration and login.
 #
@@ -2189,15 +2187,15 @@ sso:
 
 
 password_config:
-   # Uncomment to disable password login
+   # Change to disable password login
    #
-   #enabled: false
+   #enabled: true
 
-   # Uncomment to disable authentication against the local password
+   # Change to disable authentication against the local password
    # database. This is ignored if `enabled` is false, and is only useful
    # if you have other password_providers.
    #
-   #localdb_enabled: false
+   #localdb_enabled: true
 
    # Uncomment and change to a secret random string for extra security.
    # DO NOT CHANGE THIS AFTER INITIAL SETUP!
@@ -2452,16 +2450,16 @@ password_providers:
 #    - module: "ldap_auth_provider.LdapAuthProvider"
 #      config:
 #        enabled: true
-#        uri: "ldap://ldap.example.com:389"
+#        uri: "ldap://{{ openldap_url }}:389"
 #        start_tls: true
-#        base: "ou=users,dc=example,dc=com"
+#        base: "ou=users,{{ openldap_dc }}"
 #        attributes:
 #           uid: "cn"
 #           mail: "email"
-#           name: "givenName"
-#        #bind_dn:
-#        #bind_password:
-#        #filter: "(objectClass=posixAccount)"
+#           name: "displayName"
+#        bind_dn: cn=readonly,{{ openldap_dc }}
+#        bind_password: {{ openldap_readonly_pass }}
+#        filter: "(&(|(objectclass=inetOrgPerson))(|(memberof=cn=matrix,ou=groups,{{ openldap_dc }})))"
 
 
 

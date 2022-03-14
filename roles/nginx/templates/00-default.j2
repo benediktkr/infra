@@ -16,9 +16,9 @@ server {
  # {% endif %} #}
 
 server {
-  listen 443 ssl;
+  listen 443 ssl http2 default_server;
 
-  listen   [::]:443 ssl; # listen for ipv6
+  # listen   [::]:443 ssl; # listen for ipv6
 
   root /var/www/html;
   server_name {{ inventory_hostname }};

@@ -1,14 +1,16 @@
 ---
 
-- type: log
+- type: filestream
   paths:
     - /var/log/nginx/access_*.log
 
   scan_frequency: 10s
   enabled: true
 
-  json.keys_under_root: true
-  json.add_error_key: true
+  parsers:
+    - ndjson:
+        keys_under_root: true
+        add_error_key: true
 
   fields_under_root: true
   fields:
@@ -17,7 +19,7 @@
   tags:
     - nginx
 
-- type: log
+- type: filestream
   paths:
     - /var/log/nginx/error_*.log
 
