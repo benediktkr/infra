@@ -164,3 +164,14 @@
     - filebeat
     - filebeat-docker
   notify: restart filebeat
+  when: false
+
+- name: temp remove filebeat docker input
+  file:
+    state: absent
+    path: /etc/filebeat/inputs.d/docker.yml
+  tags:
+    - filebeat
+    - filebeat-docker
+  notify: restart filebeat
+  when: true
