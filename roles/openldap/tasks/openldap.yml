@@ -273,7 +273,7 @@
     bind_pw: "{{ openldap_admin_pass }}"
   loop_control:
     label: "{{ item }}"
-  with_items: "{{ openldap_groups }}"
+  with_items: "{{ openldap_groups }} + ['empty']"
   tags:
     - ldap-users
 
