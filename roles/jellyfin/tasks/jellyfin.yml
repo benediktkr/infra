@@ -2,6 +2,21 @@
 
 # subtitles: https://jellyfin.org/docs/general/server/media/subtitles.html
 
+- name: install certs
+  copy:
+    src: "/usr/local/etc/certs/{{ item }}"
+    dest: "/usr/local/etc/certs/"
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - letsencrypt
+  notify: reload nginx
+  vars:
+    prediff_cmd: echo
+  with_items:
+    - "{{ jellyfin_url }}"
+
 - name: create dir structure
   file:
     path: "{{ jellyfin_root }}/{{ item }}"
