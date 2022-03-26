@@ -43,6 +43,11 @@
   notify:
     - call exportfs
 
+- name: load kernel module
+  modprobe:
+    name: nfsd
+    state: present
+
 - name: enable nfs-kernel-server
   service:
     name: nfs-kernel-server
