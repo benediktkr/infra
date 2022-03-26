@@ -4,3 +4,6 @@
   service:
     name: nginx
     state: reloaded
+
+- name: run letsencrypt.sh
+  command: /usr/local/bin/letsencrypt.sh
