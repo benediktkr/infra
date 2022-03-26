@@ -2,3 +2,4 @@
 
 telegraf_smart_disks: false
 telegraf_sensors: true
+telegraf_tags: {}

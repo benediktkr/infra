@@ -4,6 +4,9 @@
   # rack = "1a"
   ## Environment variables can be used as tags, and throughout the config file
   # user = "$USER"
+  {% for key, val in telegraf_tags.items() -%}
+  {{ key }} = "{{ val }}"
+  {% endfor %}
 
 
 [agent]
@@ -229,7 +232,6 @@
   ## Uncomment to remove deprecated metrics.
   # fielddrop = ["uptime_format"]
 
-
 {% if 'servers' in group_names and not telegraf_disable_docker|default(false) %}
 
 {% if telegraf_docker|default(true) %}
@@ -237,14 +239,6 @@
   timeout = "5s"
 {% endif %}
 
-[[inputs.nginx]]
-  urls = [
-  {% if 'address' in ansible_default_ipv4 %}
-    "https://{{ inventory_hostname }}/server_status"
-  {% else %}
-    "https://localhost/server_status"
-  {% endif %}
-  ]
 {% endif %}
 
 
@@ -330,3 +324,8 @@
  #   ## If true, read the entire file and calculate an md5 checksum.
  #   md5 = false
  # {% endif %} #}
+
+[[inputs.exec]]
+  commands = ["/usr/local/bin/telegraf-vnstat.py"]
+  timeout = "2s"
+  data_format = "influx"

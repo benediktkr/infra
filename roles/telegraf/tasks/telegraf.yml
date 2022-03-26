@@ -33,6 +33,24 @@
   notify: restart telegraf
   tags: users
 
+- name: install humanize
+  pip:
+    name: humanize
+    state: latest
+    executable: pip3
+  tags:
+    - pip
+    - packages
+
+- name: template vnstat script
+  template:
+    src: telegraf-vnstat.py.j2
+    dest: /usr/local/bin/telegraf-vnstat.py
+    mode: 0775
+    owner: telegraf
+    group: telegraf
+  notify: restart telegraf
+
 # - name: get list of existing groups
 #   shell: "/usr/bin/getent group | awk -F':' '{print $1}'"
 #   register: etc_groups

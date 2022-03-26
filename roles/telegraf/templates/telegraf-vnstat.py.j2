@@ -1,0 +1,68 @@
+#!/usr/bin/env python3
+
+import json
+import subprocess
+import sys
+
+import humanize
+
+
+VNSTAT = "/usr/bin/vnstat"
+
+def human(size):
+    return humanize.naturalsize(size)
+
+if __name__ == "__main__":
+    cmd = [VNSTAT, "--json"]
+
+    # raises exception if vnstat returns non-zero
+    ps = subprocess.run(cmd, check=True, capture_output=True)
+    j = json.loads(ps.stdout)
+    for item in j['interfaces']:
+        iface = item['name']
+
+        t = item['traffic']
+        total_rx = t['total']['rx']
+        total_tx = t['total']['tx']
+
+        all_days_desc = list(reversed(item['traffic']['day']))
+        # looking at 30 days since yesterday
+        # not including today (since its not finished)
+        days = all_days_desc[1:31]
+        today = all_days_desc[0]
+        if len(days) == 0:
+            days.append(today)
+
+        including_today = days[:-1]+[today]
+        fields = {
+            # total for the 30 days since yesterday (or less if new host)
+            # 'rolling_sum_rx': sum([a['rx'] for a in days]),
+            # 'rolling_sum_tx': sum([a['tx'] for a in days]),
+            # 'rolling_sum': sum([a['rx'] + a['tx'] for a in days]),
+            'rolling_sum_rx': sum([a['rx'] for a in including_today]),
+            'rolling_sum_tx': sum([a['tx'] for a in including_today]),
+            'rolling_sum': sum([a['rx'] + a['tx'] for a in including_today]),
+            # total for 30 days since today, since we include today in the
+            # rolling avg
+            'rolling_avg_rx': sum([a['rx'] for a in including_today]) / len(days),
+            'rolling_avg_tx': sum([a['tx'] for a in including_today]) / len(days),
+            'rolling_avg': sum([a['tx'] + a['rx'] for a in including_today]) / len(days),
+        }
+        fieldstr = ",".join(f'{k}={float(v)}' for k, v in fields.items())
+        telegraf = f"vnstat,interface={iface} {fieldstr}"
+
+        if "--debug" in sys.argv:
+            print("debug:")
+            print(iface)
+            print(f"total over last {len(days)} days (not including today):")
+            print(human(fields['rolling_sum_rx']))
+            print(human(fields['rolling_sum_tx']))
+            print(human(fields['rolling_sum']))
+            print(f"rolling average over last {len(days)} days (including today):")
+            print(human(fields['rolling_avg_rx']))
+            print(human(fields['rolling_avg_tx']))
+            print(human(fields['rolling_avg']))
+            print()
+            print("output:")
+
+        print(telegraf)
