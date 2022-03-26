@@ -29,7 +29,9 @@ PersistentKeepalive = 25
 
 # {{ peer_name }}
 [Peer]
+{% if not peer.wg_is_primary_dns|default(false) -%}
 Endpoint = {{ peer_name }}:{{ wireguard_port }}
+{% endif %}
 PublicKey = {{ lookup('file', 'private/wireguard/' + peer_name + '.pub' ) }}
 {% if 'allowed' in peer %}
 AllowedIPs = {{ peer.ip }}/32, {{ peer.allowed|join(", ") }}
