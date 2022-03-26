@@ -38,6 +38,23 @@
     - www.sudo.is
     - apt.sudo.is
 
+- name: install certs
+  copy:
+    src: "/usr/local/etc/certs/{{ item }}"
+    dest: "/usr/local/etc/certs/"
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - letsencrypt
+    - wwwsudo.is
+    - www.sudo.is
+  notify: reload nginx
+  vars:
+    prediff_cmd: echo
+  with_items:
+    - www.{{ domain }}
+
 - name: make cache dir
   file:
     state: directory
@@ -93,6 +110,8 @@
   tags:
     - nginx-config
     - nginx-default-vhost
+    - www.sudo.is
+    - wwwsudo.is
 
 - name: cleanup
   file:
