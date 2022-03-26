@@ -23,3 +23,5 @@
   service:
     name: nginx
     state: reloaded
+  ignore_errors: true
+  when: "'nginx' in group_names"

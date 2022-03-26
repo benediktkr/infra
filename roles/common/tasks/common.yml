@@ -78,7 +78,7 @@
 
 - name: Set timezone to Europe/Berlin
   timezone:
-    name: UTC
+    name: Etc/UTC
   tags:
     - timezone
 
@@ -196,6 +196,7 @@
       - netcat
       - nethogs
       - nmap
+      - mergerfs
       - openssl
       - iputils-ping
       - procmail
@@ -217,7 +218,7 @@
     - packages
     - common-packages
 
-#- dateutil
+#- python-dateutil
 - name: install common pip packages
   pip:
     name:
@@ -226,6 +227,7 @@
       - loguru
       - requests
       - psutil
+      - humanize # added because of telegraf/vnstat.py
     state: latest
     executable: pip3
   tags:
