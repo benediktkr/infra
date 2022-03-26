@@ -1,6 +1,6 @@
 server {
-   listen 443 ssl;
-   listen   [::]:443 ssl; # listen for ipv6
+   listen 443 ssl http2;
+   # listen   [::]:443 ssl; # listen for ipv6
 
    {# {% for cidr in my_local_cidrs -%}
     # allow {{ cidr }};
