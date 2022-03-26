@@ -1,5 +1,23 @@
 ---
 
+- name: install certs
+  copy:
+    src: "/usr/local/etc/certs/{{ item.url }}"
+    dest: "/usr/local/etc/certs/"
+    owner: root
+    group: root
+    mode: 0755
+  loop_control:
+    label: "{{ item.url }}"
+  tags:
+    - letsencrypt
+    - nextcloud-nginx
+  notify: reload nginx
+  vars:
+    prediff_cmd: echo
+  with_items:
+    - "{{ nextclouds }}"
+
 - name: create dir structure
   file:
     path: "{{ item[1].root }}/{{ item[0].dir }}"

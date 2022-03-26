@@ -4,7 +4,7 @@
 
 {% if item.cron %}
 
-- type: log
+- type: filestream
   paths:
     - {{ item.root }}/data/nextcloud.log
 
