@@ -1,0 +1,27 @@
+---
+
+- name: install certs
+  copy:
+    src: "/usr/local/etc/certs/{{ item }}"
+    dest: "/usr/local/etc/certs/"
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - letsencrypt
+  notify: reload nginx
+  vars:
+    prediff_cmd: echo
+  with_items:
+    - "{{ mirrors_url }}"
+
+- name: template nginx-config
+  template:
+    src: 01-mirrors.conf.j2
+    dest: /etc/nginx/sites-enabled/01-mirrors.conf
+    owner: root
+    group: root
+    mode: 0775
+  tags:
+    - nginx-config
+  notify: reload nginx
