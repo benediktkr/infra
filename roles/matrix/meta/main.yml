@@ -8,4 +8,5 @@ dependencies:
   - matrix-registration
   - matrix-bridge-smtp
   - matrix-bridge-instagram
+  - matrix-bridge-telegram
   - matrix-hydrogen
