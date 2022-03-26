@@ -1,0 +1,25 @@
+---
+
+- name: reload haproxy
+  service:
+    name: haproxy
+    state: reloaded
+
+- name: netplan apply
+  become: true
+  command: netplan apply
+
+- name: restart rsyslog
+  service:
+    name: rsyslog
+    state: restarted
+
+- name: restart filebeat
+  service:
+    name: filebeat
+    state: restarted
+
+- name: restart telegraf
+  service:
+    name: telegraf
+    state: restarted

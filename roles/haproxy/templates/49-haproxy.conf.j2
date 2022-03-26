@@ -1,0 +1,25 @@
+# ansible managed
+
+# modified 49-haproxy.conf from the ubuntu haproxy package only write the
+# syslog msg, since that is set to a json encoded string in haproxy.fg
+
+template(name="haproxy-template" type="list") {
+  property(name="msg")constant(value="\n")
+}
+
+# Create an additional socket in haproxy's chroot in order to allow logging via
+# /dev/log to chroot'ed HAProxy processes
+$AddUnixListenSocket /var/lib/haproxy/dev/log
+
+# Send HAProxy messages to a dedicated logfile
+:programname, startswith, "haproxy" {
+  /var/log/haproxy.log;haproxy-template
+  stop
+}
+
+{#
+ property(name="msg" format="json")
+
+ haproxy.* /tmp/local0.log
+ local0.*           -/var/log/haproxy/haproxy.log;haproxy-template #}
+#}

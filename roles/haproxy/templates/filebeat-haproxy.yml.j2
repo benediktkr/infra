@@ -1,0 +1,21 @@
+---
+
+- type: filestream
+  paths:
+    - /var/log/haproxy.log
+
+  scan_frequency: 10s
+  enabled: true
+
+  parsers:
+    - ndjson:
+        keys_under_root: true
+        add_error_key: true
+
+  fields_under_root: true
+  fields:
+    service.type: haproxy
+    group: lb
+
+  tags:
+    - haproxy
