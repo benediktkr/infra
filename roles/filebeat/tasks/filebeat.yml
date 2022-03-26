@@ -50,3 +50,9 @@
     enabled: true
   tags:
     - packages
+
+- name: delete reference file to minimize confusion
+  file:
+    state: absent
+    path: /etc/filebeat/filebeat.reference.yml
+  notify: restart filebeat

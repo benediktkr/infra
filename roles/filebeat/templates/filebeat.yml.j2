@@ -16,53 +16,53 @@ filebeat.config.inputs:
   enabled: true
   path: inputs.d/*.yml
 
-filebeat.inputs:
+filebeat.inputs: []
 
-- type: log
-  enabled: false
+# - type: log
+#   enabled: false
 
-  # Glob based paths.
-  paths:
-    - /var/log/*.log
+#   # Glob based paths.
+#   paths:
+#     - /var/log/*.log
 
-  # Lists of regular expressions to match.
-  #exclude_lines: ['^DBG']
-  #include_lines: ['^ERR', '^WARN']
-  #exclude_files: ['.gz$']
+#   # Lists of regular expressions to match.
+#   #exclude_lines: ['^DBG']
+#   #include_lines: ['^ERR', '^WARN']
+#   #exclude_files: ['.gz$']
 
-  # Optional additional fields. These fields can be freely picked
-  # to add additional information to the crawled log files for filtering
-  #fields:
-  #  level: debug
-  #  review: 1
+#   # Optional additional fields. These fields can be freely picked
+#   # to add additional information to the crawled log files for filtering
+#   #fields:
+#   #  level: debug
+#   #  review: 1
 
-  ### Multiline options
+#   ### Multiline options
 
-  # take all the lines that do not start with [ and combines them with the previous line that does
-  # multiline.type: pattern
-  # multiline.pattern: '^\['
-  # multiline.negate: true
-  # multiline.match: after
+#   # take all the lines that do not start with [ and combines them with the previous line that does
+#   # multiline.type: pattern
+#   # multiline.pattern: '^\['
+#   # multiline.negate: true
+#   # multiline.match: after
 
-  # default:
-  #multiline.pattern: ^\[
-  #multiline.negate: false
-  #multiline.match: after
+#   # default:
+#   #multiline.pattern: ^\[
+#   #multiline.negate: false
+#   #multiline.match: after
 
 
 # filestream is an input for collecting log messages from files. It is going to replace log input in the future.
-- type: filestream
-  enabled: false
-  paths:
-    - /var/log/*.log
+# - type: filestream
+#   enabled: false
+#   paths:
+#     - /var/log/*.log
 
-  #exclude_lines: ['^DBG']
-  #include_lines: ['^ERR', '^WARN']
-  #prospector.scanner.exclude_files: ['.gz$']
+#   #exclude_lines: ['^DBG']
+#   #include_lines: ['^ERR', '^WARN']
+#   #prospector.scanner.exclude_files: ['.gz$']
 
-  #fields:
-  #  level: debug
-  #  review: 1
+#   #fields:
+#   #  level: debug
+#   #  review: 1
 
 # ============================== Filebeat modules ==============================
 
@@ -181,7 +181,14 @@ processors:
 # ================================== Logging ===================================
 
 # Available log levels are: error, warning, info, debug
-logging.level: info
+logging.level: warning
+# implicit defaults:
+logging.to_files: true
+logging.files:
+   path: /var/log/filebeat
+   name: filebeat
+   keepfiles: 7
+   permissions: 0644
 
 # At debug level, you can selectively enable logging only for some components.
 # To enable all selectors use ["*"]. Examples of other selectors are "beat",
@@ -194,7 +201,7 @@ logging.level: info
 # reporting is disabled by default.
 
 # Set to true to enable the monitoring reporter.
-#monitoring.enabled: false
+monitoring.enabled: false
 
 # Sets the UUID of the Elasticsearch cluster under which monitoring data for this
 # Filebeat instance will appear in the Stack Monitoring UI. If output.elasticsearch
