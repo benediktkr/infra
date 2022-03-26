@@ -1,5 +1,17 @@
 ---
 
+- name: template nginx vhost
+  template:
+    src: 02-unifi.conf.j2
+    dest: /etc/nginx/sites-enabled/01-unifi
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - nginx
+    - unifi-nginx
+  notify: reload nginx
+
 - name: create dir structure
   file:
     path: "{{ unifi_root }}"
@@ -18,22 +30,32 @@
 # if that hangs:
 #  mca-cli-op set-inform http://<controller_ip>:8080/inform
 #
+# somtimes:
+#  set-inform http://<controller_ip>:8080/inform
+#
 # check with this (sometimes it trie the docker container ip f.ex):
 # unifi-ap$ info
 # ...
 #   status:      Unknown[11] (http://172.17.0.2:8080/inform)
 #
 # use tag 'arm32v7' for raspbian
+#
+# list of ports: https://help.ui.com/hc/en-us/articles/218506997-UniFi-Ports-Used
 
+# v6.5.55
+# v6.0.45
+# v5.14.23
 - name: start docker container
   docker_container:
     name: "unifi"
-    image: "jacobalberty/unifi:5.12.66"
-    auto_remove: no
-    detach: yes
+    image: "jacobalberty/unifi:v5.14.23"
+    auto_remove: false
+    detach: true
     restart_policy: "unless-stopped"
     state: started
-    init: yes
+    init: true
+    pull: true
+    #user: "{{ systemuserlist['unifi']['uid'] }}:{{ systemuserlist['unifi']['gid'] }}"
     env:
       TZ: "Europe/Berlin"
       RUNAS_UID0: "false"

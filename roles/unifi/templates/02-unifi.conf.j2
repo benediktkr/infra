@@ -1,0 +1,47 @@
+# ansible
+
+server {
+
+  listen 443 ssl;
+  listen   [::]:443 ssl; # listen for ipv6
+
+   server_name {{ unifi_url }};
+
+      location /wss/ {
+       proxy_pass https://localhost:8443;
+       proxy_http_version 1.1;
+       proxy_set_header Upgrade $http_upgrade;
+       proxy_set_header Connection "Upgrade";
+       proxy_set_header Host $host;
+   }
+
+   location / {
+        proxy_pass         https://localhost:8443/;
+
+        proxy_redirect     off;
+        proxy_set_header   Host $host;
+        proxy_set_header   X-Real-IP $remote_addr;
+        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Host $server_name;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+
+   }
+
+    access_log /var/log/nginx/access_{{ unifi_url }}.log main;
+    error_log /var/log/nginx/error_{{ unifi_url }}.log warn;
+
+    ssl_session_timeout 5m;
+
+    ssl_certificate /etc/letsencrypt/live/{{ domain }}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/{{ domain }}/privkey.pem;
+
+    add_header Referrer-Policy "no-referrer" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Download-Options "noopen" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Permitted-Cross-Domain-Policies "none" always;
+    add_header X-Robots-Tag "none" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+
+    fastcgi_hide_header X-Powered-By;
+}
