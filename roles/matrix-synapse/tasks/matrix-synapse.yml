@@ -12,6 +12,7 @@
     - name: registration
     - name: element
     - name: data/bridge-instagram
+    - name: data/bridge-telegram
 
 - name: template config
   template:
