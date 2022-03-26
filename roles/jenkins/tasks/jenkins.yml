@@ -1,5 +1,36 @@
 ---
 
+- name: install certs
+  copy:
+    src: "/usr/local/etc/certs/{{ item }}"
+    dest: "/usr/local/etc/certs/"
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - letsencrypt
+  notify: reload nginx
+  vars:
+    prediff_cmd: echo
+  with_items:
+    - "{{ apt_url }}"
+    - "{{ jenkins_url }}"
+
+- name: template nginx vhost(s)
+  template:
+    src: "{{ item }}.j2"
+    dest: /etc/nginx/sites-enabled/{{ item }}
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - nginx
+    - jenkins-nginx
+  with_items:
+    - 01-jenkins.conf
+    - 01-apt.conf
+  notify: reload nginx
+
 - name: create dirs
   file:
    path: "{{ jenkins_root }}/{{ item }}"
@@ -85,7 +116,6 @@
       - "{{ jenkins_root }}/home:/var/jenkins_home"
       - "{{ jenkins_root }}/etc/docker:/etc/docker"
       - "/var/www/{{ apt_url }}:/var/www/{{ apt_url }}"
-      - /var/www/{{ builds_url }}:/builds
       - /var/run/docker.sock:/var/run/docker.sock
     networks_cli_compatible: no
     networks:
