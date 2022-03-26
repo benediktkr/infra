@@ -1,5 +1,23 @@
 ---
 
+- name: install certs
+  copy:
+    src: "/usr/local/etc/certs/{{ item }}"
+    dest: "/usr/local/etc/certs/"
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - letsencrypt
+    - grafana
+    - influxdb
+  notify: reload nginx
+  vars:
+    prediff_cmd: echo
+  with_items:
+    - "{{ grafana_url }}"
+    - "{{ influxdb_url }}"
+
 - name: add apt key for influxdb, grafana
   apt_key:
     url: "{{ item }}"
