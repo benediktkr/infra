@@ -1,3 +1,5 @@
+# ansible
+
 input {
   #tcp {
   #  port => {{ logstash_tcp }}
@@ -78,7 +80,7 @@ filter {
 output {
   if [type] == "syslog" {
     elasticsearch {
-      hosts => "elasticsearch:9200"
+      hosts => "{{ bridgewithdns.elasticsearch }}:9200"
       user => "{{ elk_users.elastic.user }}"
       password => "{{ elk_users.elastic.passwd }}"
       ecs_compatibility => disabled
@@ -87,19 +89,21 @@ output {
   }
   if [type] == "beats" {
     elasticsearch {
-      hosts => "elasticsearch:9200"
+      hosts => "{{ bridgewithdns.elasticsearch }}:9200"
       user => "{{ elk_users.elastic.user }}"
       password => "{{ elk_users.elastic.passwd }}"
       ecs_compatibility => disabled
       index => "beats-%{+YYYY.MM.dd}"
     }
   }
-  if "jellyfin_login" in [tags] {
-    file {
-      path => "/usr/share/logstash/logs/jellyfin_login-%{+YYYY-MM-dd}.json"
-    }
-  }
-  file {
-    path => "/usr/share/logstash/logs/logfile-%{+YYYY-MM-dd}.log"
-  }
 }
+
+
+  {# if "jellyfin_login" in [tags] {
+   #   file {
+   #     path => "/usr/share/logstash/logs/jellyfin_login-%{+YYYY-MM-dd}.json"
+   #   }
+   # }
+   # file {
+   #   path => "/usr/share/logstash/logs/logfile-%{+YYYY-MM-dd}.log"
+   # } #}

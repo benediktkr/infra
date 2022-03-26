@@ -1,0 +1,18 @@
+---
+
+- name: reload nginx
+  service:
+    name: nginx
+    state: reloaded
+
+- name: restart logstash container
+  docker_container:
+    name: logstash
+    state: started
+    restart: true
+
+- name: restart kibana container
+  docker_container:
+    name: kibana
+    state: started
+    restart: true

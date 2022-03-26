@@ -2,6 +2,9 @@ server {
   listen 443 ssl;
 
   server_name {{ kibana_url }};
+  {% if inventory_hostname in wg_clients -%}
+  listen {{ wg_clients[inventory_hostname].ip }}:443 ssl http2;
+  {% endif -%}
 
   include /etc/nginx/authelia_internal.conf;
   include /etc/nginx/require_auth.conf;
@@ -25,8 +28,8 @@ server {
 
   ssl_session_timeout 5m;
 
-  ssl_certificate /etc/letsencrypt/live/{{ domain }}/fullchain.pem;
-  ssl_certificate_key /etc/letsencrypt/live/{{ domain }}/privkey.pem;
+  ssl_certificate /usr/local/etc/certs/{{ kibana_url }}/fullchain.pem;
+  ssl_certificate_key /usr/local/etc/certs/{{ kibana_url }}/privkey.pem;
 
   add_header Referrer-Policy "no-referrer" always;
   add_header X-Content-Type-Options "nosniff" always;

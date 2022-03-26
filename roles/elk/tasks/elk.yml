@@ -5,6 +5,20 @@
 #     -H 'Content-Type: application/json' \
 #     -u elastic:<your current elastic password> \
 #     -d '{"password" : "<your new password>"}'
+- name: install certs
+  copy:
+    src: "/usr/local/etc/certs/{{ item }}"
+    dest: "/usr/local/etc/certs/"
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - letsencrypt
+  notify: reload nginx
+  vars:
+    prediff_cmd: echo
+  with_items:
+    - "{{ kibana_url }}"
 
 - name: create dir structure
   file:
@@ -38,6 +52,9 @@
     - kibana
   tags:
     - logstash
+  notify:
+    - restart kibana container
+    - restart logstash container
 
 - name: template pipeline config
   template:
@@ -48,6 +65,7 @@
     mode: 0644
   tags:
     - logstash
+  notify: restart logstash container
 
 # - name: template log4j2 file for logstash
 #   template:
