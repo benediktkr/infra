@@ -1,12 +1,15 @@
 server {
 
-  listen 443 ssl;
+  listen 443 ssl http2;
+  {% if inventory_hostname in wg_clients -%}
+  listen {{ wg_clients[inventory_hostname].ip }}:443 ssl http2;
+  {% endif -%}
 
   server_name {{ authelia_login_url }};
 
   ssl_session_timeout 5m;
-  ssl_certificate /etc/letsencrypt/live/{{ domain }}/fullchain.pem;
-  ssl_certificate_key /etc/letsencrypt/live/{{ domain }}/privkey.pem;
+  ssl_certificate /usr/local/etc/certs/{{ authelia_login_url }}/fullchain.pem;
+  ssl_certificate_key /usr/local/etc/certs/{{ authelia_login_url }}/privkey.pem;
 
   if ( $request_method !~ ^(GET|POST|HEAD)$ ) {
     return 405;
@@ -70,12 +73,13 @@ server {
 
 server {
 
-  #listen 443 ssl;
+  #listen 443 ssl http2;
 
   {% if inventory_hostname in wg_clients -%}
-  listen {{ wg_clients[inventory_hostname].ip }}:443 ssl;
+  listen {{ wg_clients[inventory_hostname].ip }}:443 ssl http2 default_server;
   {% endif -%}
 
+  allow 127.0.0.1/32;
   {% for cidr in my_local_cidrs -%}
   allow {{ cidr }};
   {% endfor -%}
@@ -87,6 +91,7 @@ server {
 
   server_name {{ authelia_api_url }};
 
+  # internal traffic only, does not go over lb for now, so wildcard is fine
   ssl_session_timeout 5m;
   ssl_certificate /etc/letsencrypt/live/{{ domain }}/fullchain.pem;
   ssl_certificate_key /etc/letsencrypt/live/{{ domain }}/privkey.pem;
