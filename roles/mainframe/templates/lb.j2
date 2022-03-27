@@ -10,6 +10,8 @@ import random
 
 import requests
 
+import matrixmsg
+
 class LoadBalancer:
     def __init__(self, lb_name):
         self.lb_name = lb_name
@@ -20,7 +22,7 @@ class LoadBalancer:
         else:
             self.api_url = self.conf['api_url']
 
-    def update(self):
+    def update_from_api(self):
         self.servers = self.get_lb_servers()
         self.floating_ips = self.get_floating_ips()
 
@@ -43,10 +45,14 @@ class LoadBalancer:
 
 
     def __read_conf(self, lb_name):
-        f_name = f"/usr/local/etc/{lb_name}.json"
-        with open(f_name, 'r') as f:
-            conf = f.read()
-        return json.loads(conf)
+        try:
+            f_name = f"/usr/local/etc/{lb_name}.json"
+            with open(f_name, 'r') as f:
+                conf = f.read()
+            return json.loads(conf)
+        except (FileNotFoundError, JSONDecodeError):
+            raise SystemExit(f"invalid config '{lb_name}.json'")
+
 
     def get_lb_servers(self):
         s = self.request("GET", "servers")
@@ -121,7 +127,7 @@ def parse_args():
 def main():
     args = parse_args()
     lb = LoadBalancer(args.lb)
-    lb.update()
+    lb.update_from_api()
 
     if args.cmd is None or args.cmd == "show":
 
@@ -140,6 +146,9 @@ def main():
             print(json.dumps({'failover_name': failover_name}, indent=2))
         else:
             print(f"failed over to '{failover_name}'")
+
+        text = f"`[{lb.lb_name}]` failed over to `{failover_name}` (_manual_)"
+        matrixmsg.send(text, add_prefix=False)
 
     if args.cmd == "list":
         if args.json:
