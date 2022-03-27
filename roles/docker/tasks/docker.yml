@@ -9,10 +9,16 @@
   when: ansible_lsb.id == "Raspbian"
   tags: packages
 
-- name: set arch to amd64 for {{ ansible_lsb.id }} if not Raspbian
+- name: set arch to amd64 if x86_64
   set_fact:
     arch: amd64
-  when: ansible_lsb.id != "Raspbian"
+  when: ansible_architecture == "x86_64"
+  tags: packages
+
+- name: set arch to arm64 if aarch64
+  set_fact:
+    arch: arm64
+  when: ansible_architecture == "aarch64"
   tags: packages
 
 - name: install docker dependencies for raspbian

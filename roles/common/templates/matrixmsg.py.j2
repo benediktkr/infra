@@ -7,9 +7,13 @@ from socket import gethostname
 
 import requests
 
-URL = "https://{{ matrix_url }}/_webhook/incoming"
 TOKEN = "{{ matrix_webhook_token }}"
 
+{% if matrix_webhook_url is defined %}
+URL = "{{ matrix_webhook_url }}"
+{% else %}
+URL = "https://{{ matrix_url }}/_webhook/incoming"
+{% endif %}
 
 def markdown_fmt(lines):
     return "\r\n".join(
