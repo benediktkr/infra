@@ -1,0 +1,9 @@
+---
+
+dependencies:
+  - postgresql
+  - matrix-nginx
+  - matrix-synapse
+  #- matrix-bridge-smtp
+  - matrix-bridge-instagram
+  - matrix-bridge-telegram
