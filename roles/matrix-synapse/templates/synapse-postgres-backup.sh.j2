@@ -2,8 +2,12 @@
 
 # run as postgres user
 
-/usr/bin/pg_dump {{ systemuserlist.matrix.username }} > {{ psql_dump_path}}/synapse-postgres-backup.sql
+/usr/bin/pg_dump {{ matrix_postgres_user }} > {{ psql_dump_path}}/synapse-postgres-backup.sql
+
+{% if matrix_bridges_enabled | default(false) %}
 
 # databases for e.g. brides are here too for simplicity
 /usr/bin/pg_dump matrix_bridge_instagram > {{ psql_dump_path }}/bridge-instagram-postgres-backup.sql
 /usr/bin/pg_dump matrix_bridge_telegram > {{ psql_dump_path }}/bridge-telegram-postgres-backup.sql
+
+{% endif %}

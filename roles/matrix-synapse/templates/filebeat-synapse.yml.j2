@@ -13,7 +13,7 @@
 
   fields_under_root: true
   fields:
-    service.type: matrix-synapse
+    service.type: {{ matrix_log_service_type }}
 
   processors:
     - rename:

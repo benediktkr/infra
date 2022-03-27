@@ -11,8 +11,32 @@
     - name: log
     - name: registration
     - name: element
-    - name: data/bridge-instagram
-    - name: data/bridge-telegram
+
+- name: postgresql user
+  postgresql_user:
+    name: "{{ matrix_postgres_user }}"
+    password: "{{ matrix_postgres_passwd }}"
+    encrypted: true
+    state: present
+  become_user: postgres
+  tags:
+    - users
+    - postgresql
+    - postgresql-users
+
+- name: postgresql database
+  postgresql_db:
+    name: "{{matrix_postgres_user }}"
+    encoding: UTF8
+    template: template0
+    state: present
+    lc_ctype: "C"
+    lc_collate: "C"
+  become_user: postgres
+  tags:
+    - users
+    - postgresql
+    - postgresql-users
 
 - name: template config
   template:
@@ -25,6 +49,7 @@
     - log.config
     - homeserver.yaml
     - turnserver.conf
+    - synapse.env
   tags:
     - matrix-config
 
@@ -61,32 +86,6 @@
     - docker-containers
     - redis
 
-- name: postgresql user
-  postgresql_user:
-    name: "{{ systemuserlist.matrix.username }}"
-    password: "{{ systemuserlist.matrix.postgres_passwd }}"
-    encrypted: true
-    state: present
-  become_user: postgres
-  tags:
-    - users
-    - postgresql
-    - postgresql-users
-
-- name: postgresql database
-  postgresql_db:
-    name: "{{ systemuserlist.matrix.username }}"
-    encoding: UTF8
-    template: template0
-    state: present
-    lc_ctype: "C"
-    lc_collate: "C"
-  become_user: postgres
-  tags:
-    - users
-    - postgresql
-    - postgresql-users
-
 
 # register_new_matrix_user -u $username -t bot -c /data/homeserver.yaml http://localhost:8008
 
@@ -98,7 +97,7 @@
     detach: true
     pull: true
     restart_policy: "unless-stopped"
-    state: started
+    state: "{{ matrix_synapse_container_state }}"
     user: "{{ systemuserlist.matrix.uid }}:{{ systemuserlist.matrix.gid }}"
     container_default_behavior: compatibility
     networks_cli_compatible: false
@@ -114,21 +113,18 @@
         target: /log
       - type: bind
         read_only: true
-        source: /etc/letsencrypt/live/{{ matrix_domain }}/fullchain.pem
+        source: /usr/local/etc/certs/{{ matrix_domain }}/fullchain.pem
         target: /data/{{ matrix_domain }}.crt
       - type: bind
         read_only: true
-        source: /etc/letsencrypt/live/{{ matrix_domain }}/privkey.pem
+        source: /usr/local/etc/certs/{{ matrix_domain }}/privkey.pem
         target: /data/{{ matrix_domain }}.key
     healthcheck:
       interval: 15s
       timeout: 5s
       start_period: 5s
       test: "curl -fSs http://localhost:{{ matrix_synapse_port }}/health"
-    env:
-      SERVER_NAME: "{{ matrix_domain }}"
-      SYNAPSE_REPORT_STATS: "no"
-      LD_PRELOAD: "/usr/lib/x86_64-linux-gnu/libjemalloc.so.2"
+    env_file: "{{ systemuserlist.matrix.home }}/data/synapse.env"
 
     # entrypoint script assumes container runs as root
     entrypoint: /usr/local/bin/python -m synapse.app.homeserver --config-path /data/homeserver.yaml
@@ -169,12 +165,26 @@
     - backup
     - matrix-backup
     - matrix-scripts
-    - matrix-registration
   loop_control:
     label: "{{ item }}"
   with_items:
     - synapse-postgres-backup.sh
+
+- name: template invite script
+  template:
+    src: "{{ item }}.j2"
+    dest: /usr/local/bin/{{ item }}
+    mode: 0755
+    owner: root
+    group: root
+  tags:
+    - matrix-scripts
+    - matrix-registration
+  loop_control:
+    label: "{{ item }}"
+  with_items:
     - matrix-invite.py
+  when: matrix_registration_enabled
 
 - name: cron file
   template:
