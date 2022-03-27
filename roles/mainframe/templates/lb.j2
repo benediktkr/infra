@@ -1,0 +1,171 @@
+#!/usr/bin/env python3
+
+
+import json
+import sys
+import argparse
+from json import JSONDecodeError
+from urllib.parse import urljoin
+import random
+
+import requests
+
+class LoadBalancer:
+    def __init__(self, lb_name):
+        self.lb_name = lb_name
+        self.conf = self.__read_conf(lb_name)
+
+        if not self.conf["api_url"].endswith("/"):
+            self.api_url = f"{self.conf['api_url']}/"
+        else:
+            self.api_url = self.conf['api_url']
+
+    def update(self):
+        self.servers = self.get_lb_servers()
+        self.floating_ips = self.get_floating_ips()
+
+
+    def request(self, method, api_path, json=None):
+        url = urljoin(self.api_url, api_path)
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + self.conf["lb_token"]
+        }
+        r = requests.request(
+            method,
+            url,
+            headers=headers,
+            json=json
+        )
+
+        r.raise_for_status()
+        return r.json()
+
+
+    def __read_conf(self, lb_name):
+        f_name = f"/usr/local/etc/{lb_name}.json"
+        with open(f_name, 'r') as f:
+            conf = f.read()
+        return json.loads(conf)
+
+    def get_lb_servers(self):
+        s = self.request("GET", "servers")
+        d = dict()
+        for item in s['servers']:
+            if item['labels'].get("group", dict()) == self.lb_name:
+                server_id = str(item['id'])
+                d[server_id] = {
+                    'id': server_id,
+                    'name': item['name'],
+                    'ptr_name': item['public_net']['ipv4']['dns_ptr'],
+                    'public_ip': item['public_net']['ipv4']['ip'],
+                    'private_ip': item['private_net'][0]['ip'],
+                    'floating_ips': item['public_net']['floating_ips']
+                }
+        return d
+
+    def get_floating_ips(self):
+        ips = self.request("GET", "floating_ips")
+        d = dict()
+        for item in ips['floating_ips']:
+            lb_id = str(item['id'])
+            lb_name = item['name']
+            server_id = str(item['server'])
+            d[lb_name] = {
+                'id': lb_id,
+                'name': lb_name,
+                'url': item['description'],
+                'public_ip': item['ip'],
+                'server_id': server_id,
+                'server_name': self.servers[server_id]['name'],
+                'network_zone': item['home_location']['network_zone'],
+                'region': item['home_location']['name']
+            }
+        return d
+
+    def get_failover_id(self):
+        all_ids = set(self.servers.keys())
+        current = set([self.get_lb_floating_ip()['server_id']])
+        avail = all_ids.difference(current)
+
+        failto_id = random.choice(list(avail))
+        return failto_id
+
+    def get_lb_floating_ip(self):
+        return self.floating_ips[self.lb_name]
+
+    def failover_now(self):
+        floating_ip_id = self.get_lb_floating_ip()['id']
+        failover_id = self.get_failover_id()
+
+        url = f"floating_ips/{floating_ip_id}/actions/assign"
+        payload = {"server": failover_id}
+        response = self.request("POST", url, json=payload)
+        return failover_id
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("-l", "--lb", default="fsn-lb", choices=["fsn-lb"])
+    parser.add_argument("-j", "--json", action="store_true", help="output json")
+
+    subparser = parser.add_subparsers(dest='cmd')
+    subparser.required = False
+
+    subparser.add_parser('show')
+    subparser.add_parser('failover')
+    subparser.add_parser('list')
+
+    return parser.parse_args()
+
+def main():
+    args = parse_args()
+    lb = LoadBalancer(args.lb)
+    lb.update()
+
+    if args.cmd is None or args.cmd == "show":
+
+        lb_floating_ip = lb.get_lb_floating_ip()
+        if args.json:
+            print(json.dumps(lb_floating_ip, indent=2))
+        else:
+            print(lb_floating_ip['server_name'])
+        return 0
+
+    if args.cmd == "failover":
+        # do the failover
+        failover_id = lb.failover_now()
+        failover_name = lb.servers[failover_id]['name']
+        if args.json:
+            print(json.dumps({'failover_name': failover_name}, indent=2))
+        else:
+            print(f"failed over to '{failover_name}'")
+
+    if args.cmd == "list":
+        if args.json:
+            print(json.dumps({
+                'servers': lb.servers,
+                'floating_ips': lb.floating_ips
+            }, indent=2))
+        else:
+            print("== floating ips")
+            for item in lb.floating_ips.values():
+                print(item['name'])
+                print(f"  id:     {item['id']}")
+                print(f"  ip:     {item['public_ip']}")
+                print(f"  url:    {item['url']}")
+                print(f"  active: {item['server_name']}")
+            print()
+
+            print("== lb servers")
+            for server_id, item in lb.servers.items():
+                print(item['name'])
+                print(f"  id:         {item['id']}")
+                print(f"  ptr_name:   {item['ptr_name']}")
+                print(f"  public_ip:  {item['public_ip']}")
+                print(f"  private_ip: {item['private_ip']}")
+
+        return 0
+
+if __name__ == "__main__":
+    sys.exit(main())

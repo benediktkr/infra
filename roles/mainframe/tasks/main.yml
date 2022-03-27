@@ -1,6 +1,6 @@
 ---
 
-- include_vars: group_vars/fsn-lb.yml
+- include_vars: group_vars/fsnlb.yml
   tags:
     - always
 

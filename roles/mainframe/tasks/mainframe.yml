@@ -89,9 +89,11 @@
     - archive-scripts
     - archives
     - archives-config
+    - mainframe-scripts
   with_items:
     - podcast.json
     - archives.toml
+    - fsn-lb.json
 
 - name: template scripts
   template:
@@ -101,6 +103,7 @@
     group: root
     mode: 0755
   with_items:
+    - lb
     - archive-podcast.py
     - archive-wayback.py
     - youtube-dl-mirrors.sh
