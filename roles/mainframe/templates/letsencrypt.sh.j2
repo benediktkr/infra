@@ -31,18 +31,16 @@ openssl rsa -inform pem -in /etc/letsencrypt/live/{{ item }}/privkey.pem -outfor
 {% endfor %}
 
 # sni sub domains
-{% for item in lb_tcp %}
-{% if item.cert|default(true) %}
-mkdir -p /usr/local/etc/certs/{{ item.fqdn }}
+{% for item in letsencrypt_sni %}
+mkdir -p /usr/local/etc/certs/{{ item }}
 
 {%   for pemfile in ["cert.pem", "chain.pem", "fullchain.pem", "privkey.pem"] %}
-/usr/bin/cp /etc/letsencrypt/live/{{ item.fqdn }}/{{ pemfile }} /usr/local/etc/certs/{{ item.fqdn }}/{{ pemfile }}
+/usr/bin/cp /etc/letsencrypt/live/{{ item }}/{{ pemfile }} /usr/local/etc/certs/{{ item }}/{{ pemfile }}
 {%   endfor %}
 
-chgrp adm /usr/local/etc/certs/{{ item.fqdn }}/privkey.pem
-chmod 660 /usr/local/etc/certs/{{ item.fqdn }}/privkey.pem
+chgrp adm /usr/local/etc/certs/{{ item }}/privkey.pem
+chmod 660 /usr/local/etc/certs/{{ item }}/privkey.pem
 
-{% endif %}
 {% endfor %}
 
 
