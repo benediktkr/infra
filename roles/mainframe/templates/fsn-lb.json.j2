@@ -1,6 +1,12 @@
 {
+    {% if hcloud_api_url.endswith("/") -%}
     "api_url": "{{ hcloud_api_url }}",
+    {% else -%}
+    "api_url": "{{ hcloud_api_url }}/",
+    {% endif %}
+
     "lb_token": "{{ hcloud_lb_token }}",
     "lb_ip": "{{ lb_ip }}",
+    "lb_ip_id": "{{ lb_ip_id }}",
     "lb_url": "{{ lb_url }}"
 }
