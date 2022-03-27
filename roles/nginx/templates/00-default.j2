@@ -74,8 +74,8 @@ server {
 
   ssl_session_timeout 5m;
 
-  ssl_certificate /etc/letsencrypt/live/{{ inventory_hostname.split('.')[1:] | join(".")  }}/fullchain.pem;
-  ssl_certificate_key /etc/letsencrypt/live/{{ inventory_hostname.split('.')[1:] | join(".")  }}/privkey.pem;
+  ssl_certificate /usr/local/etc/certs/{{ domain }}/fullchain.pem;
+  ssl_certificate_key /usr/local/etc/certs/{{ domain }}/privkey.pem;
 
   add_header Referrer-Policy "no-referrer" always;
   add_header X-Content-Type-Options "nosniff" always;
