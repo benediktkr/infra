@@ -21,15 +21,15 @@ def markdown_fmt(lines):
     )
 
 
-def send(text, room=None):
-    # if room is not None:
-    #     params = {'room': room}
-    # else:
-    #     params = None
+def send(text, room=None, add_prefix=True):
+    if add_prefix:
+        prefix = gethostname()
+    else:
+        prefix = None
 
     params = {'room': room}
     d = {
-        'prefix': gethostname(),
+        'prefix': prefix,
         'text': text,
         'token': TOKEN
     }
@@ -41,7 +41,7 @@ def send(text, room=None):
         return 2
 
     j = r.json()
-    print(j)
+    # print(j)
     if r.status_code == 200:
         return 0
     else:
