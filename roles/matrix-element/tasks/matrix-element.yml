@@ -1,5 +1,20 @@
 ---
 
+- name: install certs
+  copy:
+    src: "/usr/local/etc/certs/{{ item }}"
+    dest: "/usr/local/etc/certs/"
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - letsencrypt
+  notify: reload nginx
+  vars:
+    prediff_cmd: echo
+  with_items:
+    - "{{ element_url }}"
+
 - name: element config
   template:
     src: element-config.json.j2
@@ -7,6 +22,18 @@
     owner: matrix
     group: matrix
     mode: 0664
+
+- name: template element vhost
+  template:
+    src: 01-element.j2
+    dest: /etc/nginx/sites-enabled/01-element
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - nginx
+    - matrix-nginx
+  notify: reload nginx
 
 - name: start matrix-element container
   docker_container:
