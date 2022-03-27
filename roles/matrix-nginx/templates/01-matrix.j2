@@ -27,13 +27,15 @@ server {
   location = /.well-known/matrix/server {
     default_type application/json;
     add_header Access-Control-Allow-Origin *;
-    return 200 '{"m.server": "{{ matrix_url }}"}';
+    return 200 '{"m.server": "{{ matrix_url }}:443"}';
   }
 
 
   location /health {
     allow 127.0.0.1;
+    {% if inventory_hostname in my_public_ips -%}
     allow {{ my_public_ips[inventory_hostname] }}/32;
+    {% endif -%}
     allow {{ my_public_ips[ansible_control_host] }}/32;
     allow {{ wireguard_cidr }};
     deny all;
@@ -56,17 +58,21 @@ server {
     client_max_body_size {{ matrix_upload_size }};
   }
 
+  {% if matrix_registration_enabled -%}
   location ~ ^/(static|register) {
     proxy_set_header X-Forwarded-For $remote_addr;
     proxy_pass http://{{ bridgewithdns.matrix_reg }}:{{ matrix_registration_port }};
   }
+  {% endif %}
 
+  {% if matrix_webhook_enabled -%}
   location /_webhook {
     proxy_pass http://10.102.47.128:3033/_webhook;
     proxy_set_header X-Forwarded-For $remote_addr;
     proxy_set_header X-Forwarded-Proto $scheme;
     proxy_set_header Host $host;
   }
+  {% endif %}
 
   location /hydrogen {
     alias /usr/local/share/hydrogen-web/;
@@ -91,9 +97,11 @@ server {
     proxy_pass http://{{ bridgewithdns.matrix_admin }}:80/;
   }
 
+  {% if matrix_bridges_enabled -%}
   location /_telegram/public {
       proxy_pass http://{{ bridgewithdns.matrix_telegram }}:{{ matrix_telegram_port }};
   }
+  {% endif %}
 
   ssl_certificate /usr/local/etc/certs/{{ matrix_url }}/fullchain.pem;
   ssl_certificate_key /usr/local/etc/certs/{{ matrix_url }}/privkey.pem;
@@ -121,40 +129,3 @@ server {
  #     proxy_set_header X-Forwarded-For $remote_addr;
  #   }
  # } #}
-
-
-server {
-    listen 443 ssl http2;
-    {% if inventory_hostname in wg_clients -%}
-    listen {{ wg_clients[inventory_hostname].ip }}:443 ssl http2;
-    {% endif -%}
-
-    server_name {{ element_url }};
-
-    location / {
-        proxy_pass         http://{{ bridgewithdns.element }};
-
-        proxy_redirect     off;
-        proxy_set_header   Host $host;
-        proxy_set_header   X-Real-IP $remote_addr;
-        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header   X-Forwarded-Host $server_name;
-        proxy_set_header   X-Forwarded-Proto $scheme;
-
-   }
-
-    access_log /var/log/nginx/access_{{ element_url }}.log main;
-    error_log /var/log/nginx/error_{{ element_url }}.log warn;
-
-    ssl_session_timeout 5m;
-    ssl_certificate /usr/local/etc/certs/{{ element_url }}/fullchain.pem;
-    ssl_certificate_key /usr/local/etc/certs/{{ element_url }}/privkey.pem;
-
-    add_header Referrer-Policy "no-referrer" always;
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header X-Download-Options "noopen" always;
-    add_header X-Frame-Options "SAMEORIGIN" always;
-    add_header X-Permitted-Cross-Domain-Policies "none" always;
-    add_header X-Robots-Tag "none" always;
-    add_header X-XSS-Protection "1; mode=block" always;
-}
