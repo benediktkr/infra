@@ -13,6 +13,8 @@
 # letsencrypt
 45 1 * * * root /usr/local/bin/letsencrypt.sh
 
+# CHAOS
+*/5 * * * * {{ myusername }} /usr/local/bin/lb failover --random
 
 # archives
 

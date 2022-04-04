@@ -119,9 +119,9 @@ def parse_args():
     subparser.required = False
 
     subparser.add_parser('show')
-    subparser.add_parser('failover')
+    sp_failover = subparser.add_parser('failover')
+    sp_failover.add_argument("-r", "--random", action="store_true")
     subparser.add_parser('list')
-
     return parser.parse_args()
 
 def main():
@@ -139,6 +139,13 @@ def main():
         return 0
 
     if args.cmd == "failover":
+        # runs every */5 min
+        # 1440 mins == 24h
+        # 1440/5 = 288
+        # for an avg of 1/day failovers
+        if args.random and random.randrange(288) != 0:
+            sys.exit(0)
+
         # do the failover
         failover_id = lb.failover_now()
         failover_name = lb.servers[failover_id]['name']
@@ -147,7 +154,8 @@ def main():
         else:
             print(f"failed over to '{failover_name}'")
 
-        text = f"`[{lb.lb_name}]` failed over to `{failover_name}` (_manual_)"
+        reason = "random" if args.random else "manual"
+        text = f"`[{lb.lb_name}]` failed over to `{failover_name}` (_{reason}_)"
         matrixmsg.send(text, add_prefix=False)
 
     if args.cmd == "list":

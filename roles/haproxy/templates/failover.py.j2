@@ -2,7 +2,8 @@
 
 # check if /sys/class/net/wg0/carrier exists
 # check if wg0 is up in other ways
-# check if haproxy has a pid
+# check if haproxy has a pid (returns 0 if a process exists)
+#    pgrep haproxy
 # maybe haproxy healthcheck
 
 import sys
