@@ -94,6 +94,7 @@
     - podcast.json
     - archives.toml
     - fsn-lb.json
+    - praw.ini
 
 - name: template scripts
   template:
@@ -161,6 +162,38 @@
       dest: /usr/local/sbin/tf-convergence.sh
       mode: 770
 
+- name: install certs
+  copy:
+    src: "/usr/local/etc/certs/{{ item }}"
+    dest: "/usr/local/etc/certs/"
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - letsencrypt
+  notify: reload nginx
+  no_log: true
+  with_items:
+    - "{{ archives_url }}"
+
+- name: template nginx vhost(s)
+  template:
+    src: "{{ item }}.j2"
+    dest: /etc/nginx/sites-enabled/{{ item }}
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - 01-archives.conf
+    - 02-tools.conf
+    - 01-static.conf
+  tags:
+    - archives
+    - archivebox
+    - nginx
+    - mainframe-nginx
+  notify: reload nginx
+
 - name: archives log dir and cache
   file:
     state: directory
@@ -214,6 +247,20 @@
     - archives-container
     - docker-containers
 
+- name: log dirs
+  file:
+    state: directory
+    path: /var/log/{{ item.name }}
+    owner: "{{ item.owner | default(1300) }}"
+    group: "{{ item.owner | default(1300) }}"
+    mode: 0775
+  loop_control:
+    label: "{{ item.name }}"
+  with_items:
+    - name: ricelandbot
+  tags:
+    - ricelandbot
+
 - name: start archivebox
   docker_container:
     name: archivebox
@@ -241,34 +288,32 @@
     - archivebox-container
     - docker-containers
 
-- name: install certs
-  copy:
-    src: "/usr/local/etc/certs/{{ item }}"
-    dest: "/usr/local/etc/certs/"
-    owner: root
-    group: root
-    mode: 0755
+- name: start ricelandbot
+  docker_container:
+    name: ricelandbot
+    image: dockreg.sudo.is/ricelandbot:latest
+    auto_remove: false
+    detach: true
+    pull: true
+    restart_policy: "unless-stopped"
+    state: started
+    container_default_behavior: compatibility
+    networks_cli_compatible: false
+    user: "1300:1300"
+    networks:
+      - name: bridgewithdns
+    mounts:
+      - type: bind
+        source: /var/log/ricelandbot
+        target: /var/log/ricelandbot
+        # set XDG_CONFIG_HOME if this moves
+      - type: bind
+        source: /usr/local/etc/praw.ini
+        target: /ricelandbot/praw.ini
+        read_only: true
+    env:
+      LOGFILE: /var/log/ricelandbot/ricelandbot.log
   tags:
-    - letsencrypt
-  notify: reload nginx
-  no_log: true
-  with_items:
-    - "{{ archives_url }}"
-
-- name: template nginx vhost(s)
-  template:
-    src: "{{ item }}.j2"
-    dest: /etc/nginx/sites-enabled/{{ item }}
-    owner: root
-    group: root
-    mode: 0644
-  with_items:
-    - 01-archives.conf
-    - 02-tools.conf
-    - 01-static.conf
-  tags:
-    - archives
-    - archivebox
-    - nginx
-    - mainframe-nginx
-  notify: reload nginx
+    - ricelandbot
+    - ricelandbot-container
+    - docker-containers
