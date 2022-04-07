@@ -46,16 +46,25 @@ server {
 
   }
   location ~* ^(\/_matrix|\/_synapse\/client) {
-    proxy_pass http://{{ bridgewithdns.matrix }}:{{ matrix_synapse_port }};
-    proxy_set_header X-Forwarded-For $remote_addr;
-    proxy_set_header X-Forwarded-Proto $scheme;
-    proxy_set_header Host $host;
+      # working around this issue that seems to still be hapening
+      # https://github.com/matrix-org/synapse/issues/2748
+      if ($args ~ (^|.*&)height=0(.*)) {
+          set $args $1height=400$2;
+      }
+      if ($args ~ (^|.*&)width=0(.*)) {
+          set $args $1width=400$2;
+      }
+
+      proxy_pass http://{{ bridgewithdns.matrix }}:{{ matrix_synapse_port }};
+      proxy_set_header X-Forwarded-For $remote_addr;
+      proxy_set_header X-Forwarded-Proto $scheme;
+      proxy_set_header Host $host;
 
 
-    # Nginx by default only allows file uploads up to 1M in size
-    # Increase client_max_body_size to match max_upload_size defined
-    # in homeserver.yaml
-    client_max_body_size {{ matrix_upload_size }};
+      # Nginx by default only allows file uploads up to 1M in size
+      # Increase client_max_body_size to match max_upload_size defined
+      # in homeserver.yaml
+      client_max_body_size {{ matrix_upload_size }};
   }
 
   {% if matrix_registration_enabled -%}
