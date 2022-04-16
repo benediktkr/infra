@@ -5,6 +5,8 @@ server {
   listen {{ wg_clients[inventory_hostname].ip }}:443 ssl http2;
   {% endif -%}
 
+  include /etc/nginx/authelia_internal.conf;
+
   server_name {{ grafana_url }};
 
   location ~ ^/api/health {
@@ -23,6 +25,9 @@ server {
   }
 
   location / {
+    include /etc/nginx/require_auth.conf;
+    include /etc/nginx/require_auth_proxy.conf;
+
     proxy_pass         http://127.0.0.1:{{ grafana_port }}/;
 
     proxy_redirect     off;

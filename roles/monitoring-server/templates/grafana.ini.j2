@@ -425,13 +425,13 @@ enabled = false
 
 #################################### Auth Proxy ##########################
 [auth.proxy]
-;enabled = false
-;header_name = X-WEBAUTH-USER
-;header_property = username
-;auto_sign_up = true
-;sync_ttl = 60
+enabled = true
+header_name = Remote-User
+header_property = username
+auto_sign_up = true
+sync_ttl = 60
 ;whitelist = 192.168.1.1, 192.168.2.1
-;headers = Email:X-User-Email, Name:X-User-Name
+headers = Email:Remote-Email, Name:Remote-Name
 # Read the auth proxy docs for details on what the setting below enables
 ;enable_login_token = false
 
