@@ -1,11 +1,12 @@
 ---
 
-- name: install mergerfs, btrfs-progs
+- name: install packages
   apt:
     update_cache: true
     name:
       - mergerfs
       - btrfs-progs
+      - rclone
     state: latest
   when: not skip_apt|default(false)
   tags:
