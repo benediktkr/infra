@@ -3,6 +3,21 @@
 # authelia: https://github.com/linuxserver/reverse-proxy-confs/blob/master/pihole.subfolder.conf.sample
 # also has generally better reverse proxy config
 
+- name: install certs
+  copy:
+    src: "/usr/local/etc/certs/{{ item }}"
+    dest: "/usr/local/etc/certs/"
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - letsencrypt
+  notify: reload nginx
+  vars:
+    prediff_cmd: echo
+  with_items:
+    - "{{ pihole_url }}"
+
 - name: template nginx vhost
   template:
     src: pihole-vhost.j2

@@ -1,49 +1,49 @@
 server {
-   listen 443 ssl http2;
-   # listen   [::]:443 ssl; # listen for ipv6
+    listen 443 ssl http2;
+    {% if inventory_hostname in wg_clients -%}
+    listen {{ wg_clients[inventory_hostname].ip }}:443 ssl http2;
+    {% endif -%}
 
-   {# {% for cidr in my_local_cidrs -%}
-    # allow {{ cidr }};
-    # {% endfor -%}
-    # deny all; #}
+    include /etc/nginx/authelia_internal.conf;
+    include /etc/nginx/require_auth.conf;
 
-   server_name {{ pihole_url }} {{ inventory_hostname }};
+    server_name {{ pihole_url }} {{ inventory_hostname }};
 
+    location / {
+        return 302 https://$host/admin/;
+    }
 
-   location / {
-     return 301 https://$host/pihole;
+    location /admin {
+       proxy_pass         http://{{pihole_http_inet}}:{{ pihole_http_port }};
+
+       # proxy_redirect     http://{{pihole_http_inet}}:{{pihole_http_port}}/admin/ /;
+
+       include /etc/nginx/require_auth_proxy.conf;
+       proxy_set_header   Host $host;
+       proxy_set_header   Origin $host;
+       proxy_set_header   X-Forwarded-Host $http_host;
+       proxy_set_header   X-Real-IP $remote_addr;
+       proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+       proxy_set_header   X-Forwarded-Host $server_name;
+       proxy_set_header   X-Forwarded-Proto $scheme;
+
    }
 
-   location /admin/ {
-        proxy_pass         http://{{pihole_http_inet}}:{{ pihole_http_port }}/admin/;
+   access_log /var/log/nginx/access_{{ pihole_url }}.log main;
+   error_log /var/log/nginx/error_{{ pihole_url }}.log warn;
 
-{# proxy_redirect     http://{{pihole_http_inet}}:{{pihole_http_port}}/admin/ /; #}
+   ssl_session_timeout 5m;
 
-        proxy_set_header   Host $host;
-        proxy_set_header   Origin $host;
-        proxy_set_header   X-Forwarded-Host $http_host;
-        proxy_set_header   X-Real-IP $remote_addr;
-        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header   X-Forwarded-Host $server_name;
-        proxy_set_header   X-Forwarded-Proto $scheme;
+   ssl_certificate /usr/local/etc/certs/{{ pihole_url }}/fullchain.pem;
+   ssl_certificate_key /usr/local/etc/certs/{{ pihole_url }}/privkey.pem;
 
-   }
+   add_header Referrer-Policy "no-referrer" always;
+   add_header X-Content-Type-Options "nosniff" always;
+   add_header X-Download-Options "noopen" always;
+   add_header X-Frame-Options "SAMEORIGIN" always;
+   add_header X-Permitted-Cross-Domain-Policies "none" always;
+   add_header X-Robots-Tag "none" always;
+   add_header X-XSS-Protection "1; mode=block" always;
 
-    access_log /var/log/nginx/access_{{ pihole_url }}.log main;
-    error_log /var/log/nginx/error_{{ pihole_url }}.log warn;
-
-    ssl_session_timeout 5m;
-
-    ssl_certificate /etc/letsencrypt/live/{{ pihole_url.split('.')[1:] | join(".")  }}/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/{{ pihole_url.split('.')[1:] | join(".")  }}/privkey.pem;
-
-    add_header Referrer-Policy "no-referrer" always;
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header X-Download-Options "noopen" always;
-    add_header X-Frame-Options "SAMEORIGIN" always;
-    add_header X-Permitted-Cross-Domain-Policies "none" always;
-    add_header X-Robots-Tag "none" always;
-    add_header X-XSS-Protection "1; mode=block" always;
-
-    fastcgi_hide_header X-Powered-By;
+   fastcgi_hide_header X-Powered-By;
 }
