@@ -9,7 +9,9 @@ server {
 
   location ~ ^/(ping|metrics|status) {
     allow 127.0.0.1;
+    {% if inventory_hostname in my_public_ips -%}
     allow {{ my_public_ips[inventory_hostname] }}/32;
+    {% endif %}
     allow {{ my_public_ips[ansible_control_host] }}/32;
     deny all;
 

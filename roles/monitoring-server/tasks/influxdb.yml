@@ -9,6 +9,13 @@
   tags:
     - influxdb-config
 
+- name: ensure ownership
+  file:
+    path: /var/lib/influxdb
+    owner: influxdb
+    group: influxdb
+    recurse: true
+
 - name: install pip3 packages for influxdb (and scripts)
   pip:
     name:
