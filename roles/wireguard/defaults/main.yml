@@ -1,0 +1,4 @@
+---
+
+wireguard_dns: true
+pihole_dns: 10.10.1.1

@@ -39,6 +39,7 @@
     name:
       - wireguard
       - qrencode
+      - resolvconf
     state: present
   tags:
     - packages
