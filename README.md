@@ -2,6 +2,8 @@
 
 the ansible repo for the [sudo.is](https://www.sudo.is) infrastructure.
 
+![](https://static.sudo.is/img/lokun-logo.png)
+
 ## related projects
 
 theres a lot of useful (and not so useful) scripts in this repo, that
