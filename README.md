@@ -25,13 +25,6 @@ this repo also deploys/orchestrates a bunch of "projects":
  * [archives](https://git.sudo.is/ben/archives): file listing with
    proxy auth
 
- * [emacs-docker](https://git.sudo.is/ben/emacs-docker): building
-   emacs from upstream git in docker on jenkins and packaging as
-   `.deb` published at https://apt.sudo.is
-
- * [nginx-build](https://git.sudo.is/ben/nginx-build): building nginx from
-   source with all modules (the useful ones anyway) and packaging as `.deb`
-
  * [shared-jenkins-pipelines](https://git.sudo.is/ben/shared-jenkins-pipelines)
 
 and some docker images that needed customizing or as a way to package `.deb`:
@@ -43,6 +36,12 @@ and some docker images that needed customizing or as a way to package `.deb`:
  * [poetry-docker](https://git.sudo.is/ben/poetry-docker)
  * [xmrig-docker](https://git.sudo.is/ben/xmrig-docker)
  * [hydrogen-docker](https://git.sudo.is/ben/hydrogen-docker)
+ * [emacs-docker](https://git.sudo.is/ben/emacs-docker): building
+   emacs from upstream git in docker on jenkins and packaging as
+   `.deb` published at https://apt.sudo.is
+ * [nginx-build](https://git.sudo.is/ben/nginx-build): building nginx from
+   source with all modules (the useful ones anyway) and packaging as `.deb`
+
 
 ## mirrors
 
