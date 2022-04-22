@@ -1,6 +1,6 @@
 # infra
 
-the ansible repo for the sudo.is infrastructure.
+the ansible repo for the [sudo.is](https://www.sudo.is) infrastructure.
 
 ## related projects
 
