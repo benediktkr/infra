@@ -1,10 +1,8 @@
----
-
 - type: filestream
+  id: "nginx-access-glob"
   paths:
     - /var/log/nginx/access_*.log
 
-  scan_frequency: 10s
   enabled: true
 
   parsers:
@@ -20,10 +18,10 @@
     - nginx
 
 - type: filestream
+  id: "nginx-error-glob"
   paths:
     - /var/log/nginx/error_*.log
 
-  scan_frequency: 10s
   enabled: true
 
   tags:
