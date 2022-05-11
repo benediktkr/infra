@@ -2,6 +2,7 @@
 # https://www.haproxy.com/de/blog/haproxy-log-customization/
 global
 	chroot /var/lib/haproxy
+        maxconn 60000
 
         # default:
         {# #stats socket /run/haproxy/admin.sock mode 660 level admin expose-fd listeners
@@ -89,10 +90,14 @@ frontend {{ lb_url }}
     {# balance leastconn #}
 
 
+{#
+ # from backend (not used):
+ default-server check maxconn 20
+ #}
+
 {% for item in lb_tcp -%}
 backend {{ item.fqdn }}
     mode tcp
-    #default-server check maxconn 20
     option ssl-hello-chk
     {% for origin in item.origins -%}
     server {{ origin.name }} {{ origin.name }}:{{ origin.port | default(443) }} check
