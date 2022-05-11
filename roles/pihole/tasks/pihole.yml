@@ -54,6 +54,17 @@
     - pihole-config
     - pihole-overrides
 
+- name: template pihole-FTL.conf
+  template:
+    src: pihole-FTL.conf.j2
+    dest: "{{ pihole_root }}/etc/pihole/pihole-FTL.conf"
+    owner: 999
+    group: 999
+    mode: 0644
+  tags:
+    - pihole-config
+    - pihole-overrides
+
 - name: template dhcp options if dhcp server
   template:
     src: 07-dhcp-options.conf.j2
