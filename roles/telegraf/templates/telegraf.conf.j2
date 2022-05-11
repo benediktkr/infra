@@ -182,7 +182,7 @@
   # mount_points = ["/"]
 
   ## Ignore mount points by filesystem type.
-  ignore_fs = ["tmpfs", "devtmpfs", "devfs", "iso9660", "overlay", "aufs", "squashfs"]
+  ignore_fs = ["tmpfs", "devtmpfs", "devfs", "iso9660", "overlay", "aufs", "squashfs", "nsfs", "securityfs", "debugfs", "tracefs", "configfs"]
 
 
 [[inputs.diskio]]
@@ -293,10 +293,10 @@
 
 
 {% if 'bear' in group_names %}
-[[inputs.exec]]
-  commands = ["/usr/local/bin/farmertelegraf.sh"]
-  timeout = "5s"
-  data_format = "influx"
+# [[inputs.exec]]
+#   commands = ["/usr/local/bin/farmertelegraf.sh"]
+#   timeout = "5s"
+#   data_format = "influx"
 {% endif %}
 
 {% if 'backupservers' in group_names %}
