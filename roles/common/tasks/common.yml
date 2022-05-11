@@ -169,6 +169,7 @@
       - ca-certificates
       - cbm
       - cron
+      - chrony
       - cryptsetup
       - cryptsetup-initramfs
       - curl
@@ -387,6 +388,24 @@
     mode: 0600
     recurse: yes
   when: ansible_distribution == "Ubuntu"
+  tags:
+    - motd
+
+- name: check if /etc/default/motd-news exists
+  stat:
+    path: /etc/default/motd-news
+  register: motd_news
+  tags:
+    - motd
+
+- name: disable motd-news if /etc/default file exists
+  lineinfile:
+    path: /etc/default/motd-news
+    line: "ENABLED=0"
+    create: no
+  when: motd_news.stat.exists
+  tags:
+    - motd
 
 - name: install/remove unattended-upgrades
   apt:
