@@ -15,24 +15,23 @@ http {
     include       /etc/nginx/mime.types;
     default_type  application/octet-stream;
 
-    # prefer: $authelia_user
-    # default: $remote_user
-    #map $authelia_user $remote_user_name {
-    #    default $authelia_user;
-    #    ""      $remote_user;
-    #}
+    # nginx hack
+    map $host $authelia_user {
+        default "-";
+    }
 
     log_format  main  '{"remote_addr": "$remote_addr", '
                       ' "remote_user": "$remote_user", '
-                      {# ' "authelia_user": "$authelia_user", ' #}
+                      ' "authelia_user": "$authelia_user", '
                       ' "time_local": "$time_local", '
+                      ' "request": "$request", '
                       ' "request_method": "$request_method", '
                       ' "request_uri": "$request_uri", '
                       ' "server_name": "$server_name", '
-                      ' "server_port": "$server_port", '
                       ' "status": "$status", '
                       ' "body_bytes_sent": $body_bytes_sent, '
                       ' "http_referer":  "$http_referer", '
+                      ' "http_host":  "$http_host", '
                       ' "http_user_agent": "$http_user_agent", '
                       ' "http_x_forwarded_for": "$http_x_forwarded_for"}';
 

@@ -101,15 +101,22 @@
 
 - name: template default vhosts
   template:
-    src: "{{ item }}.j2"
-    dest: "/etc/nginx/sites-enabled/{{ item }}"
+    src: 00-default.j2
+    dest: /etc/nginx/sites-enabled/00-default
   notify: reload nginx
-  with_items:
-  - 00-default
-  - 01-sudo.is.conf
   tags:
     - nginx-config
     - nginx-default-vhost
+
+
+- name: template {{ domain }} vhost
+  template:
+    src: 01-{{ domain }}.conf.j2
+    dest: /etc/nginx/sites-enabled/01-{{ domain }}.conf
+  notify: reload nginx
+  when: '"auth" not in group_names'
+  tags:
+    - nginx-config
     - www.sudo.is
     - wwwsudo.is
 
