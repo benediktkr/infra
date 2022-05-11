@@ -1,17 +1,9 @@
----
-
-- type: log
+- type: filestream
+  id: "gitea-log"
   paths:
     - {{ systemuserlist.git.home }}/data/gitea/log/gitea.log
 
-  scan_frequency: 10s
   enabled: true
-
-  # # take all the lines that do not start with [ and combines them with the previous line that does
-  # multiline.type: pattern
-  # multiline.pattern: '^\['
-  # multiline.negate: true
-  # multiline.match: after
 
   fields_under_root: true
   fields:
