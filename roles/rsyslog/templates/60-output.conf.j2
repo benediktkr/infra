@@ -1,7 +1,8 @@
 {#*.*      @{{ logstash_url }}:{{ logstash_syslog_port }};json-template#}
 *.*      @{{ logstash_url }}:{{ logstash_syslog_port }}
 
-*.*       /tmp/test.log;json-template
+
+{# *.*       /tmp/test.log;json-template #}
 
 
 {# *.*   @{{ syslog_url }}:514 #}
