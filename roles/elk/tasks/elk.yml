@@ -122,6 +122,7 @@
     pull: true
     state: started
     container_default_behavior: compatibility
+    memory: "4G"
     mounts:
       - type: bind
         source: /etc/letsencrypt/live/{{ domain }}

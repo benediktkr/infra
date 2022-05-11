@@ -34,15 +34,30 @@ input {
 filter {
   if "jellyfin" in [tags] {
     grok {
-      match => ["message", "\[%{TIMESTAMP_ISO8601:timestamp}%{DATA}\] \[%{LOGLEVEL:level}\] \[%{NUMBER:thread_id}\] %{DATA:logger_name}\: %{GREEDYDATA:message}"]
+      match => [ "message", "\[%{LOGLEVEL:level}\] - %{DATA:logger_name} - %{GREEDYDATA:message}" ]
       overwrite => [ "message" ]
     }
+  }
+  if "arrformat" in [tags] {
     grok {
-      match => ["message", "Authentication request for \"%{WORD:jellyfin_user}\" has (%{WORD}%{SPACE})?%{WORD:jellyfin_login}(.*%{IPV4:remote_addr})?"]
-      add_tag => [ "jellyfin_login" ]
+      match => [ "message", "%{DATA}\|%{LOGLEVEL:level}\|%{GREEDYDATA:message}" ]
+      overwrite => [ "message" ]
     }
+  }
+
+  if "mautrix-bridge" in [tags] {
     grok {
-      match => ["message", "WS \"%{IPV4:remote_addr}\""]
+      match => ["message", "\[%{LOGLEVEL:level}\] - %{DATA:namespace} - %{GREEDYDATA:message}"]
+      overwrite => [ "message" ]
+    }
+  }
+  if "transmission" in [tags] {
+    grok {
+      match => ["message", "\[%{DATA:log_time_rm}\] %{GREEDYDATA:message} \(%{DATA:logger_name}:%{NUMBER:line_no_rm}\)"]
+      overwrite => [ "message" ]
+    }
+    mutate {
+      remove_field => [ "log_time_rm", "line_no_rm" ]
     }
   }
   if "gitea" in [tags] {
@@ -53,26 +68,67 @@ filter {
   }
   if "nextcloud" in [tags] {
     mutate {
-        remove_field => [ "time" ]
+      remove_field => [ "time",  "exception.Trace", "exception.Previous" ]
+      rename => { "level" => "level_num" }
+    }
+    translate {
+      dictionary => {
+        "0" => "DEBUG"
+        "1" => "INFO"
+        "2" => "WARN"
+        "3" => "ERROR"
+        "4" => "FATAL"
+      }
+      source => "[level_num]"
+      target => "[level]"
+    }
+    mutate {
+      remove_field => [ "level_num" ]
     }
   }
   if "authelia" in [tags] {
     mutate {
-        remove_field => [ "time" ]
-        rename => {"msg" => "message"}
+      remove_field => [ "time" ]
+      rename => {"msg" => "message"}
     }
     grok {
       match => ["message", "username=%{WORD:auth_request_user} groups=%{GREEDYDATA:auth_request_group} ip=%{IPV4:auth_request_ip} and object %{URI:auth_request_object_url} \(method %{WORD:auth_request_method}\)"]
     }
   }
-  if [event][module] == "mysql" {
+  if "nginx" in [tags] {
+    mutate {
+      remove_field => [ "time_local" ]
+    }
+  }
+  {# if "nginx-error" in [tags] {
+   #   grok {
+   #     match => {
+   #       "message" => [
+   #         "%{DATA}\[%{LOGLEVEL:level}\] %{DATA}\: \*%{NUMBER} %{GREEDYDATA:message}",
+   #         "client: %{IPV4:remote_addr}",
+   #         "server: %{DATA:server_name}",
+   #         "request: \"%{DATA:request}\"",
+   #         "upstream: \"%{DATA:upstream_addr}\"",
+   #         "host: \"%{DATA:http_host}\"",
+   #         "referrer: \"%{DATA:http_referrer}\""
+   #       ]
+   #     }
+   #     overwrite => [ "message" ]
+   #   }
+   #   mutate {
+   #     uppercase => [ "level" ]
+   #   }
+   # } #}
+
+ if [event][module] == "mysql" {
     mutate {
         add_tag => [ "mariadb" ]
     }
   }
+
   if [type] == "syslog" {
     mutate {
-      copy => { "logsource" => "hostname" }
+      rename => { "logsource" => "hostname" }
     }
   }
 }
