@@ -44,6 +44,16 @@
     group: git
     mode: 0644
 
+- name: template robots.txt
+  template:
+    src: robots.txt.j2
+    dest: "{{ systemuserlist.git.home }}/robots.txt"
+    owner: www-data
+    group: www-data
+    mode: 0644
+  tags:
+    - robots
+
 - name: template nginx vhost
   template:
     src: 01-gitea.j2
