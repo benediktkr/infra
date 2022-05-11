@@ -1,17 +1,17 @@
----
-
-- type: log
+- type: filestream
+  id: "jellyfin-logs"
   paths:
     - {{ jellyfin_root }}/config/log/beats_*.log
 
   scan_frequency: 10s
   enabled: true
 
-  # take all the lines that do not start with [ and combines them with the previous line that does
-  multiline.type: pattern
-  multiline.pattern: '^\['
-  multiline.negate: true
-  multiline.match: after
+  parsers:
+    - multiline:
+        type: pattern
+        pattern: '^\['
+        negate: true
+        match: after
 
   fields_under_root: true
   fields:
