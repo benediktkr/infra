@@ -11,12 +11,22 @@
   scan_frequency: 10s
   enabled: true
 
-  json.keys_under_root: true
-  json.add_error_key: true
+
+  parsers:
+    - ndjson:
+        keys_under_root: true
+        add_error_key: true
 
   fields_under_root: true
   fields:
     service.type: nextcloud
+
+  processors:
+    - drop_fields:
+        fields:
+          - "exception.Trace"
+          - "time"
+
 
   tags:
     - nextcloud

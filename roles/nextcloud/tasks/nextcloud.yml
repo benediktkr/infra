@@ -178,4 +178,5 @@
     mode: 0600
   tags:
     - filebeat
+    - filebeat-nextcloud
   notify: restart filebeat
