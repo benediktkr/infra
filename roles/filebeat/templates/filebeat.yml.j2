@@ -196,7 +196,7 @@ processors:
 # ================================== Logging ===================================
 
 # Available log levels are: error, warning, info, debug
-logging.level: warning
+logging.level: info
 # implicit defaults:
 logging.to_files: true
 logging.files:
@@ -209,6 +209,13 @@ logging.files:
 # To enable all selectors use ["*"]. Examples of other selectors are "beat",
 # "publisher", "service".
 #logging.selectors: ["*"]
+
+# If enabled, filebeat periodically logs its internal metrics that have changed
+# in the last period. For each metric that changed, the delta from the value at
+# the beginning of the period is logged. Also, the total values for
+# all non-zero internal metrics are logged on shutdown. The default is true.
+logging.metrics.enabled: false
+
 
 # ============================= X-Pack Monitoring ==============================
 # Filebeat can export internal metrics to a central Elasticsearch monitoring
