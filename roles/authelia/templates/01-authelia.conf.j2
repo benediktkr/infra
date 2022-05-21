@@ -93,8 +93,8 @@ server {
 
   # internal traffic only, does not go over lb for now, so wildcard is fine
   ssl_session_timeout 5m;
-  ssl_certificate /etc/letsencrypt/live/{{ domain }}/fullchain.pem;
-  ssl_certificate_key /etc/letsencrypt/live/{{ domain }}/privkey.pem;
+  ssl_certificate /usr/local/etc/certs/{{ domain }}/fullchain.pem;
+  ssl_certificate_key /usr/local/etc/certs/{{ domain }}/privkey.pem;
 
   location / {
     return 404;

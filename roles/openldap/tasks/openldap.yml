@@ -13,21 +13,21 @@
     - slapd.d
     - ldif
 
-- name: copy certs that need to be owned by openldap user
-  copy:
-    src: "private/letsencrypt/{{ openldap_domain }}/{{ item }}"
-    dest: "{{ openldap_root }}/certs/{{ item }}"
-    owner: openldap
-    group: openldap
-    mode: 0600
-  tags:
-    - letsencrypt
-  no_log: true
-  with_items:
-    - cert.pem
-    - chain.pem
-    - fullchain.pem
-    - privkey.pem
+# - name: copy certs that need to be owned by openldap user
+#   copy:
+#     src: "private/letsencrypt/{{ openldap_domain }}/{{ item }}"
+#     dest: "{{ openldap_root }}/certs/{{ item }}"
+#     owner: openldap
+#     group: openldap
+#     mode: 0600
+#   tags:
+#     - letsencrypt
+#   no_log: true
+#   with_items:
+#     - cert.pem
+#     - chain.pem
+#     - fullchain.pem
+#     - privkey.pem
 
 - name: copy dhparam.pem
   copy:
@@ -65,13 +65,13 @@
         source: "{{ openldap_root }}/certs/dhparam.pem"
         target: /container/service/slapd/assets/certs/dhparam.pem
       - type: bind
-        source: "{{ openldap_root }}/certs/fullchain.pem"
+        source: "/usr/local/etc/certs/{{ openldap_domain }}/fullchain.pem"
         target: /container/service/slapd/assets/certs/fullchain.pem
       - type: bind
-        source: "{{ openldap_root }}/certs/cert.pem"
+        source: "/usr/local/etc/certs/{{ openldap_domain }}/cert.pem"
         target: /container/service/slapd/assets/certs/cert.pem
       - type: bind
-        source: "{{ openldap_root }}/certs/privkey.pem"
+        source: "/usr/local/etc/certs/{{ openldap_domain }}/privkey.pem"
         target: /container/service/slapd/assets/certs/privkey.pem
       # - type: bind
       #   source: "{{ openldap_root }}/ldif"

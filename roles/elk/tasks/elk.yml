@@ -125,7 +125,7 @@
     memory: "4G"
     mounts:
       - type: bind
-        source: /etc/letsencrypt/live/{{ domain }}
+        source: /usr/local/etc/certs/{{ domain }}
         target: /etc/letsencrypt/live/{{ domain }}
         read_only: true
       - type: bind
