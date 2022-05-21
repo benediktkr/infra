@@ -17,8 +17,8 @@
 
 - name: template nginx vhost
   template:
-    src: 01-invidious.j2
-    dest: /etc/nginx/sites-enabled/01-invidious
+    src: 01-invidious.conf.j2
+    dest: /etc/nginx/sites-enabled/01-invidious.conf
     owner: root
     group: root
     mode: 0644

@@ -116,6 +116,7 @@
     - archive
     - archive-scripts
     - letsencrypt
+    - letsencrypt-scripts
   # notify:
   #   - run letsencrypt.sh
 

@@ -1,0 +1,92 @@
+---
+
+- name: install certs
+  copy:
+    src: "/usr/local/etc/certs/{{ item }}"
+    dest: "/usr/local/etc/certs/"
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - letsencrypt
+  notify: reload nginx
+  with_items:
+    - "{{ nitter_url }}"
+  vars:
+    prediff_cmd: echo
+
+- name: template config
+  template:
+    src: nitter.conf.j2
+    dest: "{{ systemuserlist.nitter.home }}/nitter.conf"
+    owner: "{{ systemuserlist.nitter.username }}"
+    group: "{{ systemuserlist.nitter.username }}"
+    mode: 0644
+  tags:
+    - nitter-conf
+
+- name: template nginx vhost
+  template:
+    src: 01-nitter.conf.j2
+    dest: /etc/nginx/sites-enabled/01-nitter.conf
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - nginx
+    - nginx-nitter
+  notify: reload nginx
+
+- name: redis container for nitter
+  docker_container:
+    name: nitter-redis
+    image: "redis:latest"
+    restart_policy: "unless-stopped"
+    auto_remove: false
+    detach: true
+    pull: true
+    state: started
+    container_default_behavior: compatibility
+    env:
+      REDIS_HOST: nitter-redis
+    networks_cli_compatible: false
+    networks:
+      - name: bridgewithdns
+    healthcheck:
+      interval: 30s
+      timeout: 60s
+      start_period: 10s
+      test: "redis-cli --raw incr ping"
+  tags:
+    - nitter-container
+    - docker-containers
+    - redis
+
+
+- name: redis container for nitter
+  docker_container:
+    name: nitter
+    image: zedeus/nitter:latest
+    restart_policy: "unless-stopped"
+    auto_remove: false
+    detach: true
+    pull: true
+    state: started
+    container_default_behavior: compatibility
+    networks_cli_compatible: false
+    user: "{{ systemuserlist.nitter.uid }}:{{ systemuserlist.nitter.gid }}"
+    networks:
+      - name: bridgewithdns
+        ipv4_address: "{{ bridgewithdns.nitter }}"
+    mounts:
+      - type: bind
+        source: "{{ systemuserlist.nitter.home }}/nitter.conf"
+        target: /src/nitter.conf
+    healthcheck:
+      test: wget -nv --tries=1 --spider http://127.0.0.1:8080/Jack/status/20 || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 2
+  tags:
+    - nitter-container
+    - docker-containers
