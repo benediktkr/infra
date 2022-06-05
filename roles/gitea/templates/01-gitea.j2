@@ -9,38 +9,40 @@ server {
   server_name {{ gitea_url }};
 
    location / {
-        proxy_pass         http://{{ bridgewithdns.gitea }}:{{ gitea_docker_port }};  # /
+       proxy_pass         http://{{ bridgewithdns.gitea }}:{{ gitea_docker_port }};  # /
 
-        proxy_redirect     off;
-        proxy_set_header   Host $host;
-        proxy_set_header   X-Real-IP $remote_addr;
-        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header   X-Forwarded-Host $server_name;
-        proxy_set_header   X-Forwarded-Proto $scheme;
+       proxy_redirect     off;
+       proxy_set_header   Host $host;
+       proxy_set_header   X-Real-IP $remote_addr;
+       proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+       proxy_set_header   X-Forwarded-Host $server_name;
+       proxy_set_header   X-Forwarded-Proto $scheme;
    }
 
    location /robots.txt {
-      alias {{ systemuserlist.git.home }}/robots.txt;
+       # gitea itself can also serve this file
+       alias {{ systemuserlist.git.home }}/data/gitea/robots.txt;
    }
 
    location /user/forgot_password {
-      return 302 https://{{ authelia_login_url }}/reset-password/step1;
+       return 302 https://{{ authelia_login_url }}/reset-password/step1;
    }
-    access_log /var/log/nginx/access_{{ gitea_url }}.log main;
-    error_log /var/log/nginx/error_{{ gitea_url }}.log warn;
 
-    ssl_session_timeout 5m;
+   access_log /var/log/nginx/access_{{ gitea_url }}.log main;
+   error_log /var/log/nginx/error_{{ gitea_url }}.log warn;
 
-    ssl_certificate /usr/local/etc/certs/{{ gitea_url }}/fullchain.pem;
-    ssl_certificate_key /usr/local/etc/certs/{{ gitea_url }}/privkey.pem;
+   ssl_session_timeout 5m;
 
-    add_header Referrer-Policy "no-referrer" always;
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header X-Download-Options "noopen" always;
-    add_header X-Frame-Options "SAMEORIGIN" always;
-    add_header X-Permitted-Cross-Domain-Policies "none" always;
-    add_header X-Robots-Tag "none" always;
-    add_header X-XSS-Protection "1; mode=block" always;
+   ssl_certificate /usr/local/etc/certs/{{ gitea_url }}/fullchain.pem;
+   ssl_certificate_key /usr/local/etc/certs/{{ gitea_url }}/privkey.pem;
 
-    fastcgi_hide_header X-Powered-By;
+   add_header Referrer-Policy "no-referrer" always;
+   add_header X-Content-Type-Options "nosniff" always;
+   add_header X-Download-Options "noopen" always;
+   add_header X-Frame-Options "SAMEORIGIN" always;
+   add_header X-Permitted-Cross-Domain-Policies "none" always;
+   add_header X-Robots-Tag "none" always;
+   add_header X-XSS-Protection "1; mode=block" always;
+
+   fastcgi_hide_header X-Powered-By;
 }

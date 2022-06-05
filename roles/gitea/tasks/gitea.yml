@@ -26,6 +26,7 @@
     - data
     - data/gitea
     - data/gitea/conf
+    - data/gitea/templates
     - data/git
 
 - name: template ssh passthrough script
@@ -47,10 +48,22 @@
 - name: template robots.txt
   template:
     src: robots.txt.j2
-    dest: "{{ systemuserlist.git.home }}/robots.txt"
+    dest: "{{ systemuserlist.git.home }}/data/gitea/robots.txt"
     owner: www-data
     group: www-data
     mode: 0644
+  tags:
+    - robots
+
+- name: copy gitea templates
+  copy:
+    src: "{{ item }}"
+    dest: "{{ systemuserlist.git.home }}/data/gitea/templates/{{ item }}"
+    owner: www-data
+    group: www-data
+    mode: 0644
+  with_items:
+    - home.tmpl
   tags:
     - robots
 
