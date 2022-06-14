@@ -209,6 +209,7 @@
   tags:
     - nginx-config
     - jellyfin-conf
+    - nginx-jellyfin
   notify: reload nginx
 
 
