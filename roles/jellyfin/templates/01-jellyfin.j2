@@ -1,5 +1,4 @@
 ## https://jellyfin.org/docs/general/networking/nginx.html
-{% set domain = jellyfin_url.split('.')[1:] | join(".")  %}
 
 {# proxy_cache_path  {{ jellyfin_root }}/nginx-cache levels=1:2 keys_zone=cWEB:50m inactive=90d max_size=35000m;
  # map $request_uri $h264Level { ~(h264-level=)(.+?)& $2; }
@@ -11,14 +10,13 @@ server {
     listen {{ wg_clients[inventory_hostname].ip }}:443 ssl http2;
     {% endif -%}
 
+    include /etc/nginx/sudo-known.conf;
     include listen-proxy-protocol.conf;
     server_name {{ jellyfin_url }};
 
     # use a variable to store the upstream proxy
     # set $jellyfin jellyfin;
     # resolver 127.0.0.1 valid=30;
-
-    include /etc/nginx/sudo-known.conf;
 
     # access log is used by python script
     access_log /var/log/nginx/access_{{ jellyfin_url }}.log main;
@@ -44,7 +42,6 @@ server {
     # be whitelisted.
     add_header Content-Security-Policy "default-src https: data: blob: http://image.tmdb.org; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' https://www.gstatic.com/cv/js/sender/v1/cast_sender.js https://www.gstatic.com/eureka/clank/cast_sender.js https://www.gstatic.com/eureka/clank/94/cast_sender.js https://www.gstatic.com/eureka/clank/95/cast_sender.js https://www.gstatic.com/eureka/clank/96/cast_sender.js https://www.gstatic.com/eureka/clank/97/cast_sender.js https://www.youtube.com blob:; worker-src 'self' blob:; connect-src 'self'; object-src 'none'; frame-ancestors 'self'" always;
 
-
     location = / {
         return 302 https://$host/web/;
     }
@@ -52,7 +49,6 @@ server {
     location / {
         #include /etc/nginx/jellyfin/jellyfin_auth.conf;
 
-        # Proxy main Jellyfin traffic
         proxy_pass http://127.0.0.1:{{ jellyfin_port }};
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -63,7 +59,6 @@ server {
 
         # Disable buffering when the nginx proxy gets very resource
         # heavy upon streaming
-
         #proxy_buffering off;
     }
 
@@ -83,10 +78,7 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     }
 
-
-
-    # location block for /web - This is purely for aesthetics so
-    # /web/#!/ works instead of having to go to /web/index.html/#!/
+    # so /web/#!/ works instead of having to go to /web/index.html/#!/
     location = /web/ {
         proxy_pass http://127.0.0.1:{{ jellyfin_port }}/web/index.html;
         proxy_set_header Host $host;
@@ -98,7 +90,6 @@ server {
     }
 
     location /socket {
-        # Proxy Jellyfin Websockets traffic
         proxy_pass http://127.0.0.1:{{ jellyfin_port }};
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
