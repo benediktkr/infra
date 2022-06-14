@@ -23,6 +23,7 @@
   tags:
     - grafana-config
     - nginx-grafana
+    - nginx
   notify: reload nginx
 
 # - name: Create influxdb datasources

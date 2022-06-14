@@ -6,7 +6,7 @@ server {
   {% endif -%}
 
   include /etc/nginx/authelia_internal.conf;
-
+  include /etc/nginx/listen-proxy-protocol.conf;
   server_name {{ grafana_url }};
 
   location ~ ^/api/health {
@@ -31,7 +31,7 @@ server {
     include /etc/nginx/require_auth.conf;
     include /etc/nginx/require_auth_proxy.conf;
 
-    proxy_pass         http://127.0.0.1:{{ grafana_port }}/;
+    proxy_pass         http://127.0.0.1:{{ grafana_port }};
 
     proxy_redirect     off;
     proxy_set_header   Host $host;

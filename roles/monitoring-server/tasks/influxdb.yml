@@ -36,6 +36,7 @@
   tags:
     - nginx-config
     - nginx-influxdb
+    - nginx
 
 # fails after the first time, since after that
 - name: create influxdb admin user
