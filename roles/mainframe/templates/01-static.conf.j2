@@ -7,6 +7,7 @@ server {
 
     charset utf-8;
 
+    include listen-proxy-protocol.conf;
     server_name static.{{ domain }} {{ static2_url }};
     root /var/www/static.{{ domain }};
 
