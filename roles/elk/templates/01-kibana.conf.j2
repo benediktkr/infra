@@ -8,6 +8,7 @@ server {
 
   include /etc/nginx/authelia_internal.conf;
   include /etc/nginx/require_auth.conf;
+  include /etc/nginx/listen-proxy-protocol.conf;
 
   location / {
     proxy_pass         http://{{ bridgewithdns.kibana }}:{{ kibana_port }}/;

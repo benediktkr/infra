@@ -4,6 +4,7 @@ server {
     listen {{ wg_clients[inventory_hostname].ip }}:443 ssl http2;
     {% endif -%}
 
+    include listen-proxy-protocol.conf;
     server_name {{ nitter_url }};
 
     access_log /var/log/nginx/access_{{ nitter_url }}.log main;
