@@ -15,6 +15,8 @@ server {
     return 405;
   }
 
+  include /etc/nginx/sudo-known.conf;
+
   location / {
 
     proxy_pass         http://{{ bridgewithdns.authelia }}:{{ authelia_port }};
@@ -90,6 +92,8 @@ server {
   deny all;
 
   server_name {{ authelia_api_url }};
+
+  include /etc/nginx/sudo-known.conf;
 
   # internal traffic only, does not go over lb for now, so wildcard is fine
   ssl_session_timeout 5m;

@@ -75,10 +75,15 @@
   notify: reload nginx
   tags: nginx-default-vhost
 
-- name: template uploadsize.conf
+- name: template conf.d files
   template:
-    src: "uploadsize.conf.j2"
-    dest: /etc/nginx/conf.d/uploadsize.conf
+    src: "{{ item }}.j2"
+    dest: /etc/nginx/conf.d/{{ item }}
+  with_items:
+    - uploadsize.conf
+  tags:
+    - nginx-conf
+    - nginx-conf
   notify: reload nginx
 
 - name: template config files
@@ -90,7 +95,11 @@
     - require_auth.conf
     - require_auth_proxy.conf
     - authelia_internal.conf
+    - listen-proxy-protocol.conf
+    - sudo-known.conf
+    - well-known.conf
   tags:
+    - nginx-conf
     - authelia-nginx
   notify: reload nginx
 

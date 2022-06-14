@@ -17,6 +17,8 @@ server {
     # set $jellyfin jellyfin;
     # resolver 127.0.0.1 valid=30;
 
+    include /etc/nginx/sudo-known.conf;
+
     # access log is used by python script
     access_log /var/log/nginx/access_{{ jellyfin_url }}.log main;
     error_log /var/log/nginx/error_{{ jellyfin_url }}.log warn;

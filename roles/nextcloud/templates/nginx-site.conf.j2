@@ -9,6 +9,7 @@ server {
   {% endif -%}
   # listen   [::]:443 ssl; # listen for ipv6
 
+  include listen-proxy-protocol.conf;
   server_name {{ item.url }};
 
   if ($scheme != "https") {

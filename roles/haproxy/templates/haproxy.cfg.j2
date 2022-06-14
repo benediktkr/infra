@@ -96,11 +96,25 @@ frontend {{ lb_url }}
  #}
 
 {% for item in lb_tcp -%}
+{% if item.proxy_protocol|default(false) -%}
+backend {{ item.fqdn }}
+    mode tcp
+    balance leastconn
+    option tcpka
+    {% for origin in item.origins -%}
+    server {{ origin.name }} {{ origin.name }}:{{ origin.port | default(40443) }} send-proxy-v2 check
+    {% endfor %}
+
+{% else -%}
 backend {{ item.fqdn }}
     mode tcp
     option ssl-hello-chk
+    {% if item.tcp_keepalive|default(false) -%}
+    option tcpka
+    {% endif -%}
     {% for origin in item.origins -%}
     server {{ origin.name }} {{ origin.name }}:{{ origin.port | default(443) }} check
     {% endfor %}
 
+{% endif %}
 {% endfor %}

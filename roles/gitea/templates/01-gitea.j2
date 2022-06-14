@@ -19,9 +19,15 @@ server {
        proxy_set_header   X-Forwarded-Proto $scheme;
    }
 
+   include /etc/nginx/sudo-known.conf;
+
    location /robots.txt {
        # gitea itself can also serve this file
        alias {{ systemuserlist.git.home }}/data/gitea/robots.txt;
+   }
+   location /sitemap.xml {
+       # gitea itself can also serve this file
+       alias {{ systemuserlist.git.home }}/data/gitea/sitemap.xml;
    }
 
    location /user/forgot_password {
@@ -41,7 +47,6 @@ server {
    add_header X-Download-Options "noopen" always;
    add_header X-Frame-Options "SAMEORIGIN" always;
    add_header X-Permitted-Cross-Domain-Policies "none" always;
-   add_header X-Robots-Tag "none" always;
    add_header X-XSS-Protection "1; mode=block" always;
 
    fastcgi_hide_header X-Powered-By;
