@@ -96,7 +96,7 @@ frontend {{ lb_url }}
  #}
 
 {% for item in lb_tcp -%}
-{% if item.proxy_protocol|default(false) -%}
+{% if item.proxy_protocol|default(true) -%}
 backend {{ item.fqdn }}
     mode tcp
     balance leastconn
