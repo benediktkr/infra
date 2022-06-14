@@ -10,7 +10,8 @@
     name: filebeat
     state: restarted
 
-# - name: restart gitea
-#   docker_container:
-#     name: gitea
-#     state: restarted
+- name: restart gitea
+  docker_container:
+    name: gitea
+    state: started
+    restart: true

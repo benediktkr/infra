@@ -27,6 +27,7 @@
     - data/gitea
     - data/gitea/conf
     - data/gitea/templates
+    - data/gitea/templates/custom
     - data/git
 
 - name: template ssh passthrough script
@@ -44,14 +45,18 @@
     owner: git
     group: git
     mode: 0644
+  notify: restart gitea
 
 - name: template robots.txt
   template:
-    src: robots.txt.j2
-    dest: "{{ systemuserlist.git.home }}/data/gitea/robots.txt"
+    src: "{{ item }}.j2"
+    dest: "{{ systemuserlist.git.home }}/data/gitea/{{ item }}"
     owner: www-data
     group: www-data
     mode: 0644
+  with_items:
+    - robots.txt
+    - sitemap.xml
   tags:
     - robots
 
@@ -64,8 +69,11 @@
     mode: 0644
   with_items:
     - home.tmpl
+    - custom/extra_links.tmpl
+    - custom/extra_tabs.tmpl
   tags:
-    - robots
+    - gitea-templates
+  notify: restart gitea
 
 - name: template nginx vhost
   template:
