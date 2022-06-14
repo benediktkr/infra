@@ -100,7 +100,9 @@ frontend {{ lb_url }}
 backend {{ item.fqdn }}
     mode tcp
     balance leastconn
+    {% if item.tcp_keepalive|default(false) -%}
     option tcpka
+    {% endif -%}
     {% for origin in item.origins -%}
     server {{ origin.name }} {{ origin.name }}:{{ origin.port | default(40443) }} send-proxy-v2 check
     {% endfor %}
