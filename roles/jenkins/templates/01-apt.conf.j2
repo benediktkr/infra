@@ -7,6 +7,7 @@ server {
     {% endif -%}
     # listen   [::]:443 ssl;
 
+    include listen-proxy-protocol.conf;
     server_name {{ apt_url }};
     root /var/www/{{ apt_url }};
 
