@@ -5,8 +5,8 @@
 
 
 # PTR Records
-     local-data-ptr: "10.102.47.138 edge.s21.sudo.is."
-     #local-data-ptr: "192.168.21.1 edge.s21.sudo.is."
+
+local-data-ptr: "192.168.21.1 edge.s21.sudo.is."
 
 {% for name, wg in wg_clients.items() %}
 {%   if name.endswith(domain) %}

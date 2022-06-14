@@ -1,3 +1,24 @@
+PIHOLE_PTR=HOSTNAME
+
 BLOCKINGMODE=NULL
-REPLY_ADDR4=0.0.0.0
 RATE_LIMIT=0/0
+
+BLOCK_ESNI=true
+
+# reply with NXDOMAIN to queries of use-application-dns.net
+# this is the default value
+MOZILLA_CANARY=true
+
+# reply with NXDOMAIN to mask.icloud.com and mask-h2.icloud.com to
+# disable apples icloud private relay to prevent apps devices from
+# bypassing pihole
+BLOCK_ICLOUD_PR=true
+
+# when the gravity database is locked/busy, allow all queries
+REPLY_WHEN_BUSY=ALLOW
+
+LOGFILE=/var/log/pihole/pihole-FTL.log
+
+# this option is deprecated
+REPLY_ADDR4=0.0.0.0
+LOCAL_IPV4={{ wg_clients[inventory_hostname]['ip'] }}

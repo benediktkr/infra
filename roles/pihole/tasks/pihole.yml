@@ -29,6 +29,14 @@
     - pihole-nginx
   notify: reload nginx
 
+- name: create log dir
+  file:
+    path: /var/log/pihole
+    state: directory
+    mode: 0755
+    owner: "{{ item['owner'] | default('999') }}"
+    group: "{{ item['group'] | default('999') }}"
+
 - name: create dir structure
   file:
     path: "{{ pihole_root }}/{{ item['dir'] }}"
@@ -41,7 +49,6 @@
     - { dir: "etc/dnsmasq.d" }
     - { dir: "etc/unbound" }
   tags: docker
-  register: piholedocker
 
 - name: template dns overrides
   template:
@@ -53,6 +60,16 @@
   tags:
     - pihole-config
     - pihole-overrides
+
+- name: cron file
+  template:
+    src: pihole-cron.j2
+    dest: /etc/cron.d/pihole
+    owner: root
+    group: root
+    mode: 0600
+  tags:
+    - cron
 
 - name: template pihole-FTL.conf
   template:
@@ -180,15 +197,23 @@
       #- "{{ pihole_nginx_interface }}:53:53/udp"
       - "{{ wg_clients[inventory_hostname]['ip'] }}:53:53/udp"
       - 127.0.0.1:{{pihole_http_port}}:{{pihole_http_port}}
+    hostname: "{{ pihole_url }}"
     network_mode: bridge
     purge_networks: yes
     networks_cli_compatible: yes
     networks:
       - name: bridgewithdns
         ipv4_address: "{{ bridgewithdns.pihole }}"
-    volumes:
-      - "{{ pihole_root }}/etc/pihole:/etc/pihole"
-      - "{{ pihole_root }}/etc/dnsmasq.d:/etc/dnsmasq.d"
+    mounts:
+      - type: bind
+        source: "{{ pihole_root }}/etc/pihole"
+        target: /etc/pihole
+      - type: bind
+        source: "{{ pihole_root }}/etc/dnsmasq.d"
+        target: /etc/dnsmasq.d
+      - type: bind
+        source: /var/log/pihole
+        target: /var/log/pihole
   tags:
     - pihole-container
     - docker-containers
