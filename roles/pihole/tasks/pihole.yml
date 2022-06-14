@@ -20,7 +20,7 @@
 
 - name: template nginx vhost
   template:
-    src: pihole-vhost.j2
+    src: 01-pihole.conf.j2
     dest: /etc/nginx/sites-enabled/01-pihole-vhost
     #validate: /usr/sbin/nginx -t
   tags:

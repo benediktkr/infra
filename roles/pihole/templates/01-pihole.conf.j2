@@ -16,9 +16,8 @@ server {
     location /admin {
        proxy_pass         http://{{pihole_http_inet}}:{{ pihole_http_port }};
 
-       # proxy_redirect     http://{{pihole_http_inet}}:{{pihole_http_port}}/admin/ /;
-
        include /etc/nginx/require_auth_proxy.conf;
+
        proxy_set_header   Host $host;
        proxy_set_header   Origin $host;
        proxy_set_header   X-Forwarded-Host $http_host;

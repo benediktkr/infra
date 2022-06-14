@@ -6,10 +6,12 @@
 
 # PTR Records
 
-local-data-ptr: "192.168.21.1 edge.s21.sudo.is."
-
 {% for name, wg in wg_clients.items() %}
 {%   if name.endswith(domain) %}
 local-data-ptr: "{{ wg['ip'] }} {{ name }}."
 {%   endif %}
+{% endfor %}
+
+{% for item in s21_ptrs %}
+local-data-ptr: "{{ item['ip'] }} {{ item['name'] }}."
 {% endfor %}
