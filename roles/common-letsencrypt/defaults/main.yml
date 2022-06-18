@@ -1,0 +1,4 @@
+---
+
+letsencrypt_manager: no
+letsencrypt_wildcards: false

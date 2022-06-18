@@ -24,8 +24,8 @@ def renewed_cert(name):
     os.chmod(privkey, 0o640)
     shutil.chown(privkey, group="adm")
 
-    print(f"cert renewed: {name}")
-    matrixmsg.send(f"cert renewed: `{name}`")
+    print(f"renewed: {name}")
+    matrixmsg.send(f"cert: `{name}`")
 
 def main():
     try:

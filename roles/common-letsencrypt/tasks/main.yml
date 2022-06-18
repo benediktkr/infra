@@ -1,0 +1,3 @@
+---
+ - include: common-letsencrypt.yml
+   tags: common-letsencrypt

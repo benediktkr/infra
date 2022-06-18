@@ -15,5 +15,3 @@ enable_telegraf: false
 
 ssh_tunnels: []
 tunnel_user: ""
-
-letsencrypt_manager: no
