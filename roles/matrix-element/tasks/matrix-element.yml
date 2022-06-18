@@ -2,7 +2,7 @@
 
 - name: install certs
   copy:
-    src: "/usr/local/etc/certs/{{ item }}"
+    src: "/usr/local/etc/letsencrypt/live/{{ item }}"
     dest: "/usr/local/etc/certs/"
     owner: root
     group: root

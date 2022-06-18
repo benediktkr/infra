@@ -1,0 +1,76 @@
+---
+
+- name: install pip packages
+  pip:
+    name:
+      - certbot
+      - certbot-dns-cloudflare
+    state: latest
+    executable: pip3
+  tags:
+    - packages
+    - pip
+
+
+- name: ensure dir for live certs exists
+  file:
+    state: directory
+    path: "{{ item }}"
+    owner: root
+    group: adm
+    mode: 0770
+  with_items:
+    - /usr/local/etc/letsencrypt
+    - /usr/local/etc/letsencrypt/live
+
+- name: template letsencrypt configs
+  template:
+    src: "{{ item }}.j2"
+    dest: /etc/letsencrypt/{{ item }}
+    owner: root
+    group: root
+    mode: 0770
+  with_items:
+    - cloudflare-credentials.ini
+    - cli.ini
+
+- name: template renewal configs
+  template:
+    src: renewal.ini.j2
+    dest: /etc/letsencrypt/renewal/{{ item.name }}.conf
+    owner: root
+    group: root
+    mode: 0644
+  with_items: "{{ letsencrypt_sni }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: false
+
+# - name: temp force renew all certs
+#   command: /usr/local/bin/certbot certonly --force-renewal -d {{ item.name }}
+#   with_items: "{{ letsencrypt_sni }}"
+#   loop_control:
+#     label: "{{ item.name }}"
+#   tags:
+#     - force-renew
+
+- name: template scripts
+  template:
+    src: "{{ item }}.j2"
+    dest: "/usr/local/bin/{{ item }}"
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - letsencrypt.sh
+    - letsencrypt-hook.py
+
+- name: cron file
+  template:
+    src: certbot-cron.j2
+    dest: /etc/cron.d/certbot
+    owner: root
+    group: root
+    mode: 0600
+  tags:
+    - cron

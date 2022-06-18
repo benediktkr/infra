@@ -1,0 +1,39 @@
+#!/usr/bin/env python3
+
+import os
+import shutil
+import sys
+
+import matrixmsg
+
+filenames = ["cert.pem", "chain.pem", "fullchain.pem", "privkey.pem"]
+letsencrypt_live = "/etc/letsencrypt/live"
+cert_repo = "/usr/local/etc/letsencrypt/live"
+
+def renewed_cert(name):
+    src_dir = os.path.join(letsencrypt_live, name)
+    dest_dir = os.path.join(cert_repo, name)
+    os.makedirs(dest_dir, exist_ok=True)
+
+    for fname in filenames:
+        src = os.path.join(src_dir, fname)
+        dest = os.path.join(dest_dir, fname)
+        shutil.copy(src, dest)
+
+    privkey = os.path.join(dest_dir, 'privkey.pem')
+    os.chmod(privkey, 0o640)
+    shutil.chown(privkey, group="adm")
+
+    print(f"cert renewed: {name}")
+    matrixmsg.send(f"cert renewed: `{name}`")
+
+def main():
+    try:
+        for name in os.environ['RENEWED_DOMAINS'].split(" "):
+            renewed_cert(name)
+    except IndexError:
+        print("error: no 'RENEWED_DOMAINS' env var present!")
+
+
+if __name__ == "__main__":
+    sys.exit(main())

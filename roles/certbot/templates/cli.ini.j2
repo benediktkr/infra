@@ -1,0 +1,12 @@
+# ansible_managed
+
+email = {{ systems_email }}
+account = {{ acme_account }}
+
+deploy-hook = /usr/local/bin/letsencrypt-hook.py
+
+key-type = rsa
+preferred-challenges = dns-01,
+server = https://acme-v02.api.letsencrypt.org/directory
+authenticator = dns-cloudflare
+dns-cloudflare-credentials = /etc/letsencrypt/cloudflare-credentials.ini

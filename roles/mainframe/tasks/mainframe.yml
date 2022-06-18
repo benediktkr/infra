@@ -43,13 +43,12 @@
     name:
       - ansible
       - bdfr
-      - certbot
-      - certbot-dns-cloudflare
       #- feedgen
       - podgen
       - mutagen # for podgen
       - feedparser
       - internetarchive
+      - ldap3   # new_user.py
       - loguru
       - netaddr
       - requests
@@ -109,16 +108,25 @@
     - archive-wayback.py
     - youtube-dl-mirrors.sh
     - reddit-archives.sh
-    - letsencrypt.sh
   tags:
     - scripts
     - mainframe-scripts
     - archive
     - archive-scripts
-    - letsencrypt
-    - letsencrypt-scripts
-  # notify:
-  #   - run letsencrypt.sh
+
+- name: copy scripts
+  copy:
+    src: "{{ item }}"
+    dest: /usr/local/bin/{{ item }}
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - new_user.py
+  tags:
+    - scripts
+    - mainframe-scripts
+    - mainframe-scripts
 
 - name: cron file
   template:

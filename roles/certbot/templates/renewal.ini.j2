@@ -1,0 +1,18 @@
+# ansible_managed
+# renew_before_expiry = 30 days
+version = 1.28.0
+archive_dir = /etc/letsencrypt/archive/{{ item.name }}
+cert = /etc/letsencrypt/live/{{ item.name }}/cert.pem
+privkey = /etc/letsencrypt/live/{{ item.name }}/privkey.pem
+chain = /etc/letsencrypt/live/{{ item.name }}/chain.pem
+fullchain = /etc/letsencrypt/live/{{ item.name }}/fullchain.pem
+
+# Options used in the renewal process
+[renewalparams]
+account = {{ acme_account }}
+pref_challs = dns-01, ""
+authenticator = dns-cloudflare
+dns_cloudflare_credentials = /etc/letsencrypt/cloudflare-credentials.ini
+renew_hook = /usr/local/bin/letsencrypt-hook.py
+server = https://acme-v02.api.letsencrypt.org/directory
+key_type = rsa

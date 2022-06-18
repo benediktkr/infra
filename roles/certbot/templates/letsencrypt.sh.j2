@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# distributed from ansible
+
+set -e
+
+# dns creds: /root/.cerbot_cloudflare.init
+# config: /etc/letsencrypt/renewal/{{ domain }}.conf
+# new: certbot certonly --dns-cloudflare --dns-cloudflare-credentials /root/.certbot_cloudflare.ini --preferred-challenges dns -d $name1 -d $name2
+
+# set --config-dir, --work-dir, --logs-dir to something else?
+
+LOCKFILE="/tmp/letsencrypt.lock"
+lockfile -r 0 -l 3600  $LOCKFILE
+
+/usr/local/bin/certbot renew -q -n
+
+
+rm -f $LOCKFILE
