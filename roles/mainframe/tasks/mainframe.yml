@@ -173,17 +173,21 @@
 
 - name: install certs
   copy:
-    src: "/usr/local/etc/certs/{{ item }}"
+    src: "/usr/local/etc/letsencrypt/live/{{ item }}"
     dest: "/usr/local/etc/certs/"
     owner: root
     group: root
     mode: 0755
+  loop_control:
+    label: "{{ item }}"
   tags:
-    - letsencrypt
+    - letsencrypt-certs
+    - mainframe-nginx
   notify: reload nginx
-  no_log: true
   with_items:
     - "{{ archives_url }}"
+    - "{{ archivebox_url }}"
+    - static.{{ domain }}
 
 - name: template nginx vhost(s)
   template:
