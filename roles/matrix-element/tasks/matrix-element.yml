@@ -8,6 +8,7 @@
     group: root
     mode: 0755
   tags:
+    - letsencrypt-certs
     - letsencrypt
   notify: reload nginx
   vars:
