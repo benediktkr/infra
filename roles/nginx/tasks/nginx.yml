@@ -17,7 +17,7 @@
 #   tags:
 #     - packages
 
-- name: install nginx and wwwsudois
+- name: install nginx
   apt:
     name:
       - nginx
@@ -38,22 +38,6 @@
     - www.sudo.is
     - apt.sudo.is
 
-- name: install certs
-  copy:
-    src: "/usr/local/etc/certs/{{ item }}"
-    dest: "/usr/local/etc/certs/"
-    owner: root
-    group: root
-    mode: 0755
-  tags:
-    - letsencrypt
-    - wwwsudo.is
-    - www.sudo.is
-  notify: reload nginx
-  vars:
-    prediff_cmd: echo
-  with_items:
-    - www.{{ domain }}
 
 - name: make cache dir
   file:
@@ -118,18 +102,6 @@
     - nginx-config
     - nginx-default-vhost
 
-
-- name: template {{ domain }} vhost
-  template:
-    src: 01-{{ domain }}.conf.j2
-    dest: /etc/nginx/sites-enabled/01-{{ domain }}.conf
-  notify: reload nginx
-  when: '"auth" not in group_names'
-  tags:
-    - nginx-config
-    - www.sudo.is
-    - wwwsudo.is
-
 - name: cleanup
   file:
     path: "/etc/nginx/sites-enabled/{{ item }}"
@@ -137,6 +109,16 @@
   with_items:
     - 00-default-http
     - 00-default-https
+
+- name: cleanup for www role
+  file:
+    path: "{{ item }}"
+    state: absent
+  when: nginx_cleanup == true
+  with_items:
+    - /etc/nginx/sites-enabled/01-sudo.is.conf
+    - /usr/local/etc/certs/www.{{ domain }}
+  notify: reload nginx
 
 - name: template default proxy vhosts (if any)
   template:

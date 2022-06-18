@@ -1,0 +1,41 @@
+---
+
+- name: install wwwsudois
+  apt:
+    name:
+      - wwwsudois
+    update_cache: true
+    state: latest
+  environment:
+    PATH: "{{ ansible_env.PATH }}:/sbin:/usr/sbin"
+  when: not skip_apt|default(false)
+  tags:
+    - packages
+    - wwwsudois
+    - www.sudo.is
+    - apt.sudo.is
+
+- name: install certs
+  copy:
+    src: "/usr/local/etc/letsencrypt/live/{{ item }}"
+    dest: "/usr/local/etc/certs/"
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - letsencrypt-certs
+  notify: reload nginx
+  vars:
+    prediff_cmd: echo
+  with_items:
+    - www.{{ domain }}
+
+- name: template {{ domain }} vhost
+  template:
+    src: 01-{{ domain }}.conf.j2
+    dest: /etc/nginx/sites-enabled/01-{{ domain }}.conf
+  notify: reload nginx
+  tags:
+    - nginx-config
+    - www.sudo.is
+    - wwwsudo.is
