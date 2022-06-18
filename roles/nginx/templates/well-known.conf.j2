@@ -18,3 +18,10 @@ location = /.well-known/carddav {
 location = /.well-known/caldav {
     return 301 https://{{ nextcloud_url }}/remote.php/dav;
 }
+
+location = /.well-known/openid-configuration {
+    return 301 https://{{ authelia_login_url }}/.well-known/openid-configuration;
+}
+location = /.well-known/oauth-authorization-server {
+    return 301 https://{{ authelia_login_url }}/.well-known/oauth-authorization-server;
+}

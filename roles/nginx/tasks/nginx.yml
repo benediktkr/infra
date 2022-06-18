@@ -101,6 +101,7 @@
   tags:
     - nginx-conf
     - authelia-nginx
+    - well-known
   notify: reload nginx
 
 - name: template default index.html

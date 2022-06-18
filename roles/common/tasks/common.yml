@@ -76,7 +76,7 @@
     - ssh
     - hostkeys
 
-- name: Set timezone to Europe/Berlin
+- name: Set timezone to UTC
   timezone:
     name: Etc/UTC
   tags:

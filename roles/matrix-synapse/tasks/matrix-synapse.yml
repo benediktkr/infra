@@ -52,6 +52,7 @@
     - synapse.env
   tags:
     - matrix-config
+    - homeserver.yaml
 
 - name: copy signing key
   copy:
