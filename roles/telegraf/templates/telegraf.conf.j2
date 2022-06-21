@@ -52,21 +52,21 @@
   ## Log at debug level.
   # debug = false
   ## Log only error level messages.
-  # quiet = false
+  quiet = false
 
   ## Log target controls the destination for logs and can be one of "file",
   ## "stderr" or, on Windows, "eventlog".  When set to "file", the output file
   ## is determined by the "logfile" setting.
-  # logtarget = "file"
+  logtarget = "file"
 
   ## Name of the file to be logged to when using the "file" logtarget.  If set to
   ## the empty string then logs are written to stderr.
-  # logfile = ""
+  logfile = "/var/log/telegraf/telegraf.log"
 
   ## The logfile will be rotated after the time interval specified.  When set
   ## to 0 no time based rotation is performed.  Logs are rotated only when
   ## written to, if there is no log activity rotation may be delayed.
-  # logfile_rotation_interval = "0d"
+  #logfile_rotation_interval = "1d"
 
   ## The logfile will be rotated when it becomes larger than the specified
   ## size.  When set to 0 no size based rotation is performed.
