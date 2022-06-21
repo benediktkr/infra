@@ -29,13 +29,20 @@
     - pihole-nginx
   notify: reload nginx
 
-- name: create log dir
+- name: create log dirs
   file:
-    path: /var/log/pihole
+    path: /var/log/{{ item.name }}
     state: directory
     mode: 0755
-    owner: "{{ item['owner'] | default('999') }}"
-    group: "{{ item['group'] | default('999') }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.owner }}"
+  with_items:
+    - name: pihole
+      owner: "{{ pihole_uid }}"
+    - name: unbound0
+      owner: "{{ pihole_uid }}"
+    - name: unbound1
+      owner: "{{ pihole_uid }}"
 
 - name: create dir structure
   file:
@@ -60,6 +67,7 @@
   tags:
     - pihole-config
     - pihole-overrides
+  notify: pihole restartdns
 
 - name: cron file
   template:
@@ -81,6 +89,7 @@
   tags:
     - pihole-config
     - pihole-overrides
+  notify: restart pihole
 
 - name: template dhcp options if dhcp server
   template:
@@ -92,6 +101,20 @@
   tags:
     - pihole-config
   when: pihole_dhcp
+  notify: restart pihole
+
+- name: template other dnsmasq.d files
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ pihole_root }}/etc/dnsmasq.d/{{ item }}"
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - pihole-config
+  with_items:
+    - "99-edns.conf"
+  notify: restart pihole
 
 - name: template unbound config
   template:
@@ -105,6 +128,17 @@
   with_items:
     - unbound.conf
     - a-records.conf
+  notify: restart unbound
+
+- name: template unbound custom entrypoint with uid change
+  template:
+    src: unbound-entrypoint.sh.j2
+    dest: "{{ pihole_root }}/unbound-entrypoint.sh"
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - unbound
 
 - name: disable systemd-resolved or named if they are active
   service:
@@ -115,12 +149,6 @@
   with_items:
     - systemd-resolved
     - named
-
-- name: enable null blocking
-  lineinfile:
-    path: "{{ pihole_root}}/etc/pihole/pihole-FTL.conf"
-    line: "BLOCKINGMODE=NULL"
-    create: true
 
 # NOTE: For a DNS server with lots of short-lived connections, you may
 # wish to consider adding --net=host to the run command for
@@ -146,6 +174,13 @@
         read_only: true
         source: "{{ pihole_root }}/etc/unbound/a-records.conf"
         target: /opt/unbound/etc/unbound/a-records.conf
+      - type: bind
+        source: /var/log/{{ item }}/
+        target: /opt/unbound/etc/unbound/log/
+      - type: bind
+        source: "{{ pihole_root }}/unbound-entrypoint.sh"
+        target: /unbound-entrypoint.sh
+    entrypoint: /unbound-entrypoint.sh
     container_default_behavior: compatibility
     networks_cli_compatible: false
     networks:
@@ -164,7 +199,7 @@
 - name: start docker container
   docker_container:
     name: "pihole"
-    image: "pihole/pihole:{{ pihole_version | default('latest') }}"
+    image: "pihole/pihole:latest"
     auto_remove: no
     detach: yes
     pull: yes
@@ -224,3 +259,19 @@
     host: localhost
     sleep: 4
   tags: pihole-container
+
+- name: template filebeat configs
+  template:
+    src: "filebeat-{{ item }}.yml.j2"
+    dest: "/etc/filebeat/inputs.d/{{ item }}.yml"
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - unbound
+  tags:
+    - filebeat
+    - filebeat-input
+    - filebeat-pihole
+    - filebeat-unbound
+  notify: restart filebeat

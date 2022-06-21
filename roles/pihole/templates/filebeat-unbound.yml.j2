@@ -1,0 +1,16 @@
+---
+
+- type: filestream
+  paths:
+    - /var/log/unbound0/unbound.log
+    - /var/log/unbound1/unbound.log
+
+  scan_frequency: 10s
+  enabled: true
+
+  fields_under_root: true
+  fields:
+    service.type: unbound
+
+  tags:
+    - unbound

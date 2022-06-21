@@ -15,3 +15,30 @@
   service:
     name: nginx
     state: reloaded
+
+- name: pihole restartdns
+  command: docker exec pihole pihole restartdns
+
+- name: restart pihole
+  docker_container:
+    name: pihole
+    image: pihole/pihole:latest
+    state: started
+    restart: true
+
+- name: restart unbound
+  docker_container:
+    name: "{{ item }}"
+    image: mvance/unbound:latest
+    state: started
+    restart: true
+  with_items:
+    - unbound0
+    - unbound1
+  loop_control:
+    label: "{{ item }}"
+
+- name: restart filebeat
+  service:
+    name: filebeat
+    state: restarted

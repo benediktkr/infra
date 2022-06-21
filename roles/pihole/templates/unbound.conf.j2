@@ -36,6 +36,13 @@ server:
     # Listen to for queries from clients and answer from this network interface
     # and port.
     interface: 0.0.0.0@53
+    do-ip4: yes
+    do-udp: yes
+    do-tcp: yes
+
+    do-ip6: yes
+    prefer-ip6: no
+
 
     # Rotates RRSet order in response (the pseudo-random number is taken from
     # the query ID, for speed and thread safety).
@@ -48,23 +55,42 @@ server:
     # LOGGING
     ###########################################################################
 
-    # Do not print log lines to inform about local zone actions
-    log-local-actions: no
+    # print log lines to inform about local zone actions
+    log-local-actions: yes
 
-    # Do not print one line per query to the log
+    # print one line per query to the log
     log-queries: no
 
-    # Do not print one line per reply to the log
+    # print one line per reply to the log
     log-replies: no
 
     # Do not print log lines that say why queries return SERVFAIL to clients
-    log-servfail: no
+    log-servfail: yes
 
     # Further limit logging
-    logfile: /dev/null
+    logfile: /opt/unbound/etc/unbound/log/unbound.log
 
-    # Only log errors
-    verbosity: 0
+    # Level 0 means no verbosity, only errors.
+    # Level 1 gives operational information.
+    # Level 2 gives detailed operational information.
+    # Level 3 gives query level information, output per query.
+    # Level 4 gives algorithm level information.
+    # Level 5 logs client identification for cache misses
+    verbosity: 1
+    # At 0, off.
+    #
+    # At 1, for every user query that fails a line is printed to the
+    # logs. This way you can monitor what happens with validation. Use
+    # a diagnosis tool, such as dig or drill, to find out why
+    # validation is failing for these queries.
+    #
+    # At 2, not only the query that failed is printed but also the
+    # reason why unbound thought it was wrong and which server sent
+    # the faulty data.
+    val-log-level: 2
+
+    log-time-ascii: no
+    use-syslog: no
 
     ###########################################################################
     # PRIVACY SETTINGS
@@ -189,12 +215,9 @@ server:
     # Unbound suggests a value of 10 million.
     unwanted-reply-threshold: 10000
 
-    # Use 0x20-encoded random bits in the query to foil spoof attempts. This
-    # perturbs the lowercase and uppercase of query names sent to authority
-    # servers and checks if the reply still has the correct casing.
-    # This feature is an experimental implementation of draft dns-0x20.
-    # Experimental option.
-    use-caps-for-id: yes
+    # Don't use Capitalization randomization as it known to cause DNSSEC issues sometimes
+    # see https://discourse.pi-hole.net/t/unbound-stubby-or-dnscrypt-proxy/9378 for further details
+    use-caps-for-id: no
 
     # Help protect users that rely on this validator for authentication from
     # potentially bad data in the additional section. Instruct the validator to

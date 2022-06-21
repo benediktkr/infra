@@ -1,7 +1,6 @@
 ---
 
 pihole_root: "/srv/pihole"
-pihole_version: latest
 pihole_cond: "False"
 pihole_cond_ip: ""
 pihole_cond_domain: ""
@@ -9,3 +8,6 @@ pihole_dns_overrides: []
 pihole_http_iniet: 127.0.0.1
 pihole_http_port: 8081
 pihole_dhcp: false
+
+pihole_uid: '999'
+pihole_gid: '999'
