@@ -66,6 +66,12 @@ filter {
       overwrite => [ "message" ]
     }
   }
+  if "unbound" in [tags] {
+    grok {
+      match => ["message", "\[%{NUMBER}\] unbound\[%{DATA}\:%{DATA}\] %{LOGLEVEL:level}\: %{GREEDYDATA:message}"]
+      overwrite => [ "message" ]
+    }
+  }
   if "nextcloud" in [tags] {
     mutate {
       remove_field => [ "time",  "exception.Trace", "exception.Previous" ]
@@ -163,3 +169,16 @@ output {
    # file {
    #   path => "/usr/share/logstash/logs/logfile-%{+YYYY-MM-dd}.log"
    # } #}
+
+    # match multiple:
+    #
+    # filter {
+    #   grok {
+    #     match => {
+    #       "message" => [
+    #         "Duration: %{NUMBER:duration}",
+    #         "Speed: %{NUMBER:speed}"
+    #       ]
+    #     }
+    #   }
+    # }
