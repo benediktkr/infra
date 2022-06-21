@@ -57,6 +57,6 @@ AllowedIPs = {{ inbound_peer.ip }}/32, {{ inbound_peer.allowed|join(", ") }}
 {% else %}
 AllowedIPs = {{ inbound_peer.ip }}/32
 {% endif %}
-PersistentKeepalive = 25
+PersistentKeepalive = {{ inbound_peer.persistent_keepalive|default('25') }}
 
 {% endfor %}
