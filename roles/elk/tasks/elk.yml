@@ -19,6 +19,7 @@
     prediff_cmd: echo
   with_items:
     - "{{ kibana_url }}"
+    - "{{ domain }}"
 
 - name: create dir structure
   file:
