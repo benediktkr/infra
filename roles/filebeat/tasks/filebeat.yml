@@ -41,6 +41,7 @@
     mode: 0600
   tags:
     - filebeat
+    - filebeat-config
   notify: restart filebeat
 
 - name: start and enable filebeat

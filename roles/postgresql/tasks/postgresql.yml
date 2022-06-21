@@ -83,8 +83,9 @@
     dest: "/etc/filebeat/modules.d/postgresql.yml"
     owner: root
     group: root
-    mode: 0600
+    mode: 0644
   tags:
+    - filebeat-input
     - filebeat
   notify: restart filebeat
 

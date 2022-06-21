@@ -160,7 +160,7 @@
     dest: "/etc/filebeat/inputs.d/nginx.yml"
     owner: root
     group: root
-    mode: 0600
+    mode: 0644
   tags:
     - filebeat
     - filebeat-nginx

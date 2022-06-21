@@ -176,8 +176,9 @@
     dest: "/etc/filebeat/inputs.d/nextcloud.yml"
     owner: root
     group: root
-    mode: 0600
+    mode: 0644
   tags:
     - filebeat
+    - filebeat-input
     - filebeat-nextcloud
   notify: restart filebeat
