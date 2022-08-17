@@ -260,6 +260,7 @@
   tags:
     - ldap-users
 
+
 - name: create groups
   community.general.ldap_entry:
     dn: "cn={{ item }},ou=groups,{{ openldap_dc }}"
@@ -273,9 +274,10 @@
     bind_pw: "{{ openldap_admin_pass }}"
   loop_control:
     label: "{{ item }}"
-  with_items: "{{ openldap_groups }} + ['empty']"
+  with_items: "{{ openldap_groups }}"
   tags:
     - ldap-users
+    - ldap-groups
 
 - name: adding inventory users to groups
   community.general.ldap_attrs:
