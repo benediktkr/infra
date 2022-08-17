@@ -1,3 +1,0 @@
----
- - include: matrix-bridge-email.yml
-   tags: matrix-bridge-email
