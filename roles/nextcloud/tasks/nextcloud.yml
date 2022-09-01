@@ -13,6 +13,7 @@
     - letsencrypt
     - letsencrypt-certs
     - nextcloud-nginx
+    - nextcloud-letsencrypt
   notify: reload nginx
   vars:
     prediff_cmd: echo
@@ -23,7 +24,7 @@
   file:
     path: "{{ item[1].root }}/{{ item[0].dir }}"
     state: directory
-    mode: 0750
+    mode: "{{ item[0].mode }}"
     owner: "{{ item[0].owner }}"
     group: "{{ item[0].group }}"
   loop_control:
@@ -32,9 +33,11 @@
     - - dir: html
         owner: www-data
         group: root # changes back otherwise
+        mode: "0755"
       - dir: data
         owner: www-data
         group: www-data
+        mode: "0750"
     - "{{ nextclouds }}"
 
 - name: template scripts
@@ -72,22 +75,22 @@
   with_items: "{{ nextclouds }}"
   loop_control:
     label: "{{ item.name }}"
-  when: False  # disabled during migration
+  when: false
 
 - name: redis containers
   docker_container:
     name: "redis_{{ item.name }}"
     image: "redis:latest"
     hostname: "redis_{{ item.name }}"
-    auto_remove: no
-    detach: yes
+    auto_remove: false
+    detach: true
     pull: yes
     state: "{{ item.state | default('started') }}"
     restart_policy: "unless-stopped"
     container_default_behavior: compatibility
     env:
       REDIS_HOST: "redis_{{ item.name }}"
-    networks_cli_compatible: no
+    networks_cli_compatible: false
     networks:
       - name: bridgewithdns
     healthcheck:
@@ -114,16 +117,17 @@
     name: "{{ item.name }}"
     hostname: "{{ item.name }}"
     image: "nextcloud:{{ item.version }}"
-    auto_remove: no
-    detach: yes
-    pull: yes
+    auto_remove: false
+    detach: true
+    pull: true
     state: "{{ item.state | default('started') }}"
     restart_policy: "unless-stopped"
     container_default_behavior: compatibility
     env:
       NEXTCLOUD_DATA_DIR: "/data"
+      PHP_MEMORY_LIMIT: "2048M"
     ports:
-      - "127.0.0.1:{{ item.exposed_port }}:{{ item.container_port }}"
+      - 127.0.0.1:{{ item.exposed_port }}:{{ item.container_port }}
     mounts:
       - type: bind
         source: "{{ item.root }}/data"
@@ -132,7 +136,7 @@
         source: "{{ item.root }}/html"
         target: /var/www/html
 
-    networks_cli_compatible: no
+    networks_cli_compatible: false
     networks:
       - name: bridgewithdns
         ipv4_address: "{{ item.docker_ip }}"
@@ -145,8 +149,11 @@
 
 - name: template nginx vhost
   template:
-    src: nginx-site.conf.j2
-    dest: /etc/nginx/sites-enabled/01-nextcloud
+    src: "01-{{ item.name }}.conf.j2"
+    dest: "/etc/nginx/sites-enabled/01-{{ item.name }}"
+  with_items: "{{ nextclouds }}"
+  loop_control:
+    label: "01-{{ item.name }}"
   tags:
     - nginx
     - nextcloud-nginx
@@ -156,7 +163,9 @@
   template:
     src: nextcloud-cron.j2
     dest: /etc/cron.d/nextcloud
-  tags: cron
+  tags:
+    - cron
+    - nextcloud-cron
 
 - name: wait for nextclouds
   wait_for:

@@ -1,4 +1,4 @@
 ---
 
-- include: nextcloud.yml
+- import_tasks: nextcloud.yml
   tags: nextcloud
