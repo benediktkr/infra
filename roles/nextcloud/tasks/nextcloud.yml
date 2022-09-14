@@ -32,13 +32,57 @@
   with_nested:
     - - dir: html
         owner: www-data
-        group: root # changes back otherwise
+        group: www-data
         mode: "0755"
       - dir: data
         owner: www-data
         group: www-data
         mode: "0750"
+      - dir: php-fpm.d
+        owner: www-data
+        group: www-data
+        mode: "0750"
     - "{{ nextclouds }}"
+
+- name: copy our php-fpm.d/www.conf
+  copy:
+    src: php-fpm.d/www.conf
+    dest: "{{ item.root }}/php-fpm.d/www.conf"
+    owner: root
+    group: root
+    mode: "0750"
+  with_items: "{{ nextclouds }}"
+  loop_control:
+    label: "{{item.root}}/php-fpm.d/www.conf"
+  tags:
+    - nextcloud-php
+    - nextcloud-php-www.conf
+
+- name: copy our php-fpm.d/docker.conf
+  copy:
+    src: php-fpm.d/docker.conf
+    dest: "{{ item.root }}/php-fpm.d/docker.conf"
+    owner: root
+    group: root
+    mode: "0750"
+  with_items: "{{ nextclouds }}"
+  loop_control:
+    label: "{{item.root}}/php-fpm.d/docker.conf"
+  tags:
+    - nextcloud-php
+
+- name: copy our php-fpm.d/zz-docker.conf
+  copy:
+    src: php-fpm.d/zz-docker.conf
+    dest: "{{ item.root }}/php-fpm.d/zz-docker.conf"
+    owner: root
+    group: root
+    mode: "0750"
+  with_items: "{{ nextclouds }}"
+  loop_control:
+    label: "{{item.root}}/php-fpm.d/zz-docker.conf"
+  tags:
+    - nextcloud-php
 
 - name: template scripts
   template:
@@ -127,7 +171,7 @@
       NEXTCLOUD_DATA_DIR: "/data"
       PHP_MEMORY_LIMIT: "2048M"
     ports:
-      - 127.0.0.1:{{ item.exposed_port }}:{{ item.container_port }}
+      - 127.0.0.1:{{ item.exposed_port }}:9000
     mounts:
       - type: bind
         source: "{{ item.root }}/data"
@@ -135,6 +179,9 @@
       - type: bind
         source: "{{ item.root }}/html"
         target: /var/www/html
+      - type: bind
+        source: "{{ item.root }}/php-fpm.d"
+        target: /usr/local/etc/php-fpm.d
 
     networks_cli_compatible: false
     networks:
@@ -169,10 +216,12 @@
 
 - name: wait for nextclouds
   wait_for:
-    port: "{{ item.container_port }}"
+    port: "9000"
     host: "{{ item.docker_ip }}"
     sleep: 2
-  when: item.docker_ip is defined and item.state == "started"
+  when:
+    - item.docker_ip is defined
+    - item.state == "started"
   with_items: "{{ nextclouds }}"
   loop_control:
     label: "{{ item.name }}"
