@@ -35,7 +35,7 @@ TOPT device resets)
 field         | description
 --------------|------------
 `id`          | incremental id (int)
-`jti`         | the token
+`jti`         | an uuid
 `iat`         | creation time
 `issued_ip`   | client ip
 `exp`         | expiration time
