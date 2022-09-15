@@ -9,3 +9,14 @@
   service:
     name: filebeat
     state: restarted
+
+- name: restart nextcloud
+  docker_container:
+    name: "{{ item.name }}"
+    state: "{{ item.state }}"
+    restart: true
+  when:
+    - item.state == "started"
+  with_items: "{{ nextclouds }}"
+  loop_control:
+    label: "{{ item.name }}"

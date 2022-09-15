@@ -20,6 +20,17 @@
   with_items:
     - "{{ nextclouds }}"
 
+- name: create log dir
+  file:
+    path: /var/log/{{ item.name }}
+    state: directory
+    mode: "0755"
+    owner: www-data
+    group: www-data
+  loop_control:
+    label: /var/log/{{ item.name }}
+  with_items: "{{ nextclouds }}"
+
 - name: create dir structure
   file:
     path: "{{ item[1].root }}/{{ item[0].dir }}"
@@ -54,6 +65,7 @@
   with_items: "{{ nextclouds }}"
   loop_control:
     label: "{{item.root}}/php-fpm.d/www.conf"
+  notify: restart nextcloud
   tags:
     - nextcloud-php
     - nextcloud-php-www.conf
@@ -68,6 +80,7 @@
   with_items: "{{ nextclouds }}"
   loop_control:
     label: "{{item.root}}/php-fpm.d/docker.conf"
+  notify: restart nextcloud
   tags:
     - nextcloud-php
 
@@ -81,6 +94,7 @@
   with_items: "{{ nextclouds }}"
   loop_control:
     label: "{{item.root}}/php-fpm.d/zz-docker.conf"
+  notify: restart nextcloud
   tags:
     - nextcloud-php
 
@@ -182,7 +196,9 @@
       - type: bind
         source: "{{ item.root }}/php-fpm.d"
         target: /usr/local/etc/php-fpm.d
-
+      - type: bind
+        source: /var/log/{{ item.name }}
+        target: /var/log
     networks_cli_compatible: false
     networks:
       - name: bridgewithdns
