@@ -15,6 +15,14 @@
   vars:
     prediff_cmd: echo
 
+- name: create log dir
+  file:
+    state: directory
+    path: /var/log/invidious
+    owner: root
+    group: 1000
+    mode: 0775
+
 - name: template nginx vhost
   template:
     src: 01-invidious.conf.j2
@@ -69,6 +77,10 @@
     networks:
       - name: bridgewithdns
         ipv4_address: "{{ bridgewithdns.invidious }}"
+    mounts:
+      - type: bind
+        source: /var/log/invidious
+        target: /var/log/invidious
     healthcheck:
       interval: 30s
       timeout: 3s
@@ -95,6 +107,8 @@
         registration_enabled: false
         popular_enabled: false
         default_home: Subscriptions
+        output: /var/log/invidious/invidious.log
+        log_level: info
   tags:
     - invidious-container
     - docker-containers
@@ -119,3 +133,17 @@
   tags:
     - backup
     - cron
+
+- name: template filebeat configs
+  template:
+    src: "filebeat-{{ item }}.yml.j2"
+    dest: "/etc/filebeat/inputs.d/{{ item }}.yml"
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - invidious
+  tags:
+    - filebeat
+    - filebeat-input
+  notify: restart filebeat

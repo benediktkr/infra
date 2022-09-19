@@ -1,0 +1,18 @@
+#!/bin/bash
+
+set -e
+
+{% set user = systemuserlist.invidious %}
+
+echo "container user: invidious"
+echo "container group: invidious"
+echo
+echo "system username: {{ user.username }}"
+echo
+echo "setting uid to: {{ user.uid }}"
+echo "setting gid to: {{ user.gid }}"
+
+groupmod -g {{ user.gid }} invidious
+usermod -u {{ user.uid }} -g {{ user.gid }} invidious
+
+exec  /invidious/invidious

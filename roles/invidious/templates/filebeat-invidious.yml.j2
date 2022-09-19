@@ -1,0 +1,16 @@
+---
+
+- type: filestream
+  paths:
+    - /var/log/invidious/invidious.log
+
+  scan_frequency: 10s
+  enabled: true
+
+  fields_under_root: true
+  fields:
+    service.type: invidious
+
+  tags:
+    - youbahn
+    - invidious
