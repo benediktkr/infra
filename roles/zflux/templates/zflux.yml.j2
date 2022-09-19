@@ -1,14 +1,14 @@
 ---
 
-# should be capable of both bind and connect tbh
+{% set broker = sudoisbot.broker %}
 
 zmq:
   topic: {{ zflux.zmq.topic }}
-{% if zflux.bind is defined %}
-  # bind: 'tcp://*:{{ zflux.zmq.bind_port|default("5558") }}'
-  bind: {{ zflux.bind }}
+  metrics: 'tcp://127.0.0.1:5558'
+{% if zflux.zmq.listen_addr is defined %}
+  bind: 'tcp://{{ zflux.zmq.bind_addr }}:{{ zflux.zmq.bind_port }}'
 {% else %}
-  connect: 'tcp://{{ broker }}:5560'
+  connect: 'tcp://{{ broker.name }}:{{ broker.be_port }}'
 {% endif %}
 
 

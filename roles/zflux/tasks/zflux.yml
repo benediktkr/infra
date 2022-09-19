@@ -1,29 +1,45 @@
 ---
 
+- name: make dirs
+  file:
+    path: "{{ systemuserlist.zflux.home }}/{{ item.name }}"
+    state: directory
+    mode: 0770
+    owner: zflux
+    group: zflux
+  loop_control:
+    label: "{{ item.name }}"
+  with_items:
+    - name: data
+
 - name: template config
   template:
     src: zflux.yml.j2
     dest: /usr/local/etc/zflux.yml
-  #notify: restart zflux
 
-# - name: start docker container
-#   docker_container:
-#     name: "zflux"
-#     image: "benediktkr/zflux:latest"
-#     auto_remove: no
-#     detach: yes
-#     pull: yes
-#     restart_policy: "unless-stopped"
-#     state: started
-#     env:
-#       ZFLUX_LOGFILE: /data/zflux.log
-#     ports:
-#       - "{{ zflux.zmq.bind_port }}:{{ zflux.zmq.bind_port }}/tcp"
-#     volumes:
-#       - /usr/local/etc/zflux.yml:/etc/zflux.yml
-#       - /srv/zflux:/data
-#     networks_cli_compatible: no
-#     networks:
-#       - name: bridge
-#       - name: bridgewithdns
-#   tags: zflux-container
+- name: start docker container
+  docker_container:
+    name: "zflux"
+    image: git.sudo.is/ben/zflux:latest
+    auto_remove: false
+    detach: true
+    pull: true
+    restart_policy: "unless-stopped"
+    state: started
+    env:
+      ZFLUX_LOGFILE: /data/zflux.log
+    # ports:
+    #  - "{{ zflux.zmq.bind_port }}:{{ zflux.zmq.bind_port }}/tcp"
+    mounts:
+      - type: bind
+        source: /usr/local/etc/zflux.yml
+        target: /etc/zflux.yml
+        read_only: true
+      - type: bind
+        source: "{{ systemuserlist.zflux.home }}/data"
+        target: /data
+    networks_cli_compatible: no
+    networks:
+      - name: bridge
+      - name: bridgewithdns
+  tags: zflux-container
