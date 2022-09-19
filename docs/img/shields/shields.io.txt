@@ -1,0 +1,1 @@
+example: https://img.shields.io/static/v1?label=git&message=git.sudo.is/ben/sudoisbot&logo=gitea&style=flat-square&logoWidth=20&color=darkgreen

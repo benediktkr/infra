@@ -1,8 +1,12 @@
 # infra
 
+[![git](docs/img/shields/git.sudo.is-ben-infra.svg)](https://git.sudo.is/ben/infra)
+[![github](docs/img/shields/github-benediktkr.svg)](https://github.com/benediktkr/infra)
+[![matrix](docs/img/shields/darkroom.svg)](https://matrix.to/#/#darkroom:sudo.is)
+
 the ansible repo for the [sudo.is](https://www.sudo.is) infrastructure.
 
-![](https://static.sudo.is/img/lokun-logo.png)
+![logo](docs/img/logo.png)
 
 ## related projects
 
@@ -31,7 +35,6 @@ this repo also deploys/orchestrates a bunch of "projects":
 
 and some docker images that needed customizing or as a way to package `.deb`:
 
-
  * [jenkins-docker](https://git.sudo.is/ben/jenkins-docker)
  * [mergerfs-docker](https://git.sudo.is/ben/mergerfs-docker)
  * [openldap-docker](https://git.sudo.is/ben/openldap-docker)
@@ -48,6 +51,6 @@ and some docker images that needed customizing or as a way to package `.deb`:
 
 ## mirrors
 
- * upstream repo: https://git.sudo.is/ben/infra
- * github mirror: https://github.com/benediktkr/infra
+ * :gitea: repo: https://git.sudo.is/ben/infra
+ * :github: mirror: https://github.com/benediktkr/infra
  * bitbucket mirror (private): https://bitbucket.org/benedikt/infra
