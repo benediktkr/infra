@@ -1,0 +1,11 @@
+---
+
+- name: install synapse-admin
+  apt:
+    name: sudois-synapse-admin
+    update_cache: true
+    state: latest
+  when: not skip_apt|default(false)
+  tags:
+    - packages
+    - apt.sudo.is

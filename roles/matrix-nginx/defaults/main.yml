@@ -1,0 +1,9 @@
+---
+
+matrix_webhook_enabled: false
+
+matrix_registration_enabled: false
+matrix_hydrogen_enabled: false
+matrix_admin_enabled: false
+
+matrix_bridges_enabled: false

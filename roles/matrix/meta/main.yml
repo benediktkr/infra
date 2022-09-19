@@ -4,7 +4,9 @@ dependencies:
   - postgresql
   - matrix-nginx
   - matrix-synapse
+  - matrix-admin
+
   - matrix-element
-  - matrix-registration
-  - matrix-bridge-smtp
   - matrix-hydrogen
+  - matrix-bridge-smtp
+  - matrix-registration

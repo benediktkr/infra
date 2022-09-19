@@ -92,7 +92,7 @@ allow_public_rooms_without_auth: false
 # If set to 'true', allows any other homeserver to fetch the server's public
 # rooms directory via federation. Defaults to 'false'.
 #
-#allow_public_rooms_over_federation: true
+allow_public_rooms_over_federation: false
 
 # The default room version for newly created rooms.
 #
@@ -516,11 +516,11 @@ request_token_inhibit_3pid_errors: true
 # instance, if using certbot, use `fullchain.pem` as your certificate,
 # not `cert.pem`).
 #
-tls_certificate_path: "/data/{{ matrix_domain }}.crt"
+#tls_certificate_path: "/data/{{ matrix_domain }}.crt"
 
 # PEM-encoded private key for TLS
 #
-tls_private_key_path: "/data/{{ matrix_domain }}.key"
+#tls_private_key_path: "/data/{{ matrix_domain }}.key"
 
 # Whether to verify TLS server certificates for outbound federation requests.
 #

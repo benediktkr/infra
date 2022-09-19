@@ -86,13 +86,14 @@ server {
   }
   {% endif %}
 
+  {% if matrix_hydrogen_enabled -%}
   location /hydrogen {
     alias /usr/local/share/hydrogen-web/;
     charset utf-8;
     index index.html;
     autoindex off;
   }
-
+  {% endif %}
 
   include /etc/nginx/authelia_internal.conf;
   location /_synapse/admin {
@@ -103,11 +104,25 @@ server {
     proxy_set_header X-Forwarded-Proto $scheme;
     proxy_set_header Host $host;
   }
+
+  {% if matrix_admin_enabled -%}
+  # to work around authelia not matching /_a/ requests, with this error:
+  #
+  #  No matching rule for subject https://{{ matrix_url }}/_a/... Applying default policy.
+
+  location = /_a {
+    return 302 https://{{ matrix_url }}/_a/index.html;
+  }
+
   location /_a/ {
     include /etc/nginx/require_auth.conf;
-    include /etc/nginx/require_auth_proxy.conf;
-    proxy_pass http://{{ bridgewithdns.matrix_admin }}:80/;
+
+    alias /usr/local/share/synapse-admin/;
+    charset utf-8;
+    index index.html;
+    autoindex off;
   }
+  {% endif %}
 
   {% if matrix_bridges_enabled -%}
   location /_telegram/public {

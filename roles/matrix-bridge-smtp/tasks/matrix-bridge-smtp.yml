@@ -4,7 +4,7 @@
 - name: start matrix-smtp-webhook container
   docker_container:
     name: matrix-smtp-webhook
-    image: dockreg.sudo.is/matrix-smtp-webhook:latest
+    image: git.sudo.is/ops/matrix-smtp-webhook:latest
     auto_remove: false
     detach: true
     pull: true

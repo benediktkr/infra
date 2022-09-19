@@ -112,14 +112,14 @@
       - type: bind
         source: "{{ systemuserlist.matrix.home }}/log"
         target: /log
-      - type: bind
-        read_only: true
-        source: /usr/local/etc/certs/{{ matrix_domain }}/fullchain.pem
-        target: /data/{{ matrix_domain }}.crt
-      - type: bind
-        read_only: true
-        source: /usr/local/etc/certs/{{ matrix_domain }}/privkey.pem
-        target: /data/{{ matrix_domain }}.key
+      # - type: bind
+      #   read_only: true
+      #   source: /usr/local/etc/certs/{{ matrix_domain }}/fullchain.pem
+      #   target: /data/{{ matrix_domain }}.crt
+      # - type: bind
+      #   read_only: true
+      #   source: /usr/local/etc/certs/{{ matrix_domain }}/privkey.pem
+      #   target: /data/{{ matrix_domain }}.key
     healthcheck:
       interval: 15s
       timeout: 5s
@@ -131,28 +131,6 @@
     entrypoint: /usr/local/bin/python -m synapse.app.homeserver --config-path /data/homeserver.yaml
   tags:
     - matrix-container
-    - docker-containers
-
-- name: start synapse-admin container
-  docker_container:
-    name: matrix-admin
-    image: awesometechnologies/synapse-admin:latest
-    auto_remove: false
-    detach: true
-    pull: true
-    restart_policy: "unless-stopped"
-    state: started
-    container_default_behavior: compatibility
-    networks_cli_compatible: false
-    networks:
-      - name: bridgewithdns
-        ipv4_address: "{{ bridgewithdns.matrix_admin }}"
-    env:
-      REACT_APP_SERVER: "https://{{ matrix_url }}"
-  tags:
-    - matrix-container
-    - matrix-admin-container
-    - matrix-admin
     - docker-containers
 
 - name: template scripts

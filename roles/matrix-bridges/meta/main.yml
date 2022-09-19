@@ -4,6 +4,8 @@ dependencies:
   - postgresql
   - matrix-nginx
   - matrix-synapse
-  #- matrix-bridge-smtp
+  - matrix-admin
+
   - matrix-bridge-instagram
   - matrix-bridge-telegram
+  #- matrix-bridge-smtp
