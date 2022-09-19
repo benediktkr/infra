@@ -2,7 +2,7 @@
 
 - name: ensure hostname letsencrypt cert exists
   command:
-    cmd: /usr/local/bin/certbot certonly -d {{ inventory_hostname }}
+    cmd: /usr/local/bin/letsencrypt-new.py {{ inventory_hostname }}
     creates: /usr/local/etc/letsencrypt/live/{{ inventory_hostname }}/fullchain.pem
   delegate_to: localhost
   tags:
@@ -19,7 +19,7 @@
   tags:
     - letsencrypt
     - letsencrypt-certs
-  notify: reload nginx
+  #notify: reload nginx
   vars:
     prediff_cmd: echo
   with_items:
@@ -35,7 +35,7 @@
   tags:
     - letsencrypt
     - letsencrypt-wildcard
-  notify: reload nginx
+  #notify: reload nginx
   vars:
     prediff_cmd: echo
   with_items: "{{ letsencrypt_domains }}"
@@ -47,7 +47,7 @@
   file:
     path: /usr/local/etc/certs/{{ item }}
     state: absent
-  notify: reload nginx
+  #notify: reload nginx
   with_items: "{{ letsencrypt_domains }}"
   when: letsencrypt_wildcards == false
   vars:
