@@ -9,7 +9,7 @@
       - cryptsetup
       - cryptsetup-initramfs
     state: present
-    update_cache: yes
+    update_cache: true
   tags:
     - packages
   notify: update initramfs
@@ -28,10 +28,16 @@
     replace: "NO_START=1"
   notify: update initramfs
 
+- name: disable dropbear because we use openssh after boot
+  service:
+    name: dropbear
+    state: stopped
+    enabled: false
+
 - name: authorized_keys for dropbear
   template:
     src: "private/sshkeys/{{ myusername }}.authorized_keys"
-    dest: /etc/dropbear-initramfs/authorized_keys
-    mode: 700
-    force: yes
+    dest: /etc/dropbear/initramfs/authorized_keys
+    mode: 0700
+    force: true
   notify: update initramfs
