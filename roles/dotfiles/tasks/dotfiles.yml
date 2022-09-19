@@ -24,10 +24,10 @@
   git:
     repo: "{{ dotfiles_repo }}"
     dest: "{{ dotfiles_path }}/dotfiles"
-    version: master
-    clone: yes
-    update: yes
-    force: yes
+    version: main
+    clone: true
+    update: true
+    force: true
   become_user: "{{ myusername }}"
   register: gitpull
 
