@@ -182,3 +182,19 @@
     - filebeat-docker
   notify: restart filebeat
   when: true
+
+- name: make .docker dir
+  file:
+    state: directory
+    path: "{{ systemuserlist[ansible_user].home }}/.docker"
+    mode: 0700
+  tags:
+    - docker-auth
+
+- name: docker auth config
+  copy:
+    dest: "{{ systemuserlist[ansible_user].home }}/.docker/config.json"
+    mode: 0750
+    content: "{{ docker_config | to_nice_json }}"
+  tags:
+    - docker-auth
