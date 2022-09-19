@@ -32,8 +32,8 @@ server {
 
     ssl_session_timeout 5m;
 
-    ssl_certificate /etc/letsencrypt/live/{{ domain }}/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/{{ domain }}/privkey.pem;
+    ssl_certificate /usr/local/etc/certs/{{ unifi_url }}/fullchain.pem;
+    ssl_certificate_key /usr/local/etc/certs/{{ unifi_url }}/privkey.pem;
 
     add_header Referrer-Policy "no-referrer" always;
     add_header X-Content-Type-Options "nosniff" always;
