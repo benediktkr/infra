@@ -44,6 +44,8 @@
     owner: authelia
     group: authelia
     mode: 0750
+  tags:
+    - authelia-config
   notify: restart authelia container
 
 - name: template nginx vhost
@@ -63,9 +65,9 @@
     name: authelia-redis
     image: "redis:latest"
     restart_policy: "unless-stopped"
-    auto_remove: no
-    detach: yes
-    pull: yes
+    auto_remove: false
+    detach: true
+    pull: true
     state: started
     container_default_behavior: compatibility
     env:
