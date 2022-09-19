@@ -14,15 +14,71 @@
 #     - never
 #     - image
 
-- name: copy ssh keys if known
-  copy:
-    src: "{{ item }}"
-    dest: /etc/ssh/
-  with_fileglob: "private/ssh_host_keys/{{ inventory_hostname }}/etc/ssh/ssh_host_*"
-  notify: reload sshd
+- name: check if we have ssh host keys for this host
+  stat:
+    path: "private/ssh_host_keys/{{ inventory_hostname }}"
+  delegate_to: localhost
+  register: ssh_host_keys
   tags:
     - ssh
     - hostkeys
+    - install-hostkeys
+
+- name: install host keys if known
+  copy:
+    dest: "/etc/ssh/{{ item }}"
+    src: "private/ssh_host_keys/{{ inventory_hostname }}/etc/ssh/{{ item }}"
+  with_items:
+    # - ssh_host_dsa_key
+    # - ssh_host_dsa_key.pub
+    - ssh_host_ecdsa_key
+    - ssh_host_ecdsa_key.pub
+    - ssh_host_ed25519_key
+    - ssh_host_ed25519_key.pub
+    - ssh_host_rsa_key
+    - ssh_host_rsa_key.pub
+  when:
+    - ssh_host_keys.stat.exists
+  tags:
+    - ssh
+    - hostkeys
+    - install-hostkeys
+
+
+- name: mask sleep targets in systemd
+  systemd:
+    name: "{{ item }}"
+    masked: true
+  with_items:
+    - sleep.target
+    - suspend.target
+    - hibernate.target
+    - hybrid-sleep.target
+  when: disable_sleep
+  tags:
+    - sleep
+
+- name: disable logind handling lid switch if sleep is disabled
+  replace:
+    path: /etc/systemd/logind.conf
+    regexp: '^#?HandleLidSwitch=suspend$'
+    replace: 'HandleLidSwitch=ignore'
+  when: disable_sleep
+  tags:
+    - sleep
+  notify:
+    - systemctl daemon reload
+
+- name: disable sleep systemd config
+  replace:
+    path: /etc/systemd/sleep.conf
+    regexp: '^#AllowSuspend=yes$'
+    replace: 'AllowSuspend=no'
+  when: disable_sleep
+  tags:
+    - sleep
+  notify:
+    - systemctl daemon reload
 
 - name: copy sensor-image keys when relevant
   copy:
@@ -53,15 +109,20 @@
     src: "/etc/ssh/{{ item }}"
     dest: private/ssh_host_keys/
   with_items:
+    # - ssh_host_dsa_key
+    # - ssh_host_dsa_key.pub
     - ssh_host_ecdsa_key
     - ssh_host_ecdsa_key.pub
     - ssh_host_ed25519_key
     - ssh_host_ed25519_key.pub
     - ssh_host_rsa_key
     - ssh_host_rsa_key.pub
+  when:
+    - ssh_host_keys|default(true)
   tags:
     - ssh
     - hostkeys
+    - save-hostkeys
 
 - name: chown ssh_host_keys
   file:
@@ -82,7 +143,7 @@
   tags:
     - timezone
 
-- name: install python3 on ubuntu
+- name: install python3
   apt:
     name:
       - python3
@@ -97,24 +158,25 @@
   tags:
     - packages
     - python3
-  when: ansible_distribution == "Ubuntu"
+    - python3-packages
+  #when: ansible_distribution == "Ubuntu"
 
-- name: install python3
-  apt:
-    name:
-      - python3.9
-      - python3.9-pip
-      - python3.9-apt
-      - python3.9-setuptools
-      - python3.9-venv
-      - python3.9-dev
-      - python-setuptools
-    update_cache: true
-    state: latest
-  tags:
-    - packages
-    - python3
-  when: ansible_distribution != "Ubuntu"
+# - name: install python3
+#   apt:
+#     name:
+#       - python3.9
+#       - python3.9-pip
+#       - python3.9-apt
+#       - python3.9-setuptools
+#       - python3.9-venv
+#       - python3.9-dev
+#       - python-setuptools
+#     update_cache: true
+#     state: latest
+#   tags:
+#     - packages
+#     - python3
+#   when: ansible_distribution != "Ubuntu"
 
 # - name: correct python3 version selected on ubuntu
 #   alternatives:
@@ -201,6 +263,7 @@
       - openssl
       - iputils-ping
       - procmail
+      - pciutils
       - rsync
       - smartmontools
       - sshfs
@@ -283,9 +346,9 @@
       - update-motd
       - landscape-client
       - landscape-common
-    autoremove: yes
+    autoremove: false
     state: absent
-    purge: yes
+    purge: true
   tags: packages
 
 - name: make sure openssh-server is installed
@@ -299,7 +362,7 @@
   apt:
     name: ntp
     state: absent
-    purge: yes
+    purge: true
   tags:
     - ntp
 
@@ -376,18 +439,36 @@
 
 - meta: flush_handlers
 
-- name: empty /etc/motd
-  copy:
-    content: ""
-    dest: /etc/motd
-    force: yes
+  # /etc/motd is updated in the 'users' role
 
-- name: disable update-motd on ubuntu
+- name: chmod /etc/update-motd.d
   file:
-    dest: /etc/update-motd.d/
-    mode: 0600
-    recurse: yes
-  when: ansible_distribution == "Ubuntu"
+    dest: /etc/update-motd.d
+    owner: root
+    group: root
+    mode: 0755
+    state: directory
+  tags:
+    - motd
+
+- name: look for update-motd.d files
+  find:
+    paths: /etc/update-motd.d
+    file_type: file
+  register: motd_d
+  tags:
+    - motd
+
+- name: chmod -x on files in update-mot.d
+  file:
+    path: "{{ item.path }}"
+    state: file
+    owner: root
+    group: root
+    mode: 0644
+  loop_control:
+    label: "{{ item.path }}"
+  with_items: "{{ motd_d.files }}"
   tags:
     - motd
 
@@ -402,7 +483,7 @@
   lineinfile:
     path: /etc/default/motd-news
     line: "ENABLED=0"
-    create: no
+    create: false
   when: motd_news.stat.exists
   tags:
     - motd
@@ -411,7 +492,7 @@
   apt:
     name: unattended-upgrades
     state: "{% if unatt_enabled|bool %}present{% else %}absent{%endif%}"
-    update_cache: yes
+    update_cache: true
   tags:
     - unatt
     - packages
