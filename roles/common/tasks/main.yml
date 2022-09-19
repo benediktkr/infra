@@ -1,5 +1,5 @@
 ---
 # file: roles/common/tasks/main.yml
-- include: common.yml
+- import_tasks: common.yml
   tags:
     - common

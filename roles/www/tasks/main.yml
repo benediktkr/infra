@@ -1,3 +1,3 @@
 ---
- - include: www.yml
+ - import_tasks: www.yml
    tags: www

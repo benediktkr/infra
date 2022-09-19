@@ -35,7 +35,7 @@
   apt_repository:
     repo: "deb {{ item }}"
     state: present
-    update_cache: yes
+    update_cache: true
   with_items:
     - https://repos.influxdata.com/{{ ansible_lsb.id | lower }} {{ ansible_lsb.codename }} stable
     - https://packages.grafana.com/oss/deb stable main
@@ -61,7 +61,7 @@
 - name: enable influxdb, grafana
   service:
     name: "{{ item }}"
-    enabled: yes
+    enabled: true
   with_items:
     - influxdb
     - grafana-server
@@ -97,11 +97,11 @@
   tags:
     - influxdb-systemd
 
-- include: influxdb.yml
+- import_tasks: influxdb.yml
   tags:
     #- monitoring-server
     - influxdb
 
-- include:  grafana.yml
+- import_tasks:  grafana.yml
   tags:
     - grafana

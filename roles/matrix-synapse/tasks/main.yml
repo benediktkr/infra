@@ -1,5 +1,5 @@
 ---
-- include: matrix-synapse.yml
+- import_tasks: matrix-synapse.yml
   tags:
     - matrix-synapse
     - matrix

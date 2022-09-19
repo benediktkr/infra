@@ -1,3 +1,3 @@
 ---
-- include: unifi.yml
+- import_tasks: unifi.yml
   tags: unifi

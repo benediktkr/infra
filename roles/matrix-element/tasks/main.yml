@@ -1,3 +1,3 @@
 ---
- - include: matrix-element.yml
+ - import_tasks: matrix-element.yml
    tags: matrix-element, matrix

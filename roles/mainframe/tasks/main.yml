@@ -4,5 +4,5 @@
   tags:
     - always
 
-- include: mainframe.yml
+- import_tasks: mainframe.yml
   tags: mainframe

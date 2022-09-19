@@ -1,0 +1,3 @@
+---
+ - import_tasks: cupsd.yml
+   tags: cupsd

@@ -1,5 +1,5 @@
 ---
 # file: roles/rpi/tasks/main.yml
-- include: rpi.yml
+- import_tasks: rpi.yml
   tags: rpi
   when: ansible_lsb.id == "Raspbian"

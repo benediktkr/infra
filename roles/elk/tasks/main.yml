@@ -1,3 +1,3 @@
 ---
- - include: elk.yml
+ - import_tasks: elk.yml
    tags: elk

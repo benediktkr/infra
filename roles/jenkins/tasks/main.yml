@@ -1,3 +1,3 @@
 ---
- - include: jenkins.yml
+ - import_tasks: jenkins.yml
    tags: jenkins

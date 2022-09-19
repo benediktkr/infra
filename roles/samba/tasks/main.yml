@@ -1,0 +1,3 @@
+---
+ - import_tasks: samba.yml
+   tags: samba

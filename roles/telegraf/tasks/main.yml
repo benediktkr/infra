@@ -1,5 +1,5 @@
 ---
 
-- include: telegraf.yml
+- import_tasks: telegraf.yml
   tags:
     - telegraf

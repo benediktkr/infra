@@ -1,4 +1,4 @@
 ---
 
-- include: redis.yml
+- import_tasks: redis.yml
   tags: redis

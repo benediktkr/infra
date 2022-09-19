@@ -1,3 +1,3 @@
 ---
- - include: tunnel.yml
+ - import_tasks: tunnel.yml
    tags: tunnel

@@ -1,4 +1,4 @@
 ---
 
-- include: mariadb.yml
+- import_tasks: mariadb.yml
   tags: mariadb
