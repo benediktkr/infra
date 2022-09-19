@@ -57,7 +57,7 @@
     - { dir: "etc/unbound" }
   tags: docker
 
-- name: template dns overrides
+- name: template dns overrides if pihole_custom_list
   template:
     src: custom.list.j2
     dest: "{{ pihole_root }}/etc/pihole/custom.list"
@@ -68,6 +68,7 @@
     - pihole-config
     - pihole-overrides
   notify: pihole restartdns
+  when: pihole_custom_list|default(false)
 
 - name: cron file
   template:
@@ -195,7 +196,8 @@
     - unbound0
     - unbound1
 
-
+# docker exec pihole pihole -a -p
+# docker exec pihole sudo pihole -a -p
 - name: start docker container
   docker_container:
     name: "pihole"
@@ -214,11 +216,8 @@
       WEB_PORT: "{{ pihole_http_port|string }}"
       DNSMASQ_LISTENING: "all" # the docker nat port forward is a firewall
       VIRTUAL_HOST: "{{ pihole_url }}"
-      # ServerIP: "{{ pihole_local_ip }}" # can disable wg0
       TZ: "Europe/Berlin"
-      WEBPASSWORD: "{{ pihole_web_password }}"
-      DNS1: "{{ bridgewithdns.unbound0 }}"
-      DNS2: "{{ bridgewithdns.unbound1 }}"
+      PIHOLE_DNS_: "{{ bridgewithdns.unbound0 }};{{ bridgewithdns.unbound1 }}"
       CONDITIONAL_FORWARDING: "{{ pihole_cond|string }}"
       CONDITIONAL_FORWARDING_IP: "{{ pihole_cond_ip }}"
       CONDITIONAL_FORWARDING_DOMAIN: "{{ pihole_cond_domain }}"
@@ -232,10 +231,14 @@
       #- "{{ pihole_nginx_interface }}:53:53/udp"
       - "{{ wg_clients[inventory_hostname]['ip'] }}:53:53/udp"
       - 127.0.0.1:{{pihole_http_port}}:{{pihole_http_port}}
-    hostname: "{{ pihole_url }}"
+    # setting the hostname to {{pihole_url}} makes pihole mess with resolving that record.
+    #hostname: "{{ pihole_url }}"
     network_mode: bridge
     purge_networks: yes
     networks_cli_compatible: yes
+    # /var/log/pihole/pihole-FTL.log
+    # add_message(type=7, message=/dev/shm) - SQL error step DELETE: database is locked
+    shm_size: '2G'
     networks:
       - name: bridgewithdns
         ipv4_address: "{{ bridgewithdns.pihole }}"

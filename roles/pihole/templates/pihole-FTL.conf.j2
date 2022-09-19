@@ -20,10 +20,18 @@ REPLY_WHEN_BUSY=ALLOW
 
 LOGFILE=/var/log/pihole/pihole-FTL.log
 
-# this option is deprecated
-REPLY_ADDR4=0.0.0.0
+RESOLVE_IPV6=yes
+RESOLVE_IPV4=yes
+# disables pihole trying to override the PTR record
+PIHOLE_PTR=NONE
+
 {% if inventory_hostname in wg_clients %}
-LOCAL_IPV4={{ wg_clients[inventory_hostname]['ip'] }}
+#LOCAL_IPV4={{ wg_clients[inventory_hostname]['ip'] }}
+#REPLY_ADDR4={{ wg_clients[inventory_hostname]['ip'] }}
 {% else %}
-LOCAL_IPV4={{ ansible_default_ipv4.address }}
+#LOCAL_IPV4={{ ansible_default_ipv4.address }}
+#REPLY_ADDR4= {{ wg_clients[inventory_hostname]['ip'] }}
 {% endif %}
+
+# the default is needed to pihole leaves the file alone
+LOCAL_IPV4=0.0.0.0

@@ -8,6 +8,7 @@ server {
     include /etc/nginx/require_auth.conf;
 
     include listen-proxy-protocol.conf;
+    include /etc/nginx/sudo-known.conf;
 
     server_name {{ pihole_url }} {{ inventory_hostname }};
 
@@ -16,6 +17,8 @@ server {
     }
 
     location /admin {
+       add_before_body /.sudo-known/info.html;
+
        proxy_pass         http://{{pihole_http_inet}}:{{ pihole_http_port }};
 
        include /etc/nginx/require_auth_proxy.conf;
