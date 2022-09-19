@@ -2,6 +2,13 @@
   id: "nginx-access-glob"
   paths:
     - /var/log/nginx/access_*.log
+    - /var/log/nginx/access.log
+
+
+  {% if kibana_url is defined -%}
+  prospector.scanner.exclude_files:
+    - /var/log/nginx/access_{{ kibana_url }}.log
+  {% endif %}
 
   scan_frequency: 10s
   enabled: true

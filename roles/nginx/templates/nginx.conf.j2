@@ -16,13 +16,19 @@ http {
     default_type  application/octet-stream;
 
     # nginx hack
+    # if $authelia_user doesnt exist, set it to empty string
+    # if $authelia_user does exist, do nothing
     map $host $authelia_user {
-        default "-";
+        default "";
+    }
+    map $host $authelia_groups {
+        default "";
     }
 
     log_format  main  '{"remote_addr": "$remote_addr", '
                       ' "remote_user": "$remote_user", '
                       ' "authelia_user": "$authelia_user", '
+                      ' "authelia_groups": "$authelia_groups", '
                       ' "time_local": "$time_local", '
                       ' "request": "$request", '
                       ' "request_method": "$request_method", '

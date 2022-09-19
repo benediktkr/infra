@@ -5,3 +5,12 @@ real_ip_header proxy_protocol;
 {% for cidr in my_local_cidrs -%}
 set_real_ip_from {{ cidr }};
 {% endfor -%}
+
+# found this when creating redirects in the gitea nginx config file
+# default: on
+port_in_redirect off;
+
+# default: off
+# when the use of the primary server name is disabled, the name from
+# the “Host” request header field is used
+server_name_in_redirect off;

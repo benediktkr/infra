@@ -1,15 +1,25 @@
 
 location = /.sudo-known/hostname {
-    add_header Content-Type "text/html; charset=utf-8" always;
+    default_type application/json;
     return 200 "{{ inventory_hostname }}";
 }
 
+location = /.sudo-known/hostname.html {
+    default_type text/html;
+    return 200 "<!-- {{ inventory_hostname }} -->\n\n";
+}
+
 location = /.sudo-known/server_name {
-    add_header Content-Type "text/html; charset=utf-8" always;
+    default_type application/json;
     return 200 "$server_name";
 }
 
 location = /.sudo-known/info {
-    add_header Content-Type "application/json" always;
+    default_type application/json;
     return 200 '{"hostname": "{{ inventory_hostname }}", "server_name": "$server_name"}';
+}
+
+location = /.sudo-known/info.html {
+    default_type text/html;
+    return 200 '<!--\n    hostname: {{ inventory_hostname }}\n    server_name: $server_name\n-->\n\n ';
 }
