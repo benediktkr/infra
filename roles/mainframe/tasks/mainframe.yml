@@ -30,9 +30,14 @@
       - libcurl4-gnutls-dev
       - weechat-matrix
       - parallel
+      - restic
       - zip
       - httrack
       - pwgen
+      - ubuntu-dev-tools # ubuntu-vm-builder
+      - libvirt-clients  # virsh
+      - vainfo           # intel va-api
+      - i965-va-driver   # intel va-api
   tags:
     - packages
     - packages-mainframe
@@ -51,6 +56,7 @@
       - ldap3   # new_user.py
       - loguru
       - netaddr
+      - paramiko
       - requests
       - virtualenv
       - waybackpy
@@ -89,6 +95,7 @@
     - archives
     - archives-config
     - mainframe-scripts
+    - mainframe-etc
   with_items:
     - podcast.json
     - archives.toml
@@ -123,6 +130,7 @@
     mode: 0755
   with_items:
     - new_user.py
+    - save-old-host-from-rsnapshot.sh
   tags:
     - scripts
     - mainframe-scripts
@@ -183,11 +191,13 @@
   tags:
     - letsencrypt-certs
     - mainframe-nginx
+    - static-sites
   notify: reload nginx
   with_items:
     - "{{ archives_url }}"
     - "{{ archivebox_url }}"
     - static.{{ domain }}
+    - "{{ xmr_url }}"
 
 - name: template nginx vhost(s)
   template:
@@ -200,11 +210,13 @@
     - 01-archives.conf
     - 02-tools.conf
     - 01-static.conf
+    - 01-xmr.conf
   tags:
     - archives
     - archivebox
     - nginx
     - mainframe-nginx
+    - static-sites
   notify: reload nginx
 
 - name: archives log dir and cache
@@ -224,7 +236,7 @@
 - name: start archives
   docker_container:
     name: archives
-    image: dockreg.sudo.is/archives:latest
+    image: git.sudo.is/ben/archives:latest
     auto_remove: false
     detach: true
     pull: true
@@ -301,15 +313,15 @@
     - archivebox-container
     - docker-containers
 
-- name: start ricelandbot
+- name: start/stop ricelandbot
   docker_container:
+    state: stopped
     name: ricelandbot
-    image: dockreg.sudo.is/ricelandbot:latest
+    image: git.sudo.is/ops/ricelandbot:latest
     auto_remove: false
     detach: true
     pull: true
     restart_policy: "unless-stopped"
-    state: started
     container_default_behavior: compatibility
     networks_cli_compatible: false
     user: "1300:1300"

@@ -1,0 +1,18 @@
+# ansible managed
+
+[DEFAULT]
+arch = x86_64
+part = vmbuilder.partition
+rootpass =
+dns = {{ pihole_dns }}
+
+[ubuntu]
+mirror = http://de.archive.ubuntu.com/ubuntu
+suite = jammy
+flavour = virtual
+addpkg = openss-server
+
+{% for host in groups['kvm'] -%}
+[{{ host.split('.')[0] }}]
+libvirt = qemu+ssh://{{ host }}/system
+{% endfor %}

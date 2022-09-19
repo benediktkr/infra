@@ -1,0 +1,37 @@
+server {
+    listen 443 ssl http2;
+    {% if inventory_hostname in wg_clients -%}
+    listen {{ wg_clients[inventory_hostname].ip }}:443 ssl http2;
+    {% endif -%}
+
+    charset utf-8;
+
+    include listen-proxy-protocol.conf;
+    server_name {{ xmr_url }} www.{{ xmr_url }};
+    root /var/www/{{ xmr_url }};
+
+    ssl_certificate /usr/local/etc/certs/{{ xmr_url }}/fullchain.pem;
+    ssl_certificate_key /usr/local/etc/certs/{{ xmr_url }}/privkey.pem;
+
+    autoindex on;
+    autoindex_exact_size off;
+
+    include /etc/nginx/sudo-known.conf;
+
+    location ~* ^.+\.json$ {
+        add_header Content-Type application/json;
+    }
+
+    access_log /var/log/nginx/access_xmr.eu.net.org.log main;
+    error_log /var/log/nginx/error_xmr.eu.net.org warn;
+
+    ssl_session_timeout 5m;
+
+    add_header Referrer-Policy "no-referrer" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Download-Options "noopen" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Permitted-Cross-Domain-Policies "none" always;
+    add_header X-Robots-Tag "none" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+}
