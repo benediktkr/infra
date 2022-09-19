@@ -1,12 +1,15 @@
 
+
+
 server {
+    server_name {{ server_names | join(" ") }};
+
     {% if inventory_hostname in wg_clients -%}
     listen {{ wg_clients[inventory_hostname].ip }}:443 ssl http2;
     {% endif -%}
     listen 443 ssl http2;
 
     include listen-proxy-protocol.conf;
-    server_name www.{{ domain }} {{ domain }};
 
     charset utf-8;
     root /var/www/www.{{ domain }};
