@@ -1,0 +1,10 @@
+{% if ephemeral_homes|default(false) %}
+
+  WARNING: anything you save in /home on this system will be lost
+
+  this system is not meant to be operated by humans, and /home
+  is ephemeral.
+
+  what are you even doing here?
+
+{% endif %}

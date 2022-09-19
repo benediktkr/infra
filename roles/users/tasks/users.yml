@@ -4,21 +4,18 @@
   block:
     - set_fact:
         human_users: "{{ default_users + extra_users }}"
-        system_users: "{{ default_system_users + system_users }}"
-      tags:
-        - systemusers
-        - humanusers
-        - sshkeys
-        - human
 
     - name: list human users
       debug:
         var: human_users
 
-    - name: sanity check
+    - name: sanity checks
       fail:
-        msg: 'my user is missing'
-      when: myusername not in human_users
+        msg: "{{ item }} is missing"
+      loop_control:
+        label: "{{ item }}"
+      with_items: ["{{ myusername }}"]
+      when: item not in human_users
   tags:
     - systemusers
     - humanusers
@@ -57,7 +54,7 @@
   user:
     name: "{{ item }}"
     state: absent
-    force: yes
+    force: true
   with_items:
     - pi
     - ec2user
@@ -65,7 +62,9 @@
     - opc
     - doe
     - ted
-  tags: defaultusers
+  tags:
+    - defaultusers
+    - remove-users
 
 - name: remove lingering /home dirs for stupid default users
   file:
@@ -78,7 +77,9 @@
     - opc
     - doe
     - ted
-  tags: defaultusers
+  tags:
+    - defaultusers
+    - remove-users
 
 - name: create user groups
   group:
@@ -98,67 +99,104 @@
 
 
 - name: set up system users
+  tags:
+    - systemusers
   block:
+
+    - name: sanity checks for {{ ansible_username }}
+      fail:
+        msg: "{{ ansible_username }} is missing"
+      when: ansible_username not in systemuserlist.keys() | list
 
     - name: create system user groups
       group:
-        state: present
-        name: "{{ item.key }}"
-        gid: "{{ item.value.gid | default(item.value.uid) }}"
-      with_dict: "{{ systemuserlist }}"
+        name: "{{ item.username }}"
+        gid: "{{ item.gid | default(item.uid) }}"
+      with_items: "{{ systemuserlist.values() | rejectattr('enabled', 'false') }}"
       loop_control:
-        label: "{{ item.key }}"
+        label: "{{ item.username }}"
 
-    - name: create (or remove) system users
+    - name: system users
       user:
-        state: "{{ item.state | default('present') }}"
-        name: "{{ item.key }}"
+        system: "{{ item.system_account | default(true) }}"
+        name: "{{ item.username }}"
+        group: "{{ item.gid }}"
+        groups: "{{ item.groups | default([]) }}"
+        append: true
+        shell: "{{ item.shell | default('/dev/null') }}"
+        uid: "{{ item.uid }}"
+        home: "{{ item.home | default('/var/lib/' + item.username) }}"
+        create_home: "{{ 'home' in item | default(False) }}"
+        move_home: true
+        force: false
+      loop_control:
+        label: "{{ item.username }}"
+      with_items: "{{ systemuserlist.values() | rejectattr('enabled', 'false') }}"
+
+    - name: set authorized_keys for system users with pubkeys
+      template:
+        src: "private/sshkeys/{{ item.key }}.authorized_keys"
+        dest: "~/.ssh/authorized_keys"
+        owner: "{{ item.key }}"
         group: "{{ item.key }}"
-        groups: "{{ item.value.groups | default([]) }}"
-        shell: "{{ item.value.shell | default('/dev/null') }}"
-        uid: "{{ item.value.uid }}"
-        create_home: "{{ 'home' in item.value | default(False) }}"
-        home: "{{ item.value.home | default('/var/lib/' + item.key) }}"
-        move_home: yes
-        append: yes
-        system: yes
-        force: no
+        mode: 0600
+      become: true
+      become_user: "{{ item.key }}"
       loop_control:
         label: "{{ item.key }}"
       with_dict: "{{ systemuserlist }}"
+      when:
+        - item.value.sshkey|default(false)
 
-    - name: set authorized_keys for tunnel user
-      template:
-        src: private/sshkeys/tunnel.authorized_keys
-        dest: /home/.system/tunnel/.ssh/authorized_keys
-        owner: tunnel
-        group: tunnel
-        mode: 0700
+    - name: remove disabled system users
+      user:
+        state: absent
+        name: "{{ item.username }}"
+        uid: "{{ item.uid }}"
+      loop_control:
+        label: "{{ item.username }}"
+      with_items: "{{ systemuserlist.values() | selectattr('enabled', 'false') }}"
       tags:
-        - sshkeys
+        - remove-users
 
-    - name: set authorized_keys for jenkins user if jenkins server
-      template:
-        src: private/sshkeys/jenkins.authorized_keys
-        dest: "{{ systemuserlist.jenkins.home }}/.ssh/authorized_keys"
-        owner: jenkins
-        group: jenkins
-        mode: 0700
+    - name: remove disabled system user groups
+      group:
+        state: absent
+        name: "{{ item.username }}"
+        gid: "{{ item.gid }}"
+      loop_control:
+        label: "{{ item.username }}"
+      with_items: "{{ systemuserlist.values() | selectattr('enabled', 'false') }}"
       tags:
-        - sshkeys
+        - remove-users
 
-- name: create (or remove) human users
+    # because 'force' to the user task doesnt seem to work
+    - name: remove lingering home dirs for removed system users (if set)
+      file:
+        state: absent
+        path: "{{ item.home }}"
+      with_items: "{{ systemuserlist.values() | selectattr('enabled', 'false') }}"
+      loop_control:
+        label: "{{ item.username }}"
+      when:
+        - item.force_remove_home|default(false)
+      tags:
+        - remove-users
+
+- name: human users
   user:
     state: "{{ item.state | default('present') }}"
     name: "{{ userlist[item]['username'] }}"
-    group: "{{ userlist[item]['username'] }}"
+    group: "{{ userlist[item]['gid'] }}"
     groups: "{{ userlist[item]['groups'] | default([]) }}"
+    append: true
     shell: "{{ userlist[item]['shell'] | default('/bin/zsh') }}"
     uid: "{{ userlist[item]['uid'] }}"
-    append: true
+    #home: "{{ userlist[item]['home'] | default('/home/' + userlist[item]['username'] ) }}"
+    home: "/home/{{ userlist[item]['username'] }}"
     create_home: true
-    home: "{{ userlist[item]['home'] | default('/home/' + userlist[item]['username'] ) }}"
     move_home: false
+    force: false
   with_items: "{{ human_users }}"
   tags: human
 
@@ -170,6 +208,17 @@
     group: "{{ item }}"
     mode: 0700
   with_items: "{{ human_users }}"
+  tags: human
+
+- name: empty .zshrc if ephemeral_homes to avoid zsh-newuser-install
+  copy:
+    dest: "~{{ item }}/.zshrc"
+    owner: "{{ item }}"
+    group: "{{ item }}"
+    mode: 0770
+    content: "#!/bin/zsh"
+  with_items: "{{ human_users }}"
+  when: ephemeral_homes
   tags: human
 
 - name: allow 'sudo' group to have passwordless sudo
@@ -209,6 +258,63 @@
     - "{{ myusername }}"
     - root
 
+- name: make dir for ephemeral hosts on non-human-operatored hosts
+  file:
+    state: directory
+    path: /usr/local/homes
+  tags:
+    - human
+    - ephemeral_homes
+  when: ephemeral_homes
+
+- name: install ephemeral homes script on non-human-operated hosts
+  copy:
+    src: ephemeralhomes.py
+    dest: /usr/local/bin/ephemeralhomes.py
+    owner: root
+    group: root
+    mode: 0700
+  tags:
+    - human
+    - ephemeral_homes
+    - ephemeral_homes-script
+  when: ephemeral_homes
+
+- name: install ephemeral homes crontab on non-human-operated hosts
+  template:
+    src: ephemeralhomes-cron.j2
+    dest: /etc/cron.d/ephemeralhomes
+    owner: root
+    group: root
+    mode: 0600
+  tags:
+    - human
+    - ephemeral_homes
+  when: ephemeral_homes
+
+- name: ensure ephemeral homes script+cron is absent on human-operated-hosts
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - /etc/cron.d/ephemeralhomes
+    - /usr/local/bin/ephemeralhomes.py
+  when: not ephemeral_homes
+  tags:
+    - human
+    - ephemeral_homes
+
+- name: motd
+  template:
+    src: motd.j2
+    dest: /etc/motd
+    owner: root
+    group: root
+    mode: 0744
+  tags:
+    - motd
+    - human
+    - ephemeral_homes
 
 - name: set up deadspace
   block:
