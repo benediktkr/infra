@@ -1,0 +1,30 @@
+---
+
+- name: install packages
+  apt:
+    name:
+      - qemu-kvm # qemu-system-x86
+      - virt-manager
+      - libvirt-daemon-system
+      - virtinst
+      - libvirt-clients
+      - bridge-utils
+    state: latest
+    update_cache: true
+  tags:
+    - packages
+
+- name: start and enable libvirtd
+  service:
+    name: libvirtd
+    enabled: true
+    state: started
+
+- name: template qemu.conf
+  template:
+    src: qemu.conf.j2
+    dest: /etc/libvirt/qemu.conf
+    owner: root
+    group: root
+    mode: 0600
+  notify: restart libvirtd
