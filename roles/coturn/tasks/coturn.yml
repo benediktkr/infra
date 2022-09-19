@@ -1,5 +1,28 @@
 ---
 
+- name: install certs (zerossl)
+  copy:
+    src: "private/zerossl/{{ coturn_url }}"
+    dest: "/usr/local/etc/certs/"
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - zerossl-certs
+  notify: restart coturn
+  vars:
+    prediff_cmd: echo
+
+# coturn isnt in the ubuntu 22.04 repos because of this bug:
+# https://bugs.launchpad.net/ubuntu/+source/coturn/+bug/1967018
+#
+# using the ppa instead
+
+- name: add ppa for coturn while its not in the main repos
+  apt_repository:
+    repo: 'ppa:ubuntuhandbook1/coturn'
+    state: present
+
 - name: install coturn
   apt:
     name: coturn
@@ -22,11 +45,3 @@
     name: coturn
     state: started
     enabled: true
-  when: coturn_enabled|default(false)
-
-- name: stop and disable coturn
-  service:
-    name: coturn
-    state: stopped
-    enabled: false
-  when: not coturn_enabled|default(false)

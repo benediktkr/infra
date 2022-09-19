@@ -1,9 +1,12 @@
+# config reference: https://github.com/coturn/coturn/wiki/turnserver
+
 use-auth-secret
 static-auth-secret={{ coturn_static_auth_secret }}
 realm={{ coturn_url }}
 
 # logs
 #syslog
+#log-file=/var/log/coturn/coturn.log
 log-file=/tmp/coturn.log
 
 # VoIP traffic is all UDP. no reason to let users connect to any TCP endpoints
@@ -14,8 +17,24 @@ denied-peer-ip=10.0.0.0-10.255.255.255
 denied-peer-ip=192.168.0.0-192.168.255.255
 denied-peer-ip=172.16.0.0-172.31.255.255
 
+# recommended additional local peers to block, to mitigate external access to internal services.
+# https://www.rtcsec.com/article/slack-webrtc-turn-compromise-and-bug-bounty/#how-to-fix-an-open-turn-relay-to-address-this-vulnerability
+no-multicast-peers
+denied-peer-ip=0.0.0.0-0.255.255.255
+denied-peer-ip=100.64.0.0-100.127.255.255
+denied-peer-ip=127.0.0.0-127.255.255.255
+denied-peer-ip=169.254.0.0-169.254.255.255
+denied-peer-ip=192.0.0.0-192.0.0.255
+denied-peer-ip=192.0.2.0-192.0.2.255
+denied-peer-ip=192.88.99.0-192.88.99.255
+denied-peer-ip=198.18.0.0-198.19.255.255
+denied-peer-ip=198.51.100.0-198.51.100.255
+denied-peer-ip=203.0.113.0-203.0.113.255
+denied-peer-ip=240.0.0.0-255.255.255.255
+
 # special case the turn server itself so that client->TURN->TURN->client
 # flows work
+# TODO: might need DO internal ip
 allowed-peer-ip={{ wg_clients[inventory_hostname]['ip'] }}
 
 # its possible to limit the quota of relayed streams per user (or
@@ -26,16 +45,31 @@ total) to avoid risk of DoS.
 user-quota=12
 total-quota=1200
 
-cert=/etc/letsencrypt/live/{{ inventory_hostname.split('.')[1:] | join(".") }}/fullchain.pem
-pkey=/etc/letsencrypt/live/{{ inventory_hostname.split('.')[1:] | join(".") }}/privkey.pem
+# these are not the regular letsencrypt certs
+# see item 4 under "Configuration": https://matrix-org.github.io/synapse/develop/turn-howto.html
+cert=/usr/local/etc/certs/{{ coturn_url }}/fullchain.crt
+pkey=/usr/local/etc/certs/{{ coturn_url }}/private.key
 
-no-tlsv1
-no-tlsv1_1
-no-tlsv1_2
+# ensuring lines that disable tls/dtls are disabled
+#no-tls
+#no-dtls
+
+# no-tlsv1
+# no-tlsv1_1
+# no-tlsv1_2
+
+
+# Ensure your firewall allows traffic into the TURN server on the
+# ports you've configured it to listen on (By default: 3478 and 5349 for
+# TURN traffic (remember to allow both TCP and UDP traffic), and ports
+# 49152-65535 for the UDP relay.)
 
 # interesting parts from debian example file:
 
-# cli is on by default with these settings
+# Turn OFF the CLI support. By default it is always ON, and the
+# process turnserver accepts the telnet client connections on IP address
+# 127.0.0.1, port 5766.
+# See also options cli-ip, cli-port and cli-password.
 #no-cli
 #cli-ip=127.0.0.1
 #cli-port=5766
