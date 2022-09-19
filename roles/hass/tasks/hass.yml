@@ -1,0 +1,81 @@
+---
+
+# hass + zwave
+
+- name: create dir structure
+  file:
+    path: "{{ systemuserlist.hass.home }}/{{ item }}"
+    state: directory
+    mode: 0755
+    owner: hass
+    group: hass
+  with_items:
+    - home-assistant
+    - zwavejs
+
+# docker run --run -it -p 8091:8091 -p 3000:3000 --network
+#bridgewithdns --device /dev/ttyACM0:/dev/zwave -v
+# /home/ben/zwavejs:/usr/src/app/store zwavejs/zwavejs2mqtt:latest
+
+- name: start zwavejs container
+  docker_container:
+    name: zwavejs
+    image: zwavejs/zwavejs2mqtt:latest
+    detach: true
+    pull: true
+    restart_policy: "unless-stopped"
+    state: "{{ container_state | default('started') }}"
+    container_default_behavior: compatibility
+    user: "{{ systemuserlist.hass.uid }}:dialout"
+    devices:
+      - "/dev/serial/by-id/usb-0658_0200-if00:/dev/zwave:rwm"
+    ports:
+      # - "127.0.0.1:3000:3000"
+      # - "127.0.0.1:8091:8091"
+      - "3000:3000"
+      - "8091:8091"
+    mounts:
+      - type: bind
+        source: /var/lib/hass/zwavejs
+        target: /usr/src/app/store
+    networks_cli_compatible: false
+    network_mode: bridgewithdns
+    networks:
+      - name: bridgewithdns
+  tags:
+    - zwavejs
+    - zwavejs-container
+    - hass-container
+    - docker-containers
+
+# docker run --rm it --name hass -p 8123:8123 -e TZ=Etc/UTC -v
+# /home/ben/hass:/config --network-bridgewithdns
+# ghcr.io/home-assistant/home-assistant:stable
+
+- name: start home-assistant container
+  docker_container:
+    name: hass
+    image: ghcr.io/home-assistant/home-assistant:stable
+    detach: true
+    pull: true
+    restart_policy: "unless-stopped"
+    state: "{{ container_state | default('started') }}"
+    container_default_behavior: compatibility
+    user: "{{ systemuserlist.hass.uid }}:{{ systemuserlist.hass.gid }}"
+    env:
+      TZ: "Etc/UTC"
+    ports:
+      - "8123:8123"
+    mounts:
+      - type: bind
+        source: /var/lib/hass/home-assistant
+        target: /config
+    networks_cli_compatible: false
+    network_mode: bridgewithdns
+    networks:
+      - name: bridgewithdns
+  tags:
+    - home-assistant
+    - home-assistant-container
+    - hass-container
+    - docker-containers
