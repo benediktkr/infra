@@ -1,0 +1,17 @@
+---
+
+{% set broker = sudoisbot.broker %}
+{% set unifi = sudoisbot.unifi %}
+
+addr: tcp://{{ broker.name }}:{{ broker.fe_port }}
+location: s21
+
+unifi:
+  url: {{ sudoisbot.unifi.url }}
+  username: "{{ sudoisbot.unifi.username }}"
+  password: "{{ sudoisbot.unifi.password }}"
+
+people:
+{% for initials, devices in sudoisbot.unifi.people.items() %}
+  "{{ initials }}": {{ devices | to_yaml }}
+{%- endfor -%}

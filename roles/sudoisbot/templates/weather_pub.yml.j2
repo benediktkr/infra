@@ -1,0 +1,16 @@
+---
+
+{% set broker = sudoisbot.broker  %}
+
+addr: tcp://{{ broker.name }}:{{ broker.fe_port }}
+owm_token: {{ sudoisbot.weather.owm_token }}
+frequency: {{ sudoisbot.weather.frequency | default(300) }}
+
+locations:
+  {% for location in sudoisbot.weather.locations %}
+
+  - name: {{ location.name }}
+    lat: {{ location.lat }}
+    lon: {{ location.lon }}
+    msl: {{ location.msl }}
+  {% endfor %}

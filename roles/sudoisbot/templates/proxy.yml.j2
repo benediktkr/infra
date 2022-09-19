@@ -1,0 +1,9 @@
+---
+
+{% set broker = sudoisbot.broker %}
+
+frontend_addr: tcp://{{ broker.listen_addr }}:{{ broker.fe_port }}
+backend_addr: tcp://{{ broker.listen_addr }}:{{ broker.be_port }}
+capture_addr: tcp://{{ broker.cap_listen_addr }}:{{ broker.cap_port }}
+
+cache_dir: {{ systemuserlist.sudoisbot.home }}/cache

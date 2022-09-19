@@ -1,0 +1,25 @@
+---
+
+{% set broker = sudoisbot.broker %}
+addr: tcp://{{ broker.name }}:{{ broker.fe_port }}
+screen:
+  weather_location: fhain
+  rotation: {{ sudoisbot.screen.rotation }}
+  msgs:
+    - "wash hands & 'void the 'rona!"
+    - "the dog goes woof"
+    - "doggie doggie what now!?"
+    - "wash hands and shoes off"
+weather: {{ sudoisbot.screen.weather }}
+mysql:
+  host: "{{ mariadb_host }}"
+  database: sink
+  user: sink
+  password: "{{ systemuserlist.sudoisbot.mariadb_pass }}"
+people:
+{% for initials, devices in sudoisbot.unifi.people.items() %}
+  "{{ initials }}": {{ devices | to_yaml }}
+{%- endfor -%}
+
+#logging:
+#  level: ERROR

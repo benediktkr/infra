@@ -1,0 +1,65 @@
+---
+
+- name: create mariadb db
+  mysql_db:
+    name: "{{ mariadb_db }}"
+    encoding: utf8mb4
+    collation: utf8mb4_general_ci
+    login_unix_socket: /run/mysqld/mysqld.sock
+  tags:
+    - mariadb-users
+
+- name: mariadb user without password
+  mysql_user:
+    state: present
+    name: "{{ systemuserlist.sudoisbot.username }}"
+    host: 'localhost'
+    priv: "{{ mariadb_db }}.*:ALL"
+    login_unix_socket: /run/mysqld/mysqld.sock
+  tags:
+    - mariadb-users
+
+- name: mariadb user with password
+  mysql_user:
+    state: present
+    name: "{{ systemuserlist.sudoisbot.username }}"
+    host: "{{ item }}"
+    priv: "{{ mariadb_db }}.*:ALL"
+    password: "{{ systemuserlist.sudoisbot.mariadb_pass }}"
+    login_unix_socket: /run/mysqld/mysqld.sock
+  loop_control:
+    label: "'{{ systemuserlist.sudoisbot.username }}'@'{{ item }}'"
+  with_items:
+    - "{{ ansible_default_ipv4.address }}"
+    - "{{ bridgewithdns_mariadb }}"
+  tags:
+    - mariadb-users
+
+- name: make config dirs
+  file:
+    path: /usr/local/etc/sudoisbot
+    state: directory
+    mode: 0770
+    owner: sudoisbot
+    group: sudoisbot
+
+- name: make data dirs
+  file:
+    path: "{{ systemuserlist.sudoisbot.home }}/{{ item.name }}"
+    state: directory
+    mode: 0770
+    owner: sudoisbot
+    group: sudoisbot
+  loop_control:
+    label: "{{ item.name }}"
+  with_items:
+    - name: cache
+    - name: hass
+    - name: data
+    - name: logs
+
+- name: template config files
+  template:
+    src: "{{ item }}.yml.j2"
+    dest: /usr/local/etc/sudoisbot/{{ item }}.yml
+  with_items: "{{ sudoisbot.roles }}"
