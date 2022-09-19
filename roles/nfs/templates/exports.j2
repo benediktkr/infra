@@ -1,4 +1,9 @@
 
+# The value 0 has a special meaning when use with NFSv4. NFSv4 has a
+# concept of a root of the overall exported filesystem.
+#
+# The export point exported with fsid=0 will be used as this root.
+
 {% for item in deadspace[inventory_hostname] -%}
 {% if item.nfs|default(False) -%}
 {% set fsid = loop.index0 %}

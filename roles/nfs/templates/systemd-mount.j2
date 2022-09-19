@@ -1,0 +1,13 @@
+[Unit]
+Description=deadspace nfs mounts
+#After=network.target
+After=wg-quick@wg0.service
+
+[Mount]
+What={{ item.what }}
+Where={{ item.where }}
+Type=nfs4
+Options=_netdev,auto
+
+[Install]
+WantedBy=multi-user.target

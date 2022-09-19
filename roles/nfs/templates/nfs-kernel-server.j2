@@ -10,7 +10,7 @@ RPCNFSDPRIORITY=0
 # see rpc.mountd(8) or http://wiki.debian.org/SecuringNFS
 # To disable NFSv4 on the server, specify '--no-nfs-version 4' here
 #RPCMOUNTDOPTS="--manage-gids -h {{ wg_clients[inventory_hostname]['ip'] }} -h 127.0.0.1"
-RPCMOUNTDOPTS="--manage-gids "
+RPCMOUNTDOPTS="--manage-gids -N 2 -N 3 -H {{ wg_clients[inventory_hostname]['ip'] }}"
 
 # Do you want to start the svcgssd daemon? It is only required for Kerberos
 # exports. Valid alternatives are "yes" and "no"; the default is "no".
@@ -19,4 +19,4 @@ NEED_SVCGSSD=""
 # Options for rpc.svcgssd.
 RPCSVCGSSDOPTS=""
 
-RPCNFSDOPTS="-H {{ wg_clients[inventory_hostname]['ip'] }}"
+RPCNFSDOPTS="-N 2 -N 3"

@@ -12,15 +12,17 @@
 
 - name: template /etc/exports
   template:
-    src: exports.j2
-    dest: /etc/exports
+    src: "{{ item }}.j2"
+    dest: /etc/{{ item }}
     owner: root
     group: root
+  with_items:
+    - nfs.conf
+    - exports
   notify:
     - call exportfs
-    - reload nfs-kernel-server
 
-- name: template config
+- name: template configs
   template:
     src: "{{ item }}.j2"
     dest: /etc/default/{{ item }}
@@ -30,18 +32,8 @@
     - rpcbind
     - nfs-kernel-server
   notify:
-    - call exportfs
     - reload nfs-kernel-server
-    - restart rpcbind
-
-- name: template /etc/exports
-  template:
-    src: exports.j2
-    dest: /etc/exports
-    owner: root
-    group: root
-  notify:
-    - call exportfs
+    #- restart rpcbind
 
 - name: load kernel module
   modprobe:
@@ -53,3 +45,45 @@
     name: nfs-kernel-server
     enabled: true
     state: started
+
+- name: mask rpcbind
+  service:
+    name: "{{ item }}"
+    masked: true
+  with_items:
+    - rpcbind.service
+    - rpcbind.socket
+
+
+- name: template systemd mounts
+  template:
+    src: systemd-mount.j2
+    dest: "/etc/systemd/system/{{ systemd_name }}"
+    owner: root
+    group: root
+    mode: 0644
+  loop_control:
+    label: "{{ systemd_name }}"
+  vars:
+    systemd_name: "{{ item.where.split('/')[1:] | join('-') }}.mount"
+  when:
+    systemd_name != ".mount"
+  tags:
+    - nfs-mounts
+  with_items: "{{ deadspace_nfs_mounts[inventory_hostname] }}"
+
+- name: start nfs mounts
+  service:
+    daemon_reload: true
+    name: "{{ systemd_name }}"
+    state: started
+    enabled: true
+  loop_control:
+    label: "{{ systemd_name }}"
+  vars:
+    systemd_name: "{{ item.where.split('/')[1:] | join('-') }}.mount"
+  when:
+    systemd_name != ".mount"
+  with_items: "{{ deadspace_nfs_mounts[inventory_hostname] }}"
+  tags:
+    - nfs-mounts
