@@ -1,4 +1,10 @@
 ---
 
 jenkins_port: 3003
-jenkins_root: /srv/jenkins
+jenkins_root: /var/lib/jenkins
+jenkins_docker: false
+
+jenkins_service_enabled_started: false
+
+jenkins_service_state: "{% if jenkins_service_enabled_started %}started{% else %}stopped{%endif%}"
+jenkins_service_enabled_name: "{% if jenkins_service_enabled_started %}enabled{% else %}disabled{%endif%}"

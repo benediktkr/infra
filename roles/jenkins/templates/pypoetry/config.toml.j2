@@ -1,0 +1,8 @@
+[repositories]
+
+{% for repo in poetry_repositories -%}
+{% if repo.name != "pypi" -%}
+[repositories.{{ repo.name }}]
+url = "{{ repo.url }}"
+{% endif -%}
+{% endfor %}

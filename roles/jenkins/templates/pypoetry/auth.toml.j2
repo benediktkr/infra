@@ -1,0 +1,4 @@
+[pypi-token]
+{% for repo in poetry_repositories -%}
+{{ repo.name }} = "{{ repo.token }}"
+{% endfor %}

@@ -1,5 +1,15 @@
 ---
 
+- name: set authorized_keys for jenkins user
+  template:
+    src: private/sshkeys/jenkins.authorized_keys
+    dest: "{{ systemuserlist.jenkins.home }}/.ssh/authorized_keys"
+    owner: jenkins
+    group: jenkins
+    mode: 0600
+  tags:
+    - sshkeys
+
 - name: install certs
   copy:
     src: "/usr/local/etc/letsencrypt/live/{{ item }}"
@@ -33,27 +43,54 @@
 
 - name: create dirs
   file:
-   path: "{{ jenkins_root }}/{{ item }}"
+   path: "{{ jenkins_root }}/{{ item.name }}"
    state: directory
-   mode: '0755'
+   mode: "{{ item.mode }}"
    owner: jenkins
    group: jenkins
-   recurse: no
+   recurse: false
+  loop_control:
+    label: "{{ item.name }}, mode: {{ item.mode }}"
   with_items:
-    - home
-    - home/.docker
-    - home/artifacts
-    - etc/docker
+    - name: etc
+      mode: '0755'
+    - name: etc/docker
+      mode: '0755'
+    - name: jenkins_home
+      mode: '0755'
+    - name: jenkins_home/artifacts
+      mode: '0755'
+    - name: jenkins_home/.docker
+      mode: '0755'
 
-- name: copy docker config for dockerhub
-  template:
-    src: private/jenkins/docker.config.json.j2
-    dest: "{{ jenkins_root }}/home/.docker/config.json"
-    mode: 0755
+# - name: config files for poetry
+#   template:
+#     dest: "{{ jenkins_root }}/etc/{{ item.name }}"
+#     src: "{{ item.name }}.j2"
+#     mode: '{{ item.mode }}'
+#     owner: jenkins
+#     group: jenkins
+#   with_items:
+#     - name: pypoetry/auth.toml
+#       owner: jenkins
+#       mode: '0700'
+#     - name: pypoetry/config.toml
+#       owner: jenkins
+#       mode: '0700'
+#   tags:
+#     - poetry-auth
+#     - poetry
+#     - python
+
+- name: docker auth config for jenkins
+  copy:
+    dest: "{{ jenkins_root }}/jenkins_home/.docker/config.json"
+    mode: '0750'
     owner: jenkins
     group: jenkins
+    content: "{{ docker_config | to_nice_json }}"
   tags:
-    - docker
+    - docker-auth
 
 - name: create dirs for {{ apt_url }}
   file:
@@ -66,20 +103,21 @@
     - amd64
     - armhf
     - all
+  when: jenkins_docker
 
 - name: create .gnupg
   file:
-   path: "{{ jenkins_root }}/home/.gnupg"
+   path: "{{ jenkins_root }}/jenkins_home/.gnupg"
    state: directory
    mode: 0700
    owner: jenkins
    group: jenkins
-
+  when: jenkins_docker
 
 - name: copy gpg stuff
   template:
     src: "private/jenkins/{{ item }}.j2"
-    dest: "{{ jenkins_root }}/home/.gnupg/{{ item }}"
+    dest: "{{ jenkins_root }}/jenkins_home/.gnupg/{{ item }}"
     mode: 0700
     owner: jenkins
     group: jenkins
@@ -87,6 +125,7 @@
     - "{{ apt_url }}.conf"
     - "{{ apt_url }}.gpg"
     - "{{ apt_url }}.key"
+  when: jenkins_docker
 
 - name: copy KEY.gpg
   template:
@@ -95,6 +134,7 @@
     mode: 0755
     owner: jenkins
     group: www-data
+  when: jenkins_docker
 
 
 - name: start docker container
@@ -102,9 +142,9 @@
     name: "jenkins"
     image: "benediktkr/jenkins:lts"
     hostname: "jenkins"
-    auto_remove: no
-    detach: yes
-    pull: yes
+    auto_remove: false
+    detach: true
+    pull: true
     restart_policy: "unless-stopped"
     container_default_behavior: compatibility
     #user: "{{systemuserlist.jenkins.uid}}:{{systemuserlist.jenkins.gid}}"
@@ -112,17 +152,72 @@
     ports:
       - "{{ jenkins_bind_addr | default('127.0.0.1') }}:{{ jenkins_port }}:8080/tcp"
       - "50000:50000/tcp"
-    volumes:
-      - "{{ jenkins_root }}/home:/var/jenkins_home"
-      - "{{ jenkins_root }}/etc/docker:/etc/docker"
-      - "/var/www/{{ apt_url }}:/var/www/{{ apt_url }}"
-      - /var/run/docker.sock:/var/run/docker.sock
-    networks_cli_compatible: no
+    mounts:
+      - type: bind
+        source: "{{ jenkins_root }}/jenkins_home"
+        target: "/var/jenkins_home"
+      - type: bind
+        source: "{{ jenkins_root }}/etc/docker"
+        target: "/etc/docker"
+      # - type: bind
+      #   source: "{{ jenkins_root }}/etc/pypoetry"
+      #   target: "/etc/pypoetry"
+      - type: bind
+        source: "/var/www/{{ apt_url }}"
+        target: "/var/www/{{ apt_url }}"
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+    env:
+      THIS_PROPAGATES: "TO THE JOBS"
+    networks_cli_compatible: false
     networks:
       - name: bridge
       - name: bridgewithdns
   tags:
     - jenkins-container
     - docker-containers
+  when: jenkins_docker
+
+- name: add apt key for pkg.jenkins.io
+  apt_key:
+    url: "{{ item }}"
+    state: present
+  with_items:
+    - https://pkg.jenkins.io/debian-stable/jenkins.io.key
+  tags:
+    - packages
+  when: not jenkins_docker
+
+- name: add repo for jenkins
+  apt_repository:
+    repo: "deb {{ item }}"
+    state: present
+    update_cache: true
+  with_items:
+    - http://pkg.jenkins.io/debian-stable binary/
+  tags:
+    - packages
+  when: not jenkins_docker
+
+- name: install jenkins and openjdk packages
+  apt:
+    name:
+      - default-jdk-headless
+      #- apt-utils   # it will complain about this otherwise
+      - jenkins
+    state: latest
+    update_cache: true
+  tags:
+    - packages
+  when: not jenkins_docker
+
+
+- name: "ensure jenkins is {{ jenkins_service_state }} and {{ jenkins_service_enabled_name }}"
+  service:
+    name: jenkins
+    state: "{{ jenkins_service_state }}"
+    enabled: "{{ jenkins_service_enabled_started }}"
+  when: not jenkins_docker
 
 # sudo docker exec -it jenkins /usr/bin/docker login
