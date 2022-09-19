@@ -1,5 +1,6 @@
 # infra
 
+[![Build Status](https://jenkins.sudo.is/buildStatus/icon?job=ben%2Finfra%2Fmain&style=flat-square)](https://jenkins.sudo.is/job/ben/job/infra/)
 [![git](docs/img/shields/git.sudo.is-ben-infra.svg)](https://git.sudo.is/ben/infra)
 [![github](docs/img/shields/github-benediktkr.svg)](https://github.com/benediktkr/infra)
 [![matrix](docs/img/shields/darkroom.svg)](https://matrix.to/#/#darkroom:sudo.is)
