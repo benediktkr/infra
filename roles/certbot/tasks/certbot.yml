@@ -5,6 +5,7 @@
     name:
       - certbot
       - certbot-dns-cloudflare
+      - certbot-dns-digitalocean
     state: latest
     executable: pip3
   tags:
@@ -32,7 +33,20 @@
     mode: 0770
   with_items:
     - cloudflare-credentials.ini
+    - digitalocean-credentials.ini
     - cli.ini
+
+- name: template local configs
+  template:
+    src: "{{ item }}.j2"
+    dest: /usr/local/etc/letsencrypt/{{ item }}
+    owner: root
+    group: root
+    mode: 0775
+  with_items:
+    - dns-provider-domains.json
+  tags:
+    - certbot-dns-config
 
 - name: template renewal configs
   template:
@@ -64,6 +78,7 @@
   with_items:
     - letsencrypt.sh
     - letsencrypt-hook.py
+    - letsencrypt-new.py
 
 - name: cron file
   template:

@@ -21,3 +21,8 @@ if you need to
 ```shell
 sudo certbot delete --cert-name $NAME
 ```
+
+
+```
+--dns-cloudflare-propagation-seconds
+```
