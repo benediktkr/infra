@@ -8,6 +8,7 @@
       - mariadb-server
       - mariadb-client
       - python3-pymysql
+      - gzip
     state: present
   tags:
     - packages
@@ -39,6 +40,8 @@
     collation: utf8mb4_general_ci
     login_unix_socket: /run/mysqld/mysqld.sock
   with_items: "{{ systemuserlist.values() | selectattr('mariadb', 'true') }}"
+  when:
+    - not item.mariadb_role_managed|default(false)
   loop_control:
     label: "{{ item.username }}"
   tags:
@@ -51,6 +54,8 @@
     state: present
     login_unix_socket: /run/mysqld/mysqld.sock
   with_items: "{{ systemuserlist.values() | selectattr('mariadb', 'true') }}"
+  when:
+    - not item.mariadb_role_managed|default(false)
   loop_control:
     label: "{{ item.username }}"
   tags:
@@ -60,12 +65,14 @@
   mysql_user:
     name: "{{ item.mariadb_username|default(item.username) }}"
     password: "{{ item.mariadb_pass }}"
-    host: "{{ item.mariadb_host | default(mariadb_bridgewithdns) }}"
+    host: "{{ item.mariadb_host | default(bridgewithdns_mariadb) }}"
     priv: "{{ item.mariadb_username|default(item.username) }}.*:ALL"
     state: present
     login_unix_socket: /run/mysqld/mysqld.sock
   with_items: "{{ systemuserlist.values() | selectattr('mariadb', 'true') }}"
-  when: '"mariadb_pass" in item '
+  when:
+    - '"mariadb_pass" in item'
+    - not item.mariadb_role_managed|default(false)
   loop_control:
     label: "{{ item.username }}"
   tags:
@@ -80,7 +87,7 @@
     mode: 0770
   tags:
     - backup
-    - mysql-users
+    - mariadb-backup
 
 - name: backup cron
   template:

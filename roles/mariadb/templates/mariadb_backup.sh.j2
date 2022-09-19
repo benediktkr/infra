@@ -13,19 +13,15 @@ if [ ! -d {{ mariadb_dump_path }} ]; then
     exit 1
 fi
 
-{% for name, item in systemuserlist.items()|default([]) %}
-{% if item.mariadb | default(False)  %}
-{% set user = item.mariadb_username|default(item.username) %}
-# dumping '{{ user }}'
-if [ -f {{ mariadb_dump_path }}/{{ user }}.1.sql ]; then
-    rm {{ mariadb_dump_path }}/{{ user }}.1.sql
+{% set name = inventory_hostname.split('.')[0] %}
+if [ -f {{ mariadb_dump_path }}/{{ name }}.1.sql.gz ]; then
+    rm {{ mariadb_dump_path }}/{{ name }}.1.sql.gz
 fi
-if [ -f {{ mariadb_dump_path }}/{{ user }}.sql ]; then
-    mv {{ mariadb_dump_path }}/{{ user }}.sql {{ mariadb_dump_path }}/{{ user }}.1.sql
+if [ -f {{ mariadb_dump_path }}/{{ name }}.sql.gz ]; then
+    mv {{ mariadb_dump_path }}/{{ name }}.sql.gz {{ mariadb_dump_path }}/{{ name }}.1.sql.gz
 fi
-mysqldump {{ user }} > {{ mariadb_dump_path }}/{{ user }}.sql
 
-{% endif %}
-{% endfor %}
+# for more compressin, use `gzip --best`
+mysqldump --all-databases | gzip > {{ mariadb_dump_path }}/{{ name }}.sql.gz
 
 rm -f /var/run/maridb_backup.lock
