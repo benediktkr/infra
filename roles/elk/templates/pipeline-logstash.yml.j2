@@ -40,11 +40,28 @@ filter {
   }
   if "arrformat" in [tags] {
     grok {
-      match => [ "message", "%{DATA}\|%{LOGLEVEL:level}\|%{GREEDYDATA:message}" ]
+      match => [ "message", "%{DATA}\|%{LOGLEVEL:level}\|%{DATA:logger_name}\|%{GREEDYDATA:message}" ]
+      overwrite => [ "message" ]
+    }
+    mutate {
+       uppercase => [ "level" ]
+    }
+  }
+  if "jackett" in [tags] {
+    grok {
+      match => [ "message", "%{DATE} %{TIME} %{LOGLEVEL:level} %{DATA:logger_name} %{GREEDYDATA:message}" ]
+      overwrite => [ "message" ]
+    }
+    mutate {
+       uppercase => [ "level" ]
+    }
+  }
+  if "bazarr" in [tags] {
+    grok {
+      match => [ "message", "%{DATA}\|%{LOGLEVEL:level}%{SPACE}\|%{DATA:logger_name}%{SPACE}\|BAZARR %{GREEDYDATA:message}\|" ]
       overwrite => [ "message" ]
     }
   }
-
   if "mautrix-bridge" in [tags] {
     grok {
       match => ["message", "\[%{LOGLEVEL:level}\] - %{DATA:namespace} - %{GREEDYDATA:message}"]
@@ -98,7 +115,13 @@ filter {
       rename => {"msg" => "message"}
     }
     grok {
-      match => ["message", "username=%{WORD:auth_request_user} groups=%{GREEDYDATA:auth_request_group} ip=%{IPV4:auth_request_ip} and object %{URI:auth_request_object_url} \(method %{WORD:auth_request_method}\)"]
+      match => {
+        "message" => [
+          "username=%{WORD:auth_request_user} groups=%{GREEDYDATA:auth_request_group} ip=%{IPV4:auth_request_ip} and object %{URI:auth_request_object_url} \(method %{WORD:auth_request_method}\)",
+          "user %{WORD:auth_request_user}",
+          "user \'%{WORD:auth_request_user}\'"
+        ]
+      }
     }
   }
   if "nginx" in [tags] {
