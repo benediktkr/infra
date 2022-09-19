@@ -15,9 +15,10 @@
   with_items:
     - "{{ gitea_url }}"
 
+
 - name: create dir structure
   file:
-    path: "{{ systemuserlist.git.home }}/{{ item }}"
+    path: "{{ gitea_user.home }}/{{ item }}"
     state: directory
     mode: 0755
     owner: git
@@ -28,6 +29,7 @@
     - data/gitea/conf
     - data/gitea/templates
     - data/gitea/templates/custom
+    - data/gitea/templates/user/dashboard
     - data/git
 
 - name: template ssh passthrough script
@@ -41,7 +43,7 @@
 - name: template config
   template:
     src: private/gitea_app.ini.j2
-    dest: "{{ systemuserlist.git.home }}/data/gitea/conf/app.ini"
+    dest: "{{ gitea_user.home }}/data/gitea/conf/app.ini"
     owner: git
     group: git
     mode: 0644
@@ -50,7 +52,7 @@
 - name: template robots.txt
   template:
     src: "{{ item }}.j2"
-    dest: "{{ systemuserlist.git.home }}/data/gitea/{{ item }}"
+    dest: "{{ gitea_user.home }}/data/gitea/{{ item }}"
     owner: www-data
     group: www-data
     mode: 0644
@@ -62,8 +64,8 @@
 
 - name: copy gitea templates
   copy:
-    src: "{{ item }}"
-    dest: "{{ systemuserlist.git.home }}/data/gitea/templates/{{ item }}"
+    src: "tmpl/{{ item }}"
+    dest: "{{ gitea_user.home }}/data/gitea/templates/{{ item }}"
     owner: www-data
     group: www-data
     mode: 0644
@@ -71,6 +73,8 @@
     - home.tmpl
     - custom/extra_links.tmpl
     - custom/extra_tabs.tmpl
+    - user/dashboard/feeds.tmpl
+    - user/dashboard/repolist.tmpl
   tags:
     - gitea-templates
   notify: restart gitea
@@ -91,26 +95,26 @@
   docker_container:
     name: gitea
     image: gitea/gitea:latest
-    detach: yes
-    pull: yes
+    detach: true
+    pull: true
     restart_policy: "unless-stopped"
     state: "{{ container_state | default('started') }}"
     container_default_behavior: compatibility
     ports:
       - "127.0.0.1:{{ gitea_ssh_port }}:22"
     volumes:
-      - "{{ systemuserlist.git.home }}/data:/data"
-      - "{{ systemuserlist.git.home }}/.ssh/:/data/git/.ssh"
+      - "{{ gitea_user.home }}/data:/data"
+      - "{{ gitea_user.home }}/.ssh/:/data/git/.ssh"
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     env:
-      USER_UID: "{{ systemuserlist.git.uid }}"
-      USER_GID: "{{ systemuserlist.git.gid }}"
+      USER_UID: "{{ gitea_user.uid }}"
+      USER_GID: "{{ gitea_user.gid }}"
       DB_TYPE: mysql
       DB_HOST: "{{ ansible_docker0.ipv4.address }}:3306"
       DB_NAME: gitea
       DB_USER: gitea
-      DB_PASSWD: "{{ systemuserlist.git.mariadb_pass }}"
+      DB_PASSWD: "{{ gitea_user.mariadb_pass }}"
       DISABLE_REGISTRATION: "true"
     networks_cli_compatible: false
     network_mode: bridgewithdns

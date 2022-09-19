@@ -7,10 +7,33 @@ server {
   {% endif -%}
 
   include listen-proxy-protocol.conf;
-  server_name {{ gitea_url }};
+  server_name {{ gitea_url }} {{ gitea_extra_urls | default([]) | join([" "]) }};
 
-   location / {
-       proxy_pass         http://{{ bridgewithdns.gitea }}:{{ gitea_docker_port }};
+
+  # default value
+  set $header_sudo_gitea "gitea";
+
+  location / {
+      proxy_pass         http://{{ bridgewithdns.gitea }}:{{ gitea_docker_port }};
+
+      proxy_redirect     off;
+      proxy_set_header   Host $host;
+      proxy_set_header   X-Real-IP $remote_addr;
+      proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header   X-Forwarded-Host $server_name;
+      proxy_set_header   X-Forwarded-Proto $scheme;
+
+      set $header_sudo_gitea "gitea";
+   }
+
+   location /{{ gitea_team_org }}/issues {
+       # relies on "port_in_direct off" from listen-proxy-protocol.conf
+       set $header_sudo_gitea "redirect";
+       return 302 "/{{ gitea_team_org }}/issues/";
+   }
+   {% for item in ['issues', 'wiki'] -%}
+   location /{{ gitea_team_org }}/{{ item }}/ {
+       proxy_pass         http://{{ bridgewithdns.gitea }}:{{ gitea_docker_port }}/{{ gitea_team_org }}/{{ gitea_issues_repo }}/{{ item }}/;
 
        proxy_redirect     off;
        proxy_set_header   Host $host;
@@ -18,17 +41,19 @@ server {
        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
        proxy_set_header   X-Forwarded-Host $server_name;
        proxy_set_header   X-Forwarded-Proto $scheme;
+       set $header_sudo_gitea "gitea, {{ item }}";
    }
+   {% endfor %}
 
    include /etc/nginx/sudo-known.conf;
 
    location /robots.txt {
        # gitea itself can also serve this file
-       alias {{ systemuserlist.git.home }}/data/gitea/robots.txt;
+       alias {{ gitea_user.home }}/data/gitea/robots.txt;
    }
    location /sitemap.xml {
        # gitea itself can also serve this file
-       alias {{ systemuserlist.git.home }}/data/gitea/sitemap.xml;
+       alias {{ gitea_user.home }}/data/gitea/sitemap.xml;
    }
 
    location /user/forgot_password {
@@ -44,11 +69,10 @@ server {
    ssl_certificate_key /usr/local/etc/certs/{{ gitea_url }}/privkey.pem;
 
    add_header Referrer-Policy "no-referrer" always;
-   add_header X-Content-Type-Options "nosniff" always;
-   add_header X-Download-Options "noopen" always;
    add_header X-Frame-Options "SAMEORIGIN" always;
    add_header X-Permitted-Cross-Domain-Policies "none" always;
    add_header X-XSS-Protection "1; mode=block" always;
+   add_header SUDO-GITEA $header_sudo_gitea always;
 
    fastcgi_hide_header X-Powered-By;
 }

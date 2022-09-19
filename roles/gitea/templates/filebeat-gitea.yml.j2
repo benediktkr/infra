@@ -1,7 +1,7 @@
 - type: filestream
-  id: "gitea-log"
+  id: "gitea-log_{{ gitea_user.username }}"
   paths:
-    - {{ systemuserlist.git.home }}/data/gitea/log/gitea.log
+    - {{ gitea_user.home }}/data/gitea/log/gitea.log
 
   enabled: true
 

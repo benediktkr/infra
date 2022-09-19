@@ -1,0 +1,5 @@
+---
+
+gitea_username: git
+
+gitea_user: "{{ systemuserlist[gitea_username] }}"
