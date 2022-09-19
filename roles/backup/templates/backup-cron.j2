@@ -1,7 +1,7 @@
 # distributed from ansible
 
 # m h dom mon dow
-{% if not tmp_no_backup|default(false) %}
+{% if rsnapshot_cron_enabled|default(false) %}
 
 20 4 * * * root /usr/local/bin/full_backup.sh
 */1 * * * * root /usr/local/bin/sudoisrsnapshot.py metrics --quiet

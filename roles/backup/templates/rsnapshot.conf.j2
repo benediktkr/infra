@@ -132,6 +132,8 @@ link_dest	0
 
 {% for hostname in hostvars %}
 
+{% set ssh_hostname = hostvars[hostname]["backup_ssh_hostname"] | default(hostname) -%}
+
 # {{ hostname }}
 {% for path in rsnapshot_default %}
 {%   if inventory_hostname == hostname %}

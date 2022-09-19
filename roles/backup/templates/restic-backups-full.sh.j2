@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# LOCKFILES
+
+{% for repo in restic_config %}
+# repo: {{ repo }}
+# {{ restic_config[repo]['url'] }}
+
+if [[ "$1" == "{{ repo }}" || "$1" == "" ]]; then
+echo "repo: {{ repo }}"
+echo "{{ restic_config[repo]['url'] }}"
+
+{% for p in restic_config[repo].paths -%}
+    echo "{{ p.path }}"
+    /usr/local/bin/restic-backups.py -r {{ repo }} -H {{ p.host|default(inventory_hostname) }} backup {{ p.path }}
+{% endfor %}
+fi
+
+{% endfor %}

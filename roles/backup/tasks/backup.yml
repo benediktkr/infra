@@ -10,10 +10,14 @@
   run_once: True
   delegate_to: localhost
 
-- name: install rsnapshot
+- name: install packages
   apt:
-    name: rsnapshot
+    name:
+      - rsnapshot
+      - restic
+      - rclone
     state: present
+  when: not skip_apt|default(false)
   tags:
     - packages
 
@@ -29,41 +33,50 @@
     - "{{ sdfbackup_opts.ssh_args.mountpoint }}"
     - "{{ sdfbackup_opts.luks_args.mountpoint }}"
 
+- name: create log dir
+  file:
+    state: directory
+    path: /var/log/backup
+    owner: root
+    group: adm
+    mode: 0770
+  tags:
+    - restic
+
 - name: template rsnapshot config
   template:
     src: rsnapshot.conf.j2
     dest: /etc/rsnapshot.conf
   tags:
+    - backup-config
     - rsnapshot-config
+    - rsnapshot
 
-- name: template sdfbackup config
-  template:
-    src: sdfbackup.json.j2
-    dest: /usr/local/etc/sdfbackup.json
+- name: config files for custom scripts
+  copy:
+    dest: /usr/local/etc/{{ item.filename }}
     owner: root
-    group: root
+    group: "{{ item.group | default('root') }}"
     mode: 0640
-
-- name: template cron file
-  template:
-    src: backup-cron.j2
-    dest: /etc/cron.d/backup
-    mode: 0750
-  tags: backup_scripts
-
-- name: template backup scripts
-  template:
-    src: "{{ item }}.j2"
-    dest: "/usr/local/bin/{{ item }}"
-    mode: 0750
-    owner: root
-    group: root
+    content: "{{ item.content }}"
+  loop_control:
+    label: "{{ item.filename }}"
   with_items:
-    - sdfbackup.py
-    - sdfcleanup.sh
-    - sudoisrsnapshot.py
-    - full_backup.sh
-  tags: backup_scripts
+    - filename: sdfbackup.json
+      content: "{{ sdfbackup_opts | to_nice_json }}"
+    - filename: restic-passwords.json
+      content: "{{ restic_passwords | to_nice_json }}"
+      group: adm
+    - filename: restic.json
+      content: "{{ restic_config | to_nice_json }}"
+      group: adm
+    - filename: backup-excludes.txt
+      content: "{{ rsnapshot_exclude | join('\n') }}"
+      group: adm
+  tags:
+    - restic
+    - restic-scripts
+    - backup-config
 
 - name: luks key for sdf
   copy:
@@ -72,4 +85,64 @@
     owner: root
     group: root
     mode: 0600
+  tags:
+    - backup-config
   no_log: True
+
+- name: template cron file
+  template:
+    src: backup-cron.j2
+    dest: /etc/cron.d/backup
+    mode: 0644
+  tags: backup_scripts
+
+- name: template backup scripts
+  template:
+    src: "{{ item }}.j2"
+    dest: "/usr/local/bin/{{ item }}"
+    mode: 0750
+    owner: root
+    group: adm
+  with_items:
+    - sdfbackup.py
+    - sdfcleanup.sh
+    - sudoisrsnapshot.py
+    - full_backup.sh
+    - restic-backups-full.sh
+  tags: backup_scripts
+
+- name: install python packages for restic scripts
+  pip:
+    name:
+      - loguru
+    state: latest
+    executable: pip3
+  tags:
+    - pip
+    - packages
+    - restic
+
+- name: copy restic scripts
+  copy:
+    src: "{{ item }}"
+    dest: "/usr/local/bin/{{ item }}"
+    mode: 0750
+    owner: root
+    group: adm
+  with_items:
+    - restic-backups.py
+    - restic-password.py
+  tags:
+    - restic
+    - restic-scripts
+    - backup_scripts
+
+- name: cleanup files
+  file:
+    state: absent
+    path: "{{ item }}"
+  tags:
+    - restic
+    - backup_scripts
+  with_items:
+    - /usr/local/bin/resticpassword.py
