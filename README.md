@@ -38,10 +38,11 @@ and some docker images that needed customizing or as a way to package `.deb`:
  * [poetry-docker](https://git.sudo.is/ben/poetry-docker)
  * [xmrig-docker](https://git.sudo.is/ben/xmrig-docker)
  * [hydrogen-docker](https://git.sudo.is/ben/hydrogen-docker)
+ * [synapse-admin-docker](https://git.sudo.is/ben/synapse-admin-docker)
  * [emacs-docker](https://git.sudo.is/ben/emacs-docker): building
    emacs from upstream git in docker on jenkins and packaging as
    `.deb` published at https://apt.sudo.is
- * [nginx-build](https://git.sudo.is/ben/nginx-build): building nginx from
+ * [build-nginx](https://git.sudo.is/ben/build-nginx): building nginx from
    source with all modules (the useful ones anyway) and packaging as `.deb`
 
 
@@ -49,4 +50,4 @@ and some docker images that needed customizing or as a way to package `.deb`:
 
  * upstream repo: https://git.sudo.is/ben/infra
  * github mirror: https://github.com/benediktkr/infra
- * bitbucket mirror: https://bitbucket.org/benedikt/infra
+ * bitbucket mirror (private): https://bitbucket.org/benedikt/infra
