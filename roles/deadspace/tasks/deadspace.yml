@@ -28,7 +28,9 @@
     dest: /root/.ssh/deadspace
     owner: root
     group: root
-    mode: 0700
+    mode: '0700'
+  vars:
+    prediff_cmd: echo
   tags:
     - sshkeys
 
@@ -38,7 +40,7 @@
     path: "{{ item.path }}"
     owner: "{{ item.owner|default(deadspace_user) }}"
     group: "{{ item.group|default(deadspace_user) }}"
-    mode: "{{ item.mode|default(0775) }}"
+    mode: "{{ item.mode|default('0775') }}"
     recurse: false
   loop_control:
     label: "{{ item.path }}"
