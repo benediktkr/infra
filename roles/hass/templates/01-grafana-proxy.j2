@@ -1,0 +1,28 @@
+server {
+    listen 443 ssl http2;
+
+    include /etc/nginx/sudo-known.conf;
+
+    server_name {{ hass_grafana_proxy_url }};
+
+    location / {
+        proxy_set_header Host {{ grafana_url }};
+        proxy_set_header Authorization "{{ hass_grafana_proxy_auth_header }}";
+
+        {# strip header from requst #}
+        {# proxy_set_header Referer ""; #}
+
+        proxy_pass https://{{ hass_grafana_proxy_pass }};
+    }
+
+    access_log /var/log/nginx/access_{{ hass_grafana_proxy_url }}.log main;
+    error_log /var/log/nginx/error_{{ hass_grafana_proxy_url }}.log warn;
+
+    ssl_session_timeout 5m;
+    ssl_certificate /usr/local/etc/certs/{{ domain }}/fullchain.pem;
+    ssl_certificate_key /usr/local/etc/certs/{{ domain }}/privkey.pem;
+
+    add_header Content-Security-Policy "frame-ancestors 'self' {{ cast_refer }} https://*.{{ domain }};" always;
+
+    fastcgi_hide_header X-Powered-By;
+}

@@ -22,6 +22,7 @@
     dest: /etc/nginx/sites-enabled/01-grafana
   tags:
     - grafana-config
+    - grafana-nginx
     - nginx-grafana
     - nginx
   notify: reload nginx

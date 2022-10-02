@@ -1,6 +1,69 @@
 ---
 
+- name: allow ssh
+  ufw:
+    rule: allow
+    to_port: "22"
+    direction: in
+    state: enabled
+  tags:
+    - ufw
+
+- name: allow loopback
+  ufw:
+    rule: allow
+    interface: lo
+    direction: in
+    state: enabled
+  tags:
+    - ufw
+
+- name: default policy
+  ufw:
+    policy: allow
+    state: enabled
+  tags:
+     - ufw
+
+- name: deny hass cloud port stuff
+  ufw:
+    # drops packets
+    rule: deny
+    to_port: '42161'
+    direction: in
+    state: enabled
+  tags:
+    - ufw
+
+- name: reject zwavejs ws and hass ports (loopback only)
+  ufw:
+    # connection refused
+    rule: reject
+    to_port: "{{ item }}"
+    direction: in
+    state: enabled
+  with_items:
+    - "8091"
+    - "8123"
+  tags:
+    - ufw
+
 # hass + zwave
+
+- name: install certs
+  copy:
+    src: "/usr/local/etc/letsencrypt/live/{{ item }}"
+    dest: "/usr/local/etc/certs/"
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - letsencrypt-certs
+  notify: reload nginx
+  vars:
+    prediff_cmd: echo
+  with_items:
+    - "{{ hass_url }}"
 
 - name: create dir structure
   file:
@@ -11,37 +74,67 @@
     group: hass
   with_items:
     - home-assistant
+    - home-assistant/config
+    - home-assistant/.config
+    - home-assistant/media
     - zwavejs
+    - zwavejs/app
+    - zwavejs/app/store
+
+- name: home assistant main configuration.yaml
+  template:
+    src: configuration.yaml.j2
+    dest: "{{ systemuserlist.hass.home }}/home-assistant/config/configuration.yaml"
+    owner: "{{ systemuserlist.hass.uid }}"
+    group: "{{ systemuserlist.hass.gid }}"
+    mode: 0644
+  notify: restart hass container
+
+- name: home assistant secrets file
+  template:
+    src: secrets.yaml.j2
+    dest: "{{ systemuserlist.hass.home }}/home-assistant/config/secrets.yaml"
+    owner: "{{ systemuserlist.hass.uid }}"
+    group: "{{ systemuserlist.hass.gid }}"
+    mode: 0644
+  no_log: true
+  notify: restart hass container
 
 # docker run --run -it -p 8091:8091 -p 3000:3000 --network
 #bridgewithdns --device /dev/ttyACM0:/dev/zwave -v
 # /home/ben/zwavejs:/usr/src/app/store zwavejs/zwavejs2mqtt:latest
 
+# the name has changed to zwave-js-ui:
+# https://github.com/zwave-js/zwave-js-ui/pull/2650
 - name: start zwavejs container
   docker_container:
     name: zwavejs
-    image: zwavejs/zwavejs2mqtt:latest
+    image: zwavejs/zwave-js-ui:latest
     detach: true
     pull: true
     restart_policy: "unless-stopped"
     state: "{{ container_state | default('started') }}"
     container_default_behavior: compatibility
     user: "{{ systemuserlist.hass.uid }}:dialout"
-    devices:
-      - "/dev/serial/by-id/usb-0658_0200-if00:/dev/zwave:rwm"
-    ports:
-      # - "127.0.0.1:3000:3000"
-      # - "127.0.0.1:8091:8091"
-      - "3000:3000"
-      - "8091:8091"
-    mounts:
-      - type: bind
-        source: /var/lib/hass/zwavejs
-        target: /usr/src/app/store
     networks_cli_compatible: false
     network_mode: bridgewithdns
     networks:
       - name: bridgewithdns
+        ipv4_address: "{{ bridgewithdns.zwavejs }}"
+    devices:
+      - "/dev/serial/by-id/usb-0658_0200-if00:/dev/zwave:rwm"
+    ports:
+      # ws for hass<->zwavejs
+      # hass is configured to use localhost:3000 to talk to zwavejs, but can
+      # also use {{ bridgewithdns.zwavejs }}, but hass is very fragile and
+      # you have to manually work around it if it cant access zwaevjs because the
+      # ip/dns changed or the container moved networks. it is not configured in a
+      # config file either. so using localhost is the least fragile strategy.
+      - "127.0.0.1:3000:3000"
+    mounts:
+      - type: bind
+        source: "{{ systemuserlist.hass.home }}/zwavejs/app/store"
+        target: /usr/src/app/store
   tags:
     - zwavejs
     - zwavejs-container
@@ -62,20 +155,48 @@
     state: "{{ container_state | default('started') }}"
     container_default_behavior: compatibility
     user: "{{ systemuserlist.hass.uid }}:{{ systemuserlist.hass.gid }}"
+    network_mode: host
     env:
       TZ: "Etc/UTC"
-    ports:
-      - "8123:8123"
     mounts:
       - type: bind
-        source: /var/lib/hass/home-assistant
+        source: "{{ systemuserlist.hass.home }}/home-assistant/config"
         target: /config
-    networks_cli_compatible: false
-    network_mode: bridgewithdns
-    networks:
-      - name: bridgewithdns
+      - type: bind
+        source: "{{ systemuserlist.hass.home }}/home-assistant/.config"
+        target: /.config
+      - type: bind
+        source: "{{ systemuserlist.hass.home }}/home-assistant/media"
+        target: /usr/var/media
   tags:
     - home-assistant
     - home-assistant-container
     - hass-container
     - docker-containers
+  register: hass_container
+
+- name: template nginx vhost for hass
+  template:
+    src: 01-hass.j2
+    dest: /etc/nginx/sites-enabled/01-hass
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - nginx
+    - hass-nginx
+    - zwave-nginx
+  notify: restart nginx
+
+# different task because its better for the hass config to restart nginx
+- name: template nginx vhost for grafana-proxy
+  template:
+    src: 01-grafana-proxy.j2
+    dest: /etc/nginx/sites-enabled/01-grafana
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - nginx
+    - grafana-proxy-nginx
+  notify: reload nginx

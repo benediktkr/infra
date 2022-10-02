@@ -66,18 +66,6 @@ server {
         return 403;
     }
 
-    location /health {
-        allow 127.0.0.1;
-        allow {{ my_public_ips[inventory_hostname] }}/32;
-        allow {{ my_public_ips[ansible_control_host] }}/32;
-        allow {{ wireguard_cidr }};
-        deny all;
-
-        proxy_pass http://127.0.0.1:{{ jellyfin_port }};
-        proxy_set_header Host $host;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    }
-
     # so /web/#!/ works instead of having to go to /web/index.html/#!/
     location = /web/ {
         proxy_pass http://127.0.0.1:{{ jellyfin_port }}/web/index.html;
@@ -102,6 +90,20 @@ server {
         proxy_set_header X-Forwarded-Host $http_host;
     }
 
+    {% for item in ["/health", "/GetUtcTime"] -%}
+    location {{ item }} {
+        allow 127.0.0.1;
+        allow {{ my_public_ips[inventory_hostname] }}/32;
+        allow {{ my_public_ips[ansible_control_host] }}/32;
+        allow {{ wireguard_cidr }};
+        deny all;
+
+        proxy_pass http://127.0.0.1:{{ jellyfin_port }};
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+    {% endfor %}
+
     {# location /videos/ {
      #     # cache video streams: https://jellyfin.org/docs/general/networking/nginx.html#cache-video-streams
      #     proxy_cache cWEB;
@@ -116,6 +118,7 @@ server {
      #     proxy_cache_key "{{ jellyfin_url }}$uri?MediaSourceId=$arg_MediaSourceId&VideoCodec=$arg_VideoCodec&AudioCodec=$arg_AudioCodec&AudioStreamIndex=$arg_AudioStreamIndex&VideoBitrate=$arg_VideoBitrate&AudioBitrate=$arg_AudioBitrate&SubtitleMethod=$arg_SubtitleMethod&TranscodingMaxAudioChannels=$arg_TranscodingMaxAudioChannels&RequireAvc=$arg_RequireAvc&SegmentContainer=$arg_SegmentContainer&MinSegments=$arg_MinSegments&BreakOnNonKeyFrames=$arg_BreakOnNonKeyFrames&h264-profile=$h264Profile&h264-level=$h264Level";
      #     proxy_cache_valid 200 301 302 30d;
      # } #}
+
 }
 
 server {

@@ -1,0 +1,123 @@
+
+# Loads default set of integrations. Icluding the cloud crap. Do remove.
+# havent gotten it to work wthough, hass doesnt load properly
+default_config:
+#
+# the dict contains this:
+# https://github.com/home-assistant/core/blob/dev/homeassistant/components/default_config/manifest.json
+#
+# the cloud thing clistens on (at least) port 42161.
+# since we need to run in host mode, and dont have network/port isolation by default
+# we'll kill this stuff.
+#
+# for some reason the settings dialog for it is still at /config/cloud/login, but
+# we arent listening on port 42161 anymore (yay!). (but hass doesnt start)
+#
+# for now we just block the ports with iptables/ufw
+#
+# config:
+#   application_credentials:
+#   automation:
+#   bluetooth:
+#   # there is no cloud, just other peoples computers..
+#   #cloud:
+#   counter:
+#   dhcp:
+#   energy:
+#   frontend:
+#   hardware:
+#   history:
+#   homeassistant_alerts:
+#   input_boolean:
+#   input_button:
+#   input_datetime:
+#   input_number:
+#   input_select:
+#   input_text:
+#   logbook:
+#   map:
+#   media_source:
+#   mobile_app:
+#   my:
+#   network:
+#   person:
+#   scene:
+#   schedule:
+#   script:
+#   ssdp:
+#   # kind of undocumented, but didnt help
+#   stream:
+#   sun:
+#   system_health:
+#   tag:
+#   timer:
+#   usb:
+#   webhook:
+#   zeroconf:
+#   zone:
+
+# Text to speech
+tts:
+  - platform: google_translate
+
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+
+calendar:
+  - platform: caldav
+    username: !secret caldav_user
+    password: !secret caldav_passwd
+    url: !secret caldav_url
+
+http:
+  # container runs with network_mode=host, so no network isolation. the docs say to not
+  # do this, and it doesnt work as expected either.
+  # using ufw/iptables for now....
+  #
+  #server_host: 127.0.0.1
+  trusted_proxies:
+    - 127.0.0.1
+    - {{ bridgewithdns.host }}
+    - {{ bridgewithdns_cidr }}
+  use_x_forwarded_for: true
+
+homeassistant:
+  name: Home
+  currency: EUR
+  unit_system: metric
+  time_zone: "Europe/Berlin"
+  external_url: https://{{ hass_url }}
+  internal_url: https://{{ hass_url }}
+  allowlist_external_dirs:
+    - "/usr/var/media"
+  allowlist_external_urls:
+    - "https://{{ static_url }}"
+    - "https://{{ hass_notflix_url }}"
+  media_dirs:
+    media: "/usr/var/media"
+
+sensor:
+  # https://www.home-assistant.io/integrations/dwd_weather_warnings/
+  # https://www.dwd.de/DE/leistungen/opendata/help/warnungen/warning_codes_pdf.pdf?__blob=publicationFile&v=5
+  # https://www.dwd.de/DE/leistungen/opendata/help/warnungen/cap_warncellids_csv.html
+  # 111000000;Berlin;DE300;Berlin;BXX
+  # 711000002;Berlin - Friedrichshain-Kreuzberg;;B-Friedrh./Kbg.;BXB
+  # 711000003;Berlin - Pankow;;B-Pankow;BXG
+  # 711000011;Berlin - Lichtenberg;;B-Lichtenberg;BXC
+  # 811000000;Stadt Berlin;;Berlin;
+  # 911000000;Berlin;;Land Berlin;LBE
+  # 911100000;Berlin;;Berlin;BXZ
+  # 995000000;Brandenburg/Berlin;;Berlin/Brandenb;DWPD
+
+  - platform: dwd_weather_warnings
+    # Berlin - Friedrichshain-Kreuzberg
+    region_name: 711000002
+
+  - platform: dwd_weather_warnings
+    # Berlin - Pankow
+    region_name: 711000003
+
+  - platform: dwd_weather_warnings
+    # Stadt Berlin
+    region_name: 811000000

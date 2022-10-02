@@ -51,6 +51,7 @@ server {
   add_header Referrer-Policy "no-referrer" always;
   add_header X-Download-Options "noopen" always;
   add_header X-Robots-Tag "none" always;
+  add_header Content-Security-Policy "frame-ancestors 'self' https://*.{{ domain }};" always;
 
   fastcgi_hide_header X-Powered-By;
 }
