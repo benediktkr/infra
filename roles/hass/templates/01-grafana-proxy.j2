@@ -13,6 +13,10 @@ server {
         {# proxy_set_header Referer ""; #}
 
         proxy_pass https://{{ hass_grafana_proxy_pass }};
+
+        # hide the CSP header from regular grafana so we can replace it.
+        # if we dont hide it, we send both back in the reponse.
+        proxy_hide_header Content-Security-Policy;
     }
 
     access_log /var/log/nginx/access_{{ hass_grafana_proxy_url }}.log main;
