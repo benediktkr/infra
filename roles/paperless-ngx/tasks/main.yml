@@ -1,0 +1,3 @@
+---
+ - import_tasks: paperless-ngx.yml
+   tags: paperless-ngx

@@ -1,0 +1,195 @@
+---
+
+- name: create mariadb db
+  mysql_db:
+    name: "{{ mariadb_db }}"
+    # utf8mb4 has problems with varchar > 255 and paperless (django) crashes
+    # https://stackoverflow.com/questions/43483129/does-mariadb-allow-255-character-unique-indexes
+    encoding: utf8
+    collation: utf8_general_ci
+    login_unix_socket: /run/mysqld/mysqld.sock
+  tags:
+    - mariadb-users
+
+- name: mariadb user without password
+  mysql_user:
+    state: present
+    name: "{{ systemuserlist.paperless.username }}"
+    host: 'localhost'
+    priv: "{{ mariadb_db }}.*:ALL"
+    login_unix_socket: /run/mysqld/mysqld.sock
+  tags:
+    - mariadb-users
+
+- name: mariadb user with password
+  mysql_user:
+    state: present
+    name: "{{ systemuserlist.paperless.username }}"
+    host: "{{ item }}"
+    priv: "{{ mariadb_db }}.*:ALL"
+    password: "{{ systemuserlist.paperless.mariadb_pass }}"
+    login_unix_socket: /run/mysqld/mysqld.sock
+  loop_control:
+    label: "'{{ systemuserlist.paperless.username }}'@'{{ item }}'"
+  when:
+    - "item | ansible.utils.ipaddr('private') or item.endswith('%')"
+  with_items:
+    - "{{ ansible_default_ipv4.address }}"
+    - "{{ bridgewithdns_mariadb }}"
+  tags:
+    - mariadb-users
+
+- name: create dir structure
+  file:
+    path: "{{ systemuserlist.paperless.home }}/{{ item.name }}"
+    state: directory
+    mode: 0775
+    owner: "{{ item.owner|default('paperless') }}"
+    group: "{{ item.group|default('paperless') }}"
+  with_items:
+    # checked dockerfile: https://github.com/docker-library/redis/blob/master/7.0/Dockerfile
+    - name: redis
+      owner: 999
+      group: 999
+    - name: redis/data
+      owner: 999
+      group: 999
+    - name: paperless-ngx
+    - name: paperless-ngx/data
+    - name: paperless-ngx/media
+    - name: paperless-ngx/export
+    - name: paperless-ngx/consume
+
+- name: redis container for paperless-nx
+  docker_container:
+    name: paperless-ngx-redis
+    image: "redis:latest"
+    restart_policy: "unless-stopped"
+    auto_remove: false
+    detach: true
+    pull: true
+    state: started
+    container_default_behavior: compatibility
+    env:
+      REDIS_HOST: paperless-ngx-redis
+    networks_cli_compatible: false
+    networks:
+      - name: bridgewithdns
+    healthcheck:
+      interval: 30s
+      timeout: 60s
+      start_period: 10s
+      test: "redis-cli --raw incr ping"
+    mounts:
+      - type: bind
+        source: "{{ systemuserlist.paperless.home }}/redis/data"
+        target: /data
+  tags:
+    - paperless-containers
+    - paperless-ngx-containers
+    - docker-containers
+    - paperless-ngx-redis
+    - redis
+
+  # https://github.com/paperless-ngx/paperless-ngx/blob/main/Dockerfile
+  # uid stuff docs: https://paperless-ngx.readthedocs.io/en/latest/setup.html?highlight=usermap
+  # uid stuff source: https://github.com/paperless-ngx/paperless-ngx/blob/main/docker/docker-entrypoint.sh#L37
+  # uid examples: https://github.com/paperless-ngx/paperless-ngx/blob/main/docker/compose/docker-compose.env
+  # if i follow the docs and run the container as the paperless user, it fails to run apt (needs sudo?)
+  # but it will drop privs to the UID in USERMAP_GID after doing that.
+  #
+  # lang codes: https://packages.debian.org/search?keywords=tesseract-ocr-&searchon=names&suite=buster
+  # lang installed by default: English, German, Italian, Spanish and French
+  # full config example: https://github.com/paperless-ngx/paperless-ngx/blob/main/paperless.conf.example
+  # if running in docker it doesnt use the file, uses env vars instead
+  #
+  # tika: metadata extracter
+  #
+  # proxy auth for authelia: https://paperless-ngx.readthedocs.io/en/latest/configuration.html?highlight=auth#hosting-security
+- name: start paperless-ngx-webserver container
+  docker_container:
+    name: paperless-ngx-webserver
+    image: ghcr.io/paperless-ngx/paperless-ngx:latest
+    restart_policy: "unless-stopped"
+    auto_remove: false
+    detach: true
+    pull: true
+    state: started
+    container_default_behavior: compatibility
+    #user: "{{ systemuserlist.paperless.uid }}"
+    networks_cli_compatible: false
+    network_mode: bridgewithdns
+    networks:
+      - name: bridgewithdns
+        ipv4_address: "{{ bridgewithdns['paperless-ngx-webserver'] }}"
+    mounts:
+      - type: bind
+        source: "{{ systemuserlist.paperless.home }}/paperless-ngx/data"
+        target: /usr/src/paperless/data
+      - type: bind
+        source: "{{ systemuserlist.paperless.home }}/paperless-ngx/media"
+        target: /usr/src/paperless/media
+      - type: bind
+        source: "{{ systemuserlist.paperless.home }}/paperless-ngx/export"
+        target: /usr/src/paperless/export
+      - type: bind
+        source: "{{ systemuserlist.paperless.home }}/paperless-ngx/consume"
+        target: /usr/src/paperless/consume
+    env:
+      USERMAP_UID: "{{ systemuserlist.paperless.uid }}"
+      USERMAP_GID: "{{ systemuserlist.paperless.gid }}"
+      PAPERLESS_URL: "https://{{ paperless_url }}"
+      PAPERLESS_SECRET_KEY: "{{ paperless_secret_key }}"
+      PAPERLESS_OCR_LANGUAGES: "{{ paperless_ocr_langs }}"
+      PAPERLESS_OCR_LANGUAGE: "{{ paperless_ocr_default_lang }}"
+      PAPERLESS_REDIS: redis://paperless-ngx-redis:6379
+      PAPERLESS_DBENGINE: mariadb
+      PAPERLESS_DBHOST: "{{ mariadb_host }}"
+      PAPERLESS_DBNAME: "{{ mariadb_db }}"
+      PAPERLESS_DBUSER: "{{ systemuserlist.paperless.username }}"
+      PAPERLESS_DBPASS: "{{ systemuserlist.paperless.mariadb_pass }}"
+      PAPERLESS_DBPORT: "3306"
+      PAPERLESS_TIME_ZONE: UTC
+      PAPERLESS_ADMIN_USER: "{{ paperless_admin_user }}"
+      PAPERLESS_ADMIN_MAIL: "{{ paperless_admin_email }}"
+      PAPERLESS_ADMIN_PASSWORD: "{{ paperless_admin_passwd }}"
+      # AUTH
+      PAPERLESS_ENABLE_HTTP_REMOTE_USER: "true"
+      PAPERLESS_LOGOUT_REDIRECT_URL: "https://{{ authelia_login_url }}/logout"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+  tags:
+    - paperless-containers
+    - paperless-ngx-containers
+    - paperless-ngx-container
+    - docker-containers
+
+- name: install certs
+  copy:
+    src: "/usr/local/etc/letsencrypt/live/{{ item }}"
+    dest: "/usr/local/etc/certs/"
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - letsencrypt-certs
+  notify: reload nginx
+  vars:
+    prediff_cmd: echo
+  with_items:
+    - "{{ paperless_url }}"
+
+- name: template nginx vhost for paperless
+  template:
+    src: 01-paperless.j2
+    dest: /etc/nginx/sites-enabled/01-paperless
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - nginx
+    - paperless-nginx
+  notify: reload nginx

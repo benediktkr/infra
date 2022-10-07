@@ -1,0 +1,47 @@
+server {
+    listen 443 ssl http2;
+    {% if inventory_hostname in wg_clients -%}
+    listen {{ wg_clients[inventory_hostname].ip }}:443 ssl http2;
+    {% endif -%}
+
+    include /etc/nginx/authelia_internal.conf;
+
+    include listen-proxy-protocol.conf;
+    include /etc/nginx/sudo-known.conf;
+
+    server_name {{ paperless_url }};
+
+
+    # set_real_ip_from 10.0.0.0/8;
+    # set_real_ip_from 172.16.0.0/12;
+    # set_real_ip_from 192.168.0.0/16;
+    # set_real_ip_from fc00::/7;
+    # real_ip_header X-Forwarded-For;
+    # real_ip_recursive on;
+
+    location / {
+        include /etc/nginx/require_auth.conf;
+        include /etc/nginx/require_auth_proxy.conf;
+
+        proxy_pass http://{{ bridgewithdns['paperless-ngx-webserver'] }}:8000;
+
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+
+        proxy_redirect off;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Host $server_name;
+    }
+
+    access_log /var/log/nginx/access_{{ paperless_url }}.log main;
+    error_log /var/log/nginx/error_{{ paperless_url }}.log warn;
+
+    ssl_session_timeout 5m;
+    ssl_certificate /usr/local/etc/certs/{{ paperless_url }}/fullchain.pem;
+    ssl_certificate_key /usr/local/etc/certs/{{ paperless_url }}/privkey.pem;
+
+    fastcgi_hide_header X-Powered-By;
+}
