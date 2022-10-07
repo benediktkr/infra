@@ -1,0 +1,56 @@
+#!/usr/bin/env python3
+
+import requests
+import argparse
+import os
+import sys
+
+authelia_url = "https://{{ authelia_api_url }}/api/verify"
+
+def make_headers(domain):
+    return {
+        #"X-Real-IP": ip,
+        #"X-Forwarded-For": ip,
+        "X-Original-URL": f"https://{domain}/",
+        "X-Forwarded-Method": "GET",
+        "X-Forwarded-Proto": "https",
+        "X-Forwarded-Host": domain,
+        "X-Forwarded-Uri": "/",
+        "X-Forwarded-Ssl": "on",
+    }
+
+
+def auth(domain, username, password):
+    r = requests.get(
+        authelia_url,
+        params={'auth': 'basic'},
+        headers=make_headers(domain),
+        auth=(username, password)
+    )
+    return r.status_code == 200
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("domain", help="which rule in authelia to auth against")
+    parser.add_argument("--username", help="overrides env var with the same name")
+    args = parser.parse_args()
+
+    try:
+        if not args.username:
+            username = os.environ['username']
+        else:
+            username = args.username
+        password = os.environ['password']
+    except KeyError:
+        print("missing env var(s)")
+        sys.exit(2)
+
+    if auth(args.domain, username, password):
+        sys.exit(0)
+    else:
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

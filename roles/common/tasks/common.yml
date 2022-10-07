@@ -508,6 +508,7 @@
     - reboot_required.py
     - update_omzsh.sh
     - matrixmsg.py
+    - authelia-auth.py
   tags:
     - common-scripts
     - update_omzsh
