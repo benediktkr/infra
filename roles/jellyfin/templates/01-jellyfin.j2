@@ -14,6 +14,8 @@ server {
     include listen-proxy-protocol.conf;
     server_name {{ jellyfin_url }};
 
+    client_max_body_size 20M;
+
     # use a variable to store the upstream proxy
     # set $jellyfin jellyfin;
     # resolver 127.0.0.1 valid=30;
@@ -28,8 +30,9 @@ server {
     #ssl_stapling on;
     #ssl_stapling_verify on;
 
-    client_body_buffer_size 1024m;
-    proxy_max_temp_file_size 0;
+    #client_body_buffer_size 1024m;
+    #proxy_max_temp_file_size 0;
+
 
     # Security / XSS Mitigation Headers
     add_header X-Frame-Options "SAMEORIGIN" always;
@@ -39,8 +42,25 @@ server {
     # Content Security Policy
     # See: https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP
     # External Javascript (such as cast_sender.js for Chromecast) must
-    # be whitelisted.
-    add_header Content-Security-Policy "default-src https: data: blob: http://image.tmdb.org; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' https://www.gstatic.com/cv/js/sender/v1/cast_sender.js https://www.gstatic.com/eureka/clank/cast_sender.js https://www.gstatic.com/eureka/clank/94/cast_sender.js https://www.gstatic.com/eureka/clank/95/cast_sender.js https://www.gstatic.com/eureka/clank/96/cast_sender.js https://www.gstatic.com/eureka/clank/97/cast_sender.js https://www.youtube.com blob:; worker-src 'self' blob:; connect-src 'self'; object-src 'none'; frame-ancestors 'self'" always;
+    # be allowlisted.
+    # 'self' https://*.{{ domain }} https://{{ domain }}
+    add_header Content-Security-Policy "default-src https: data: blob: http://image.tmdb.org; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' https://www.gstatic.com/cv/js/sender/v1/cast_sender.js https://www.gstatic.com/eureka/clank/cast_sender.js https://www.gstatic.com/eureka/clank/94/cast_sender.js https://www.gstatic.com/eureka/clank/95/cast_sender.js https://www.gstatic.com/eureka/clank/96/cast_sender.js https://www.gstatic.com/eureka/clank/97/cast_sender.js https://www.gstatic.com/eureka/clank/105/cast_sender.js https://www.gstatic.com/eureka/clank/106/cast_sender.js https://www.youtube.com blob:; worker-src 'self' blob:; connect-src 'self'; object-src 'none'; frame-ancestors 'self'" always;
+
+    # kill cache
+    add_header Last-Modified $date_gmt always;
+    #add_header Cache-Control 'no-store, no-cache' always;
+    add_header Cache-Control 'no-store' always;
+    if_modified_since off;
+    expires off;
+    etag off;
+
+    sub_filter_types application/javascript;
+    sub_filter '<title>Jellyfin</title>' '<title>{{ jellyfin_url.split(".")[0].capitalize() }}</title>';
+    sub_filter 'document.title="Jellyfin"' 'document.title="{{ jellyfin_url.split(".")[0].capitalize() }}"';
+    sub_filter 'document.title=e||"Jellyfin"' 'document.title=e||"{{ jellyfin_url.split(".")[0].capitalize() }}"';
+    #sub_filter 'document.title=B.ZP.translateHtml(document.title,"core")' 'document.title="{{ jellyfin_url.split(".")[0].capitalize() }}"';
+    sub_filter_last_modified on;
+    sub_filter_once off;
 
     location = / {
         return 302 https://$host/web/;

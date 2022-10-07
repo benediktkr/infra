@@ -221,6 +221,7 @@
     - nginx-config
     - jellyfin-conf
     - nginx-jellyfin
+    - jellyfin-nginx
   notify: reload nginx
 
 
