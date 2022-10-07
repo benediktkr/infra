@@ -29,6 +29,8 @@
     login_unix_socket: /run/mysqld/mysqld.sock
   loop_control:
     label: "'{{ systemuserlist.sudoisbot.username }}'@'{{ item }}'"
+  when:
+    - "item | ansible.utils.ipaddr('private') or item.endswith('%')"
   with_items:
     - "{{ ansible_default_ipv4.address }}"
     - "{{ bridgewithdns_mariadb }}"

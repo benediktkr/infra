@@ -142,6 +142,7 @@
         mode: 0600
       become: true
       become_user: "{{ item.key }}"
+      ignore_errors: "{{ ansible_check_mode }}"
       loop_control:
         label: "{{ item.key }}"
       with_dict: "{{ systemuserlist }}"
