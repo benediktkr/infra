@@ -66,9 +66,11 @@ scene: !include scenes.yaml
 
 calendar:
   - platform: caldav
+    days: 30
     username: !secret caldav_user
     password: !secret caldav_passwd
-    url: !secret caldav_url
+    # {{ hass_caldav.urls[0].name }}
+    url: {{ hass_caldav.urls[0].url }}
 
 http:
   # container runs with network_mode=host, so no network isolation. the docs say to not
@@ -78,11 +80,14 @@ http:
   #server_host: 127.0.0.1
   trusted_proxies:
     - 127.0.0.1
-    - {{ bridgewithdns.host }}
-    - {{ bridgewithdns_cidr }}
   use_x_forwarded_for: true
 
 homeassistant:
+  auth_providers:
+    - type: command_line
+      command: /usr/local/bin/authelia-auth.py
+      args:
+        - {{ hass_url }}
   name: Home
   currency: EUR
   unit_system: metric
@@ -121,3 +126,8 @@ sensor:
   - platform: dwd_weather_warnings
     # Stadt Berlin
     region_name: 811000000
+
+tts:
+  - platform: voicerss
+    api_key: !secret voicerss_api_key
+  - platform: google_translate

@@ -15,4 +15,4 @@
     name: hass
     state: started
     restart: true
-  when: not hass_container.changed
+  when: hass_container is not defined or not hass_container.changed
