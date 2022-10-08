@@ -4,6 +4,7 @@
 [![git](docs/img/shields/git.sudo.is-ben-infra.svg)](https://git.sudo.is/ben/infra)
 [![github](docs/img/shields/github-benediktkr.svg)](https://github.com/benediktkr/infra)
 [![matrix](docs/img/shields/matrix-ben-sudo.is.svg)](https://matrix.to/#/@ben:sudo.is)
+[![BSD-3-Clause-No-Military-License](docs/img/shields/license-BSD-blue.svg)](LICENSE)
 
 the ansible repo for the [sudo.is](https://www.sudo.is) infrastructure.
 
