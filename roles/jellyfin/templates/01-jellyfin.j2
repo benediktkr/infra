@@ -54,11 +54,14 @@ server {
     expires off;
     etag off;
 
+    # attempting to fix the title with nginx
+    {% set jellyfin_title = jellyfin_url.split(".")[0].capitalize() %}
+    sub_filter '<title>Jellyfin</title>' '<title>{{ jellyfin_title }}</title>';
+    sub_filter 'document.title="Jellyfin"' 'document.title="{{ jellyfin_title }}"';
+    sub_filter 'document.title=e||"Jellyfin"' 'document.title=e||"{{ jellyfin_title }}"';
+    sub_filter 'document.title=B.ZP.translateHtml(document.title,"core")' 'document.title="{{ jellyfin_title }}"';
+    # in addition to “text/html”.
     sub_filter_types application/javascript;
-    sub_filter '<title>Jellyfin</title>' '<title>{{ jellyfin_url.split(".")[0].capitalize() }}</title>';
-    sub_filter 'document.title="Jellyfin"' 'document.title="{{ jellyfin_url.split(".")[0].capitalize() }}"';
-    sub_filter 'document.title=e||"Jellyfin"' 'document.title=e||"{{ jellyfin_url.split(".")[0].capitalize() }}"';
-    #sub_filter 'document.title=B.ZP.translateHtml(document.title,"core")' 'document.title="{{ jellyfin_url.split(".")[0].capitalize() }}"';
     sub_filter_last_modified on;
     sub_filter_once off;
 
