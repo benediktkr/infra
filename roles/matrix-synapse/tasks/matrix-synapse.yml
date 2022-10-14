@@ -11,6 +11,12 @@
     - name: log
     - name: registration
     - name: element
+    - name: redis
+      owner: 999
+      group: 999
+    - name: redis/data
+      owner: 999
+      group: 999
 
 - name: postgresql user
   postgresql_user:
@@ -82,11 +88,17 @@
       timeout: 60s
       start_period: 10s
       test: "redis-cli --raw incr ping"
+    mounts:
+      - type: bind
+        source: "{{ systemuserlist.matrix.home }}/redis/data"
+        target: /data
   tags:
     - matrix-container
     - docker-containers
     - redis
-
+    - matrix-redis
+    - matrix-redis-container
+    - redis-container
 
 # register_new_matrix_user -u $username -t bot -c /data/homeserver.yaml http://localhost:8008
 
