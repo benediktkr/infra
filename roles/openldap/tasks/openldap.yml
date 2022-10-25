@@ -196,7 +196,7 @@
 
 # this module doesnt change existing users if they exist, so it is setting anything that a user
 # should be able to change themselves
-- name: add inventory users
+- name: add inventory human users
   community.general.ldap_entry:
     dn: "uid={{ item.username }},ou=users,{{ openldap_dc }}"
     objectClass:
@@ -217,7 +217,7 @@
     bind_pw: "{{ openldap_admin_pass }}"
   loop_control:
     label: "{{ item.username }}"
-  with_items: "{{ ldap_users }}" # see role/openldap/defaults/main.yml
+  with_items: "{{ ldap_human_users }}" # see role/openldap/defaults/main.yml
   tags:
     - ldap-users
 
@@ -237,9 +237,10 @@
     bind_pw: "{{ openldap_admin_pass }}"
   loop_control:
     label: "{{ item.username }}"
-  with_items: "{{ ldap_only_users.values() }}"
+  with_items: "{{ ldap_only_users_enabled }}"
   tags:
     - ldap-users
+    - ldap-only-users
 
 
 - name: add inventory user groups
@@ -256,7 +257,7 @@
     bind_pw: "{{ openldap_admin_pass }}"
   loop_control:
     label: "{{ item.username }}"
-  with_items: "{{ ldap_users }}"
+  with_items: "{{ ldap_human_users }}"
   tags:
     - ldap-users
 
@@ -292,7 +293,7 @@
     label: "{{ item[1].username }}, group={{ item[0] }}, present={{ item[0] in item[1].ldap_groups|default([]) }}"
   with_nested:
     - "{{ openldap_groups }}"
-    - "{{ ldap_users }}"
+    - "{{ ldap_human_users }}"
   # when:
   #   - item[1] in item[0].ldap_groups|default([])
   tags:
@@ -311,7 +312,7 @@
     label: "{{ item[1].username }}, group={{ item[0] }}, present={{ item[0] in item[1].ldap_groups|default([]) }}"
   with_nested:
     - "{{ openldap_groups }}"
-    - "{{ ldap_only_users.values() }}"
+    - "{{ ldap_only_users_enabled }}"
   tags:
     - ldap-users
 
@@ -327,6 +328,7 @@
   with_items: "{{ ldap_usernames_disabled }}"
   tags:
     - ldap-users
+    - ldap-users-disabled
 
 # # this task will change attrs if they dont match
 # - name: adding attrs that are
