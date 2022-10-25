@@ -8,7 +8,21 @@ server {
   include /etc/nginx/listen-proxy-protocol.conf;
   server_name {{ influxdb_url }};
 
-  location ~ ^/(ping|metrics|status) {
+  location /ping {
+    # if /ping?verbose=true, it leaks the version
+    set $args '';
+
+    proxy_pass         http://127.0.0.1:{{ influxdb_port }};
+    proxy_set_header   Host $host;
+    proxy_set_header   X-Real-IP $remote_addr;
+    proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header   X-Forwarded-Host $server_name;
+  }
+
+  location ~ ^/(metrics|health|debug) {
+    # /health will leak version number
+    # /metrics are private
+    # /debug is also private
     allow 127.0.0.1;
     {% if inventory_hostname in my_public_ips -%}
     allow {{ my_public_ips[inventory_hostname] }}/32;

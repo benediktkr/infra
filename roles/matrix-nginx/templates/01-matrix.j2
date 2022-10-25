@@ -34,19 +34,11 @@ server {
   }
 
 
-  location /health {
-    allow 127.0.0.1;
-    {% if inventory_hostname in my_public_ips -%}
-    allow {{ my_public_ips[inventory_hostname] }}/32;
-    {% endif -%}
-    allow {{ my_public_ips[ansible_control_host] }}/32;
-    allow {{ wireguard_cidr }};
-    deny all;
-    proxy_pass http://{{ bridgewithdns.matrix }}:{{ matrix_synapse_port }};
+  location = /_health {
+    proxy_pass http://{{ bridgewithdns.matrix }}:{{ matrix_synapse_port }}/health;
     proxy_set_header X-Forwarded-For $remote_addr;
     proxy_set_header X-Forwarded-Proto $scheme;
     proxy_set_header Host $host;
-
   }
   location ~* ^(\/_matrix|\/_synapse\/client) {
       # working around this issue that seems to still be hapening

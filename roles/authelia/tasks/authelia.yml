@@ -48,6 +48,17 @@
     - authelia-config
   notify: restart authelia container
 
+- name: template robots.txt
+  template:
+    src: "robots.txt.j2"
+    dest: "{{ systemuserlist.authelia.home }}/robots.txt"
+    owner: authelia
+    group: authelia
+    mode: 0755
+  tags:
+    - authelia-nginx
+  notify: reload nginx
+
 - name: template nginx vhost
   template:
     src: 01-authelia.conf.j2

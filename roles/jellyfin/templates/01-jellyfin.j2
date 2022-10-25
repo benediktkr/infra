@@ -56,14 +56,14 @@ server {
 
     # attempting to fix the title with nginx
     {% set jellyfin_title = jellyfin_url.split(".")[0].capitalize() %}
-    sub_filter '<title>Jellyfin</title>' '<title>{{ jellyfin_title }}</title>';
-    sub_filter 'document.title="Jellyfin"' 'document.title="{{ jellyfin_title }}"';
-    sub_filter 'document.title=e||"Jellyfin"' 'document.title=e||"{{ jellyfin_title }}"';
-    sub_filter 'document.title=B.ZP.translateHtml(document.title,"core")' 'document.title="{{ jellyfin_title }}"';
-    # in addition to “text/html”.
-    sub_filter_types application/javascript;
-    sub_filter_last_modified on;
-    sub_filter_once off;
+    #sub_filter '<title>Jellyfin</title>' '<title>{{ jellyfin_title }}</title>';
+    #sub_filter 'document.title="Jellyfin"' 'document.title="{{ jellyfin_title }}"';
+    #sub_filter 'document.title=e||"Jellyfin"' 'document.title=e||"{{ jellyfin_title }}"';
+    #sub_filter 'document.title=B.ZP.translateHtml(document.title,"core")' 'document.title="{{ jellyfin_title }}"';
+    ## in addition to “text/html”.
+    #sub_filter_types application/javascript;
+    #sub_filter_last_modified on;
+    #sub_filter_once off;
 
     location = / {
         return 302 https://$host/web/;
@@ -126,6 +126,17 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     }
     {% endfor %}
+    location = /_health {
+        proxy_pass http://127.0.0.1:{{ jellyfin_port }}/health;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        {# hide_header 'content-security-policy';
+         # hide_header 'x-response-time-ms';
+         # hide_header 'x-frame-options';
+         # hide_header 'x-xss-protection';
+         # hide_header 'last-modified'; #}
+    }
+
 
     {# location /videos/ {
      #     # cache video streams: https://jellyfin.org/docs/general/networking/nginx.html#cache-video-streams
