@@ -1,0 +1,11 @@
+vaultwarden_url = "{{ vaultwarden_ldap_vaultwarden_url}}"
+vaultwarden_admin_token = "{{ vw_admin_token }}"
+ldap_host = "{{ openldap_url }}"
+ldap_scheme = "ldaps"
+ldap_ssl = true
+ldap_bind_dn = "cn=readonly,{{ openldap_dc }}"
+ldap_bind_password = "{{ openldap_readonly_pass }}"
+ldap_search_base_dn = "{{ openldap_dc }}"
+ldap_search_filter = "(&(|(objectclass=inetOrgPerson))(|(memberof=cn=vaultwarden,ou=groups,{{ openldap_dc }})))"
+ldap_mail_field = "mail"
+ldap_sync_interval_seconds = 60 {# 900 = 15 mins #}

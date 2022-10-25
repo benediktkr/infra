@@ -9,6 +9,27 @@ mkdir roles/$1/defaults
 touch roles/$1/tasks/main.yml
 touch roles/$1/tasks/$1.yml
 
-echo "---"                     >> roles/$1/tasks/main.yml
-echo " - import_tasks: $1.yml" >> roles/$1/tasks/main.yml
-echo "   tags: $1"             >> roles/$1/tasks/main.yml
+echo "---"                       >> roles/$1/tasks/main.yml
+echo " - import_tasks: $1.yml"   >> roles/$1/tasks/main.yml
+echo "   tags: $1"               >> roles/$1/tasks/main.yml
+
+
+echo "- import_playbook: $1.yml" >> private/site2.yml
+
+echo "---"                       >> private/playbooks/$1.yml
+echo "- hosts: $1"               >> private/playbooks/$1.yml
+echo "  become: true"            >> private/playbooks/$1.yml
+echo "  gather_facts: true"      >> private/playbooks/$1.yml
+echo "  roles:"                  >> private/playbooks/$1.yml
+echo "    - $1"                  >> private/playbooks/$1.yml
+
+ln -s private/playbooks/$1.yml .
+echo "${1}.yml" >> .gitignore
+
+(
+    cd private/
+    git st
+    git add private/site2.yml
+    git add private/playbooks/$1.yml
+    git commit -m "new role: $1"
+)

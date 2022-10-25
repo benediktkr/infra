@@ -1,0 +1,6 @@
+---
+
+vw_vaults:
+  - name: vault
+    shared: true
+    container_name: vaultwarden

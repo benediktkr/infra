@@ -1,0 +1,3 @@
+---
+ - import_tasks: vaultwarden.yml
+   tags: vaultwarden

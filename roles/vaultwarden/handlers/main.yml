@@ -1,0 +1,23 @@
+---
+
+- name: reload nginx
+  service:
+    name: nginx
+    state: reloaded
+
+- name: restart filebeat
+  service:
+    name: filebeat
+    state: restarted
+
+- name: restart vaultwarden
+  docker_container:
+    name: vaultwarden
+    state: started
+    restart: true
+
+- name: restart vaultwarden_ldap
+  docker_container:
+    name: vaultwarden_ldap
+    state: started
+    restart: true

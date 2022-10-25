@@ -1,0 +1,93 @@
+{% for item in vw_vaults -%}
+upstream {{ item.container_name }}-default {
+  zone vaultwarden-default 64k;
+  server {{ bridgewithdns[item.container_name] }}:80;
+  keepalive 2;
+}
+upstream {{ item.container_name }}-ws {
+  zone vaultwarden-ws 64k;
+  server {{ bridgewithdns[item.container_name] }}:3012;
+  keepalive 2;
+}
+server {
+    listen 443 ssl http2;
+    {% if inventory_hostname in wg_clients -%}
+    listen {{ wg_clients[inventory_hostname].ip }}:443 ssl http2;
+    {% endif -%}
+
+    server_name {{ vaultwarden_url }};
+
+    include listen-proxy-protocol.conf;
+    include /etc/nginx/authelia_internal.conf;
+    include /etc/nginx/sudo-known.conf;
+
+
+    # Specify SSL Config when needed
+    #ssl_certificate /path/to/certificate/letsencrypt/live/vaultwarden.example.tld/fullchain.pem;
+    #ssl_certificate_key /path/to/certificate/letsencrypt/live/vaultwarden.example.tld/privkey.pem;
+    #ssl_trusted_certificate /path/to/certificate/letsencrypt/live/vaultwarden.example.tld/fullchain.pem;
+
+    client_max_body_size 128M;
+
+    location / {
+      proxy_http_version 1.1;
+      proxy_set_header "Connection" "";
+
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto $scheme;
+
+      proxy_pass http://{{ item.container_name }}-default;
+    }
+
+    location /notifications/hub/negotiate {
+      proxy_http_version 1.1;
+      proxy_set_header "Connection" "";
+
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto $scheme;
+
+      proxy_pass http://{{ item.container_name }}-default;
+    }
+
+    location /notifications/hub {
+      proxy_http_version 1.1;
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection "upgrade";
+
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header Forwarded $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto $scheme;
+
+      proxy_pass http://{{ item.container_name }}-ws;
+    }
+
+    # block to include authelia auth
+    location /admin {
+        include /etc/nginx/require_auth.conf;
+        proxy_http_version 1.1;
+        proxy_set_header "Connection" "";
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        proxy_pass http://{{ item.container_name }}-default;
+    }
+
+    access_log /var/log/nginx/access_{{ vaultwarden_url }}.log main;
+    error_log /var/log/nginx/error_{{ vaultwarden_url }}.log warn;
+
+    ssl_session_timeout 5m;
+    ssl_certificate /usr/local/etc/certs/{{ domain }}/fullchain.pem;
+    ssl_certificate_key /usr/local/etc/certs/{{ domain }}/privkey.pem;
+
+    fastcgi_hide_header X-Powered-By;
+}
+{% endfor %}
