@@ -30,7 +30,6 @@
     - data/gitea/templates
     - data/gitea/templates/custom
     - data/gitea/templates/user/dashboard
-    - data/gitea/templates/user/auth
     - data/git
 
 - name: template ssh passthrough script
@@ -76,7 +75,6 @@
     - custom/extra_tabs.tmpl
     - user/dashboard/feeds.tmpl
     - user/dashboard/repolist.tmpl
-    - user/auth/signin_inner.tmpl
   tags:
     - gitea-templates
   notify: restart gitea
