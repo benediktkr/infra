@@ -140,7 +140,7 @@
 - name: start docker container
   docker_container:
     name: "jenkins"
-    image: "benediktkr/jenkins:lts"
+    image: "git.sudo.is/ben/jenkins:lts"
     hostname: "jenkins"
     auto_remove: false
     detach: true
