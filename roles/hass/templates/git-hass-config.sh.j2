@@ -1,0 +1,42 @@
+#!/bin/bash
+
+set -e
+
+NAME_REPO="{{ hass_config_repo_name }}"
+
+PATH_REPO="{{ systemuserlist.hass.home }}/git/${NAME_REPO}"
+PATH_HASS="{{ systemuserlist.hass.home }}/home-assistant"
+
+export GIT_SSH_COMMAND="ssh -i ~/.ssh/${NAME_REPO}"
+
+cd $PATH_REPO
+
+if test -n "$(git status --porcelain)" ; then
+    echo "repo is dirty"
+    git status --short
+    exit 2
+fi
+
+if ! grep -q "secrets.y[a]ml" ${PATH_REPO}/.gitignore; then
+    echo "'secrets.yaml' missing from '.gitconfig'"
+    exit 3
+fi
+
+mkdir -p ${PATH_REPO}/config/
+
+{% for item in hass_config_repo_files -%}
+cp ${PATH_HASS}/config/{{ item }} ${PATH_REPO}/config/{{ item }}
+{% endfor %}
+
+if test -n "$(git status --porcelain)" ; then
+    {% for item in hass_config_repo_files -%}
+    git add config/{{ item }} > /dev/null
+    {% endfor %}
+
+    git commit -m "config updated" > /dev/null
+fi
+
+git pull --quiet
+git push --quiet 2> /dev/null
+
+# TODO: copy changes from git

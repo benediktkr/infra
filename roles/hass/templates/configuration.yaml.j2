@@ -1,4 +1,5 @@
-
+# ansible: roles/hass/templates/configuration.yaml.j2
+#
 # Loads default set of integrations. Icluding the cloud crap. Do remove.
 # havent gotten it to work wthough, hass doesnt load properly
 default_config:
@@ -58,11 +59,26 @@ default_config:
 
 # Text to speech
 tts:
+  - platform: voicerss
+    api_key: !secret voicerss_api_key
   - platform: google_translate
 
 automation: !include automations.yaml
 script: !include scripts.yaml
 scene: !include scenes.yaml
+
+{# calendar:
+ #  {% for item in hass_caldav.urls %}
+ #
+ #   - platform: caldav
+ #     days: 30
+ #     username: !secret caldav_user
+ #     password: !secret caldav_passwd
+ #     # {{ item.name }}
+ #     url: {{ item.url }}
+ #
+ #  {% endfor %}
+ #}
 
 calendar:
   - platform: caldav
@@ -127,7 +143,11 @@ sensor:
     # Stadt Berlin
     region_name: 811000000
 
-tts:
-  - platform: voicerss
-    api_key: !secret voicerss_api_key
-  - platform: google_translate
+binary_sensor:
+  - platform: workday
+    country: DE
+    workdays: [mon, tue, wed, thu, fri]
+    excludes: [sat, sun, holiday]
+
+shell_command:
+  matrixmsg: /usr/local/bin/matrixmsg.py

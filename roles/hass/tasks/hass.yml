@@ -48,6 +48,20 @@
   tags:
     - ufw
 
+- name: copy ssh keys for {{ hass_config_repo_name }}
+  template:
+    src: "private/sshkeys/{{ item }}"
+    dest: "{{ systemuserlist.hass.home }}/.ssh/{{ item }}"
+    owner: "{{ systemuserlist.hass.uid }}"
+    group: "{{ systemuserlist.hass.gid }}"
+    mode: 0600
+  no_log: true
+  with_items:
+    - "{{ hass_config_repo_name }}"
+    - "{{ hass_config_repo_name }}.pub"
+  tags:
+    - hass-git
+
 # hass + zwave
 
 - name: create dir structure
@@ -57,6 +71,8 @@
     mode: 0755
     owner: hass
     group: hass
+  tags:
+    - hass-dirs
   with_items:
     - home-assistant
     - home-assistant/config
@@ -65,6 +81,32 @@
     - zwavejs
     - zwavejs/app
     - zwavejs/app/store
+    - git
+
+- name: template gitconfig
+  template:
+    src: gitconfig.j2
+    dest: "{{ systemuserlist.hass.home }}/.gitconfig"
+    owner: "{{ systemuserlist.hass.uid }}"
+    group: "{{ systemuserlist.hass.gid }}"
+    mode: 0644
+  tags:
+    - hass-git
+
+- name: set up the {{ hass_config_repo_name }} repo
+  git:
+    repo: "{{ hass_config_repo }}"
+    dest: "{{ systemuserlist.hass.home }}/git/{{ hass_config_repo_name }}"
+    version: main
+    clone: true
+    update: false
+    force: false
+    accept_newhostkey: true
+    key_file: "{{ systemuserlist.hass.home }}/.ssh/{{ hass_config_repo_name }}"
+  become_user: "{{ systemuserlist.hass.username }}"
+  tags:
+    - hass-git
+    - hass-git-clone
 
 - name: home assistant main configuration.yaml
   template:
@@ -87,6 +129,28 @@
   notify: restart hass container
   tags:
     - hass-config
+
+- name: install git sync script
+  template:
+    src: git-hass-config.sh.j2
+    dest: /usr/local/bin/git-hass-config.sh
+    mode: 0775
+    owner: hass
+    group: hass
+  tags:
+    - hass-git
+
+- name: cron file
+  template:
+    src: hass-cron.j2
+    dest: /etc/cron.d/hass
+    owner: root
+    group: root
+    mode: 0640
+  tags:
+    - cron
+    - hass-cron
+    - hass-git
 
 # docker run --run -it -p 8091:8091 -p 3000:3000 --network
 #bridgewithdns --device /dev/ttyACM0:/dev/zwave -v
@@ -160,11 +224,14 @@
       - type: bind
         source: "{{ systemuserlist.hass.home }}/home-assistant/media"
         target: /usr/var/media
-        # from role: common
-        # only depends on requests, which hass image has
+      # scripts from role: common
+      # only depends on requests, which hass image has
       - type: bind
         source: /usr/local/bin/authelia-auth.py
         target: /usr/local/bin/authelia-auth.py
+      - type: bind
+        source: /usr/local/bin/matrixmsg.py
+        target: /usr/local/bin/matrixmsg.py
   tags:
     - home-assistant
     - home-assistant-container
