@@ -21,34 +21,34 @@ this repo also deploys/orchestrates a bunch of "projects":
 
  * [`zflux`](https://git.sudo.is/ben/zflux): a zeromq queue in front of
    influxdb to be resillient against network errors
-
  * [`notflixbot`](https://git.sudo.is/ben/notflixbot): a "custom" matrix
    bot written with nio (async python matrix library) and has
    webhooks.
-
  * [`matrix-smtp-webhook`](https://git.sudo.is/ben/matrix-smtp-webhook):
    a dead simple python daemon to read SMTP messages and forward to
-   the notflix http webhookk, great for cron mail.
-
+   the notflix http webhook, great for cron mail.
  * [`archives`](https://git.sudo.is/ben/archives): file listing with
    proxy auth
-
  * [`shared-jenkins-pipelines`](https://git.sudo.is/ben/shared-jenkins-pipelines)
 
-and some docker images that needed customizing or as a way to package `.deb`:
+and various `.deb` builds and docker images that needed some customizing:
 
+ * [`build-nginx`](https://git.sudo.is/ben/build-nginx): building
+   nginx from source with all modules (the useful ones anyway) and
+   packaging as `.deb`
+ * [`build-jellyfin-web`](https://git.sudo.is/ben/build-jellyfin-web)
+ * [`emacs-docker`](https://git.sudo.is/ben/emacs-docker): building
+   emacs from upstream git in docker on jenkins and packaging a `.deb`
+   published at https://apt.sudo.is
+ * [`hydrogen-docker`](https://git.sudo.is/ben/hydrogen-docker)
  * [`jenkins-docker`](https://git.sudo.is/ben/jenkins-docker)
  * [`mergerfs-docker`](https://git.sudo.is/ben/mergerfs-docker)
  * [`openldap-docker`](https://git.sudo.is/ben/openldap-docker)
  * [`poetry-docker`](https://git.sudo.is/ben/poetry-docker)
- * [`xmrig-docker`](https://git.sudo.is/ben/xmrig-docker)
- * [`hydrogen-docker`](https://git.sudo.is/ben/hydrogen-docker)
+ * [`socat-dns-docker`](https://git.sudo.is/ben/socat-dns-docker):
+   forwarding the dns server of a docker bridged network.
  * [`synapse-admin-docker`](https://git.sudo.is/ben/synapse-admin-docker)
- * [`emacs-docker`](https://git.sudo.is/ben/emacs-docker): building
-   emacs from upstream git in docker on jenkins and packaging as
-   `.deb` published at https://apt.sudo.is
- * [`build-nginx`](https://git.sudo.is/ben/build-nginx): building nginx from
-   source with all modules (the useful ones anyway) and packaging as `.deb`
+ * [`xmrig-docker`](https://git.sudo.is/ben/xmrig-docker)
 
 
 ## mirrors
