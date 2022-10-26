@@ -86,6 +86,7 @@
     - nginx-conf
     - authelia-nginx
     - well-known
+    - nginx-well-known
     - gitea-nginx
   notify: reload nginx
 

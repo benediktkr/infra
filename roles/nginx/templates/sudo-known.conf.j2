@@ -23,3 +23,12 @@ location = /.sudo-known/info.html {
     default_type text/html;
     return 200 '<!--\n    hostname: {{ inventory_hostname }}\n    server_name: $server_name\n-->\n\n ';
 }
+
+location = /.sudo-known/header.html {
+    default_type text/html;
+    alias /var/www/shared/header.html;
+}
+location = /.sudo-known/footer.html {
+    default_type text/html;
+    alias /var/www/shared/footer.html;
+}

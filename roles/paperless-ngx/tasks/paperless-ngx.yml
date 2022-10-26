@@ -39,30 +39,83 @@
   tags:
     - mariadb-users
 
-- name: create dir structure
+- name: create dir structure for paperless-ngx
   file:
     path: "{{ systemuserlist.paperless.home }}/{{ item.name }}"
     state: directory
     mode: 0775
     owner: "{{ item.owner|default('paperless') }}"
     group: "{{ item.group|default('paperless') }}"
+  tags:
+    - paperless-dirs
   with_items:
     # checked dockerfile: https://github.com/docker-library/redis/blob/master/7.0/Dockerfile
     - name: redis
       owner: 999
       group: 999
-    - name: redis/data
+    - name: redis/data-{{ paperless_user }}
       owner: 999
       group: 999
     - name: paperless-ngx
+    - name: paperless-ngx/bin
     - name: paperless-ngx/data
-    - name: paperless-ngx/media
-    - name: paperless-ngx/export
-    - name: paperless-ngx/consume
+    - name: paperless-ngx/data/{{ paperless_user }}
+      owner: "{{ paperless_user }}"
+      group: "{{ paperless_user }}"
 
-- name: redis container for paperless-nx
+- name: ensure {{ paperless_users_path }} exists
+  file:
+    path: "{{ paperless_users_path }}"
+    state: directory
+    mode: 0755
+    owner: paperless
+    group: paperless
+  tags:
+    - paperless-dirs
+
+- name: ensure {{ paperless_users_path }}/{{ paperless_user }} exists
+  file:
+    path: "{{ paperless_users_path }}/{{ paperless_user }}"
+    state: directory
+    mode: 0750
+    owner: "{{ paperless_user }}"
+    group: "{{ paperless_user }}"
+  tags:
+    - paperless-dirs
+
+- name: create dir structure for user in {{ paperless_users_path }}/{{ paperless_user }}}
+  file:
+    path: "{{ paperless_users_path }}/{{ paperless_user }}/{{ item }}"
+    state: directory
+    mode: 0750
+    owner: "{{ paperless_user }}"
+    group: "{{ paperless_user }}"
+  tags:
+    - paperless-dirs
+  with_items:
+    - media
+    - media/trash
+    - export
+    - consume
+
+- name: paperless scripts
+  copy:
+    src: "{{ item }}"
+    dest: "{{ systemuserlist.paperless.home }}/paperless-ngx/bin/{{ item }}"
+    owner: paperless
+    group: paperless
+    mode: 0775
+  with_items:
+    - common_consume.py
+    - post-consume.py
+    - pre-consume.py
+  tags:
+    - paperless-scripts
+    - paperless-bin
+
+- name: redis container for paperless-ngx user {{ paperless_user }}
   docker_container:
-    name: paperless-ngx-redis
+    name: paperless-ngx-redis-{{ paperless_user }}
     image: "redis:latest"
     restart_policy: "unless-stopped"
     auto_remove: false
@@ -71,7 +124,7 @@
     state: started
     container_default_behavior: compatibility
     env:
-      REDIS_HOST: paperless-ngx-redis
+      REDIS_HOST: paperless-ngx-redis-{{ paperless_user }}
     networks_cli_compatible: false
     networks:
       - name: bridgewithdns
@@ -82,7 +135,7 @@
       test: "redis-cli --raw incr ping"
     mounts:
       - type: bind
-        source: "{{ systemuserlist.paperless.home }}/redis/data"
+        source: "{{ systemuserlist.paperless.home }}/redis/data-{{ paperless_user }}"
         target: /data
   tags:
     - paperless-containers
@@ -90,6 +143,62 @@
     - docker-containers
     - paperless-ngx-redis
     - redis
+
+  # https://tika.apache.org/
+  # used to convert office documents
+- name: tika container for paperless-ngx
+  docker_container:
+    name: paperless-ngx-tika
+    image: "ghcr.io/paperless-ngx/tika:latest"
+    restart_policy: "unless-stopped"
+    auto_remove: false
+    detach: true
+    pull: true
+    state: started
+    container_default_behavior: compatibility
+    networks_cli_compatible: false
+    networks:
+      - name: bridgewithdns
+  tags:
+    - paperless-containers
+    - paperless-ngx-containers
+    - docker-containers
+    - paperless-ngx-tika
+    - tika-container
+
+  # https://gotenberg.dev/
+  # also used for office documents, converting them
+- name: gotenberg container for paperless-ngx
+  docker_container:
+    name: paperless-ngx-gotenberg
+    image: "docker.io/gotenberg/gotenberg:7"
+    restart_policy: "unless-stopped"
+    auto_remove: false
+    detach: true
+    pull: true
+    state: started
+    container_default_behavior: compatibility
+    networks_cli_compatible: false
+    networks:
+      - name: bridgewithdns
+    env:
+      CHROMIUM_DISABLE_ROUTES: "1"
+  tags:
+    - paperless-containers
+    - paperless-ngx-containers
+    - docker-containers
+    - paperless-ngx-gotenberg
+    - gotenberg-container
+
+- name: template {{ paperless_user }}.env
+  template:
+    src: paperless-ngx.env.j2
+    dest: "{{ systemuserlist.paperless.home }}/paperless-ngx/{{ paperless_user }}.env"
+    owner: root
+    group: root
+    mode: 0750
+  tags:
+    - paperless-config
 
   # https://github.com/paperless-ngx/paperless-ngx/blob/main/Dockerfile
   # uid stuff docs: https://paperless-ngx.readthedocs.io/en/latest/setup.html?highlight=usermap
@@ -106,9 +215,10 @@
   # tika: metadata extracter
   #
   # proxy auth for authelia: https://paperless-ngx.readthedocs.io/en/latest/configuration.html?highlight=auth#hosting-security
+
 - name: start paperless-ngx-webserver container
   docker_container:
-    name: paperless-ngx-webserver
+    name: paperless-ngx-user-{{ paperless_user }}
     image: ghcr.io/paperless-ngx/paperless-ngx:latest
     restart_policy: "unless-stopped"
     auto_remove: false
@@ -124,38 +234,21 @@
         ipv4_address: "{{ bridgewithdns['paperless-ngx-webserver'] }}"
     mounts:
       - type: bind
-        source: "{{ systemuserlist.paperless.home }}/paperless-ngx/data"
+        source: "{{ systemuserlist.paperless.home }}/paperless-ngx/data/{{ paperless_user }}"
         target: /usr/src/paperless/data
       - type: bind
-        source: "{{ systemuserlist.paperless.home }}/paperless-ngx/media"
+        source: "{{ paperless_users_path }}/{{ paperless_user }}/media"
         target: /usr/src/paperless/media
       - type: bind
-        source: "{{ systemuserlist.paperless.home }}/paperless-ngx/export"
+        source: "{{ paperless_users_path }}/{{ paperless_user }}/export"
         target: /usr/src/paperless/export
       - type: bind
-        source: "{{ systemuserlist.paperless.home }}/paperless-ngx/consume"
+        source: "{{ paperless_users_path }}/{{ paperless_user }}/consume"
         target: /usr/src/paperless/consume
-    env:
-      USERMAP_UID: "{{ systemuserlist.paperless.uid }}"
-      USERMAP_GID: "{{ systemuserlist.paperless.gid }}"
-      PAPERLESS_URL: "https://{{ paperless_url }}"
-      PAPERLESS_SECRET_KEY: "{{ paperless_secret_key }}"
-      PAPERLESS_OCR_LANGUAGES: "{{ paperless_ocr_langs }}"
-      PAPERLESS_OCR_LANGUAGE: "{{ paperless_ocr_default_lang }}"
-      PAPERLESS_REDIS: redis://paperless-ngx-redis:6379
-      PAPERLESS_DBENGINE: mariadb
-      PAPERLESS_DBHOST: "{{ mariadb_host }}"
-      PAPERLESS_DBNAME: "{{ mariadb_db }}"
-      PAPERLESS_DBUSER: "{{ systemuserlist.paperless.username }}"
-      PAPERLESS_DBPASS: "{{ systemuserlist.paperless.mariadb_pass }}"
-      PAPERLESS_DBPORT: "3306"
-      PAPERLESS_TIME_ZONE: UTC
-      PAPERLESS_ADMIN_USER: "{{ paperless_admin_user }}"
-      PAPERLESS_ADMIN_MAIL: "{{ paperless_admin_email }}"
-      PAPERLESS_ADMIN_PASSWORD: "{{ paperless_admin_passwd }}"
-      # AUTH
-      PAPERLESS_ENABLE_HTTP_REMOTE_USER: "true"
-      PAPERLESS_LOGOUT_REDIRECT_URL: "https://{{ authelia_login_url }}/logout"
+      - type: bind
+        source: "{{ systemuserlist.paperless.home }}/paperless-ngx/bin"
+        target: /usr/src/paperless/bin/
+    env_file: "{{ systemuserlist.paperless.home }}/paperless-ngx/{{ paperless_user }}.env"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000"]
       interval: 30s
@@ -163,6 +256,8 @@
       retries: 5
   tags:
     - paperless-containers
+    - paperless-container
+    - paperless-config
     - paperless-ngx-containers
     - paperless-ngx-container
     - docker-containers
@@ -182,10 +277,69 @@
   with_items:
     - "{{ paperless_url }}"
 
+- name: make www dirs
+  file:
+    state: directory
+    path: /var/www/{{ item }}
+    owner: www-data
+    group: www-data
+    mode: 0755
+  loop_control:
+    label: /var/www/{{ item }}
+  with_items:
+    - "{{ paperless_url }}"
+       # helper dir for try_file
+    - "{{ paperless_url }}/{{ paperless_user }}"
+  tags:
+    - paperless-nginx
+
+- name: template index file for user if user specific urls
+  template:
+    src: paperless_user.html.j2
+    dest: /var/www/{{ paperless_url }}/{{ paperless_user }}.html
+    owner: www-data
+    group: www-data
+    mode: 0755
+  tags:
+    - paperless-nginx
+  when:
+    - paperless_user_specific_urls
+
+- name: remove index files for user if not user specific urls
+  file:
+    state: absent
+    dest: /var/www/{{ paperless_url }}/{{ paperless_user }}.html
+  tags:
+    - paperless-nginx
+  when:
+    - not paperless_user_specific_urls
+
+- name: template whoami.json
+  template:
+    src: "{{ item }}.j2"
+    dest: /var/www/{{ paperless_url }}/{{ item }}
+    owner: www-data
+    group: www-data
+    mode: 0644
+  with_items:
+    - whoami.json
+  tags:
+    - paperless-nginx
+
+- name: add favicon
+  copy:
+    src: favicon.ico
+    dest: /var/www/{{ paperless_url }}/favicon.ico
+    owner: www-data
+    group: www-data
+    mode: 0755
+  tags:
+    - paperless-nginx
+
 - name: template nginx vhost for paperless
   template:
     src: 01-paperless.j2
-    dest: /etc/nginx/sites-enabled/01-paperless
+    dest: /etc/nginx/sites-enabled/01-{{ paperless_url }}
     owner: root
     group: root
     mode: 0644
@@ -193,3 +347,15 @@
     - nginx
     - paperless-nginx
   notify: reload nginx
+
+- name: template filebeat config
+  template:
+    src: filebeat-paperless.yml.j2
+    dest: "/etc/filebeat/inputs.d/paperless-{{ paperless_user }}.yml"
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - filebeat
+    - filebeat-paperless-ngx
+  notify: restart filebeat

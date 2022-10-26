@@ -14,20 +14,20 @@ server {
   server_name {{ inventory_hostname }};
   include /etc/nginx/authelia_internal.conf;
 
-  location = /server_status {
-    stub_status;
+    location = /server_status {
+        stub_status;
 
-    access_log off;
+        access_log off;
 
-    allow 127.0.0.1;
-    {% if 'address' in ansible_default_ipv4 -%}
-    allow {{ ansible_default_ipv4.address }};
-    {% endif -%}
-    {% if ansible_default_ipv6 is defined and 'address' in ansible_default_ipv6 -%}
-    allow {{ ansible_default_ipv6.address }};
-    {% endif -%}
-    allow {{ bridgewithdns_cidr }};
-    deny all;
+        allow 127.0.0.1;
+        {% if 'address' in ansible_default_ipv4 -%}
+        allow {{ ansible_default_ipv4.address }};
+        {% endif -%}
+        {% if ansible_default_ipv6 is defined and 'address' in ansible_default_ipv6 -%}
+        allow {{ ansible_default_ipv6.address }};
+        {% endif -%}
+        allow {{ bridgewithdns_cidr }};
+        deny all;
   }
 
 

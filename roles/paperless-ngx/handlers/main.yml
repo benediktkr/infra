@@ -4,3 +4,14 @@
   service:
     name: nginx
     state: reloaded
+
+- name: restart filebeat
+  service:
+    name: filebeat
+    state: restarted
+
+- name: restart paperless-ngx
+  docker_container:
+    name: paperless-ngx-user-{{ paperless_user }}
+    state: started
+    restart: true

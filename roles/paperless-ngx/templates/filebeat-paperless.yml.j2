@@ -1,0 +1,38 @@
+- type: filestream
+  paths:
+    - "{{ systemuserlist.paperless.home }}/paperless-ngx/data/{{ paperless_user }}/log/consume.log"
+
+  scan_frequency: 10s
+  enabled: true
+
+  parsers:
+    - ndjson:
+        keys_under_root: true
+        add_error_key: true
+
+  fields_under_root: true
+  fields:
+    service.type: paperless
+    consume: true
+    #paperless_user: "{{ paperless_user }}"
+
+  tags:
+    - paperless
+    - consumer
+
+
+- type: filestream
+  paths:
+    - "{{ systemuserlist.paperless.home }}/paperless-ngx/data/{{ paperless_user }}/log/paperless.log"
+    - "{{ systemuserlist.paperless.home }}/paperless-ngx/data/{{ paperless_user }}/log/mail.log"
+
+  scan_frequency: 10s
+  enabled: true
+
+  fields_under_root: true
+  fields:
+    service.type: paperless
+    paperless_user: "{{ paperless_user }}"
+
+  tags:
+    - paperless

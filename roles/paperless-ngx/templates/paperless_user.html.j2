@@ -1,0 +1,41 @@
+
+<div class="terminal">
+  <div class="pagetitle">{{ paperless_url }} | {{ paperless_user }}</div>
+
+  <ul>
+    <li class="icon">
+      <a href="/ben">/ben</a>
+    </li>
+  </ul>
+</div>
+
+<div class="terminal">
+  <div class="subpagetitle">> shared</div>
+  <ul>
+    <li class="icon">
+      <a href="/petstore">/petstore</a>
+    </li>
+  </ul>
+</div>
+
+{{ inventory_hostname }}
+
+<script>
+    window.onload = function() {
+        console.log(document.location);
+        if (document.location == "https://{{ paperless_url }}/") {
+            var xhr = new XMLHttpRequest();
+            xhr.addEventListener("load", function() {
+                paperless_user = xhr.getResponseHeader("Paperless-User").toLowerCase();
+                redirect = "https://{{ paperless_url }}/" + paperless_user + "/";
+                console.log(redirect)
+                setTimeout(function() {
+                    window.location.replace(redirect);
+                }, 10000);
+            }, false);
+            xhr.open('GET', "/whoami.json");
+            xhr.send();
+        }
+
+    }
+</script>

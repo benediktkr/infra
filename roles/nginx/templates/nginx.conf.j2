@@ -18,6 +18,15 @@ http {
     # nginx hack
     # if $authelia_user doesnt exist, set it to empty string
     # if $authelia_user does exist, do nothing
+    # map $host $authelia_user {
+    #     "" "";
+    #     default $authelia_user;
+
+    # }
+    # map $host $authelia_groups {
+    #     "" "";
+    #     default $authelia_groups;
+    # }
     map $host $authelia_user {
         default "";
     }
@@ -33,6 +42,9 @@ http {
                       ' "request": "$request", '
                       ' "request_method": "$request_method", '
                       ' "request_uri": "$request_uri", '
+                      ' "uri": "$uri", '
+                      ' "http_connection": "$http_connection", '
+                      ' "http_upgrade": "$http_upgrade", '
                       ' "server_name": "$server_name", '
                       ' "server_port": "$server_port", '
                       ' "status": "$status", '
