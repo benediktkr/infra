@@ -69,6 +69,14 @@ server {
         return 302 https://$host/web/;
     }
 
+    # jellyfin-web already has a robots.txt file that disallows everything, but we still want to maintain our own.
+    # jellyfin (not -web) will issue a 302 redirect from {{ jellyfin_url }}/robots.txt to {{ jellyfin_url }}/web/robots.txt
+    # where the file is then served from.
+    #
+    # https://github.com/jellyfin/jellyfin-web/blob/master/src/robots.txt
+    location = /robots.txt {
+        alias {{ systemuserlist.jellyfin.home }}/robots.txt;
+    }
     location / {
         #include /etc/nginx/jellyfin/jellyfin_auth.conf;
 

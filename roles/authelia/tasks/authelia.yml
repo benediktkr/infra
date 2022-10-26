@@ -57,6 +57,7 @@
     mode: 0755
   tags:
     - authelia-nginx
+    - authelia-robots
   notify: reload nginx
 
 - name: template nginx vhost

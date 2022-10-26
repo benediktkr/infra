@@ -209,6 +209,17 @@
     daemon_reload: true
     name: jellyfin_auth
 
+- name: template robots.txt
+  template:
+    src: "robots.txt.j2"
+    dest: "{{ systemuserlist.jellyfin.home }}/robots.txt"
+    owner: jellyfin
+    group: jellyfin
+    mode: 0755
+  tags:
+    - jellyfin-nginx
+    - jellyfin-robots
+  notify: reload nginx
 
 - name: template jellyfin nginx config
   template:

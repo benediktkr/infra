@@ -61,6 +61,7 @@
     - sitemap.xml
   tags:
     - robots
+    - gitea-robots
 
 - name: copy gitea templates
   copy:
