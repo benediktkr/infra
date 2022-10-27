@@ -1,0 +1,28 @@
+From 6f11836b767f23b8da0588b76794aa4b80b029ea Mon Sep 17 00:00:00 2001
+From: Ben Kristinsson <ben@sudo.is>
+Date: Thu, 27 Oct 2022 17:26:03 +0200
+Subject: [PATCH] applied patch to feeds.tml
+
+---
+ roles/gitea/files/tmpl/user/dashboard/feeds.tmpl | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/roles/gitea/files/tmpl/user/dashboard/feeds.tmpl b/roles/gitea/files/tmpl/user/dashboard/feeds.tmpl
+index 94bbbc4..a534951 100644
+--- a/roles/gitea/files/tmpl/user/dashboard/feeds.tmpl
++++ b/roles/gitea/files/tmpl/user/dashboard/feeds.tmpl
+@@ -1,4 +1,5 @@
+ {{range .Feeds}}
++    {{if and (ne .ActUser.ID 2) (ne .ActUser.ID 17)}}
+ 	<div class="news">
+ 		<div class="ui left">
+ 			{{avatarByAction .}}
+@@ -123,4 +124,5 @@
+ 		</div>
+ 		<div class="ui divider"></div>
+ 	</div>
++    {{end}}
+ {{end}}
+-- 
+2.35.1
+
