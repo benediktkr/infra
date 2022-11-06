@@ -87,7 +87,7 @@
 - name: start container
   docker_container:
     name: jellyfin
-    image: jellyfin/jellyfin:10.8.5
+    image: jellyfin/jellyfin:10.8.7
     auto_remove: no
     detach: yes
     pull: yes

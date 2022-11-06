@@ -34,37 +34,6 @@ server {
     #proxy_max_temp_file_size 0;
 
 
-    # Security / XSS Mitigation Headers
-    add_header X-Frame-Options "SAMEORIGIN" always;
-    add_header X-XSS-Protection "1; mode=block" always;
-    add_header X-Content-Type-Options "nosniff" always;
-
-    # Content Security Policy
-    # See: https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP
-    # External Javascript (such as cast_sender.js for Chromecast) must
-    # be allowlisted.
-    # 'self' https://*.{{ domain }} https://{{ domain }}
-    add_header Content-Security-Policy "default-src https: data: blob: http://image.tmdb.org; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' https://www.gstatic.com/cv/js/sender/v1/cast_sender.js https://www.gstatic.com/eureka/clank/cast_sender.js https://www.gstatic.com/eureka/clank/94/cast_sender.js https://www.gstatic.com/eureka/clank/95/cast_sender.js https://www.gstatic.com/eureka/clank/96/cast_sender.js https://www.gstatic.com/eureka/clank/97/cast_sender.js https://www.gstatic.com/eureka/clank/105/cast_sender.js https://www.gstatic.com/eureka/clank/106/cast_sender.js https://www.youtube.com blob:; worker-src 'self' blob:; connect-src 'self'; object-src 'none'; frame-ancestors 'self'" always;
-
-    # kill cache
-    add_header Last-Modified $date_gmt always;
-    #add_header Cache-Control 'no-store, no-cache' always;
-    add_header Cache-Control 'no-store' always;
-    if_modified_since off;
-    expires off;
-    etag off;
-
-    # attempting to fix the title with nginx
-    {% set jellyfin_title = jellyfin_url.split(".")[0].capitalize() %}
-    #sub_filter '<title>Jellyfin</title>' '<title>{{ jellyfin_title }}</title>';
-    #sub_filter 'document.title="Jellyfin"' 'document.title="{{ jellyfin_title }}"';
-    #sub_filter 'document.title=e||"Jellyfin"' 'document.title=e||"{{ jellyfin_title }}"';
-    #sub_filter 'document.title=B.ZP.translateHtml(document.title,"core")' 'document.title="{{ jellyfin_title }}"';
-    ## in addition to “text/html”.
-    #sub_filter_types application/javascript;
-    #sub_filter_last_modified on;
-    #sub_filter_once off;
-
     location = / {
         return 302 https://$host/web/;
     }
@@ -88,6 +57,22 @@ server {
         proxy_set_header X-Forwarded-Protocol $scheme;
         proxy_set_header X-Forwarded-Host $http_host;
 
+        proxy_set_header Accept-Encoding "";
+        proxy_hide_header last-modified;
+        proxy_hide_header cache-control;
+        proxy_hide_header date;
+
+        etag off;
+        proxy_hide_header "ETag";
+
+        if_modified_since off;
+        expires off;
+        # this causes nginx to add a second cache-control header
+        # but with value 'no-cache'.
+        #expires -1;
+        add_header Last-Modified $date_gmt always;
+        add_header Cache-Control 'no-store' always;
+
         # Disable buffering when the nginx proxy gets very resource
         # heavy upon streaming
         #proxy_buffering off;
@@ -106,7 +91,24 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_set_header X-Forwarded-Protocol $scheme;
         proxy_set_header X-Forwarded-Host $http_host;
-    }
+
+        proxy_set_header Accept-Encoding "";
+        proxy_hide_header last-modified;
+        proxy_hide_header cache-control;
+        proxy_hide_header date;
+
+        etag off;
+        proxy_hide_header "ETag";
+
+        if_modified_since off;
+        expires off;
+        add_header Last-Modified $date_gmt always;
+        add_header Cache-Control 'no-store' always;
+        #add_header Clear-Site-Data "cache" always;
+     }
+     # location = /web/config.json {
+     #     alias "{{ jellyfin_root }}/jellyfin-web/config.json";
+     # }
 
     location /socket {
         proxy_pass http://127.0.0.1:{{ jellyfin_port }};
@@ -119,6 +121,7 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_set_header X-Forwarded-Protocol $scheme;
         proxy_set_header X-Forwarded-Host $http_host;
+
     }
 
     {% for item in ["/health", "/GetUtcTime"] -%}
@@ -138,15 +141,10 @@ server {
         proxy_pass http://127.0.0.1:{{ jellyfin_port }}/health;
         proxy_set_header Host $host;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        {# hide_header 'content-security-policy';
-         # hide_header 'x-response-time-ms';
-         # hide_header 'x-frame-options';
-         # hide_header 'x-xss-protection';
-         # hide_header 'last-modified'; #}
     }
 
 
-    {# location /videos/ {
+     # location /videos/ {
      #     # cache video streams: https://jellyfin.org/docs/general/networking/nginx.html#cache-video-streams
      #     proxy_cache cWEB;
      #     proxy_cache_valid 200 301 302 30d;
@@ -159,7 +157,40 @@ server {
      #     proxy_pass http://localhost:{{ jellyfin_port }};
      #     proxy_cache_key "{{ jellyfin_url }}$uri?MediaSourceId=$arg_MediaSourceId&VideoCodec=$arg_VideoCodec&AudioCodec=$arg_AudioCodec&AudioStreamIndex=$arg_AudioStreamIndex&VideoBitrate=$arg_VideoBitrate&AudioBitrate=$arg_AudioBitrate&SubtitleMethod=$arg_SubtitleMethod&TranscodingMaxAudioChannels=$arg_TranscodingMaxAudioChannels&RequireAvc=$arg_RequireAvc&SegmentContainer=$arg_SegmentContainer&MinSegments=$arg_MinSegments&BreakOnNonKeyFrames=$arg_BreakOnNonKeyFrames&h264-profile=$h264Profile&h264-level=$h264Level";
      #     proxy_cache_valid 200 301 302 30d;
-     # } #}
+     # }
+
+    # Security / XSS Mitigation Headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header X-Content-Type-Options "nosniff" always;
+
+    # Content Security Policy
+    # See: https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP
+    # External Javascript (such as cast_sender.js for Chromecast) must
+    # be allowlisted.
+    # 'self' https://*.{{ domain }} https://{{ domain }}
+    add_header Content-Security-Policy "default-src https: data: blob: http://image.tmdb.org; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' https://www.gstatic.com/cv/js/sender/v1/cast_sender.js https://www.gstatic.com/eureka/clank/cast_sender.js https://www.gstatic.com/eureka/clank/94/cast_sender.js https://www.gstatic.com/eureka/clank/95/cast_sender.js https://www.gstatic.com/eureka/clank/96/cast_sender.js https://www.gstatic.com/eureka/clank/97/cast_sender.js https://www.gstatic.com/eureka/clank/105/cast_sender.js https://www.gstatic.com/eureka/clank/106/cast_sender.js https://www.youtube.com blob:; worker-src 'self' blob:; connect-src 'self'; object-src 'none'; frame-ancestors 'self'" always;
+
+    # kill cache
+    #add_header date $date_gmt always;
+    #add_header Cache-Control 'no-store, no-cache' always;
+
+    # # attempting to fix the title with nginx
+    # {% set jellyfin_title = jellyfin_url.split(".")[0].capitalize() %}
+    # gzip_static off;
+    # gzip off;
+    # sub_filter '<title>Jellyfin</title>' '<title>{{ jellyfin_title }}</title>';
+    # sub_filter 'document.title="Jellyfin"' 'document.title="{{ jellyfin_title }}"';
+    # sub_filter 'document.title=e||"Jellyfin"' 'document.title=e||"{{ jellyfin_title }}"';
+    # sub_filter 'document.title=B.ZP.translateHtml(document.title,"core")' 'document.title="{{ jellyfin_title }}"';
+    # sub_filter_once off;
+    # ## in addition to “text/html”.
+    # sub_filter_types application/javascript;
+
+    # sub_filter_types application/javascript;
+    # sub_filter_once off;
+    # sub_filter 'config.json' 'config.json?foo=$date_gmt';
+
 
 }
 
