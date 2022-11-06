@@ -1,0 +1,6 @@
+
+- sensor:
+    - name: "chance_of_rain"
+      unit_of_measurement: "%"
+      icon: "mdi:weather-pouring"
+      state: "{{ state_attr('weather.hourly', 'forecast')[:2] | map(attribute='precipitation_probability') | list | max | float }}"

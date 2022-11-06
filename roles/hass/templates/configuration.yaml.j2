@@ -66,6 +66,7 @@ tts:
 automation: !include automations.yaml
 script: !include scripts.yaml
 scene: !include scenes.yaml
+template: !include templates.yaml
 
 {# calendar:
  #  {% for item in hass_caldav.urls %}
@@ -148,6 +149,42 @@ binary_sensor:
     country: DE
     workdays: [mon, tue, wed, thu, fri]
     excludes: [sat, sun, holiday]
+  {% for target in hass_ping -%}
+  - platform: ping
+    name: ping_{{ target.name }}
+    host: {{ target.host }}
+    count: 1
+    scan_interval: {{ target.interval_secs }}
+  {% endfor %}
+
+device_tracker:
+  - platform: ping
+    hosts:
+      {% for target in hass_ping -%}
+      {{ target.name }}: {{ target.host }}
+      {% endfor %}
+
+# enabling bluetooth
+bluetooth:
+
+influxdb:
+  host: "{{ influxdb_url }}"
+  port: 443
+  database: hass
+  username: hass
+  password: !secret influxdb_pass
+  ssl: true
+  verify_ssl: true
+  max_retries: 3
+  default_measurement: state
+  include:
+    entities:
+       - sensor.washing_machine_electric_consumption_w
+       - sensor.washing_machine_electric_consumption_kwh
+  tags:
+    instance: prod
+    source: hass
+    home: S21
 
 shell_command:
   matrixmsg: /usr/local/bin/matrixmsg.py

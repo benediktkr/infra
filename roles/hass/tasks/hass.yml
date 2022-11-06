@@ -130,6 +130,17 @@
   tags:
     - hass-config
 
+- name: copy home assistant templates file
+  copy:
+    src: templates.yaml
+    dest: "{{ systemuserlist.hass.home }}/home-assistant/config/templates.yaml"
+    owner: "{{ systemuserlist.hass.uid }}"
+    group: "{{ systemuserlist.hass.gid }}"
+    mode: 0644
+  notify: restart hass container
+  tags:
+    - hass-config
+
 - name: install git sync script
   template:
     src: git-hass-config.sh.j2
@@ -151,6 +162,16 @@
     - cron
     - hass-cron
     - hass-git
+
+  # the host needs to have bluez installed for the container to use bluetooth
+- name: install bluetooth packages
+  apt:
+    name:
+      - bluez
+      - bluetooth
+    state: latest
+  tags:
+    - packages
 
 # docker run --run -it -p 8091:8091 -p 3000:3000 --network
 #bridgewithdns --device /dev/ttyACM0:/dev/zwave -v
@@ -224,6 +245,16 @@
       - type: bind
         source: "{{ systemuserlist.hass.home }}/home-assistant/media"
         target: /usr/var/media
+        # for bluetooth, container needs access to the dbus socket
+        # https://www.home-assistant.io/integrations/bluetooth/
+      - type: bind
+        source: /run/dbus/
+        target: /run/dbus/
+        read_only: true
+      - type: bind
+        source: /etc/bluetooth/main.conf
+        target: /etc/bluetooth/main.conf
+        read_only: true
       # scripts from role: common
       # only depends on requests, which hass image has
       - type: bind
