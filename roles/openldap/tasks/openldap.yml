@@ -43,7 +43,7 @@
     name: openldap
     hostname: "{{ openldap_url }}"
     #domainname: "{{ openldap_domain }}"
-    image: benediktkr/openldap:latest
+    image: git.sudo.is/ops/openldap:latest
     auto_remove: false
     detach: true
     pull: true
