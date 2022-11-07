@@ -42,7 +42,7 @@ LFS_START_SERVER     = false
 {% endif %}
 
 {% if gitea_ssh_enabled -%}
-DISABLE_SSH                = alse
+DISABLE_SSH                = false
 SSH_AUTHORIZED_KEYS_BACKUP = true
 # displayed in the clone urls on the web interface
 SSH_DOMAIN                 = {{ gitea_url }}
@@ -246,7 +246,7 @@ KEYWORDS = git,self-hosted,gitea,{{ domain }},{{ gitea_url }},{{ myusername }}
 # how often the notification endpoint is polled to update the notification
 # will increase to MAX_TIMEOUT in TIMEOUT_STEPs if notification count is unchanged
 # to disable: set MIN_TIMEOUT to -1
-MIN_TIMEOUT = 60s
+MIN_TIMEOUT = 10s
 MAX_TIMEOUT = 180s
 TIMEOUT_STEP = 30s
 
