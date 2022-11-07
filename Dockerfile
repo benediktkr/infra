@@ -1,8 +1,10 @@
-FROM benediktkr/poetry:3.9
+FROM python:3.10-alpine
+RUN adduser --disabled-password --uid 1000 infra && \
+    apk add --update --no-cache yamllint
 
-USER 0
-RUN python3 -m pip install yamllint
-COPY . /infra
+
 WORKDIR /infra
+USER infra
+COPY --chown=infra:infra . /infra
 
-CMD ["/infra/lint.sh", "/infra"]
+ENTRYPOINT ["/infra/bin/lint.sh", "/infra"]
