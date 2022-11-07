@@ -2,7 +2,7 @@
 
 Running a timemachine server on a linux host for backing up your mac.
 
-![screenshot of timemachine on mac](screenshot.jpg)
+![screenshot of timemachine on mac](img/timemachine.jpg)
 
 ## Prerequisites
 
