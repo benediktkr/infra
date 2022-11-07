@@ -1,3 +1,8 @@
 ---
  - import_tasks: gitea.yml
    tags: gitea
+
+ - import_tasks: shieldsio.yml
+   tags:
+     - gitea
+     - shieldsio

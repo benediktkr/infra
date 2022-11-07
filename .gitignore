@@ -95,3 +95,4 @@ jenkins.yml
 kvm.yml
 paperless.yml
 vaultwarden.yml
+mirrors.yml

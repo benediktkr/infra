@@ -18,19 +18,42 @@
 
 - name: create dir structure
   file:
-    path: "{{ gitea_user.home }}/{{ item }}"
+    path: "{{ gitea_user.home }}/{{ item.name }}"
     state: directory
     mode: 0755
-    owner: git
-    group: git
+    owner: "{{ item.owner | default(gitea_user.username) }}"
+    group: "{{ item.group | default(gitea_user.username) }}"
+  loop_control:
+    label: "{{ gitea_user.home }}/{{ item.name }}"
   with_items:
-    - data
-    - data/gitea
-    - data/gitea/conf
-    - data/gitea/templates
-    - data/gitea/templates/custom
-    - data/gitea/templates/user/dashboard
-    - data/git
+    - name: data
+
+    - name: data/git
+    - name: data/gitea
+
+      # for overriding gitea's go-templates
+      # from role/gitea/files/tmpl/
+    - name: data/gitea/templates
+    - name: data/gitea/templates/custom
+    - name: data/gitea/templates/user/dashboard
+
+    - name: data/gitea/conf
+    - name: data/gitea/tmp
+    - name: data/gitea/indexers
+    - name: data/gitea/attachments
+    - name: data/gitea/avatars
+    - name: data/gitea/repo-avatars
+    - name: data/gitea/log
+
+    - name: redis
+      owner: '999'
+      group: '999'
+    - name: redis/data
+      owner: '999'
+      group: '999'
+
+  tags:
+    - gitea-mirror
 
 - name: template ssh passthrough script
   template:
@@ -39,17 +62,38 @@
     mode: 0755
     owner: git
     group: git
+  when: gitea_ssh_enabled
+  tags:
+    - gitea-mirror
+
+- name: copy the ssh keys used for the ssh shim (gitea manages authorized_keys)
+  copy:
+    src: "private/gitea/{{ item.name }}"
+    dest: "{{ gitea_user.home }}/.ssh/{{ item.name }}"
+    mode: "{{ item.mode }}"
+    owner: "{{ gitea_user.username }}"
+    group: "{{ gitea_user.username }}"
+  no_log: true
+  when: gitea_ssh_enabled
+  with_items:
+    - name: id_rsa
+      mode: "0600"
+    - name: id_rsa.pub
+      mode: "0644"
 
 - name: template config
   template:
-    src: private/gitea_app.ini.j2
+    src: app.ini.j2
     dest: "{{ gitea_user.home }}/data/gitea/conf/app.ini"
     owner: git
     group: git
     mode: 0644
   notify: restart gitea
+  tags:
+    - gitea-config
+    - gitea-mirror
 
-- name: template robots.txt
+- name: template robots.txt and sitemap.xml
   template:
     src: "{{ item }}.j2"
     dest: "{{ gitea_user.home }}/data/gitea/{{ item }}"
@@ -78,12 +122,13 @@
     - user/dashboard/repolist.tmpl
   tags:
     - gitea-templates
+  when: gitea_custom_tmpl_enabled
   notify: restart gitea
 
 - name: template nginx vhost
   template:
     src: 01-gitea.j2
-    dest: /etc/nginx/sites-enabled/01-gitea
+    dest: /etc/nginx/sites-enabled/01-{{ gitea_url }}
     owner: root
     group: root
     mode: 0644
@@ -91,6 +136,36 @@
     - nginx
     - gitea-nginx
   notify: reload nginx
+
+- name: redis container for gitea
+  docker_container:
+    name: gitea-redis
+    image: "redis:latest"
+    restart_policy: "unless-stopped"
+    auto_remove: false
+    detach: true
+    pull: true
+    state: started
+    container_default_behavior: compatibility
+    env:
+      REDIS_HOST: redis-gitea
+    networks_cli_compatible: false
+    networks:
+      - name: bridgewithdns
+    healthcheck:
+      interval: 30s
+      timeout: 60s
+      start_period: 10s
+      test: "redis-cli --raw incr ping"
+    mounts:
+      - type: bind
+        source: "{{ gitea_user.home }}/redis/data"
+        target: /data
+  tags:
+    - redis
+    - gitea-redis-container
+    - gitea-container
+    - docker-containers
 
 - name: start container
   docker_container:
@@ -111,12 +186,6 @@
     env:
       USER_UID: "{{ gitea_user.uid }}"
       USER_GID: "{{ gitea_user.gid }}"
-      DB_TYPE: mysql
-      DB_HOST: "{{ ansible_docker0.ipv4.address }}:3306"
-      DB_NAME: gitea
-      DB_USER: gitea
-      DB_PASSWD: "{{ gitea_user.mariadb_pass }}"
-      DISABLE_REGISTRATION: "true"
     networks_cli_compatible: false
     network_mode: bridgewithdns
     networks:

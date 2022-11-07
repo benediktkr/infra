@@ -6,12 +6,26 @@ server {
   listen {{ wg_clients[inventory_hostname].ip }}:443 ssl http2;
   {% endif -%}
 
+  include /etc/nginx/sudo-known.conf;
   include listen-proxy-protocol.conf;
   server_name {{ gitea_url }} {{ gitea_extra_urls | default([]) | join([" "]) }};
 
-
   # default value
   set $header_sudo_gitea "gitea";
+
+  {% for item in ["/metrics"] -%}
+  location {{ item }} {
+     allow 127.0.0.1;
+     allow {{ my_public_ips[inventory_hostname] }}/32;
+     allow {{ my_public_ips[ansible_control_host] }}/32;
+     allow {{ wireguard_cidr }};
+     deny all;
+
+    proxy_pass http://{{ bridgewithdns.gitea }}:{{ gitea_docker_port }};
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  }
+  {% endfor %}
 
   location / {
       proxy_pass         http://{{ bridgewithdns.gitea }}:{{ gitea_docker_port }};
@@ -45,8 +59,6 @@ server {
    }
    {% endfor %}
 
-   include /etc/nginx/sudo-known.conf;
-
    location /robots.txt {
        # gitea itself can also serve this file
        alias {{ gitea_user.home }}/data/gitea/robots.txt;
@@ -60,6 +72,44 @@ server {
        return 302 https://{{ authelia_login_url }}/reset-password/step1;
    }
 
+   {% if shieldsio_enabled -%}
+
+   gzip_static off;
+   gzip off;
+
+   location = {{ shieldsio_path }} {
+     return 302 {{ shieldsio_path }}/;
+   }
+   {# location /page-data {
+    #   # wrong: /page-data/shieldsio/page-data.json
+    #   # should be: {{ shieldsio_path }}/page-data/index/page-data.json
+    #
+    #   #rewrite '^/page-data{{ shieldsio_path }}(/.*)' '/page-data/index$1';
+    #   return 302 {{ shieldsio_path }}$uri;
+    # } #}
+
+   location {{ shieldsio_path }}/ {
+     rewrite '^{{ shieldsio_path }}(/.*)$' $1 break;
+
+     proxy_set_header Accept-Encoding "";
+     sub_filter 'href="/' 'href="{{ shieldsio_path }}/';
+     sub_filter 'src="/' 'src="{{ shieldsio_path }}/';
+     #sub_filter 'pagePath="/' 'pagePath="{{ shieldsio_path }}/';
+     sub_filter_once off;
+     sub_filter_types *;
+
+     #sub_filter '\$\{\_\_PATH_PREFIX\_\_\}' '{{ shieldsio_path }}/';
+
+     proxy_pass http://127.0.0.1:{{ shieldsio_port }};
+
+     proxy_redirect     off;
+     proxy_set_header   Host $host;
+     proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+
+     set $header_sudo_gitea "shields.io";
+   }
+   {% endif %}
+
    access_log /var/log/nginx/access_{{ gitea_url }}.log main;
    error_log /var/log/nginx/error_{{ gitea_url }}.log warn;
 
@@ -68,10 +118,10 @@ server {
    ssl_certificate /usr/local/etc/certs/{{ gitea_url }}/fullchain.pem;
    ssl_certificate_key /usr/local/etc/certs/{{ gitea_url }}/privkey.pem;
 
-   add_header Referrer-Policy "no-referrer" always;
-   add_header X-Frame-Options "SAMEORIGIN" always;
-   add_header X-Permitted-Cross-Domain-Policies "none" always;
-   add_header X-XSS-Protection "1; mode=block" always;
+   #add_header Referrer-Policy "no-referrer" always;
+   #add_header X-Frame-Options "SAMEORIGIN" always;
+   #add_header X-Permitted-Cross-Domain-Policies "none" always;
+   #add_header X-XSS-Protection "1; mode=block" always;
    add_header SUDO-GITEA $header_sudo_gitea always;
 
    fastcgi_hide_header X-Powered-By;

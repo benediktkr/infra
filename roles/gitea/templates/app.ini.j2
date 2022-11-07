@@ -1,0 +1,518 @@
+# distributed from ansible/private
+
+APP_NAME = {{ gitea_url }}
+RUN_MODE = prod
+RUN_USER = {{ gitea_user.username }}
+
+[server]
+# http because nginx terminates https
+PROTOCOL             = http
+USE_PROXY_PROTOCOL   = false
+APP_DATA_PATH        = /data/gitea
+DOMAIN               = {{ gitea_url }}
+HTTP_PORT            = {{ gitea_docker_port }}
+ROOT_URL             = https://{{ gitea_url }}/
+
+# for gitea workerse (such as ssh update) that access the web service
+# setting this value allows us to set more custom SSH_ settings
+LOCAL_ROOT_URL       = http://localhost:{{ gitea_docker_port }}/
+
+# disables use of cdn for static files and gravatar for profile pictures
+OFFLINE_MODE         = true
+
+# we have the nginx access logs
+DISABLE_ROUTE_LOG   = false
+
+# gzip compressoin for runtime-generated content (not static resources)
+ENABLE_GZIP          = false
+
+# web browser cache (custom/, public/, avatars)
+STATIC_CACHE_TIME    = 6h
+STATIC_URL_PREFIX    = https://{{ gitea_url }}/
+
+# can be "home", "explore", "organizations", "login", or any URL such
+# as "/org/repo" or even "https://anotherwebsite.com
+LANDING_PAGE         = home
+
+{% if gitea_lfs_enabled -%}
+LFS_START_SERVER     = true
+LFS_JWT_SECRET       = {{ gitea_lfs_jwt_secret }}
+{% else -%}
+LFS_START_SERVER     = false
+{% endif %}
+
+{% if gitea_ssh_enabled -%}
+DISABLE_SSH                = alse
+SSH_AUTHORIZED_KEYS_BACKUP = true
+# displayed in the clone urls on the web interface
+SSH_DOMAIN                 = {{ gitea_url }}
+SSH_USER                   = {{ gitea_user.username }}
+SSH_PORT                   = 22
+SSH_EXPOSE_ANONYMOUS       = false
+
+# the docker image is running an opsnssh server (with supervised)
+START_SSH_SERVER     = false
+
+# and trying to start the builtin ssh server gives
+#   error: listen tcp :22: bind: address already in use
+# START_SSH_SERVER = true
+# BUILTIN_SSH_SERVER_USER = {{ gitea_user.username }}
+# SSH_LISTEN_PORT = 22
+
+{% else -%}
+DISABLE_SSH          = true
+{% endif %}
+
+
+[database]
+DB_TYPE  = mysql
+HOST     = 172.17.0.1:3306
+NAME     = {{ gitea_user.mariadb_username }}
+USER     = {{ gitea_user.mariadb_username }}
+PASSWD   = {{ gitea_user.mariadb_pass }}
+LOG_SQL  = false
+SCHEMA   =
+SSL_MODE = disable
+CHARSET  = utf8mb4
+
+[security]
+# explicitly setting some default values
+COOKIE_USERNAME      = gitea_awesome
+COOKIE_REMEMBER_NAME = gitea_incredible
+LOGIN_REMEMBER_DAYS  = 7
+DISABLE_WEBHOOKS     = false
+
+# secret keys
+SECRET_KEY           = {{ gitea_secret_key }}
+INTERNAL_TOKEN       = {{ gitea_internal_token }}
+
+# user needs git hook privileges to set git hook
+DISABLE_GIT_HOOKS    = false
+
+# disables the installer
+INSTALL_LOCK         = {{ gitea_installer_locked | default(true) | string | lower }}
+
+{% if gitea_reverse_proxy_auth_enabled -%}
+# values to use authelias reverse proxy auth
+REVERSE_PROXY_AUTHENTICATION_USER = X-Remote-User
+REVERSE_PROXY_AUTHENTICATION_EMAIL = X-Remote-Email
+REVERSE_PROXY_AUTHENTICATION_FULL_NAME = X-Remote-Name
+REVERSE_PROXY_TRUSTED_PROXIES = 127.0.0.0/8,::1/128
+# use X-Forwarded-For or X-Real-IP header to set remote IP for the request
+REVERSE_PROXY_LIMIT = 1
+{% endif %}
+
+{% if gitea_oidc_provider_enabled -%}
+[oauth2]
+# generate with 'gitea generate':
+#   https://docs.gitea.io/en-us/command-line/#generate
+JWT_SECRET = {{ gitea_oidc_provider_jwt_secret }}
+{% endif %}
+
+[log]
+MODE                 = file
+FILE_NAME            = gitea.log
+LEVEL                = {{ gitea_log_level }}
+REDIRECT_MACARON_LOG = true
+MACARON              = file
+ROUTER               = file
+ROOT_PATH            = /data/gitea/log
+ENABLE_SSH_LOG       = {{ gitea_ssh_enabled | string | lower }}
+
+[log.file.*]
+FLAGS                = longfile,shortfuncname,level
+
+[git]
+# explicitly set defaults
+HOME_PATH                 = /data/gitea/home
+MAX_GIT_DIFF_LINES        = 1000
+MAX_GIT_DIFF_FILES        = 100
+# respond to pushes to non-default branches with a link to create a PR
+PULL_REQUEST_PUSH_MESSAGE = true
+
+[git.timeout]
+DEFAULT = 360
+MIGRATE = 600
+MIRROR  = 300
+CLONE   = 300
+PULL    = 300
+GC      = 60
+
+[service]
+# expire time for email links
+ACTIVE_CODE_LIVE_MINUTES          = 180
+RESET_PASSWD_CODE_LIVE_MINUTES    = 180
+REGISTER_EMAIL_CONFIRM            = false
+ENABLE_CAPTCHA                    = false
+
+# dont require user to sign in to view public stuff
+REQUIRE_SIGNIN_VIEW               = false
+
+# only allow external (ldap, oidc) registrations
+DISABLE_REGISTRATION              = false
+ALLOW_ONLY_EXTERNAL_REGISTRATION  = true
+SHOW_REGISTRATION_BUTTON          = false
+
+# repo settings
+DEFAULT_ENABLE_TIMETRACKING       = false
+
+# org settings
+DEFAULT_ALLOW_CREATE_ORGANIZATION = true
+DEFAULT_ORG_VISIBILITY            = public
+
+# user settings
+DEFAULT_USER_VISIBILITY           = limited
+# public, limited (visible to logged in), private (visible to users in same org)
+ALLOWED_USER_VISIBILITY_MODES     = public,limited,private
+AUTO_WATCH_ON_CHANGES             = true
+AUTO_WATCH_NEW_REPOS              = false
+NO_REPLY_ADDRESS                  = {{ gitea_url }}
+DEFAULT_KEEP_EMAIL_PRIVATE        = false
+
+ENABLE_NOTIFY_MAIL                = false
+
+{% if gitea_reverse_proxy_auth_enabled -%}
+ENABLE_REVERSE_PROXY_AUTHENTICATION    = true
+ENABLE_REVERSE_PROXY_AUTO_REGISTRATION = true
+ENABLE_REVERSE_PROXY_EMAIL             = true
+ENABLE_REVERSE_PROXY_FULL_NAME         = true
+{% else -%}
+ENABLE_REVERSE_PROXY_AUTHENTICATION = true
+{% endif %}
+
+[repository]
+ROOT                        = /data/git/repositories
+DEFAULT_BRANCH              = main
+# default: last. options: last, private, public
+DEFAULT_PRIVATE             = public
+# default to creating private repo when using push-to-create
+DEFAULT_PUSH_CREATE_PRIVATE = true
+
+[repository.editor]
+# default includes no extension (single ',' at the end)
+LINE_WRAP_EXTENSIONS   = .txt,.md,.markdown,.mdown,.mkd
+PREVIEWABLE_FILE_MODES = markdown
+
+[repository.local]
+LOCAL_COPY_PATH = /data/gitea/tmp/local-repo
+
+[repository.upload]
+ENABLED   = true
+TEMP_PATH = /data/gitea/tmp/uploads
+MAX_FILES = 25
+# in MB
+FILE_MAX_SIZE = 10
+
+[repository.pull-request]
+WORK_IN_PROGRESS_PREFIXES = wip,wip:,[wip],WIP,WIP:,[WIP]
+DEFAULT_MERGE_MESSAGE_ALL_AUTHORS = true
+# annoyingly, these go _above_ the link to the PR
+POPULATE_SQUASH_COMMENT_WITH_COMMIT_MESSAGES = false
+
+[project]
+# explicit defaults
+PROJECT_BOARD_BASIC_KANBAN_TYPE = To Do, In Progress, Done
+PROJECT_BOARD_BUG_TRIAGE_TYPE = Needs Triage, High Priority, Low Priority, Closed
+
+[cors]
+# we would set this in nginx
+#   https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS#The_HTTP_response_headers
+ENABLED = false
+
+[ui]
+DEFAULT_THEME          = arc-green
+ISSUE_PAGING_NUM       = 100
+REACTIONS              = +1, -1, laugh, hooray, confused, heart, rocket, eyes
+# on the explore page
+SHOW_USER_EMAIL        = false
+# everywhere
+DEFAULT_SHOW_FULL_NAME = false
+# default: disable a Service Worker to cache frontend assets
+USE_SERVICE_WORKER    = false
+
+[ui.user]
+# repos that are displayed on one page
+REPO_PAGING_NUM = 30
+
+{% if gitea_main -%}
+[ui.meta]
+# affects how links are unfurled
+AUTHOR = {{ gitea_url }}
+DESCRIPTION = Gitea
+KEYWORDS = git,self-hosted,gitea,{{ domain }},{{ gitea_url }},{{ myusername }}
+{% endif %}
+
+[ui.notification]
+# how often the notification endpoint is polled to update the notification
+# will increase to MAX_TIMEOUT in TIMEOUT_STEPs if notification count is unchanged
+# to disable: set MIN_TIMEOUT to -1
+MIN_TIMEOUT = 60s
+MAX_TIMEOUT = 180s
+TIMEOUT_STEP = 30s
+
+[markdown]
+# soft line breaks as hard line breaks: single newline character between
+# paragraphs will cause a line break, adding trailing whitespace to paragraphs
+# is not necessary to force a line break.
+ENABLE_HARD_LINE_BREAK_IN_COMMENTS = false
+ENABLE_HARD_LINE_BREAK_IN_DOCUMENTS = false
+
+FILE_EXTENSIONS = .md,.markdown,.mdown,.mkd
+ENABLE_MATH = true
+
+[indexer]
+{% if gitea_indexer_es_enabled -%}
+ISSUE_INDEXER_TYPE     = elasticsearch
+ISSUE_INDEXER_CONN_STR = http://elastic:changeme@localhost:9200
+ISSUE_INDEXER_NAME     = gitea_issues
+REPO_INDEXER_ENABLED   = true
+REPO_INDEXER_CONN_STR  = http://elastic:changeme@localhost:9200
+REPO_INDEXER_NAME      = gitea_repos
+REPO_INDEXER_TYPE      = elasticsearch
+{% else -%}
+ISSUE_INDEXER_TYPE   = bleve
+ISSUE_INDEXER_PATH   = /data/gitea/indexers/issues.bleve
+REPO_INDEXER_ENABLED = false
+# takes a lot of disk space
+#REPO_INDEXER_TYPE = bleve
+{% endif %}
+
+[admin]
+DEFAULT_EMAIL_NOTIFICATIONS = onmention
+# allow non-admin users to create orgs
+DISABLE_REGULAR_ORG_CREATION = false
+
+{% if gitea_openid_enabled -%}
+[openid]
+ENABLE_OPENID_SIGNIN = true
+ENABLE_OPENID_SIGNUP = true
+{% endif %}
+
+{% if gitea_oidc_client_enabled -%}
+[oauth2_client]
+# can override REGISTER_EMAIL_CONFIRM (currently set to same)
+REGISTER_EMAIL_CONFIRM   = false
+#OPENID_CONNECT_SCOPES    =
+ENABLE_AUTO_REGISTRATION = true
+# userid = use the userid / sub attribute
+# nickname = use the nickname attribute
+# email = use the username part of the email attribute
+USERNAME = nickname
+# update if available on each login
+UPDATE_AVATAR = false
+# if account/email exists
+# disabled = show an error
+# login = show an account linking login
+# auto = link directly with the account
+ACCOUNT_LINKING = login
+{% endif %}
+
+[mailer]
+{% if gitea_smtp_enabled -%}
+ENABLED        = true
+MAILER_TYPE    = smtp
+FROM           = git@{{ domain }}
+ENVELOPE_FROM  = git@{{ domain }}
+HELO_HOSTNAME  = {{ gitea_url }}
+SUBJECT_PREFIX = [{{ gitea_url }}]
+
+{% if gitea_smtp_matrix|default(false) -%}
+SMTP_ADDR = {{ matrix_smtp_url }}
+SMTP_PORT = 25
+PROTOCOL  = smtp
+{% else -%}
+SMTP_ADDR               = {{ smtp_server }}
+SMTP_PORT               = {{ smtp_port }}
+USER                    = {{ smtp_username }}
+PASSWD                  = {{ smtp_passwd }}
+PROTOCOL                = smtps
+FORCE_TRUST_SERVER_CERT = false
+{% endif %}
+
+{% else -%}
+ENABLED = false
+{% endif %}
+
+[cache]
+ENABLED  = true
+ADAPTER  = redis
+INTERVAL = 60
+HOST     = network=tcp,addr=gitea-redis:6379,db=0,pool_size=100,idle_timeout=100
+ITEM_TTL = 16h
+
+[cache.last_commit]
+ENABLED = true
+
+[session]
+# empty = use db config
+PROVIDER_CONFIG =
+PROVIDER        = db
+# 1 week
+SESSION_LIFE_TIME = 604800
+# the cooke SameSite setting (not gitea specific)
+SAME_SITE = lax
+COOKIE_NAME     = i_like_gitea
+
+[picture]
+AVATAR_UPLOAD_PATH            = /data/gitea/avatars
+REPOSITORY_AVATAR_UPLOAD_PATH = /data/gitea/repo-avatars
+DISABLE_GRAVATAR              = true
+ENABLE_FEDERATED_AVATAR       = false
+
+[attachment]
+# pull request attachments
+STORAGE_TYPE = local
+PATH         = /data/gitea/attachments
+
+[cron]
+ENABLED      = true
+RUN_AT_START = false
+
+[cron.archive_cleanup]
+ENABLED = false
+
+[cron.update_mirrors]
+ENABLED      = true
+SCHEDULE     = @every 1h
+RUN_AT_START = false
+
+[cron.repo_health_check]
+ENABLED      = true
+SCHEDULE     = @midnight
+RUN_AT_START = false
+
+[cron.check_repo_stats]
+ENABLED      = true
+SCHEDULE     = @midnight
+RUN_AT_START = false
+
+[cron.update_migration_poster_id]
+ENABLED = false
+
+[cron.sync_external_users]
+ENABLED         = true
+RUN_AT_START    = false
+SCHEDULE        = @every 1h
+UPDATE_EXISTING = true
+
+[cron.deleted_branches_cleanup]
+ENABLED      = true
+RUN_AT_START = false
+SCHEDULE     = @midnight
+OLDER_THAN   = 24h
+
+[cron.cleanup_hook_task_table]
+ENABLED      = true
+RUN_AT_START = false
+
+[cron.cleanup_packages]
+ENABLED      = true
+RUN_AT_START = true
+SCHEDULE     = @midnight
+OLDER_THAN   = 24h
+
+[cron.delete_inactive_accounts]
+ENABLED = false
+
+[cron.delete_repo_archives]
+ENABLED = false
+
+[cron.git_gc_repos]
+ENABLED      = true
+RUN_AT_START = false
+SCHEDULE     = @every 72h
+TIMEOUT      = 60s
+# args for 'git gc'
+# ARGS       =
+
+[cron.resync_all_sshkeys]
+ENABLED      = true
+RUN_AT_START = false
+SCHEDULE     = @every 72h
+
+[cron.resync_all_hooks]
+ENABLED      = true
+RUN_AT_START = false
+SCHEDULE     = @every 72h
+
+[cron.reinit_missing_repos]
+ENABLED      = true
+RUN_AT_START = false
+SCHEDULE     = @every 72h
+
+[cron.delete_missing_repos]
+ENABLED      = true
+RUN_AT_START = false
+SCHEDULE     = @every 72h
+
+[cron.delete_generated_repository_avatars]
+ENABLED = false
+
+[cron.delete_old_actions]
+ENABLED      = true
+RUN_AT_START = false
+SCHEDULE     = @every 72h
+
+[cron.update_checker]
+ENABLED       = true
+RUN_AT_START  = false
+SCHEDULE      = @every 168h
+HTTP_ENDPOINT = https://dl.gitea.io/gitea/version.json
+
+[cron.delete_old_system_notices]
+ENABLED      = true
+RUN_AT_START = false
+SCHEDULE     = @every 168h
+OLDER_THAN   = 200h
+
+[mirror]
+ENABLED = true
+# creation of new pull/push mirrors (not git push/pull)
+DISABLE_NEW_PULL = false
+DISABLE_NEW_PUSH = false
+DEFAULT_INTERVAL = 8h
+MIN_INTERVAL = 10m
+
+[api]
+ENABLE_SWAGGER     = true
+MAX_RESPONSE_ITEMS = 200
+DEFAULT_PAGING_NUM = 200
+
+[highlight.mapping]
+# not working..
+.py.j2 = python
+.sh.j2 = sh
+
+[other]
+SHOW_FOOTER_VERSION = false
+ENABLE_SITEMAP      = true
+
+[metrics]
+# served on /metrics
+# access control in nginx
+ENABLED = true
+
+{% if gitea_federation_enabled -%}
+[federation]
+ENABLED = true
+# disable user statistics for nodeinfo
+SHARE_USER_STATISTICS = false
+{% endif %}
+
+[packages]
+ENABLED = true
+
+[storage]
+STORAGE_TYPE = local
+
+[storage.packages]
+STORAGE_TYPE = local
+
+[storage.repo-archives]
+STORAGE_TYPE = local
+
+{% if gitea_lfs_enabled -%}
+[lfs]
+STORAGE_TYPE = local
+PATH         = /data/git/lfs
+{% endif %}

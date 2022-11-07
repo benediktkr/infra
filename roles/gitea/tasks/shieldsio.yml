@@ -1,0 +1,19 @@
+---
+
+#    docker run --rm -p 8080:8080 --env PORT=8080 --name shields shieldsio/shields:next
+
+- name: start shields.io container
+  docker_container:
+    name: shieldsio
+    image: shieldsio/shields:next
+    detach: true
+    pull: true
+    restart_policy: unless-stopped
+    state: started
+    ports:
+      - 127.0.0.1:{{ shieldsio_port }}:{{ shieldsio_port }}
+    env:
+      PORT: "{{ shieldsio_port | string }}"
+  tags:
+    - docker-containers
+  when: shieldsio_enabled
