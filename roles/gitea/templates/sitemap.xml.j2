@@ -25,3 +25,21 @@
 </url>
 
 </urlset>
+
+{#
+ # this is the sitemap that gitea generates:
+ #
+ # grep "proxy_pass" /etc/nginx/sites-enabled/01-git.sudo.is  | head -n 1
+ # curl http://{{ bridgewithdns.gitea }}:{{ gitea_docker_port }}/sitemap.xml
+ #
+ # <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+ #  <url><loc>https://git.sudo.is/explore/users/sitemap-1.xml</loc></url>
+ #  <url><loc>https://git.sudo.is/explore/repos/sitemap-1.xml</loc></url>
+ #  <url><loc>https://git.sudo.is/explore/repos/sitemap-2.xml</loc></url>
+ #  <url><loc>https://git.sudo.is/explore/repos/sitemap-3.xml</loc></url>
+ #  <url><loc>https://git.sudo.is/explore/repos/sitemap-4.xml</loc></url>
+ #  <url><loc>https://git.sudo.is/explore/repos/sitemap-5.xml</loc></url>
+ #  <url><loc>https://git.sudo.is/explore/repos/sitemap-6.xml</loc></url>
+ #  <url><loc>https://git.sudo.is/explore/repos/sitemap-7.xml</loc></url>
+ # </sitemapindex>
+ #}
