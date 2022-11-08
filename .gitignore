@@ -67,8 +67,6 @@ playbooks
 group_vars/
 host_vars/
 playbooks/
-#terraform.tfstate
-ansible.cfg
 
 common.yml
 homeservers.yml
