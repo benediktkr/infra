@@ -24,7 +24,7 @@ echo "  roles:"                  >> private/playbooks/$1.yml
 echo "    - $1"                  >> private/playbooks/$1.yml
 
 ln -s private/playbooks/$1.yml .
-echo "/${1}.yml" >> .gitignore
+echo "/${1}.yml\n" >> .gitignore
 
 (
     cd private/
