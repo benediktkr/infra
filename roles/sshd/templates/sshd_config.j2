@@ -6,17 +6,11 @@
 
 # This sshd was compiled with PATH=/usr/bin:/bin:/usr/sbin:/sbin
 
-# The strategy used for options in the default sshd_config shipped with
-# OpenSSH is to specify options with their default value where
-# possible, but leave them commented.  Uncommented options override the
-# default value.
 
-Include /etc/ssh/sshd_config.d/*.conf
-
-#Port 22
+Port {{ sshd_port | default('22') }}
 #AddressFamily any
-#ListenAddress 0.0.0.0
-#ListenAddress ::
+ListenAddress {{ sshd_listen_addr4 | default('0.0.0.0') }}
+#ListenAddress {{ sshd_listen_addr6 | default('::') }}
 
 #HostKey /etc/ssh/ssh_host_rsa_key
 #HostKey /etc/ssh/ssh_host_ecdsa_key
@@ -57,7 +51,6 @@ PermitRootLogin {{ sshd_permit_root_login | default('yes') }}
 
 # To disable tunneled clear text passwords, change to no here!
 PasswordAuthentication no
-#PermitEmptyPasswords no
 
 # Change to yes to enable challenge-response passwords (beware issues with
 # some PAM modules and threads)
@@ -122,4 +115,17 @@ Subsystem sftp	/usr/lib/openssh/sftp-server
 #	AllowTcpForwarding no
 #	PermitTTY no
 #	ForceCommand cvs server
-PasswordAuthentication no
+
+
+# the include statement does not work as you would expect. theres a bug that makes Match rules
+# included files igored:
+#   https://unix.stackexchange.com/questions/603224/sshd-config-using-a-match-statement-inside-an-included-file
+#
+# but the workaround proposed here seems to work (add "Match all" befure the "Include" statement to prevent
+# the included match statements form being interpreted as parts of other statements):
+#   https://serverfault.com/a/1106224
+#
+# it also works to place the "Include" statment at the top of the file with this workaround.
+
+Match all
+Include /etc/ssh/sshd_config.d/*.conf

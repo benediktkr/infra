@@ -55,32 +55,6 @@
   tags:
     - gitea-mirror
 
-- name: template ssh passthrough script
-  template:
-    src: ssh-passthrough.j2
-    dest: /usr/local/bin/gitea
-    mode: 0755
-    owner: git
-    group: git
-  when: gitea_ssh_enabled
-  tags:
-    - gitea-mirror
-
-- name: copy the ssh keys used for the ssh shim (gitea manages authorized_keys)
-  copy:
-    src: "private/gitea/{{ item.name }}"
-    dest: "{{ gitea_user.home }}/.ssh/{{ item.name }}"
-    mode: "{{ item.mode }}"
-    owner: "{{ gitea_user.username }}"
-    group: "{{ gitea_user.username }}"
-  no_log: true
-  when: gitea_ssh_enabled
-  with_items:
-    - name: id_rsa
-      mode: "0600"
-    - name: id_rsa.pub
-      mode: "0644"
-
 - name: template config
   template:
     src: app.ini.j2
@@ -177,7 +151,7 @@
     state: "{{ container_state | default('started') }}"
     container_default_behavior: compatibility
     ports:
-      - "127.0.0.1:{{ gitea_ssh_port }}:22"
+      - "{{ gitea_ssh_port }}:22"
     volumes:
       - "{{ gitea_user.home }}/data:/data"
       - "{{ gitea_user.home }}/.ssh/:/data/git/.ssh"

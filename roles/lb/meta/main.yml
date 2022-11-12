@@ -1,0 +1,6 @@
+---
+
+dependencies:
+  - sshd
+  - gitea-proxy
+  - haproxy

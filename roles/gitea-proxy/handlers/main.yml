@@ -1,0 +1,5 @@
+---
+
+- name: update known_hosts
+  command: "/usr/local/bin/update_known_hosts.sh"
+  become_user: "{{ gitea_user.username }}"

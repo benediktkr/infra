@@ -95,3 +95,4 @@ playbooks/
 /vaultwarden.yml
 /mirrors.yml
 /lb.yml
+/gitea-proxy.yml

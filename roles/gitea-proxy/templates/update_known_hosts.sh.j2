@@ -1,0 +1,27 @@
+#!/bin/bash
+# {{ ansible_managed }}
+
+set -e
+
+{% set known_hosts = gitea_user.home + "/.ssh/known_hosts" -%}
+
+# remove keys for {{ gitea_host }}:{{ gitea_ssh_port }}
+ssh-keygen -R [{{ gitea_host }}]:{{ gitea_ssh_port }} || true
+rm -v {{ known_hosts }} || true
+touch {{ known_hosts }}
+
+# add to known_hosts
+# not piping stderr (2>&1) because that tends to corrupt the file
+{% for item in ["rsa", "ecdsa", "ed22519"] -%}
+# ssh-keyscan -t rsa -p {{ gitea_ssh_port }} {{ gitea_host }} >> {{ known_hosts }}
+{% endfor %}
+
+# hashed hostnames
+ssh-keyscan -H -p {{ gitea_ssh_port }} {{ gitea_host }} >> {{ known_hosts }}
+
+# hashed ip
+IPADDR=$(host {{ gitea_host }} | awk '{print $4}')
+ssh-keyscan -H -p {{ gitea_ssh_port }} ${IPADDR} >> {{ known_hosts }}
+
+chmod 0600 {{ known_hosts }}
+chown {{ gitea_user.uid }}:{{ gitea_user.gid }} {{ known_hosts }}

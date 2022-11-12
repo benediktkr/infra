@@ -1,0 +1,14 @@
+# {{ ansible_managed }}
+
+Match User {{ gitea_user.username }}
+  AuthorizedKeysCommandUser {{ gitea_user.username }}
+
+  # this sshes to the gitea container, where it runs 'gitea keys': https://docs.gitea.io/en-us/command-line/#keys
+  # that generates an ssh authorized_file output, which the users key is checked against
+  AuthorizedKeysCommand /usr/bin/ssh -p {{ gitea_ssh_port }} {{ gitea_user.username }}@{{ gitea_host }} /usr/local/bin/gitea keys -e {{ gitea_user.username }} -u %u -t %t -k %k
+
+  # in the authorized_keys output from gitea, userse keys are prefixed with command="/usr/local/bin/gitea...", which needs
+  # to exist both inside of the container (its the path to the gitea binary), and on this system, where it is a wrapper
+  # script that ssh's to ssh on the gitea container.
+  #
+  # see: templates/gitea.j2

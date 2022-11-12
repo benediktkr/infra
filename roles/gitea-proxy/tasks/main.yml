@@ -1,0 +1,3 @@
+---
+ - import_tasks: gitea-proxy.yml
+   tags: gitea-proxy

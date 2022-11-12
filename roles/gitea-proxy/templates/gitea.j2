@@ -1,0 +1,3 @@
+#!/bin/bash
+# {{ ansible_managed }}
+/usr/bin/ssh -p {{ gitea_ssh_port }} {{ gitea_user.username }}@{{ gitea_host }} "SSH_ORIGINAL_COMMAND=\"$SSH_ORIGINAL_COMMAND\" $0 $@"

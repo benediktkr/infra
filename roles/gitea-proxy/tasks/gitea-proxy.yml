@@ -1,0 +1,55 @@
+---
+
+- name: template gitea config in sshd_config.d
+  template:
+    src: gitea.conf.j2
+    dest: /etc/ssh/sshd_config.d/gitea.conf
+    owner: root
+    group: root
+    mode: '0644'
+  tags:
+    - sshd
+    - gitea
+  notify:
+    # - reload ssh
+    - restart ssh
+
+- name: copy the ssh keys used for the ssh proxy (gitea manages authorized_keys)
+  copy:
+    src: "private/gitea/{{ item.name }}"
+    dest: "{{ gitea_user.home }}/.ssh/{{ item.name }}"
+    mode: "{{ item.mode }}"
+    owner: "{{ gitea_user.username }}"
+    group: "{{ gitea_user.username }}"
+  no_log: true
+  with_items:
+    - name: id_rsa
+      mode: "0600"
+    - name: id_rsa.pub
+      mode: "0644"
+  tags:
+    - sshd
+    - gitea
+
+- name: template scripts for ssh proxy to gitea
+  template:
+    src: "{{ item.name }}.j2"
+    dest: "/usr/local/bin/{{ item.name }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.owner }}"
+    mode: "{{ item.mode }}"
+  loop_control:
+    label: "{{ item.name }}"
+  with_items:
+    - name: update_known_hosts.sh
+      owner: "{{ gitea_user.username }}"
+      mode: '0750'
+    - name: gitea
+      owner: root
+      mode: '0755'
+  tags:
+    - sshd
+    - gitea
+  notify:
+    - update known_hosts
+    - restart ssh
