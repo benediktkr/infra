@@ -1,0 +1,54 @@
+---
+
+- name: sanity check
+  fail:
+    msg: "failig so we dont lock ourselves out"
+  when: 'inventory_hostname != ansible_control_host'
+
+- name: allow ssh (restircted)
+  ufw:
+    rule: allow
+    to_port: "22"
+    direction: in
+    state: enabled
+    src:
+      - "{{ my_public_ips['ansible_control_host'] }}"
+      - "{{ my_public_ips['backup_pull_host'] }}"
+  when: not ufw_ssh_world
+
+- name: allow ssh (restircted)
+  ufw:
+    rule: allow
+    to_port: "22"
+    direction: in
+    state: enabled
+  when: ufw_ssh_world
+
+- name: allow loopback
+  ufw:
+    rule: allow
+    interface: lo
+    direction: in
+    state: enabled
+
+  # and/or use my cidrs
+- name: allow wg if defined
+  ufw:
+    rule: allow
+    interface: wg0
+    direction: in
+    state: enabled
+  when: ansible_wg0 is defined
+
+- name: open ports
+  ufw:
+    rule: allow
+    to_port: "{{ item }}"
+    direction: in
+    state: enabled
+  with_items: "{{ ufw_open_ports }}"
+
+- name: default policy
+  ufw:
+    policy: deny
+    state: enabled

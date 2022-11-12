@@ -1,0 +1,4 @@
+---
+
+ufw_ssh_world: false
+ufw_open_ports: []
