@@ -1,0 +1,217 @@
+---
+
+- name: check if a user is missing mariadb_pass
+  fail:
+    msg: "missing: {{ item.username }}.mariadb_pass !"
+  when: item.mariadb_pass is defined == false
+  loop_control:
+    label: "{{ item.username }}"
+  with_items: "{{ vaultwarden_users }}"
+
+- name: create mariadb db
+  mysql_db:
+    name: "{{ mariadb_db }}"
+    # utf8mb4 has problems with varchar > 255 and vaultwarden (django) crashes
+    # https://stackoverflow.com/questions/43483129/does-mariadb-allow-255-character-unique-indexes
+    encoding: utf8mb4
+    collation: utf8mb4_general_ci
+    login_unix_socket: /run/mysqld/mysqld.sock
+  with_items: "{{ vw_vaults }}"
+  loop_control:
+    label: "{{ mariadb_db }}"
+  vars:
+    mariadb_db: "vw_{{ item.name }}"
+  tags:
+    - mariadb-users
+
+- name: mariadb users for vaultwarden user vaults
+  mysql_user:
+    state: present
+    name: "{{ mariadb_username }}"
+    host: 'localhost'
+    priv: "{{ mariadb_db }}.*:ALL"
+    login_unix_socket: /run/mysqld/mysqld.sock
+  with_items: "{{ vw_vaults }}"
+  loop_control:
+    label: "{{ mariadb_username}}@localhost: {{ mariadb_db }}"
+  vars:
+    mariadb_db: "ww_{{ item.name }}"
+    mariadb_username: "{% if item.shared %}{{ mariadb_shared_user }}{% else%}{{ item.name }}{%endif%}"
+  tags:
+    - mariadb-users
+
+- name: mariadb user with password
+  mysql_user:
+    state: present
+    name: "{{ mariadb_username }}"
+    host: "{{ mariadb_host_allowed }}"
+    priv: "{{ mariadb_db }}.*:ALL"
+    password: "{{ mariadb_pass }}"
+    login_unix_socket: /run/mysqld/mysqld.sock
+  with_nested:
+    - "{{ vw_vaults }}"
+    - - "{{ ansible_default_ipv4.address }}"
+      - "{{ bridgewithdns_mariadb }}"
+  loop_control:
+    label: "{{ mariadb_username}}@{{ mariadb_host_allowed }}: {{ mariadb_db }}"
+  vars:
+    mariadb_host_allowed: "{{ item[1] }}"
+    mariadb_db: "ww_{{ item[0].name }}"
+    mariadb_username: "{% if item[0].shared %}valutwarden{% else%}{{ item[0].name }}{%endif%}"
+    mariadb_pass: "{% if item[0].shared %}{{ systemuserlist[mariadb_shared_user].mariadb_pass }}{% else%}{{ userlist[item[0].name].mariadb_pass }}{%endif%}"
+  tags:
+    - mariadb-users
+
+- name: create data dir
+  file:
+    path: "{{ systemuserlist.vaultwarden.home }}/{{ item }}"
+    state: directory
+    mode: 0770
+    owner: "vaultwarden"
+    group: "vaultwarden"
+  with_items:
+    - data
+    - ldap
+  tags:
+    - vaultwarden-dirs
+
+- name: create data/ dirs dir
+  file:
+    path: "{{ item_path }}"
+    state: directory
+    mode: 0770
+    owner: "{% if item.shared %}vaultwarden{% else %}{{ item.name }}{% endif %}"
+    group: "{% if item.shared %}vaultwarden{% else %}{{ item.name }}{% endif %}"
+  tags:
+    - vaultwarden-dirs
+  vars:
+    item_path: "{{ systemuserlist.vaultwarden.home }}/data/{{ item.name }}"
+  with_items: "{{ vw_vaults }}"
+
+- name: template config for vaultwarden_ldap
+  template:
+    src: ldap-config.toml.j2
+    dest: "{{ systemuserlist.vaultwarden.home }}/ldap/config.toml"
+    owner: vaultwarden
+    group: vaultwarden
+    mode: 0640
+  tags:
+    - vaultwarden-ldap
+  notify: restart vaultwarden_ldap
+
+- name: start vaultwarden containers
+  docker_container:
+    name: "{{ item.container_name }}"
+    image: "vaultwarden/server:latest"
+    restart_policy: "unless-stopped"
+    auto_remove: false
+    detach: true
+    pull: true
+    state: started
+    container_default_behavior: compatibility
+    user: "{{ uid }}:{{ gid }}"
+    networks_cli_compatible: false
+    network_mode: bridgewithdns
+    networks:
+      - name: bridgewithdns
+        ipv4_address: "{{ bridgewithdns[item.container_name] }}"
+    mounts:
+      - type: bind
+        source: "{{ systemuserlist.vaultwarden.home }}/data/{{ item.name }}"
+        target: /data
+    env:
+      MYSQL_PASSWORD: "{{ mariadb_pass }}"
+      MYSQL_DATABASE: "{{ mariadb_db }}"
+      MYSQL_USER: "{{ item.name }}"
+      ADMIN_TOKEN: "{{ vw_admin_token }}"
+      DOMAIN: "https://{{ vaultwarden_url }}"
+      INVITATIONS_ALLOWED: "true"
+      INVITATION_ORG_NAME: "{{ domain }}"
+      SIGNUPS_ALLOWED: "false"
+      SIGNUPS_DOMAINS_WHITELIST: "{{ domain }}"
+      LOG_FILE: "/data/{{ item.container_name }}.log"
+      WEBSOCKET_ENABLED: "true"
+      WEBSOCKET_ADDRESS: "0.0.0.0"
+      WEBSOCKET_PORT: "3012"
+      # https://github.com/dani-garcia/vaultwarden/wiki/SMTP-Configuration
+      SMTP_HOST: "{{ smtp_server }}"
+      SMTP_USERNAME: "{{ smtp_username }}"
+      SMTP_PASSWORD: "{{ smtp_passwd }}"
+      SMTP_PORT: "{{ smtp_port_string }}"
+      SMTP_SECURITY: "force_tls"
+      SMTP_FROM: "{{ systems_email }}"
+
+  loop_control:
+    label: "{{ item.container_name }}"
+  vars:
+    uid: "{% if item.shared %}{{ systemuserlist.vaultwarden.uid }}{% else%}{{ userlist[item.name].uid }}{%endif%}"
+    gid: "{% if item.shared %}{{ systemuserlist.vaultwarden.gid }}{% else%}{{ userlist[item.name].gid }}{%endif%}"
+    mariadb_db: "ww_{{ item.name }}"
+    mariadb_username: "{% if item.shared %}valutwarden{% else%}{{ item.name }}{%endif%}"
+    mariadb_pass: "{% if item.shared %}{{ systemuserlist[mariadb_shared_user].mariadb_pass }}{% else%}{{ userlist[item.name].mariadb_pass }}{%endif%}"
+  with_items: "{{ vw_vaults }}"
+  tags:
+    - vaultwarden-containers
+    - vaultwarden-container
+    - vaultwarden-config
+    - docker-containers
+
+- name: start vaultwarden_ldap container
+  docker_container:
+    name: vaultwarden_ldap
+    image: vividboarder/vaultwarden_ldap
+    restart_policy: "unless-stopped"
+    auto_remove: false
+    detach: true
+    pull: true
+    state: started
+    container_default_behavior: compatibility
+    user: "{{ uid }}:{{ gid }}"
+    networks_cli_compatible: false
+    network_mode: bridgewithdns
+    networks:
+      - name: bridgewithdns
+        ipv4_address: "{{ bridgewithdns['vaultwarden_ldap'] }}"
+    mounts:
+      - type: bind
+        source: "{{ systemuserlist.vaultwarden.home }}/ldap/config.toml"
+        target: /config.toml
+        read_only: true
+    env:
+      CONFIG_PATH: "/config.toml"
+      RUST_BACKTRACE: "full"
+  vars:
+    uid: "{{ systemuserlist.vaultwarden.uid }}"
+    gid: "{{ systemuserlist.vaultwarden.gid }}"
+  tags:
+    - vaultwarden-containers
+    - vaultwarden_ldap-container
+    - vaultwarden-ldap
+    - docker-containers
+
+# - name: install certs
+#   copy:
+#     src: "/usr/local/etc/letsencrypt/live/{{ item }}"
+#     dest: "/usr/local/etc/certs/"
+#     owner: root
+#     group: root
+#     mode: 0755
+#   tags:
+#     - letsencrypt-certs
+#   notify: reload nginx
+#   vars:
+#     prediff_cmd: echo
+#   with_items:
+#     - "{{ vaultwarden_url }}"
+
+- name: template nginx vhost for vaultwarden
+  template:
+    src: 01-vaultwarden.j2
+    dest: /etc/nginx/sites-enabled/01-{{ vaultwarden_url }}
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - nginx
+    - vaultwarden-nginx
+  notify: reload nginx

@@ -24,12 +24,14 @@ echo "  roles:"                  >> private/playbooks/$1.yml
 echo "    - $1"                  >> private/playbooks/$1.yml
 
 ln -s private/playbooks/$1.yml .
-echo "${1}.yml" >> .gitignore
+echo "/${1}.yml" >> .gitignore
 
 (
     cd private/
     git st
-    git add private/site2.yml
-    git add private/playbooks/$1.yml
+    git add site2.yml
+    git add playbooks/$1.yml
     git commit -m "new role: $1"
+    git push
+    git st
 )

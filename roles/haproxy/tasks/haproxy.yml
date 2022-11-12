@@ -1,0 +1,123 @@
+---
+
+- name: save instacne id
+  get_url:
+    url: http://169.254.169.254/hetzner/v1/metadata/instance-id
+    dest: /usr/local/etc/instance-id
+    mode: '0755'
+  ignore_errors: true
+
+- name: template failover script
+  template:
+    src: "{{ item }}.j2"
+    dest: "/usr/local/bin/{{ item }}"
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - failover.py
+
+- name: template floating ip config
+  template:
+    src: 60-floating-ip.yaml.j2
+    dest: /etc/netplan/60-floating-ip.yaml
+    owner: root
+    group: root
+    mode: 0644
+  notify: netplan apply
+
+- name: make sure log dir exists
+  file:
+    state: directory
+    path: /var/log/haproxy
+    owner: root
+    group: syslog
+    mode: 0775
+  notify: restart rsyslog
+
+- name: template rsyslog config
+  template:
+    src: 49-haproxy.conf.j2
+    dest: /etc/rsyslog.d/49-haproxy.conf
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart rsyslog
+
+- name: install haproxy+keepalived
+  apt:
+    name:
+      - haproxy
+      - keepalived
+      - heartbeat
+    state: latest
+    update_cache: true
+  when: not skip_apt|default(false)
+  tags:
+    - packages
+
+- name: tempalte letsencrypt keys with privkey+pubkey in one file
+  template:
+    src: ssl-letsencrypt.pem.j2
+    dest: /etc/haproxy/ssl-{{ item }}.pem
+    owner: root
+    group: root
+    mode: 0664
+  no_log: true
+  loop_control:
+    label: "{{ item }}"
+  tags:
+    - letsencrypt
+  notify: reload haproxy
+  with_items: "{{ letsencrypt_domains }}"
+  when: haproxy_letsencrypt|default(false)
+
+- name: tempalte haproxy config
+  template:
+    src: haproxy.cfg.j2
+    dest: /etc/haproxy/haproxy.cfg
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - haproxy.cfg
+  notify: reload haproxy
+
+
+- name: telegraf file
+  template:
+    src: telegraf-haproxy.conf.j2
+    dest: /etc/telegraf/telegraf.d/haproxy.conf
+  notify:
+    - restart telegraf
+  tags:
+    - telegraf
+
+- name: template filebeat config
+  template:
+    src: filebeat-haproxy.yml.j2
+    dest: "/etc/filebeat/inputs.d/haproxy.yml"
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - filebeat
+    - filebeat-input
+  notify: restart filebeat
+
+- name: enable haproxy and make sure its started
+  service:
+    name: haproxy
+    state: started
+    enabled: true
+
+- name: keep pacemaker and keepalived stopped for now
+  service:
+    name: "{{ item }}"
+    state: stopped
+    enabled: false
+  loop_control:
+    label: "{{ item }}"
+  with_items:
+    - pacemaker
+    - keepalived
