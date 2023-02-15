@@ -30,15 +30,17 @@
 
 - name: create dir structure
   file:
-    path: "{{ jellyfin_root }}/{{ item }}"
+    path: "{{ jellyfin_root }}/{{ item.name }}"
     state: directory
-    mode: 0750
+    mode: "{{ item.mode | default('0750') }}"
     owner: jellyfin
     group: jellyfin
   with_items:
-    - config
-    - config/plugins/configurations
-    - cache
+    - name: config
+    - name: config/plugins/configurations
+    - name: cache
+    - name: jellyfin-web
+      mode: "0755"
   tags: jellyfin-dirs
 
 - name: create nginx cache dir
@@ -60,6 +62,7 @@
   tags:
     - nginx-config
     - jellyfin-conf
+  when: jellyfin_auth_enabled
   notify: reload nginx
 
 - name: template html
@@ -72,6 +75,7 @@
   with_items:
     - jellyfin_auth_ok.html
     - jellyfin_auth_prompt.html
+  when: jellyfin_auth_enabled
   tags:
     - nginx-config
     - jellyfin-conf
@@ -83,14 +87,16 @@
     owner: www-data
     group: www-data
     mode: 0755
+  tags:
+    - jellyfin-web-config.json
 
 - name: start container
   docker_container:
     name: jellyfin
-    image: jellyfin/jellyfin:10.8.7
-    auto_remove: no
-    detach: yes
-    pull: yes
+    image: jellyfin/jellyfin:{{ jellyfin_version }}
+    auto_remove: false
+    detach: true
+    pull: true
     restart_policy: "unless-stopped"
     state: started
     user: "{{ systemuserlist.jellyfin.uid }}:{{ grouplist.media.gid }}"
@@ -100,7 +106,9 @@
       dockerlogs_format: jellyfin
     ports:
       - 127.0.0.1:8096:8096
-    networks_cli_compatible: no
+      - 1999:1900/tcp
+      - 1900:1900/udp
+    networks_cli_compatible: true
     networks:
       - name: bridgewithdns
         ipv4_address: "{{ bridgewithdns.notflix }}"
@@ -120,7 +128,7 @@
       # - type: bind
       #   source: "{{ jellyfin_root }}/index.html"
       #   target: /jellyfin/jellyfin-web/index.html
-      #   read_only: yes
+      #   read_only: true
     env:
       JELLYFIN_PublishedServerUrl: "{{ jellyfin_url }}"
   tags:
@@ -154,6 +162,8 @@
     owner: jellyfin
     group: jellyfin
     mode: 0644
+  tags:
+    - jellyfin-log
 
 - name: jellyfin nginx dir
   file:
@@ -169,6 +179,7 @@
     owner: jellyfin
     group: jellyfin
     mode: 0775
+  when: jellyfin_auth_enabled
   changed_when: false
 
 - name: template auth stuff
@@ -184,6 +195,7 @@
   with_items:
     - users.digest
     - jellyfin_auth.conf
+  when: jellyfin_auth_enabled
 
 - name: template acl script
   template:
@@ -192,6 +204,7 @@
     mode: 0755
     owner: www-data
     group: www-data
+  when: jellyfin_auth_enabled
   tags:
     - jellyfin-auth
 
@@ -199,6 +212,7 @@
   template:
     src: private/jellyfin_auth.service.j2
     dest: "/etc/systemd/system/jellyfin_auth.service"
+  when: jellyfin_auth_enabled
   tags:
     - jellyfin-auth
 
@@ -208,6 +222,7 @@
     enabled: false
     daemon_reload: true
     name: jellyfin_auth
+  when: jellyfin_auth_enabled
 
 - name: template robots.txt
   template:

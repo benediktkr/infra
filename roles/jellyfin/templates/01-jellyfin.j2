@@ -5,9 +5,9 @@
  # map $request_uri $h264Profile { ~(h264-profile=)(.+?)& $2; } #}
 
 server {
-    listen 443 ssl http2;
+    listen {{ jellyfin_nginx_listen_port }} ssl http2;
     {% if inventory_hostname in wg_clients -%}
-    listen {{ wg_clients[inventory_hostname].ip }}:443 ssl http2;
+    listen {{ wg_clients[inventory_hostname].ip }}:{{ jellyfin_nginx_listen_port }} ssl http2;
     {% endif -%}
 
     include /etc/nginx/sudo-known.conf;
@@ -20,7 +20,6 @@ server {
     # set $jellyfin jellyfin;
     # resolver 127.0.0.1 valid=30;
 
-    # access log is used by python script
     access_log /var/log/nginx/access_{{ jellyfin_url }}.log main;
     error_log /var/log/nginx/error_{{ jellyfin_url }}.log warn;
 
@@ -58,20 +57,6 @@ server {
         proxy_set_header X-Forwarded-Host $http_host;
 
         proxy_set_header Accept-Encoding "";
-        proxy_hide_header last-modified;
-        proxy_hide_header cache-control;
-        proxy_hide_header date;
-
-        etag off;
-        proxy_hide_header "ETag";
-
-        if_modified_since off;
-        expires off;
-        # this causes nginx to add a second cache-control header
-        # but with value 'no-cache'.
-        #expires -1;
-        add_header Last-Modified $date_gmt always;
-        add_header Cache-Control 'no-store' always;
 
         # Disable buffering when the nginx proxy gets very resource
         # heavy upon streaming
@@ -93,22 +78,40 @@ server {
         proxy_set_header X-Forwarded-Host $http_host;
 
         proxy_set_header Accept-Encoding "";
-        proxy_hide_header last-modified;
-        proxy_hide_header cache-control;
-        proxy_hide_header date;
 
-        etag off;
-        proxy_hide_header "ETag";
+        # ## this was also in the 'location /' block, if i add it back, also add it
+        # ## back there! (2023-02)
 
-        if_modified_since off;
-        expires off;
-        add_header Last-Modified $date_gmt always;
-        add_header Cache-Control 'no-store' always;
-        #add_header Clear-Site-Data "cache" always;
+        # proxy_hide_header last-modified;
+        # proxy_hide_header cache-control;
+        # proxy_hide_header date;
+
+        # etag off;
+        # proxy_hide_header "ETag";
+
+        # if_modified_since off;
+        # expires off;
+        # add_header Last-Modified $date_gmt always;
+        # add_header Cache-Control 'no-store' always;
+        # add_header Clear-Site-Data "cache" always;
+
+        # # useful until builds/jellyfin-web is in use.
+        # sub_filter_types application/javascript;
+        # sub_filter_once off;
+        # sub_filter 'config.json' 'config.json?id=$request_id';
+
      }
-     # location = /web/config.json {
-     #     alias "{{ jellyfin_root }}/jellyfin-web/config.json";
-     # }
+     location = /web/config.json {
+         # redirect = 302 = temporary
+         #
+         # seems to work this way without rewriting the javascript with sub_filter and
+         # overriding cache entries (providing the client/browser doesnt already have
+         # the stupid service worker cache already)
+         if ($is_args = '') {
+             rewrite "^/web/config.json$" "/web/config.json?id=$request_id" redirect;
+         }
+         alias "{{ jellyfin_root }}/jellyfin-web/config.json";
+     }
 
     location /socket {
         proxy_pass http://127.0.0.1:{{ jellyfin_port }};
@@ -127,7 +130,9 @@ server {
     {% for item in ["/health", "/GetUtcTime"] -%}
     location {{ item }} {
         allow 127.0.0.1;
+        {% if inventory_hostname in my_public_ips -%}
         allow {{ my_public_ips[inventory_hostname] }}/32;
+        {% endif -%}
         allow {{ my_public_ips[ansible_control_host] }}/32;
         allow {{ wireguard_cidr }};
         deny all;
@@ -187,9 +192,6 @@ server {
     # ## in addition to “text/html”.
     # sub_filter_types application/javascript;
 
-    # sub_filter_types application/javascript;
-    # sub_filter_once off;
-    # sub_filter 'config.json' 'config.json?foo=$date_gmt';
 
 
 }

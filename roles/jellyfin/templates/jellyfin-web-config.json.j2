@@ -50,12 +50,18 @@
             "url": "https://status-{{ jellyfin_url }}/"
         },
         {
-            "name": "Password reset",
+            "name": "change password",
             "url": "https://{{ authelia_login_url }}/reset-password/step1"
         },
         {
-            "name": "TV show calendar",
+            "name": "tv calendar",
             "url": "https://pirate.sudo.is/sonarr/feed/calendar/Sonarr.ics"
+        },
+        {
+            "name": "chatroom: #{{ jellyfin_url.replace('.', ':', 1) }}",
+            "url": "https://matrix.to/#/#{{ jellyfin_url.replace('.', ':', 1) }}"
         }
+
+
     ]
 }

@@ -4,6 +4,7 @@
   service:
     name: nginx
     state: reloaded
+  when: jellyfin_nginx_enabled
 
 - name: restart telegraf
   service:

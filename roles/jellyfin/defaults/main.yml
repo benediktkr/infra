@@ -1,3 +1,7 @@
 ---
 
 jellyfin_root: /srv/jellyfin
+jellyfin_backend: main
+jellyfin_nginx_listen_port: "443"
+jellyfin_nginx_enabled: true
+jellyfin_auth_enabled: false
