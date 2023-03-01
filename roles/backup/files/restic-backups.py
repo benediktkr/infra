@@ -75,13 +75,29 @@ def prepare_env(repo_name, repo_config):
     os.environ.update(restic_env)
 
 
+def list_sshfs_mounts():
+    cmd = "findmnt -t fuse.sshfs --json".split(' ')
+    ps = subprocess.run(cmd, capture_output=True)
+    if ps.stdout == b'':
+        return []
+    else:
+        mounts = json.loads(ps.stdout)
+        return [a['target'] for a in mounts['filesystems']]
+
+
 def run_restic(repo_url, restic_args, no_excludes, dry_run):
     restic_cmd = ["restic", "-r", repo_url]
     restic_cmd.extend(restic_args)
 
     if "backup" in restic_args and not no_excludes:
-        restic_cmd.append("--exclude-file")
-        restic_cmd.append("/usr/local/etc/backup-excludes.txt")
+        restic_cmd.extend([
+            "--exclude-file", "/usr/local/etc/backup-excludes.txt"
+        ])
+
+    for item in list_sshfs_mounts():
+        restic_cmd.extend([
+            "--exclude", item
+        ])
 
     logger.debug(" ".join(restic_cmd))
     if dry_run:
@@ -92,6 +108,15 @@ def run_restic(repo_url, restic_args, no_excludes, dry_run):
     return subprocess.run(restic_cmd, check=True)
 
 def find_nobackup(config):
+    # very interesting restic option:
+    #
+    # restic backup --help
+    # [...]
+    #
+    # --exclude-if-present filename[:header]   takes filename[:header], exclude
+    #       contents of directories containing filename (except filename itself)
+    #       if header of that file is as provided (can be specified multiple times)
+    #
     pass
 
 def main():
