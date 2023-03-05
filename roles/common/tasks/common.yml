@@ -590,3 +590,16 @@
   tags:
     - packages
     - apt.sudo.is
+
+- name: copy scripts
+  copy:
+    src: "{{ item }}"
+    dest: /usr/local/bin/{{ item }}
+    owner: root
+    group: sudo
+    mode: 0750
+  with_items:
+    - rub.py
+  tags:
+    - scripts
+    - pokies
