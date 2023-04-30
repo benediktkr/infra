@@ -15,6 +15,15 @@ server {
        proxy_set_header Host $host;
    }
 
+   location /inform {
+       proxy_pass http://localhost:8080;
+
+       proxy_redirect off;
+        proxy_set_header   Host $host;
+
+   }
+
+
    location / {
         proxy_pass         https://localhost:8443/;
 
@@ -32,8 +41,8 @@ server {
 
     ssl_session_timeout 5m;
 
-    ssl_certificate /usr/local/etc/certs/{{ unifi_url }}/fullchain.pem;
-    ssl_certificate_key /usr/local/etc/certs/{{ unifi_url }}/privkey.pem;
+    ssl_certificate /usr/local/etc/certs/{{ domain }}/fullchain.pem;
+    ssl_certificate_key /usr/local/etc/certs/{{ domain }}/privkey.pem;
 
     add_header Referrer-Policy "no-referrer" always;
     add_header X-Content-Type-Options "nosniff" always;

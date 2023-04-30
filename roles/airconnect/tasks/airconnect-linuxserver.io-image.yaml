@@ -1,0 +1,87 @@
+---
+
+- name: create airconnect dir
+  file:
+    path: "{{ airconnect_dir }}"
+    state: directory
+    mode: "0755"
+    owner: hass
+    group: hass
+  tags:
+    - airconnect-dirs
+
+- name: airconnect config files
+  template:
+    src: "{{ item.name }}.j2"
+    dest: "{{ airconnect_dir }}/{{ item.name }}"
+    owner: "{{ item.owner | default(systemuserlist.hass.uid) }}"
+    group: "{{ item.group | default(systemuserlist.hass.gid) }}"
+    mode: "{{ item.mode }}"
+  notify: restart airconnect container
+  with_items:
+    - name: airupnp.xml
+      mode: "0644"
+    - name: run
+      mode: "0755"
+    - name: supervisord.conf
+      mode: "0644"
+      owner: "root"
+      group: "root"
+      # needed to nuke the script that would otherwise
+      # overwrite our sane supervisord.conf file
+    - name: 30-install
+      mode: "0755"
+  loop_control:
+    label: "{{ item.name }}"
+  tags:
+    - airconnect-config
+    - airconnect
+
+- name: start airconnect container
+  docker_container:
+    name: airconnect
+    hostname: airconnect
+    image: 1activegeek/airconnect
+    #user: "{{ systemuserlist.hass.uid }}:{{ systemuserlist.hass.gid }}"
+    detach: true
+    pull: true
+    auto_remove: false
+    restart_policy: "unless-stopped"
+    state: "{{ airconnect_container_state | default('started') }}"
+    network_mode: host
+    env:
+      # docker image uses the linuxserver base image and supervisor,
+      # setting 'user:' doesnt work because of all of the custom shit
+      # that the base image does: https://github.com/linuxserver/docker-baseimage-ubuntu/blob/bionic/root/etc/cont-init.d/10-adduser
+      # but this image doesnt follow that properly, and supervisor starts
+      # the airconnect processes as root, so we need to mount a custom
+      # supervisord.conf file instead
+      PUID: "{{ systemuserlist.hass.uid }}"
+      PGID: "{{ systemuserlist.hass.gid }}"
+
+      # the image runs a script
+      # AIRUPNP_VAR: "-x /etc/airconnect/airupnp.xml"
+      # will create a reference config file for chromecast when found,
+      # but the defaults are fine, so no need to maintain a custom file
+      #AIRCAST_VAR: "-i /etc/airconnect/aircast.xml"
+    mounts:
+        # generate the reference config files by setting AIRUPNP_VAR and
+        # AIRCAST_VAR env to '-i $PATH'
+      - type: bind
+        source: "{{ airconnect_dir }}/airupnp.xml"
+        target: /etc/airupnp.xml
+        read_only: true
+        # need this to set uid/gid properly
+      - type: bind
+        source: "{{ airconnect_dir }}/supervisord.conf"
+        target: /etc/supervisord.conf
+        # needed to nuke the script that would otherwise overwrite our sane
+       # version of the supervisord.conf file when the container starts
+      - type: bind
+        source: "{{ airconnect_dir }}/30-install"
+        target: /etc/cont-init.d/30-install
+  tags:
+    - airconnect
+    - airconnect-container
+    - docker-containers
+  register: airconnect_container

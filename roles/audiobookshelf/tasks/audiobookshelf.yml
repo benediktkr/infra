@@ -1,0 +1,82 @@
+---
+
+- name: create dir structure
+  file:
+    path: "{{ audiobookshelf_path }}/{{ item.name }}"
+    mode: "{{ item.mode | default('0750') }}"
+    owner: "{{ audiobookshelf_user.uid }}"
+    group: "{{ audiobookshelf_group.gid }}"
+  tags:
+    - audiobookshelf-dirs
+  loop_control:
+    label: "{{ item.name }}"
+  with_items:
+    - name: ''
+    - name: audiobooks
+    - name: config
+      mode: "0755"
+    - name: metadata
+    - name: podcasts
+
+- name: install certs
+  copy:
+    src: "/usr/local/etc/letsencrypt/live/{{ item }}"
+    dest: "/usr/local/etc/certs/"
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - letsencrypt-certs
+  notify: reload nginx
+  vars:
+    prediff_cmd: echo
+  with_items:
+    - "{{ audiobookshelf_url }}"
+
+- name: template nginx vhost
+  template:
+    src: 02-audiobookshelf.conf.j2
+    dest: /etc/nginx/sites-enabled/02-audiobookshelf.conf
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - nginx
+    - audiobookshelf-nginx
+  notify: reload nginx
+
+- name: start audiobookshelf container
+  docker_container:
+    name: audiobookshelf
+    auto_remove: false
+    image: ghcr.io/advplyr/audiobookshelf:latest
+    detach: true
+    pull: true
+    restart_policy: "no"
+    state: started
+    container_default_behavior: compatibility
+    networks_cli_compatible: false
+    network_mode: bridgewithdns
+    networks:
+      - name: bridgewithdns
+        ipv4_address: "{{ bridgewithdns.audiobookshelf }}"
+    env:
+      AUDIOBOOKSHELF_UID: "{{ audiobookshelf_user.uid }}"
+      AUDIOBOOKSHELF_GID: "{{ audiobookshelf_group.gid }}"
+    user: "{{ audiobookshelf_user.uid }}:{{ audiobookshelf_group.gid }}"
+    mounts:
+      - type: bind
+        source: "{{ audiobookshelf_path }}/audiobooks"
+        target: /audiobooks
+      - type: bind
+        source: "{{ audiobookshelf_path }}/podcasts"
+        target: /podcasts
+      - type: bind
+        source: "{{ audiobookshelf_path }}/config"
+        target: /config
+      - type: bind
+        source: "{{ audiobookshelf_path }}/metadata"
+        target: /metadata
+  tags:
+    - audiobookshelf-container
+    - docker-containers

@@ -1,0 +1,11 @@
+---
+
+- name: restart airconnect containers
+  docker_container:
+    name: airconnect-{{ item }}
+    state: "{{ item.state }}"
+    restart: item.state == 'started'
+  with_items: "{{ airconnect_containers }}"
+  when:
+    - airconnect_containers is not defined or not airconnect_containers.changed
+    - item.state == 'started'

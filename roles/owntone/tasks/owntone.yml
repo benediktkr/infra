@@ -1,0 +1,145 @@
+---
+
+- name: create dir structure
+  file:
+    state: directory
+    path: "{{ owntone_path }}/{{ item.name }}"
+    mode: "{{ item.mode | default('0770') }}"
+    owner: "{{ owntone_user.uid }}"
+    group: "{{ owntone_group.gid }}"
+  tags:
+    - owntone-dirs
+  loop_control:
+    label: "{{ item.name }}"
+  with_items:
+    - name: ''
+    - name: config
+    - name: log
+    - name: audio
+    - name: audio/local_music
+    - name: audio/playlists
+    - name: audio/compilations
+    - name: audio/pipes
+    #- name: audio/lidarr
+    #- name: audio/audiobooks
+    #- name: audio/podcasts
+
+- name: create input pipe
+  command:
+    cmd: mkfifo "{{ owntone_path }}/audio/pipes/{{ item }}"
+    creates: "{{ owntone_path }}/audio/pipes/{{ item }}"
+  become_user: "{{ owntone_user.username }}"
+  loop_control:
+    label: "{{ item }}"
+  with_items:
+    - shairport-output.fifo
+    - shairport-metadata.fifo
+  tags:
+    - input.fifo
+
+- name: install certs
+  copy:
+    src: "/usr/local/etc/letsencrypt/live/{{ item }}"
+    dest: "/usr/local/etc/certs/"
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - letsencrypt-certs
+  notify: reload nginx
+  vars:
+    prediff_cmd: echo
+  with_items:
+    - "{{ domain }}"
+
+- name: template nginx vhost
+  template:
+    src: 01-owntone.conf.j2
+    dest: /etc/nginx/sites-enabled/01-owntone.conf
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - nginx
+    - owntone-nginx
+  notify: reload nginx
+
+- name: template config file
+  template:
+    src: owntone.conf.j2
+    dest: "{{ owntone_path }}/config/owntone.conf"
+    owner: "{{ owntone_user.uid }}"
+    group: "{{ owntone_group.gid }}"
+    mode: 0644
+  notify:
+    - restart owntone container
+  tags:
+    - owntone.conf
+
+- name: cron file
+  template:
+    src: owntone-cron.j2
+    dest: /etc/cron.d/owntone
+    owner: root
+    group: root
+    mode: 0600
+  tags:
+    - cron
+    - owntone-cron
+
+- name: install utils for tagging
+  apt:
+    name:
+
+      - id3v2
+      - ffmpeg
+    state: present
+  tags:
+    - packages
+
+- name: install yt-dlp
+  pip:
+    name: yt-dlp
+    state: latest
+  tags:
+    - packages
+    - pip-packages
+    - yt-dlp
+
+- name: fuse allow other
+  lineinfile:
+    path: /etc/fuse.conf
+    line: user_allow_other
+    state: present
+
+- name: start owntone container
+  docker_container:
+    name: owntone
+    #image: lscr.io/linuxserver/daapd:latest
+    image: git.sudo.is/ben/owntone:latest
+    detach: true
+    pull: true
+    restart_policy: "unless-stopped"
+    state: started
+    container_default_behavior: compatibility
+    networks_cli_compatible: false
+    # user:
+    network_mode: host
+    env:
+      VITE_OWNTONE_URL: "https://{{ owntone_url }}"
+    mounts:
+      - type: bind
+        source: "{{ owntone_path }}/config/owntone.conf"
+        target: "/etc/owntone.conf"
+      - type: bind
+        source: "{{ owntone_path }}/config"
+        target: "/config"
+      - type: bind
+        source: "{{ owntone_path }}/log"
+        target: "/log"
+      - type: bind
+        source: "{{ owntone_path }}/audio"
+        target: "/audio"
+  tags:
+    - owntone-container
+    - docker-containers

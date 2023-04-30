@@ -1,0 +1,7 @@
+---
+
+- name: nmcli conn reload
+  command: nmcli conn reload
+
+- name: nmcli device wifi hotspot
+  command: nmcli device wifi hotspot

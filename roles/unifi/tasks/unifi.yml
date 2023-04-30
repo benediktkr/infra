@@ -14,7 +14,7 @@
   vars:
     prediff_cmd: echo
   with_items:
-    - "{{ unifi_url }}"
+    - "{{ domain }}"
 
 - name: template nginx vhost
   template:
@@ -61,10 +61,13 @@
 # v6.5.55
 # v6.0.45
 # v5.14.23
+#
+# updated: v5.14.23 -> stable-5 -> stable-6 -> latest (v7)
 - name: start docker container
   docker_container:
     name: "unifi"
-    image: "jacobalberty/unifi:v5.14.23"
+    #image: "jacobalberty/unifi:v5.14.23"
+    image: jacobalberty/unifi:latest
     auto_remove: false
     detach: true
     restart_policy: "unless-stopped"
@@ -86,8 +89,9 @@
       - "8080:8080/tcp"           # Device/ controller comm.
       - "127.0.0.1:8443:8443/tcp" # Controller GUI/API as seen in a web browser
       - "10001:10001/udp"         # AP discovery
-    dns_servers:
-      - "{{ ansible_docker0.ipv4.address }}"
+  tags:
+    - unifi-container
+    - docker-containers
 
 
 - name: wait for controller to be responsive

@@ -1,0 +1,38 @@
+{#
+ #  nmcli device wifi blackbox ifname wlo1 ssid {{ hass_wifi_blackbox.ssid }} password {{ hass_wifi_blackbox.pass }}
+ #}
+[connection]
+id=blackbox
+uuid={{ hass_wifi_blackbox.uuid }}
+type=wifi
+autoconnect=false
+interface-name={{ hass_wifi_blackbox.iface }}
+{% if timestamp.stdout %}
+{{ timestamp.stdout }}
+{% else %}
+timestamp={{ ansible_date_time.epoch }}
+{% endif %}
+
+[wifi]
+mode=ap
+ssid={{ hass_wifi_blackbox.ssid }}
+{% if hass_wifi_blackbox.hidden|default(false) -%}
+hidden=true
+{% endif %}
+
+[wifi-security]
+group=ccmp;
+key-mgmt=wpa-psk
+pairwise=ccmp;
+proto=rsn;
+psk={{ hass_wifi_blackbox.pass }}
+
+[ipv4]
+address1={{ hass_wifi_blackbox.ip }}/{{ hass_wifi_blackbox.cidr_prefix }}
+method=manual
+
+[ipv6]
+addr-gen-mode=stable-privacy
+method=ignore
+
+[proxy]

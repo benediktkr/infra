@@ -1,0 +1,18 @@
+---
+
+airconnect_dir: "/var/lib/airconnect"
+airconnect_user:
+  name: airconnect
+  uid: 1337
+airconnect_group:
+  name: airconnect
+  gid: 1337
+
+airconnect_upnp: []
+airconnect_containers:
+    # UPnP/Sonos
+  - prog: airupnp
+    state: started
+    # Chromecast
+  - prog: aircast
+    state: started

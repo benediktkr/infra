@@ -1,0 +1,25 @@
+[supervisord]
+nodaemon=true
+
+# the base image of the airconnect image uses the env vars $PUID and $PGID
+# to create a user, and those are set in the ansible role
+#
+# supervisord doesnt have an argument for group, uses the default
+# group of the user instead.
+#
+# but supervisor itself needs to run as root because of
+# asinine stuff that the linuxserver base image wants to do
+
+[program:airupnp]
+user={{ systemuserlist.hass.uid }}
+redirect_stderr=true
+# the config file maintained in this ansible role, mounted in
+# the docker_container task
+command=/bin/airupnp-linux-x86_64 -x /etc/airupnp.xml
+process_name = airupnp-linux-x86_64
+
+[program:aircast]
+user={{ systemuserlist.hass.uid }}
+redirect_stderr=true
+command=/bin/aircast-linux-x86_64
+process_name = aircast-linux-x86_64

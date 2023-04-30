@@ -1,0 +1,3 @@
+---
+ - import_tasks: audiobookshelf.yml
+   tags: audiobookshelf

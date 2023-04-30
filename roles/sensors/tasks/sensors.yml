@@ -56,6 +56,191 @@
   when: dht_builder|default(False)
   tags: dht
 
+  # https://bluedot.readthedocs.io/en/latest/pairpipi.html#using-the-command-line
+  #
+  # $ sudo bluetoothctl
+  # [bluetooth]# discoverable on
+  # Changing discoverable on succeeded
+  # [bluetooth]# pairable on
+  # Changing pairable on succeeded
+  # [bluetooth]# agent on
+  # Agent is already registered
+  # [bluetooth]# default-agent
+  # Default agent request successful
+  # [bluetooth]# scan on
+  # [bluetooth]# pair EA:26:7D:4A:ED:E4
+  # 0a-11e5-a837-0800200c9a66
+  # Vendor specific
+  # [NEW] Descriptor
+  # /org/bluez/hci0/dev_EA_26_7D_4A_ED_E4/service0009/char000d/desc000f
+  # 00002901-0000-1000-8000-00805f9b34fb
+  # Characteristic User Description
+  # [NEW] Descriptor
+  # /org/bluez/hci0/dev_EA_26_7D_4A_ED_E4/service0009/char000d/desc0010
+  # 00002902-0000-1000-8000-00805f9b34fb
+  # Client Characteristic Configuration
+  # [NEW] Characteristic
+  # /org/bluez/hci0/dev_EA_26_7D_4A_ED_E4/service0009/char0011
+  # e6807d23-b90a-11e5-a837-0800200c9a66
+  # Vendor specific
+  # [NEW] Descriptor
+  # /org/bluez/hci0/dev_EA_26_7D_4A_ED_E4/service0009/char0011/desc0013
+  # 00002901-0000-1000-8000-00805f9b34fb
+  # Characteristic User Description
+  # [NEW] Characteristic
+  # /org/bluez/hci0/dev_EA_26_7D_4A_ED_E4/service0009/char0014
+  # e6807d24-b90a-11e5-a837-0800200c9a66
+  # Vendor specific
+  # [NEW] Descriptor
+  # /org/bluez/hci0/dev_EA_26_7D_4A_ED_E4/service0009/char0014/desc0016
+  # 00002901-0000-1000-8000-00805f9b34fb
+  # Characteristic User Description
+  # [NEW] Descriptor
+  # /org/bluez/hci0/dev_EA_26_7D_4A_ED_E4/service0009/char0014/desc0017
+  # 00002902-0000-1000-8000-00805f9b34fb
+  # Client Characteristic Configuration
+  # [NEW] Characteristic
+  # /org/bluez/hci0/dev_EA_26_7D_4A_ED_E4/service0009/char0018
+  # e6807d25-b90a-11e5-a837-0800200c9a66
+  # Vendor specific
+  # [NEW] Descriptor
+  # /org/bluez/hci0/dev_EA_26_7D_4A_ED_E4/service0009/char0018/desc001a
+  # 00002901-0000-1000-8000-00805f9b34fb
+  # Characteristic User Description
+  # [NEW] Characteristic
+  # /org/bluez/hci0/dev_EA_26_7D_4A_ED_E4/service0009/char001b
+  # e6807d26-b90a-11e5-a837-0800200c9a66
+  # Vendor specific
+  # [NEW] Descriptor
+  # /org/bluez/hci0/dev_EA_26_7D_4A_ED_E4/service0009/char001b/desc001d
+  # 00002901-0000-1000-8000-00805f9b34fb
+  # Characteristic User Description
+  # [NEW] Characteristic
+  # /org/bluez/hci0/dev_EA_26_7D_4A_ED_E4/service0009/char001e
+  # e6807d27-b90a-11e5-a837-0800200c9a66
+  # Vendor specific
+  # [NEW] Descriptor
+  # /org/bluez/hci0/dev_EA_26_7D_4A_ED_E4/service0009/char001e/desc0020
+  # 00002901-0000-1000-8000-00805f9b34fb
+  # Characteristic User Description
+  # [NEW] Characteristic
+  # /org/bluez/hci0/dev_EA_26_7D_4A_ED_E4/service0009/char0021
+  # e6807e20-b90a-11e5-a837-0800200c9a66
+  # Vendor specific
+  # [NEW] Descriptor
+  # /org/bluez/hci0/dev_EA_26_7D_4A_ED_E4/service0009/char0021/desc0023
+  # 00002901-0000-1000-8000-00805f9b34fb
+  # Characteristic User Description
+  # [NEW] Descriptor
+  # /org/bluez/hci0/dev_EA_26_7D_4A_ED_E4/service0009/char0021/desc0024
+  # 00002902-0000-1000-8000-00805f9b34fb
+  # Client Characteristic Configuration
+  # [NEW] Characteristic
+  # /org/bluez/hci0/dev_EA_26_7D_4A_ED_E4/service0009/char0025
+  # e6807e21-b90a-11e5-a837-0800200c9a66
+  # Vendor specific
+  # [NEW] Descriptor
+  # /org/bluez/hci0/dev_EA_26_7D_4A_ED_E4/service0009/char0025/desc0027
+  # 00002901-0000-1000-8000-00805f9b34fb
+  # Characteristic User Description
+  # [NEW] Characteristic
+  # /org/bluez/hci0/dev_EA_26_7D_4A_ED_E4/service0009/char0028
+  # e6807e24-b90a-11e5-a837-0800200c9a66
+  # Vendor specific
+  # [NEW] Descriptor
+  # /org/bluez/hci0/dev_EA_26_7D_4A_ED_E4/service0009/char0028/desc002a
+  # 00002901-0000-1000-8000-00805f9b34fb
+  # Characteristic User Description
+  # [NEW] Descriptor
+  # /org/bluez/hci0/dev_EA_26_7D_4A_ED_E4/service0009/char0028/desc002b
+  # 00002902-0000-1000-8000-00805f9b34fb
+  # Client Characteristic Configuration
+  # [NEW] Characteristic
+  # /org/bluez/hci0/dev_EA_26_7D_4A_ED_E4/service0009/char002c
+  # e6807e25-b90a-11e5-a837-0800200c9a66
+  # Vendor specific
+  # [NEW] Descriptor
+  # /org/bluez/hci0/dev_EA_26_7D_4A_ED_E4/service0009/char002c/desc002e
+  # 00002901-0000-1000-8000-00805f9b34fb
+  # Characteristic User Description
+  # [NEW] Primary Service
+  # /org/bluez/hci0/dev_EA_26_7D_4A_ED_E4/service002f
+  # 0000181a-0000-1000-8000-00805f9b34fb
+  # Environmental Sensing
+  # [NEW] Characteristic
+  # /org/bluez/hci0/dev_EA_26_7D_4A_ED_E4/service002f/char0030
+  # 00002a6e-0000-1000-8000-00805f9b34fb
+  # Temperature
+  # [NEW] Descriptor
+  # /org/bluez/hci0/dev_EA_26_7D_4A_ED_E4/service002f/char0030/desc0032
+  # 00002901-0000-1000-8000-00805f9b34fb
+  # Characteristic User Description
+  # [NEW] Descriptor
+  # /org/bluez/hci0/dev_EA_26_7D_4A_ED_E4/service002f/char0030/desc0033
+  # 00002902-0000-1000-8000-00805f9b34fb
+  # Client Characteristic Configuration
+  # [NEW] Characteristic
+  # /org/bluez/hci0/dev_EA_26_7D_4A_ED_E4/service002f/char0034
+  # 00002a6f-0000-1000-8000-00805f9b34fb
+  # Humidity
+  # [NEW] Descriptor
+  # /org/bluez/hci0/dev_EA_26_7D_4A_ED_E4/service002f/char0034/desc0036
+  # 00002901-0000-1000-8000-00805f9b34fb
+  # Characteristic User Description
+  # [NEW] Descriptor
+  # /org/bluez/hci0/dev_EA_26_7D_4A_ED_E4/service002f/char0034/desc0037
+  # 00002902-0000-1000-8000-00805f9b34fb
+  # Client Characteristic Configuration
+  # [NEW] Primary Service
+  # /org/bluez/hci0/dev_EA_26_7D_4A_ED_E4/service0038
+  # 0000180a-0000-1000-8000-00805f9b34fb
+  # Device Information
+  # [NEW] Characteristic
+  # /org/bluez/hci0/dev_EA_26_7D_4A_ED_E4/service0038/char0039
+  # 00002a29-0000-1000-8000-00805f9b34fb
+  # Manufacturer Name String
+  # [NEW] Characteristic
+  # /org/bluez/hci0/dev_EA_26_7D_4A_ED_E4/service0038/char003b
+  # 00002a24-0000-1000-8000-00805f9b34fb
+  # Model Number String
+  # [NEW] Characteristic
+  # /org/bluez/hci0/dev_EA_26_7D_4A_ED_E4/service0038/char003d
+  # 00002a25-0000-1000-8000-00805f9b34fb
+  # Serial Number String
+  # [NEW] Characteristic
+  # /org/bluez/hci0/dev_EA_26_7D_4A_ED_E4/service0038/char003f
+  # 00002a27-0000-1000-8000-00805f9b34fb
+  # Hardware Revision String
+  # [NEW] Characteristic
+  # /org/bluez/hci0/dev_EA_26_7D_4A_ED_E4/service0038/char0041
+  # 00002a26-0000-1000-8000-00805f9b34fb
+  # Firmware Revision String
+  # [NEW] Characteristic
+  # /org/bluez/hci0/dev_EA_26_7D_4A_ED_E4/service0038/char0043
+  # 00002a28-0000-1000-8000-00805f9b34fb
+  # Software Revision String
+  # [CHG] Device EA:26:7D:4A:ED:E4 UUIDs: 00001800-0000-1000-8000-00805f9b34fb
+  # [CHG] Device EA:26:7D:4A:ED:E4 UUIDs: 00001801-0000-1000-8000-00805f9b34fb
+  # [CHG] Device EA:26:7D:4A:ED:E4 UUIDs: 0000180a-0000-1000-8000-00805f9b34fb
+  # [CHG] Device EA:26:7D:4A:ED:E4 UUIDs: 0000181a-0000-1000-8000-00805f9b34fb
+  # [CHG] Device EA:26:7D:4A:ED:E4 UUIDs: e6807d20-b90a-11e5-a837-0800200c9a66
+  # [CHG] Device EA:26:7D:4A:ED:E4 ServicesResolved: yes
+  # [CHG] Device EA:26:7D:4A:ED:E4 Appearance: 0x03c0
+  # [CHG] Device EA:26:7D:4A:ED:E4 Paired: yes
+  # Pairing successful
+  # [Beddit 2564]# quit
+- name: set up bluetooth
+  apt:
+    name:
+      - pi-bluetooth
+      - bluez
+      - libgirepository1.0-dev
+      # - bluez-utils
+      # - bluetooth
+      # - blueman
+  when: bluetooth_enabled | default(false)
+  tags: bluetooth
+
 - name: install fpm with gem
   gem:
     name: fpm

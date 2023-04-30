@@ -1,0 +1,7 @@
+---
+
+dependencies:
+  - unifi
+  - sudoisbot
+  - hass
+  - homeaudio

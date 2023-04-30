@@ -1,0 +1,126 @@
+- sensor:
+    - name: "chance_of_rain"
+      unit_of_measurement: "%"
+      icon: "mdi:weather-pouring"
+      state: >-
+        {% raw -%}
+        {% set ipma_2h = state_attr('weather.ipma_hourly_home', 'forecast')[:2] | map(attribute='precipitation_probability') %}
+        {% set ipma = state_attr('weather.ipma_hourly_home', 'forecast')[0]['precipitation_probability'] | int %}
+        {% set owm = states('sensor.owm_home_forecast_precipitation_probability') | int %}
+        {{ [owm, ipma, 0] | max | int }}
+        {% endraw %}
+
+    {% for radiator in hass_radiators %}
+    {% if 'status' in radiator %}
+
+    - name: "radiator_{{ radiator.name }}_last_updated"
+      unit_of_measurement: "minutes"
+      icon: "mdi:update"
+      device_class: duration
+      state: >-
+         {% raw %} {% {% endraw -%}
+         set since_last_update = now() - states.{{ radiator.status }}.last_updated
+         {%- raw %} %} {% endraw %}
+
+         {% raw %} {{ {% endraw -%}
+         since_last_update.seconds|int // 60
+         {%- raw %} }} {% endraw -%}
+    {% endif %}
+    {% endfor %}
+    {% for linux_tracker in hass_linux_presence_trackers -%}
+    {% endfor %}
+
+- binary_sensor:
+    {% if blink1_enabled -%}
+    - name: "blink1_on"
+      device_class: light
+      state: >-
+        {% raw -%}
+        {{ state_attr('sensor.blink1', 'rgb') != "#000000" }}
+        {% endraw %}
+    {% endif %}
+
+    - name: "heating_on"
+      icon: "mdi:home-thermometer"
+      device_class: heat
+      state: >-
+         {% raw -%}
+         {% set all_radiators = states.climate | selectattr("attributes", "defined") | map(attribute="attributes") | selectattr("temperature", "defined") | map(attribute="temperature") | default([]) | list  %}
+         {% set max_radiator_temp = all_radiators | max | default(0.0) | float %}
+         {% set target_temp = states('input_number.target_temp_heat') | default(0.0) | float %}
+         {{ max_radiator_temp >= target_temp }}
+         {% endraw %}
+
+    - name: s21_anyone_home
+      icon: "mdi:home-account"
+      attributes:
+         friendly_name: "Anyone home"
+      state: >-
+         {% raw -%}
+         {{ state_attr("zone.home", "persons") | default([]) | length > 0 }}
+         {% endraw %}
+
+    - name: doorbell_buzzer
+      state: >-
+        {% raw %} {{ is_state("switch.doorbell_buzzer", "on") }} {% endraw +%}
+      icon: >-
+        {% raw -%}
+        {% if is_state("switch.doorbell_buzzer", "on") %}
+        mdi:electric-switch-closed
+        {% else %}
+        mdi:electric-switch
+        {% endif %}
+        {% endraw %}
+
+    - name: washing_machine_on
+      icon: "mdi:washing-machine"
+      device_class: running
+      delay_on: "00:00:05"
+      delay_off: "00:00:05"
+      state: >-
+        {% raw -%}
+        {% set current = states('sensor.washing_machine_electric_a') %}
+        {% set power = states('sensor.washing_machine_electric_w') %}
+        {% if current == "unavailable" or power == "unavailable" %}
+        {{ false }}
+        {% else %}
+        {{ current|default(0.0)|float > 0.14 or power|default(0.0)|float > 2.8 }}
+        {% endif %}
+        {% endraw %}
+
+    {% for linux_tracker in hass_linux_presence_trackers -%}
+    - name: {{ linux_tracker.name }}_active
+      icon: "mdi:laptop"
+      state: >-
+        {% raw -%} {% {% endraw %} set state_text = states('input_text.webhook_{{ linux_tracker.name }}') {%raw%} %} {%endraw%}
+        {% raw %}
+        {{ state_text == "active" }}
+        {% endraw %}
+
+    - name: "{{ linux_tracker.name }}_webhook_triggering"
+      state: >-
+         {% raw %} {% {% endraw -%}
+         set since_last_triggered = now() - state_attr('automation.webhook_presence_trackers_{{ linux_tracker.name }}', 'last_triggered')
+         {%- raw %} %} {% endraw %}
+
+         {% raw %} {{ {% endraw -%}
+         since_last_triggered.seconds|int < 666
+         {%- raw %} }} {% endraw -%}
+
+    {% endfor %}
+
+- button:
+    name: doorbell_buzzer
+    icon: >-
+      {% raw -%}
+      {% if is_state("switch.doorbell_buzzer", "on") %}
+      mdi:electric-switch-closed
+      {% else %}
+      mdi:electric-switch
+      {% endif %}
+      {% endraw +%}
+    press:
+      - service: script.toggle_switch_like_button
+        data:
+          target_switch: switch.doorbell_buzzer
+          press_for_ms: 200

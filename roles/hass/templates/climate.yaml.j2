@@ -1,0 +1,52 @@
+{% raw -%}
+- platform: climate_template
+  name: Radiators
+  modes:
+    - "auto"
+    - "heat"
+    - "cool"
+    - "off"
+  min_temp: 0
+  max_temp: 30
+
+  current_temperature_template: "{{ states('input_number.heating_setpoint_test') }}"
+  hvac_mode_template: "{{ states('input_select.heating_mode_test') }}"
+  current_humidity_template: 0.0
+  swing_mode_template: false
+  availability_template: true
+
+  set_temperature:
+    - service: input_number.set_value
+      data:
+        value: >-
+          {% set set_point = float(state_attr('climate.radiators', 'temperature'), 14.0) %}
+          {{ set_point }}
+      target:
+        entity_id: input_number.heating_setpoint_test
+
+  set_hvac_mode:
+    - service: input_select.select_option
+      data:
+        option: >-
+          {% set hvac_mode = state_attr('climate.radiators', 'hvac_mode') | default('off') %}
+          {{ hvac_mode }}
+      target:
+        entity_id: input_select.heating_mode_test
+
+{% endraw %}
+
+{# use this in script?
+   {{ state_attr('climate.radiators', 'temperature') }}
+
+   this should work, but doesnt
+   docs:  https://www.home-assistant.io/integrations/template/
+   {{ this.attributes.temperature }}
+
+   https://github.com/jcwillox/hass-template-climate/issues/29
+
+   this syntax works:
+     {% set set_point = float(state_attr('climate.radiators', 'temperature'), 14.0) %}
+     {{ set_point }}
+
+  target_temperature_template: "{{ states('input_number.heating_setpoint_test') }}"
+#}

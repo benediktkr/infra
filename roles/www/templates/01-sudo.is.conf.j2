@@ -1,8 +1,26 @@
+server {
+    server_name {%- for d in server_names %} {{ d }}{% endfor %};
 
+    {% if inventory_hostname in wg_clients -%}
+    listen {{ wg_clients[inventory_hostname].ip }}:443 ssl http2;
+    {% endif -%}
+    listen 443 ssl http2;
 
+    include listen-proxy-protocol.conf;
+
+    ssl_certificate /usr/local/etc/certs/www.{{ domain }}/fullchain.pem;
+    ssl_certificate_key /usr/local/etc/certs/www.{{ domain }}/privkey.pem;
+
+    location / {
+        return 301 https://www.$http_host$request_uri;
+    }
+
+    access_log /var/log/nginx/access_{{ domain }}.log main;
+    error_log /var/log/nginx/error_{{ domain }}.log warn;
+}
 
 server {
-    server_name {%- for d in server_names %} www.{{ d }} {{ d }}{% endfor %};
+    server_name {%- for d in server_names %} www.{{ d }}{% endfor %};
 
     {% if inventory_hostname in wg_clients -%}
     listen {{ wg_clients[inventory_hostname].ip }}:443 ssl http2;

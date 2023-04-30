@@ -57,47 +57,83 @@ default_config:
 #   zeroconf:
 #   zone:
 
+automation ui: !include automations.yaml
+automation ansible: !include automations-ansible-managed.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+template: !include templates.yaml
+climate: !include climate.yaml
+
 # Text to speech
 tts:
   - platform: voicerss
     api_key: !secret voicerss_api_key
   - platform: google_translate
-
-automation: !include automations.yaml
-script: !include scripts.yaml
-scene: !include scenes.yaml
-template: !include templates.yaml
-
-{# calendar:
- #  {% for item in hass_caldav.urls %}
- #
- #   - platform: caldav
- #     days: 30
- #     username: !secret caldav_user
- #     password: !secret caldav_passwd
- #     # {{ item.name }}
- #     url: {{ item.url }}
- #
- #  {% endfor %}
- #}
+  - platform: picotts
+    language: "en-GB"
 
 calendar:
+  {% for item in hass_caldav.calendars -%}
   - platform: caldav
     days: 30
     username: !secret caldav_user
     password: !secret caldav_passwd
-    # {{ hass_caldav.urls[0].name }}
-    url: {{ hass_caldav.urls[0].url }}
+    # {{ item.name | trim }}
+    url: {{ item.url | trim }}
+  {% endfor %}
 
 http:
-  # container runs with network_mode=host, so no network isolation. the docs say to not
-  # do this, and it doesnt work as expected either.
-  # using ufw/iptables for now....
-  #
-  #server_host: 127.0.0.1
+  server_host: 127.0.0.1
+  server_port: 8123
   trusted_proxies:
     - 127.0.0.1
   use_x_forwarded_for: true
+
+frontend:
+  themes: !include_dir_merge_named themes
+
+panel_custom:
+  - name: zwave
+    sidebar_title: Z-Wave
+    sidebar_icon: mdi:z-wave
+    js_url: /api/hassio/app/entrypoint.js
+    url_path: 'config/devices/dashboard?historyBack=1&config_entry=d6e38621854098348266029e18f93048'
+    embed_iframe: true
+    require_admin: true
+    config:
+      ingress: core_configurator
+  - name: automations
+    sidebar_title: Automations
+    sidebar_icon: mdi:robot
+    js_url: /api/hassio/app/entrypoint.js
+    url_path: 'config/automation/dashboard'
+    embed_iframe: true
+    require_admin: true
+    config:
+      ingress: core_configurator
+  - name: scripts
+    sidebar_title: Scripts
+    sidebar_icon: mdi:script
+    js_url: /api/hassio/app/entrypoint.js
+    url_path: 'config/script/dashboard'
+    embed_iframe: true
+    require_admin: true
+    config:
+      ingress: core_configurator
+  - name: integrations
+    sidebar_title: Integrations
+    sidebar_icon: mdi:integrated-circuit-chip
+    js_url: /api/hassio/app/entrypoint.js
+    url_path: 'config/integrations'
+    embed_iframe: true
+    require_admin: true
+    config:
+      ingress: core_configurator
+
+
+{% set zone = {'zone': hass_zones} %}
+{{ zone | to_nice_yaml }}
+
 
 homeassistant:
   auth_providers:
@@ -109,6 +145,7 @@ homeassistant:
   currency: EUR
   unit_system: metric
   time_zone: "Europe/Berlin"
+  country: DE
   external_url: https://{{ hass_url }}
   internal_url: https://{{ hass_url }}
   allowlist_external_dirs:
@@ -118,6 +155,42 @@ homeassistant:
     - "https://{{ hass_notflix_url }}"
   media_dirs:
     media: "/usr/var/media"
+  customize:
+    zone.home:
+      friendly_name: S21
+
+lovelace:
+  mode: storage
+  dashboards:
+    lovelace-yaml:
+      mode: yaml
+      title: Mini
+      icon: mdi:view-dashboard
+      show_in_sidebar: true
+      require_admin: false
+      filename: mini.yaml
+    lovelace-yaml2:
+      mode: yaml
+      title: Test
+      icon: mdi:view-dashboard
+      show_in_sidebar: true
+      require_admin: false
+      filename: ui-test.yaml
+
+  {# resources:
+   #   - url: /config/custom_components/ui_lovelace_minimalist/cards/button-card/button-card.js
+   #     type: module
+   #   - url: /config/custom_components/ui_lovelace_minimalist/cards/button-card/button-card.js
+   #     type: module #}
+
+recorder:
+  purge_keep_days: 3
+  exclude:
+    entity_globs:
+      - binary_sensor.1066d799*
+      - sensor.1066d799*
+      - light.1066d799*
+
 
 sensor:
   # https://www.home-assistant.io/integrations/dwd_weather_warnings/
@@ -144,28 +217,116 @@ sensor:
     # Stadt Berlin
     region_name: 811000000
 
+  {% for item in hass_bvg -%}
+  - platform: bvg_berlin_public_transport
+    name: {{ item.name }}
+    stop_id: "{{ item.stop_id }}"
+    direction: {{ item.direction | trim }}
+    {% if item.walking_distance is defined -%}
+    walking_distance: {{ item.walking_distance | trim }}
+    {% endif -%}
+    file_path: "/config/bvg/"
+  {% endfor %}
+
+  - platform: waqi
+    token: !secret waqi_token
+    locations:
+      {% for item in hass_waqi.locations -%}
+      - "{{ item | trim }}"
+      {%- endfor +%}
+    {#stations:
+      #{% for item in hass_waqi.stations -%}
+      #- "{{ item | trim }}"
+      #{% endfor %}
+      #}
+
+  {% if blink1_enabled -%}
+  - platform: rest
+    resource: http://localhost:{{ blink1_server_port }}/blink1
+    name: blink1
+    json_attributes:
+      - rgb
+      - bright
+    value_template: "{%raw%}{{ value_json.rgb }}{%endraw%}"
+  {% endif %}
+
 binary_sensor:
   - platform: workday
     country: DE
     workdays: [mon, tue, wed, thu, fri]
     excludes: [sat, sun, holiday]
+
+  {% for radiator in hass_radiators -%}
+  {% if 'status' in radiator -%}
+  - platform: threshold
+    entity_id: sensor.radiator_{{ radiator.name }}_last_updated
+    # defined in templates.yaml
+    name: radiator_{{ radiator.name }}_reporting
+    # minutes
+    lower: 10
+  {% endif -%}
+  {% endfor -%}
   {% for target in hass_ping -%}
   - platform: ping
     name: ping_{{ target.name }}
     host: {{ target.host }}
-    count: 1
-    scan_interval: {{ target.interval_secs }}
+    count: {{ target.count | default('1') }}
+    scan_interval: {{ target.interval_secs | default('30') }}
+  {% endfor %}
+
+input_select:
+  heating_mode_test:
+    name: Heating Mode Test
+    options:
+      - "auto"
+      - "heat"
+      - "cool"
+      - "off"
+    initial: "off"
+    icon: mdi:thermometer-lines
+
+
+input_number:
+  heating_setpoint_test:
+    name: Heating Setpoint Test
+    icon: mdi:home-thermometer
+    initial: 0
+    min: 0
+    max: 35
+    step: 0.5
+
+input_text:
+  {% for linux_tracker in hass_linux_presence_trackers -%}
+  webhook_{{ linux_tracker.name }}:
+    name: webhook_{{ linux_tracker.name }}
+    icon: "mdi:laptop"
+    initial: "inactive"
+    pattern: "^active|inactive$"
   {% endfor %}
 
 device_tracker:
+  - platform: bluetooth_le_tracker
+    interval_seconds: 12
+    track_new_devices: false
+    track_battery: false
+    consider_home: 150
+    new_device_defaults:
+      track_new_devices: false
+  - platform: bluetooth_tracker
+    request_rssi: false
+    interval_seconds: 12
+    track_new_devices: false
+    consider_home: 150
+    new_device_defaults:
+      track_new_devices: false
   - platform: ping
     hosts:
       {% for target in hass_ping -%}
+      {% if target.device_tracker|default(true) -%}
       {{ target.name }}: {{ target.host }}
+      {% endif -%}
       {% endfor %}
 
-# enabling bluetooth
-bluetooth:
 
 influxdb:
   host: "{{ influxdb_url }}"
@@ -186,5 +347,79 @@ influxdb:
     source: hass
     home: S21
 
+matrix:
+  homeserver: https://{{ matrix_url }}
+  username: !secret matrix_username
+  password: !secret matrix_password
+  rooms: !secret matrix_rooms
+  commands:
+    - word: hass
+      name: hass
+
+notify:
+  - name: matrix
+    platform: matrix
+    default_room: !secret matrix_default_room
+  - name: pagerduty
+    platform: smtp
+    sender: hass@{{ domain }}
+    recipient:
+      - !secret smtp_recipient_email
+    server: !secret smtp_server
+    port: {{ smtp_port_starttls }}
+    username: !secret smtp_username
+    password: !secret smtp_passwd
+    encryption: starttls
+    sender_name: "{{ hass_url }}"
+
 shell_command:
   matrixmsg: /usr/local/bin/matrixmsg.py
+
+rest_command:
+  {% if blink1_enabled -%}
+  blink1_turn_on:
+    url: {{ hass_blink1_url }}/blink1/on?bright=250
+    #url: http://localhost:{{ blink1_server_port }}/blink1/fadeToRGB?rgb=ff0ff
+    method: GET
+    content_type: "application/json"
+  blink1_turn_off:
+    url: {{ hass_blink1_url }}/blink1/off
+    method: GET
+    content_type: "application/json"
+  blink1_turn_magenta:
+    url: {{ hass_blink1_url }}/blink1/fadeToRGB?rgb=ff00ff
+    method: GET
+    content_type: "application/json"
+  blink1_set_color:
+    url: "{{ hass_blink1_url }}/blink1/fadeToRGB?rgb={%raw%}{{ rgb }}{%endraw%}"
+    method: GET
+  {% endif %}
+
+light:
+  {% if blink1_enabled -%}
+  - platform: template
+    lights:
+      blink1: !include blink1.yaml
+  {% endif %}
+
+# enable 'wake_on_lan' for 'samsungtv'
+wake_on_lan:
+
+samsungtv:
+  - host: {{ hass_wifi_blackbox.tv_ip }}
+    name: The TV
+    turn_on_action:
+      - service: wake_on_lan.send_magic_packet
+        data:
+          mac: "{{ hass_wifi_blackbox.tv_mac }}"
+
+feedreader:
+  urls:
+  {% for item in hass_feedreader -%}
+    - "{{ item.url | trim }}"
+  {% endfor %}
+
+{# logger:
+ #   logs:
+ #     pyatv: debug
+ #     homeassistant.components.apple_tv: debug #}

@@ -1,0 +1,7 @@
+# {{ ansible_managed }}
+
+# m h dom mon dow
+
+*/60 * * * * {{ owntone_user.username }} touch {{ owntone_path }}/audio/local_music/trigger.init-rescan
+
+#

@@ -1,0 +1,12 @@
+---
+
+- name: reload nginx
+  service:
+    name: nginx
+    state: reloaded
+
+- name: restart owntone container
+  docker_container:
+    name: hass
+    state: started
+    restart: true

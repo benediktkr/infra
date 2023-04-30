@@ -1,0 +1,100 @@
+
+- name: allow ssh
+  ufw:
+    rule: allow
+    to_port: "22"
+    direction: in
+    state: enabled
+  tags:
+    - ufw
+
+- name: allow loopback
+  ufw:
+    rule: allow
+    interface: lo
+    direction: in
+    state: enabled
+  tags:
+    - ufw
+
+- name: default policy
+  ufw:
+    policy: allow
+    state: enabled
+  tags:
+     - ufw
+
+- name: deny hass cloud port stuff
+  ufw:
+    # drops packets
+    rule: deny
+    to_port: '42161'
+    direction: in
+    state: enabled
+  tags:
+    - ufw
+
+- name: reject zwavejs ws and hass ports (loopback only)
+  ufw:
+    # connection refused
+    rule: reject
+    to_port: "{{ item }}"
+    direction: in
+    state: enabled
+  with_items:
+    - "8091"
+    - "8123"
+  tags:
+    - ufw
+
+- name: get current timestamp line
+  command: grep "timestamp=" /etc/NetworkManager/system-connections/blackbox.connection
+  check_mode: false
+  ignore_errors: true
+  changed_when: false
+  register: timestamp
+  tags:
+    - hass-wifi
+    - hass-blackbox
+
+
+#  nmcli device wifi blackbox ifname wlo1 ssid {{ hass_wifi_blackbox.ssid }} password {{ hass_wifi_blackbox.pass }}
+- name: config for blackbox wifi ap with NetworkManager
+  template:
+    src: blackbox.connection.j2
+    dest: /etc/NetworkManager/system-connections/blackbox.connection
+    owner: root
+    group: root
+    mode: 0600
+  tags:
+    - hass-wifi
+    - hass-blackbox
+  notify:
+    - nmcli conn reload
+    - nmcli device wifi hotspot
+
+# routing/forwarding should not be enabled, but block it to be sure
+- name: allow local traffic on blackbox wifi
+  ufw:
+    rule: allow
+    interface: "{{ hass_wifi_blackbox.iface }}"
+    direction: out
+    dest: "{{ hass_wifi_blackbox.ip }}/{{ hass_wifi_blackbox.cidr_prefix }}"
+    state: enabled
+  tags:
+    - hass-wifi
+    - hass-blackbox
+    - ufw
+
+- name: reject everything else on the blackbox wifi
+  ufw:
+    # connection refused
+    rule: reject
+    interface: "{{ hass_wifi_blackbox.iface }}"
+    direction: out
+    dest: any
+    state: enabled
+  tags:
+    - hass-wifi
+    - hass-blackbox
+    - ufw

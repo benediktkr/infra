@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<airupnp>
+  <common>
+    <protocolInfo>
+      <pcm>http-get:*:audio/L16;rate=44100;channels=2:DLNA.ORG_PN=LPCM;DLNA.ORG_OP=00;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=0d500000000000000000000000000000</pcm>
+      <wav>http-get:*:audio/wav:DLNA.ORG_OP=00;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=0d500000000000000000000000000000</wav>
+      <flac>http-get:*:audio/flac:DLNA.ORG_OP=00;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=0d500000000000000000000000000000</flac>
+      <mp3>http-get:*:audio/mpeg:DLNA.ORG_PN=MP3;DLNA.ORG_OP=00;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=0d500000000000000000000000000000</mp3>
+    </protocolInfo>
+    <enabled>1</enabled>
+    <max_volume>100</max_volume>
+    <http_length>-1</http_length>
+    <upnp_max>1</upnp_max>
+    <codec>mp3:320</codec>
+    <metadata>1</metadata>
+    <flush>1</flush>
+    <artwork></artwork>
+    <latency>0:1000</latency>
+    <drift>0</drift>
+  </common>
+  <main_log>info</main_log>
+  <upnp_log>info</upnp_log>
+  <util_log>warn</util_log>
+  <raop_log>info</raop_log>
+  <log_limit>-1</log_limit>
+  <max_players>32</max_players>
+  <binding>?</binding>
+  <ports>0:0</ports>
+  {% for item in airconnect_upnp -%}
+  <device>
+    <udn>uuid:{{ item.local_uid }}</udn>
+    <name>{{ item.name }}</name>
+    <mac>{{ item.mac }}</mac>
+    <enabled>{% if item.enabled|default(true) %}1{% else %}0{% endif %}</enabled>
+  </device>
+  {% endfor %}
+</airupnp>

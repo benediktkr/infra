@@ -1,0 +1,56 @@
+---
+
+- name: create airconnect dir
+  file:
+    path: "{{ airconnect_dir }}"
+    state: directory
+    mode: "0755"
+    owner: "{{ owntone_user.uid }}"
+    group: "{{ owntone_group.gid }}"
+  tags:
+    - airconnect-dirs
+
+- name: airconnect config files
+  template:
+    src: "{{ item.name }}.j2"
+    dest: "{{ airconnect_dir }}/{{ item.name }}"
+    owner: "{{ owntone_user.uid }}"
+    group: "{{ owntone_group.gid }}"
+    mode: "{{ item.mode | default('0644') }}"
+  notify: restart airconnect containers
+  with_items:
+    - name: airupnp.xml
+  loop_control:
+    label: "{{ item.name }}"
+  tags:
+    - airconnect-config
+    - airconnect
+
+- name: "set up the airconnect containers"
+  docker_container:
+    name: airconnect-{{ item.prog }}
+    hostname: airconnect-{{ item.prog }}
+    image: git.sudo.is/ben/airconnect
+    detach: true
+    pull: true
+    auto_remove: false
+    restart_policy: "unless-stopped"
+    state: "{{ item.state | default('started') }}"
+    network_mode: host
+    user: "{{ owntone_user.uid }}:{{ owntone_group.gid }}"
+    env:
+      AIRCONNECT_PROG: "{{ item.prog }}"
+      AIRCONNECT_ARGS: "{{ item.args|default() }}"
+    mounts:
+      - type: bind
+        source: "{{ airconnect_dir }}/airupnp.xml"
+        target: /etc/airupnp.xml
+        read_only: true
+  tags:
+    - airconnect
+    - airconnect-container
+    - docker-containers
+  register: airconnect_containers
+  loop_control:
+    label: airconnect-{{ item.prog }}
+  with_items: "{{ airconnect_containers }}"
