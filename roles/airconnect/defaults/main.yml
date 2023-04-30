@@ -8,6 +8,8 @@ airconnect_group:
   name: airconnect
   gid: 1337
 
+
+airconnect_max_volume: "100"
 airconnect_upnp: []
 airconnect_containers:
     # UPnP/Sonos

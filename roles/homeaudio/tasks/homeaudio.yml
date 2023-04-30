@@ -1,0 +1,21 @@
+---
+
+- name: install audio and metadata related packages
+  apt:
+    name:
+      - avahi-utils
+      - id3v2
+      - ffmpeg
+    state: present
+  tags:
+    - homeaudio-packages
+
+- name: install yt-dlp
+  pip:
+    name: yt-dlp
+    state: latest
+  tags:
+    - packages
+    - pip-packages
+    - yt-dlp
+    - homeaudio-packages

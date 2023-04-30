@@ -1,0 +1,7 @@
+---
+
+- import_tasks: homeaudio.yml
+  tags: homeaudio
+
+- import_tasks: mopidy.yml
+  tags: mopidy

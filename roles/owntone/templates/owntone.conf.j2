@@ -1,12 +1,3 @@
-# A quick guide to configuring OwnTone:
-#
-# For regular use, the most important setting to configure is "directories",
-# which should be the location of your media. Whatever user you have set as
-# "uid" must have read access to this location. If the location is a network
-# mount, please see the README.
-#
-# In all likelihood, that's all you need to do!
-
 general {
     # Username
     # Make sure the user has read access to the library directories you set
@@ -197,7 +188,7 @@ library {
     # Watch named pipes in the library for data and autostart playback when
     # there is data to be read. To exclude specific pipes from watching,
     # consider using the above _ignore options.
-    pipe_autostart = true
+    pipe_autostart = false
 
     # Enable automatic rating updates
     # If enabled, rating is automatically updated after a song has either been
@@ -208,7 +199,7 @@ library {
     # skipcount and a rolling rating based on the current rating and the action
     # (played or skipped). Both results are combined with a mix-factor of 0.75:
     # new rating = 0.75 * stable rating + 0.25 * rolling rating)
-    #rating_updates = false
+    rating_updates = false
 
     # Allows creating, deleting and modifying m3u playlists in the library directories.
     # Only supported by the player web interface and some mpd clients
@@ -255,7 +246,7 @@ audio {
     # e.g. Airplay. This feature relies on accurate ALSA measurements of
     # delay, and some devices dont provide that. If that is the case you
     # are better off disabling the feature.
-    #sync_disable = false
+    sync_disable = false
 
     # Here you can adjust when local audio is started relative to other
     # speakers, e.g. Airplay. Negative values correspond to moving local
@@ -290,10 +281,11 @@ audio {
 
 # Pipe output
 # Allows OwnTone to output audio data to a named pipe
-fifo {
-    nickname = "fifo"
-    path = "/audio/output.fifo"
-}
+# fifo {
+#     nickname = "fifo"
+#     # placed outside of library
+#     path = "/tmp/output.fifo"
+# }
 
 # AirPlay settings common to all devices
 #airplay_shared {
@@ -369,6 +361,14 @@ airplay "{{ item.name }}" {
     # Name used in the speaker list, overrides name from the device
     #nickname = "My speaker name"
 # }
+{% for item in owntone_chromecast -%}
+chromecast "{{item.name }}" {
+    exclude = {{ item.exclude|default(false) | lower }}
+    {%- if 'nickname' in item -%}
+    nickname = "{{ item.nickname }}"
+    {% endif +%}
+}
+{% endfor %}
 
 # Spotify settings (only have effect if Spotify enabled - see README/INSTALL)
 spotify {

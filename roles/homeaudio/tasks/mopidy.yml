@@ -1,0 +1,84 @@
+---
+
+- name: copy key for mopidy repo
+  copy:
+    src: mopidy-archive-keyring.gpg
+    dest: /usr/local/share/keyrings/mopidy-archive-keyring.gpg
+    owner: root
+    group: root
+    mode: "0644"
+  tags:
+    - mopidy
+
+- name: add mopidy repo
+  apt_repository:
+    repo: "{{ item }}"
+    state: present
+    update_cache: false
+    filename: /etc/apt/sources.list.d/mopidy
+  with_items:
+    - "deb [signed-by=/usr/local/share/keyrings/mopidy-archive-keyring.gpg] https://apt.mopidy.com/ buster main contrib non-free"
+    - "deb-src [signed-by=/usr/local/share/keyrings/mopidy-archive-keyring.gpg] https://apt.mopidy.com/ buster main contrib non-free"
+  register: mopidy_repo
+  tags:
+    - mopidy
+    - packages
+
+- name: apt-get update if repo changed
+  apt:
+    update_cache: true
+  when: mopidy_repo.changed
+  tags:
+    - mopidy
+    - packages
+
+- name: install mopidy
+  apt:
+    name:
+      - mopidy
+      - mopidy-podcast
+      - mopidy-soundcloud
+      - mopidy-internetarchive
+      - mopidy-local
+      - mopidy-mpd
+      - mopidy-podcast-itunes
+      - mopidy-podcast
+      - mopidy-soundcloud
+      - mopidy-internetarchive
+      - mopidy-local
+      - mopidy-mpd
+      - mopidy-podcast-itunes
+      - mopidy-spotify
+      - mopidy-mpris
+      - upnp-inspector
+      # - playerctl
+      #- upmpdcli
+    state: present
+  tags:
+    - mopidy
+    - packages
+
+- name: install mopidy pip packages
+  pip:
+    name:
+      - Mopidy-Jellyfin
+      - Mopidy-RadioNet
+      - Mopidy-YouTube
+      - Mopidy-Iris
+      - Mopidy-Autoplay
+    state: present
+  tags:
+    - mopidy
+    - packages
+    - pip-packages
+
+- name: template mopdiy config
+  template:
+    src: mopidy.conf.j2
+    dest: /etc/mopidy/mopdy.conf
+    owner: mopidy
+    group: root
+    mode: "0640"
+  tags:
+    - mopidy
+    - mopidy.conf

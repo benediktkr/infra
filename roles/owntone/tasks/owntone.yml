@@ -10,7 +10,7 @@
   tags:
     - owntone-dirs
   loop_control:
-    label: "{{ item.name }}"
+    label: "{{ owntone_path }}/{{ item.name }}"
   with_items:
     - name: ''
     - name: config
@@ -36,6 +36,8 @@
     - shairport-metadata.fifo
   tags:
     - input.fifo
+  # disabled
+  when: false
 
 - name: install certs
   copy:
@@ -87,24 +89,6 @@
     - cron
     - owntone-cron
 
-- name: install utils for tagging
-  apt:
-    name:
-
-      - id3v2
-      - ffmpeg
-    state: present
-  tags:
-    - packages
-
-- name: install yt-dlp
-  pip:
-    name: yt-dlp
-    state: latest
-  tags:
-    - packages
-    - pip-packages
-    - yt-dlp
 
 - name: fuse allow other
   lineinfile:

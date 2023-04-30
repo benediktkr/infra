@@ -50,7 +50,7 @@
     - airconnect
     - airconnect-container
     - docker-containers
-  register: airconnect_containers
+  register: airconnect_containers_task
   loop_control:
     label: airconnect-{{ item.prog }}
   with_items: "{{ airconnect_containers }}"

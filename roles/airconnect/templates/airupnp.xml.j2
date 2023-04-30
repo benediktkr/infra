@@ -8,14 +8,14 @@
       <mp3>http-get:*:audio/mpeg:DLNA.ORG_PN=MP3;DLNA.ORG_OP=00;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=0d500000000000000000000000000000</mp3>
     </protocolInfo>
     <enabled>1</enabled>
-    <max_volume>100</max_volume>
+    <max_volume>{{ airconnect_max_volume }}</max_volume>
     <http_length>-1</http_length>
     <upnp_max>1</upnp_max>
     <codec>mp3:320</codec>
     <metadata>1</metadata>
     <flush>1</flush>
     <artwork></artwork>
-    <latency>0:1000</latency>
+    <latency>0:500</latency>
     <drift>0</drift>
   </common>
   <main_log>info</main_log>
@@ -28,9 +28,11 @@
   <ports>0:0</ports>
   {% for item in airconnect_upnp -%}
   <device>
-    <udn>uuid:{{ item.local_uid }}</udn>
+    <udn>uuid:{{ item.local_uuid }}</udn>
     <name>{{ item.name }}</name>
-    <mac>{{ item.mac }}</mac>
+    {% if 'mac' in item -%}
+    <mac>{{ item.mac | upper }}</mac>
+    {% endif -%}
     <enabled>{% if item.enabled|default(true) %}1{% else %}0{% endif %}</enabled>
   </device>
   {% endfor %}

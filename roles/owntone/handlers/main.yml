@@ -7,6 +7,8 @@
 
 - name: restart owntone container
   docker_container:
-    name: hass
+    name: owntone
     state: started
     restart: true
+  when:
+    - owntone_restart_handler|default(true)
