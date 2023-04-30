@@ -30,12 +30,20 @@
 
 - name: create dir structure
   file:
-    path: "{{ unifi_root }}"
     state: directory
-    mode: 0750
-    owner: unifi
-    group: unifi
-    recurse: no
+    path: "{{ unifi_root }}/{{ item.name }}"
+    owner: "{{ systemuserlist.unifi.uid }}"
+    group: "{{ systemuserlist.unifi.gid }}"
+    mode: "{{ item.mode | default('0770') }}"
+  tags:
+    - unifi-dirs
+  loop_control:
+    label: "{{ item.name }}"
+  with_items:
+    - name: data
+    - name: log
+    - name: run
+      mode: "0775"
 
 # to adopt
 # ssh unifi-ap
@@ -74,20 +82,32 @@
     state: started
     init: true
     pull: true
-    #user: "{{ systemuserlist['unifi']['uid'] }}:{{ systemuserlist['unifi']['gid'] }}"
+    user: "{{ systemuserlist['unifi']['uid'] }}:{{ systemuserlist['unifi']['gid'] }}"
     env:
       TZ: "Europe/Berlin"
       RUNAS_UID0: "false"
       UNIFI_UID: "{{ systemuserlist['unifi']['uid'] }}"
       UNIFI_GID: "{{ systemuserlist['unifi']['gid'] }}"
+      UNIFI_HTTPS_PORT: "443"
     container_default_behavior: compatibility
-    volumes:
-      - "{{ unifi_root }}:/unifi"
+    network_mode: bridgewithdns
+    networks:
+      - name: bridgewithdns
+        ipv4_address: "{{ bridgewithdns.unifi }}"
+    mounts:
+      - type: bind
+        source: "{{ unifi_root }}/data"
+        target: "/unifi/data"
+      - type: bind
+        source: "{{ unifi_root }}/run"
+        target: "/unifi/run"
+      - type: bind
+        source: "{{ unifi_root }}/log"
+        target: "/unifi/log"
     ports:
       - "3478:3478/udp"           # STUN
       - "6789:6789/tcp"           # Speed test
       - "8080:8080/tcp"           # Device/ controller comm.
-      - "127.0.0.1:8443:8443/tcp" # Controller GUI/API as seen in a web browser
       - "10001:10001/udp"         # AP discovery
   tags:
     - unifi-container

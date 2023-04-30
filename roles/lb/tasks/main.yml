@@ -1,0 +1,15 @@
+---
+
+# - name: sshd AllowedUsers config
+#   template:
+#     src: 10-lb.conf.j2
+#     dest: /etc/ssh/sshd_config.d/10-lb.conf
+#     owner: root
+#     group: root
+#     mode: '0644'
+#   tags:
+#     - sshd
+#     - gitea
+#   notify:
+#     - reload ssh
+#     - restart ssh

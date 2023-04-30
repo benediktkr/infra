@@ -3,7 +3,7 @@
   lineinfile:
     path: /etc/ssh/ssh_known_hosts
     line: "{{ item.key }}"
-    create: yes
+    create: true
   loop_control:
     label: "{{ item.name }}"
   with_items:
@@ -38,7 +38,7 @@
 
 - name: put my dotfiles in place if dotfiles repo isnt human-managed
   copy:
-    remote_src: yes
+    remote_src: true
     src: "{{ dotfiles_path }}/dotfiles/{{ item.src }}"
     dest: "~/{{ item.dest }}"
   with_items:
@@ -52,7 +52,7 @@
 
 - name: put dotfiles for root in place
   copy:
-    remote_src: yes
+    remote_src: true
     src: "{{ dotfiles_path }}/dotfiles/{{ item.src }}"
     dest: "/root/{{ item.dest }}"
     owner: root
@@ -75,3 +75,13 @@
     - "{{ dotfiles }}"
   when:
     - not item.root|bool
+
+- name: rm outdate dotfile links
+  file:
+    path: "~/{{ item }}"
+    state: absent
+  loop_control:
+    label: "{{ item }}"
+  become_user: "{{ myusername }}"
+  with_items:
+    - "{{ dotfiles_rm }}"

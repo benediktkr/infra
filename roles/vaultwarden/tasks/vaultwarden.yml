@@ -189,20 +189,20 @@
     - vaultwarden-ldap
     - docker-containers
 
-# - name: install certs
-#   copy:
-#     src: "/usr/local/etc/letsencrypt/live/{{ item }}"
-#     dest: "/usr/local/etc/certs/"
-#     owner: root
-#     group: root
-#     mode: 0755
-#   tags:
-#     - letsencrypt-certs
-#   notify: reload nginx
-#   vars:
-#     prediff_cmd: echo
-#   with_items:
-#     - "{{ vaultwarden_url }}"
+- name: install certs
+  copy:
+    src: "/usr/local/etc/letsencrypt/live/{{ item }}"
+    dest: "/usr/local/etc/certs/"
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - letsencrypt-certs
+  notify: reload nginx
+  vars:
+    prediff_cmd: echo
+  with_items:
+    - "{{ vaultwarden_url }}"
 
 - name: template nginx vhost for vaultwarden
   template:

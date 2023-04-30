@@ -3,20 +3,31 @@
 import subprocess
 import sys
 import json
+import argparse
+
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("fqdn", help="domain to request a cert for")
+    parser.add_argument("--wildcard", action="store_true", help="wildcard cert")
+    parser.add_argument("--www", action="store_true", help="include www.")
+    return parser.parse_args()
+
 
 def main():
-    try:
-        fqdn = sys.argv[1]
-    except IndexError:
-        print(f"usage: {sys.argv[0]} <fqdn>")
-        sys.exit(1)
+    args = parse_args()
+    return certbot_new(args.fqdn, wildcard=args.wildcard, www=args.www)
 
-    return certbot_new(fqdn)
 
-def certbot_new(fqdn):
+
+def certbot_new(fqdn, wildcard, www):
     dns_file = "dns-provider-domains.json"
     with open(f'/usr/local/etc/letsencrypt/{dns_file}', 'r') as f:
         domains = json.load(f)
+
+    # add a --with-www or something instead of guessing like this
+    # and make 'domain' a list 'domains', and append/extend 'certbot_cmd'
+    # with a -d for each.
 
     dotted = fqdn.split('.')
     domain = ".".join(dotted[1:])
@@ -31,9 +42,13 @@ def certbot_new(fqdn):
     certbot_cmd = [
         "/usr/local/bin/certbot",
         "certonly",
-        "-d", fqdn,
-        dns_flag
+        dns_flag,
+        "-d", fqdn
     ]
+    if wildcard:
+        certbot_cmd.extend(["-d", f"*.{fqdn}"])
+    if www:
+        certbot_cmd.extend(["-d", f"www.{fqdn}"])
 
     print(" ".join(certbot_cmd))
 

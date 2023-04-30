@@ -9,6 +9,7 @@ upstream {{ item.container_name }}-ws {
   server {{ bridgewithdns[item.container_name] }}:3012;
   keepalive 2;
 }
+
 server {
     listen 443 ssl http2;
     {% if inventory_hostname in wg_clients -%}
@@ -20,12 +21,6 @@ server {
     include listen-proxy-protocol.conf;
     include /etc/nginx/authelia_internal.conf;
     include /etc/nginx/sudo-known.conf;
-
-
-    # Specify SSL Config when needed
-    #ssl_certificate /path/to/certificate/letsencrypt/live/vaultwarden.example.tld/fullchain.pem;
-    #ssl_certificate_key /path/to/certificate/letsencrypt/live/vaultwarden.example.tld/privkey.pem;
-    #ssl_trusted_certificate /path/to/certificate/letsencrypt/live/vaultwarden.example.tld/fullchain.pem;
 
     client_max_body_size 128M;
 
@@ -85,8 +80,8 @@ server {
     error_log /var/log/nginx/error_{{ vaultwarden_url }}.log warn;
 
     ssl_session_timeout 5m;
-    ssl_certificate /usr/local/etc/certs/{{ domain }}/fullchain.pem;
-    ssl_certificate_key /usr/local/etc/certs/{{ domain }}/privkey.pem;
+    ssl_certificate /usr/local/etc/certs/{{ vaultwarden_url }}/fullchain.pem;
+    ssl_certificate_key /usr/local/etc/certs/{{ vaultwarden_url }}/privkey.pem;
 
     fastcgi_hide_header X-Powered-By;
 }

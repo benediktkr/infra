@@ -1,0 +1,74 @@
+---
+
+- name: add apt repo
+  apt_repository:
+    repo: "deb [arch=amd64] http://download.proxmox.com/{{ ansible_lsb.id | lower }}/pve {{ ansible_lsb.codename | lower}} pve-no-subscription"
+    state: present
+    update_cache: false
+    filename: /etc/apt/sources.list.d/pve-install-repo
+  tags:
+    - packages
+    - proxmox-repo
+
+- name: copy gpg key for repo
+  copy:
+    src: proxmox-release-bullseye.gpg
+    dest: /etc/apt/trusted.gpg.d/proxmox-release-bullseye.gpg
+    owner: root
+    group: root
+    mode: "0644"
+  tags:
+    - packages
+
+- name: apt-get update
+  apt:
+    update_cache: true
+  tags:
+    - packages
+
+# NOTE: not in ansible yet, docs say to do a "apt full-upgrade" now.
+
+- name: install proxmox kernel
+  apt:
+    name: pve-kernel-5.15
+    state: present
+  tags:
+    - packages
+
+# NOTE: also not in ansible, reboot after this.
+
+- name: install poxmox ve
+  apt:
+    name:
+      - proxmox-ve
+      #- postfix
+      - open-iscsi
+    state: present
+  tags:
+    - packages
+
+- name: remove the enterprise repo that gets installed
+  file:
+    path: /etc/apt/sources.list.d/pve-enterprise.list
+    state: absent
+  tags:
+    - packages
+  register: enterprise_removed
+
+- name: update apt if enterprise repo removed
+  apt:
+    update_cache: true
+  tags:
+    - packages
+  when: enterprise_removed.changed
+
+- name: remove debian kernel and os-prober
+  apt:
+    name:
+      - linux-image-amd64
+      - 'linux-image-5.10*'
+      - os-prober
+    state: absent
+  notify: update grub
+  tags:
+    - packages

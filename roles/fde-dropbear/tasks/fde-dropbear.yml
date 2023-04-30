@@ -37,7 +37,7 @@
 - name: authorized_keys for dropbear
   template:
     src: "private/sshkeys/{{ myusername }}.authorized_keys"
-    dest: /etc/dropbear/initramfs/authorized_keys
+    dest: "{{ dropbear_initramfs_dir|default('/etc/dropbear/initramfs') }}/authorized_keys"
     mode: 0700
     force: true
   notify: update initramfs

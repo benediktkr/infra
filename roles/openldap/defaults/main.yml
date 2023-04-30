@@ -8,6 +8,9 @@ openldap_root: "{{ systemuserlist.openldap.home }}"
 ldap_human_users: "{{ userlist.values()|selectattr('ldap_enabled', 'true') }}"
 ldap_human_users_in_groups: "{{ ldap_human_users | selectattr('ldap_groups') }}"
 
+ldap_system_users: "{{ systemuserlist.values()|selectattr('ldap_enabled', 'true') }}"
+ldap_system_users_in_groups: "{{ ldap_system_users | selectattr('ldap_groups') }}"
+
 ldap_only_users_enabled: "{{ ldap_only_users.values() | selectattr('ldap_enabled', 'true') }}"
 
 ldap_linux_usernames_disabled: "{{ userlist.values()|selectattr('ldap_enabled', 'false') | map(attribute='username') }}"

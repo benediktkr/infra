@@ -1,0 +1,135 @@
+
+# also change haproxy role like this
+#
+# haproxy roel should set up haproxy, not configure it
+#
+# this role templates its copy of haproxy.cfg
+# and then the lb role templates a different copy
+# but both have haproxy as dependency
+#
+# haproxy does not support to include config files
+# or split up the config in multiple parts.
+
+# https://www.haproxy.com/de/blog/haproxy-log-customization/
+global
+	chroot /var/lib/haproxy
+        maxconn 60000
+
+        # default:
+        {# #stats socket /run/haproxy/admin.sock mode 660 level admin expose-fd listeners
+         # #stats socket /run/haproxy/admin.sock user haproxy group haproxy mode 660 level admin
+         # #stats timeout 30s #}
+
+	user haproxy
+	group haproxy
+	daemon
+
+        {# # number of processes
+         # #nbproc 2
+         # # number of threads
+         # #nbthread 4
+         #
+         # # Default SSL material locations
+	 # ca-base /etc/ssl/certs
+	 # crt-base /etc/ssl/private
+         #
+	 # # See: https://ssl-config.mozilla.org/#server=haproxy&server-version=2.0.3&config=intermediate
+         # ssl-default-bind-ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384
+         # ssl-default-bind-ciphersuites TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256
+         # ssl-default-bind-options ssl-min-ver TLSv1.2 no-tls-tickets #}
+
+defaults
+    timeout connect 5000
+    timeout client  50000
+    timeout server  50000
+
+{# defaults
+ #
+ #
+ #         #        mode	http
+ # 	#option	dontlognull
+ #         #option log-health-checks
+ #         errorfile 400 /etc/haproxy/errors/400.http
+ # 	errorfile 403 /etc/haproxy/errors/403.http
+ # 	errorfile 408 /etc/haproxy/errors/408.http
+ # 	errorfile 500 /etc/haproxy/errors/500.http
+ # 	errorfile 502 /etc/haproxy/errors/502.http
+ # 	errorfile 503 /etc/haproxy/errors/503.http
+ # 	errorfile 504 /etc/haproxy/errors/504.http
+ #         #log-format '{"type":"haproxy","timestamp":%Ts,"http_status":%ST,"http_request":"%r","remote_addr":"%ci","bytes_read":%B,"upstream_addr":"%si","backend_name":"%b","retries":%rc,"bytes_uploaded":%U,"upstream_response_time":"%Tr","upstream_connect_time":"%Tc","session_duration":"%Tt","termination_state":"%ts"}'
+ #
+ #         # http:
+ #         # log-format '{"pid":%pid,"haproxy_frontend_type":"http","haproxy_process_concurrent_connections":%ac,"haproxy_frontend_concurrent_connections":%fc,"haproxy_backend_concurrent_connections":%bc,"haproxy_server_concurrent_connections":%sc,"haproxy_backend_queue":%bq,"haproxy_server_queue":%sq,"haproxy_client_request_send_time":%Tq,"haproxy_queue_wait_time":%Tw,"haproxy_server_wait_time":%Tc,"haproxy_server_response_send_time":%Tr,"response_time":%Td,"session_duration":%Tt,"request_termination_state":"%tsc","haproxy_server_connection_retries":%rc,"remote_addr":"%ci","remote_port":%cp,"frontend_addr":"%fi","frontend_port":%fp,"frontend_ssl_version":"%sslv","frontend_ssl_ciphers":"%sslc","request_method":"%HM","request_uri":"%[capture.req.uri,json(utf8s)]","request_http_version":"%HV","host":"%[capture.req.hdr(0)]","referer":"%[capture.req.hdr(1),json(utf8s)]","haproxy_frontend_name":"%f","haproxy_backend_name":"%b","haproxy_server_name":"%s","status":%ST,"response_size":%B,"request_size":%U}' #}
+
+listen health
+    bind :{{ haproxy_stats_port }}
+    # interface wg0 interface lo
+    mode http
+
+    acl health_allowed src {{ wg_clients[ansible_control_host].ip }}/32
+    acl health_allowed src 127.0.0.1/32
+    http-request deny unless health_allowed
+
+    stats enable
+    stats uri /stats
+    stats refresh 10s
+    stats admin unless FALSE  {# unless LOCALHOST #}
+
+    monitor-uri /health
+    option httpchk
+    option dontlognull
+
+frontend https-redirect
+    mode http
+    bind :80
+    http-request redirect scheme https
+
+
+frontend {{ lb_url }}
+    bind *:443
+    mode tcp
+    log /dev/log local0
+    option tcplog
+
+    log-format '{"pid":%pid,"server_name":"%b", "haproxy_frontend_type":"tcp","haproxy_process_concurrent_connections":%ac,"haproxy_frontend_concurrent_connections":%fc,"haproxy_backend_concurrent_connections":%bc,"haproxy_server_concurrent_connections":%sc,"haproxy_backend_queue":%bq,"haproxy_server_queue":%sq,"haproxy_queue_wait_time":%Tw,"haproxy_server_wait_time":%Tc,"response_time":%Td,"session_duration":%Tt,"request_termination_state":"%tsc","haproxy_server_connection_retries":%rc,"remote_addr":"%ci","remote_port":%cp,"frontend_addr":"%fi","frontend_port":%fp,"frontend_ssl_version":"%sslv","frontend_ssl_ciphers":"%sslc","haproxy_frontend_name":"%f","haproxy_backend_name":"%b","haproxy_server_name":"%s","response_size":%B,"request_size":%U}'
+
+    tcp-request inspect-delay 5s
+    tcp-request content accept if { req_ssl_hello_type 1 }
+
+    {% for item in lb_tcp -%}
+    use_backend {{ item.fqdn }} if { req.ssl_sni -i {{ item.fqdn }} }
+    {% endfor %}
+
+    {# balance leastconn #}
+
+
+{#
+ # from backend (not used):
+ default-server check maxconn 20
+ #}
+
+{% for item in lb_tcp -%}
+{% if item.proxy_protocol|default(true) -%}
+backend {{ item.fqdn }}
+    mode tcp
+    balance leastconn
+    {% if item.tcp_keepalive|default(false) -%}
+    option tcpka
+    {% endif -%}
+    {% for origin in item.origins -%}
+    server {{ origin.name }} {{ origin.name }}:{{ origin.port | default(40443) }} send-proxy-v2 check
+    {% endfor %}
+
+{% else -%}
+backend {{ item.fqdn }}
+    mode tcp
+    option ssl-hello-chk
+    {% if item.tcp_keepalive|default(false) -%}
+    option tcpka
+    {% endif -%}
+    {% for origin in item.origins -%}
+    server {{ origin.name }} {{ origin.name }}:{{ origin.port | default(443) }} check
+    {% endfor %}
+
+{% endif %}
+{% endfor %}

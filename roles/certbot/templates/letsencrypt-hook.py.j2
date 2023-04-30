@@ -15,23 +15,27 @@ def renewed_cert(name):
     dest_dir = os.path.join(cert_repo, name)
     os.makedirs(dest_dir, exist_ok=True)
 
-    for fname in filenames:
-        src = os.path.join(src_dir, fname)
-        dest = os.path.join(dest_dir, fname)
-        shutil.copy(src, dest)
+    try:
+        for fname in filenames:
+            src = os.path.join(src_dir, fname)
+            dest = os.path.join(dest_dir, fname)
+            shutil.copy(src, dest)
 
-    privkey = os.path.join(dest_dir, 'privkey.pem')
-    os.chmod(privkey, 0o640)
-    shutil.chown(privkey, group="adm")
+        privkey = os.path.join(dest_dir, 'privkey.pem')
+        os.chmod(privkey, 0o640)
+        shutil.chown(privkey, group="adm")
 
-    print(f"renewed: {name}")
-    matrixmsg.send(f"cert: `{name}`")
+        print(f"renewed: {name}")
+        matrixmsg.send(f"cert: `{name}`")
+    except FileNotFoundError:
+        matrixmsg.send(f"no files found for `{name}` in `RENEWED_DOAINS`")
+
 
 def main():
     try:
         for name in os.environ['RENEWED_DOMAINS'].split(" "):
             renewed_cert(name)
-    except IndexError:
+    except KeyError:
         print("error: no 'RENEWED_DOMAINS' env var present!")
 
 

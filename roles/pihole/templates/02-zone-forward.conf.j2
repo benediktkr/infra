@@ -1,0 +1,3 @@
+{% for item in pihole_zone_forwards -%}
+server=/{{ item.zone | trim }}/{{ item.resolver | trim }}
+{% endfor %}

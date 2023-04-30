@@ -1,0 +1,4 @@
+---
+
+- import_tasks: proxmox.yml
+  tags: proxmox

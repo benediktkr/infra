@@ -36,11 +36,12 @@
 - name: install humanize
   pip:
     name: humanize
-    state: latest
+    state: present
     executable: pip3
   tags:
     - pip
     - packages
+    - pip-latest
 
 - name: template vnstat script
   template:
@@ -63,32 +64,45 @@
 #  with_items: "{{ systemuserlist.telegraf.groups }}"
 #  when: 'item in etc_groups.stdout_lines'
 
-- name: add apt key for influxdata to install telegraf
-  apt_key:
-    url: https://repos.influxdata.com/influxdb.key
-    state: present
-  tags:
-    - packages
+# sudo gpg --no-default-keyring --keyring /usr/share/keyrings/influxdb-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys D8FF8E1F7DF8B07E
+# - name: add apt key for influxdata to install telegraf
+#   apt_key:
+#     url: https://repos.influxdata.com/influxdb.key
+#     state: present
+#   tags:
+#     - packages
 
 - name: set distro to debian if raspbian
   set_fact:
     distro: debian
   when: ansible_lsb.id == "Raspbian"
+  tags:
+    - influx-repo
+    - packages
 
 - name: otherwise use lsb id
   set_fact:
     distro: "{{ ansible_lsb.id }}"
   when: ansible_lsb.id != "Raspbian"
+  tags:
+    - influx-repo
+    - packages
 
 - name: set codename to bullseye if bookworm
   set_fact:
     codename: bullseye
   when: ansible_lsb.codename == "bookworm"
+  tags:
+    - influx-repo
+    - packages
 
 - name: set codename to focal if hirsute
   set_fact:
     codename: focal
   when: ansible_lsb.codename == "hirsute"
+  tags:
+    - influx-repo
+    - packages
 
 - name: otherwise use lsb codename
   set_fact:
@@ -96,14 +110,45 @@
   when:
     - ansible_lsb.codename != "bookworm"
     - ansible_lsb.codename != "hirsute"
+  tags:
+    - influx-repo
+    - packages
+
+- name: get influxdb key
+  get_url:
+    url:  https://repos.influxdata.com/influxdb.key
+    dest: /etc/apt/trusted.gpg.d/influxdb.asc
+  tags:
+    - influx-repo
+    - packages
+
+- name: get dearmored influxdb key (the key downloaded in the other task doesnt work)
+  command:
+    cmd: gpg --no-default-keyring --keyring /usr/share/keyrings/influxdb-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys D8FF8E1F7DF8B07E
+    creates: /usr/share/keyrings/influxdb-archive-keyring.gpg
+  tags:
+    - influx-repo
+    - packages
+
+- name: remove repo definition without signed-by
+  apt_repository:
+    repo: deb https://repos.influxdata.com/{{ distro | lower }} {{ codename }} stable
+    state: absent
+    update_cache: false
+  tags:
+    - packages
+    - influx-repo
 
 - name: add repo for influxdata to install telegraf
   apt_repository:
-    repo: deb https://repos.influxdata.com/{{ distro | lower }} {{ codename }} stable
+    repo: deb [signed-by=/usr/share/keyrings/influxdb-archive-keyring.gpg] https://repos.influxdata.com/{{ distro | lower }} {{ codename }} stable
+    #repo: deb [signed-by=/etc/apt/trusted.gpg.d/influxdb.asc] https://repos.influxdata.com/{{ distro | lower }} {{ codename }} stable
     state: present
+    update_cache: false
   when: not skip_apt|default(false)
   tags:
     - packages
+    - influx-repo
 
 - name: install telegraf
   apt:

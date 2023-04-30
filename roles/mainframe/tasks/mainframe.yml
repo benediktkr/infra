@@ -217,6 +217,8 @@
     - nginx
     - mainframe-nginx
     - static-sites
+    - static
+    - www
   notify: reload nginx
 
 - name: archives log dir and cache

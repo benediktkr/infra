@@ -104,10 +104,13 @@
       - docker
       - docker-compose
     executable: pip3
+    state: present
   tags:
     - packages
     - pip
     - docker-compose
+    - docker-pip
+    - pip-latest
 
 - name: set up bridged network with dns
   docker_network:
@@ -119,6 +122,7 @@
     internal: no
   tags:
     - docker-network
+    - docker-network-bridgewithdns
 
 - name: install systemd config for container
   template:
@@ -187,6 +191,8 @@
   file:
     state: directory
     path: "{{ systemuserlist[ansible_user].home }}/.docker"
+    owner: "{{ systemuserlist[ansible_user].uid }}"
+    group: "{{ systemuserlist[ansible_user].gid }}"
     mode: 0700
   tags:
     - docker-auth
@@ -195,6 +201,8 @@
   copy:
     dest: "{{ systemuserlist[ansible_user].home }}/.docker/config.json"
     mode: 0750
+    owner: "{{ systemuserlist[ansible_user].uid }}"
+    group: "{{ systemuserlist[ansible_user].gid }}"
     content: "{{ docker_config | to_nice_json }}"
   tags:
     - docker-auth

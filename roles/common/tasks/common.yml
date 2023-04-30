@@ -6,6 +6,26 @@
   tags:
     - hostname
 
+- name: ensure hostname in /etc/hosts
+  lineinfile:
+    dest: /etc/hosts
+    line: "{{ etc_hosts_ip }} {{ inventory_hostname }} {{ inventory_hostname.split('.')[0] }}"
+    state: present
+  when: etc_hosts_ip is defined
+  tags:
+    - etc-hosts
+
+- name: ensure no 127.0.0.0/8 entries for hostname in /etc/hosts (when required)
+  lineinfile:
+    dest: /etc/hosts
+    regexp: "^127.*{{ item }}.*"
+    state: absent
+  with_items:
+    - "{{ inventory_hostname }}"
+    - "{{ inventory_hostname.split('.')[0] }}"
+  when: etc_hosts_rm|default(false)
+  tags: etc-hosts
+
 # - name: set image hostname
 #   hostname:
 #     name: "sensor-image"
@@ -238,6 +258,7 @@
       - dnsutils
       - file
       - git
+      - gnupg
       - haveged
       - htop
       - iotop
@@ -292,13 +313,14 @@
       - requests
       - psutil
       - humanize # added because of telegraf/vnstat.py
-    state: latest
+    state: present
     executable: pip3
   tags:
     - pip
     - common-pip
     - common-pip-packages
     - packages
+    - pip-latest
 
 - name: remove pip packages that are only needed on mainframe
   pip:
@@ -346,7 +368,7 @@
       - update-motd
       - landscape-client
       - landscape-common
-    autoremove: false
+    autoremove: true
     state: absent
     purge: true
   tags: packages
@@ -590,3 +612,14 @@
   tags:
     - packages
     - apt.sudo.is
+
+- name: ensure /deadspace exists
+  file:
+    path: /deadspace
+    state: directory
+    owner: root
+    group: "{{ grouplist.media.gid }}"
+    mode: "0775"
+  tags:
+    - deadspace
+    - deadspace-dir

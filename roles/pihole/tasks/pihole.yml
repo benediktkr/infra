@@ -115,6 +115,7 @@
     - pihole-config
   with_items:
     - "99-edns.conf"
+    - "02-zone-forward.conf"
   notify: restart pihole
 
 - name: template unbound config
@@ -126,6 +127,7 @@
     mode: 0644
   tags:
     - unbound
+    - a-records
   with_items:
     - unbound.conf
     - a-records.conf

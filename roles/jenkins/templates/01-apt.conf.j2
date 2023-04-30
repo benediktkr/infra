@@ -8,10 +8,13 @@ server {
     # listen   [::]:443 ssl;
 
     include listen-proxy-protocol.conf;
+    include /etc/nginx/authelia_internal.conf;
+
     server_name {{ apt_url }};
     root /var/www/{{ apt_url }};
 
     location / {
+        include /etc/nginx/require_auth.conf;
         index index.html index.htm;
         autoindex on;
         autoindex_exact_size off;

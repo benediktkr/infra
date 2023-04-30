@@ -64,8 +64,13 @@ server {
 
   ssl_session_timeout 5m;
 
+  {% if inventory_hostname == ansible_control_host -%}
   ssl_certificate /usr/local/etc/certs/{{ inventory_hostname }}/fullchain.pem;
   ssl_certificate_key /usr/local/etc/certs/{{ inventory_hostname }}/privkey.pem;
+  {% else -%}
+  ssl_certificate /usr/local/etc/certs/nginx_default_cert/pubkey.pem;
+  ssl_certificate_key /usr/local/etc/certs/nginx_default_cert/privkey.pem;
+  {% endif %}
 
   add_header Referrer-Policy "no-referrer" always;
   add_header X-Content-Type-Options "nosniff" always;

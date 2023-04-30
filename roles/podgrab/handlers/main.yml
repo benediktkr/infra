@@ -1,0 +1,6 @@
+- name: restart podgrab container
+  docker_container:
+    name: podgrab
+    state: started
+    restart: true
+  when: podgrab_container is not defined or not podgrab_container.changed

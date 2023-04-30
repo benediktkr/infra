@@ -105,7 +105,7 @@
 - name: start container
   docker_container:
     name: authelia
-    image: authelia/authelia:latest
+    image: ghcr.io/authelia/authelia:master
     restart_policy: "unless-stopped"
     auto_remove: false
     detach: true

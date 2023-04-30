@@ -17,7 +17,7 @@ def parse_args():
     parser.add_argument('--config', default='/usr/local/etc/restic.json')
     parser.add_argument('--log-level', default='INFO')
     parser.add_argument('--dry-run', action='store_true')
-    parser.add_argument('--no-excludes', action='store_true')
+    parser.add_argument('--non-interactive', action='store_true')
     parser.add_argument('--log-file',
                         default='/var/log/backup/restic-backups.log')
 
@@ -85,19 +85,19 @@ def list_sshfs_mounts():
         return [a['target'] for a in mounts['filesystems']]
 
 
-def run_restic(repo_url, restic_args, no_excludes, dry_run):
+def run_restic(repo_url, restic_args, dry_run, non_interactive):
     restic_cmd = ["restic", "-r", repo_url]
     restic_cmd.extend(restic_args)
 
-    if "backup" in restic_args and not no_excludes:
+    if "backup" in restic_args:
         restic_cmd.extend([
             "--exclude-file", "/usr/local/etc/backup-excludes.txt"
         ])
 
-    for item in list_sshfs_mounts():
-        restic_cmd.extend([
-            "--exclude", item
-        ])
+        for item in list_sshfs_mounts():
+            restic_cmd.extend([
+                "--exclude", item
+            ])
 
     logger.debug(" ".join(restic_cmd))
     if dry_run:
@@ -128,7 +128,11 @@ def main():
     repo_config = config[args.repo]
     prepare_env(args.repo, repo_config)
     return run_restic(
-        repo_config['url'], restic_args, args.no_excludes, args.dry_run)
+        repo_config['url'],
+        restic_args,
+        args.dry_run,
+        args.non_interactive
+    )
 
 
 if __name__ == "__main__":

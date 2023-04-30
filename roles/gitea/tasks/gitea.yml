@@ -35,7 +35,7 @@
       # from role/gitea/files/tmpl/
     - name: data/gitea/templates
     - name: data/gitea/templates/custom
-    - name: data/gitea/templates/user/dashboard
+    #- name: data/gitea/templates/user/dashboard
 
     - name: data/gitea/conf
     - name: data/gitea/tmp
@@ -92,8 +92,8 @@
     - home.tmpl
     - custom/extra_links.tmpl
     - custom/extra_tabs.tmpl
-    - user/dashboard/feeds.tmpl
-    - user/dashboard/repolist.tmpl
+    #- user/dashboard/feeds.tmpl
+    #- user/dashboard/repolist.tmpl
   tags:
     - gitea-templates
   when: gitea_custom_tmpl_enabled

@@ -7,6 +7,10 @@ iptables -t nat -D POSTROUTING -s {{ wireguard_cidr }} -o {{ ansible_default_ipv
 iptables -t nat -A POSTROUTING -s {{ wireguard_cidr }} -o {{ ansible_default_ipv4.interface  }} -j MASQUERADE
 {% endif %}
 
+{% if wg_clients[inventory_hostname].multicast_enabled|default(false) -%}
+ip link set multicast on dev wg0
+{% endif -%}
+
 {% if wg_post_up_dns_route|default(false) %}
 sleep 5
 

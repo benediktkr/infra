@@ -1,0 +1,47 @@
+---
+
+- name: create dir structure
+  file:
+    path: "{{ systemuserlist.archives.home }}/podgrab/{{ item.name }}"
+    state: directory
+    mode: "{{ item.mode | default('0755') }}"
+    owner: "{{ systemuserlist.archives.username }}"
+    group: media
+  loop_control:
+    label: "{{ item.name }}"
+  with_items:
+    - name: data
+    - name: config
+  tags:
+    - podgrab-dirs
+
+- name: start podgrab container
+  docker_container:
+    name: podgrab
+    image: akhilrex/podgrab
+    user: "{{ systemuserlist.archives.uid }}:{{ grouplist.media.gid }}"
+    detach: true
+    pull: true
+    restart_policy: "no"
+    state: "{{ podgrab_container_state | default('started') }}"
+    container_default_behavior: compatibility
+    networks_cli_compatible: false
+    network_mode: bridgewithdns
+    networks:
+      - name: bridgewithdns
+    env:
+      BASE_URL: "https://{{ hass_url }}/podcasts"
+      CHECK_FREQUENCY: "240"
+    ports:
+      - "127.0.0.1:{{ podgrab_port }}:8080"
+    mounts:
+      - type: bind
+        source: "{{ systemuserlist.archives.home }}/podgrab/data"
+        target: /assets
+      - type: bind
+        source: "{{ systemuserlist.archives.home }}/podgrab/config"
+        target: /config
+  tags:
+    - podgrab-container
+    - docker-containers
+  register: podgrab_container

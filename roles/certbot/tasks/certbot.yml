@@ -47,18 +47,21 @@
     - dns-provider-domains.json
   tags:
     - certbot-dns-config
+    - certbot-domains
 
-- name: template renewal configs
-  template:
-    src: renewal.ini.j2
-    dest: /etc/letsencrypt/renewal/{{ item.name }}.conf
-    owner: root
-    group: root
-    mode: 0644
-  with_items: "{{ letsencrypt_sni }}"
-  loop_control:
-    label: "{{ item.name }}"
-  when: false
+# - name: template renewal configs
+#   template:
+#     src: renewal.ini.j2
+#     dest: /etc/letsencrypt/renewal/{{ item.name }}.conf
+#     owner: root
+#     group: root
+#     mode: 0644
+#   with_items: "{{ letsencrypt_sni }}"
+#   loop_control:
+#     label: "{{ item.name }}"
+#   when: false
+#   tags:
+#     - certbot-domains
 
 # - name: temp force renew all certs
 #   command: /usr/local/bin/certbot certonly --force-renewal -d {{ item.name }}
@@ -79,6 +82,8 @@
     - letsencrypt.sh
     - letsencrypt-hook.py
     - letsencrypt-new.py
+  tags:
+    - certbot-scripts
 
 - name: cron file
   template:

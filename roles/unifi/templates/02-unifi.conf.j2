@@ -2,30 +2,40 @@
 
 server {
 
-  listen 443 ssl;
-  listen   [::]:443 ssl; # listen for ipv6
+    listen 443 ssl;
+    server_name {{ unifi_url }} {{ unifi_url2 }};
 
-   server_name {{ unifi_url }};
+    ssl_session_timeout 5m;
+    ssl_certificate /usr/local/etc/certs/{{ domain }}/fullchain.pem;
+    ssl_certificate_key /usr/local/etc/certs/{{ domain }}/privkey.pem;
 
-      location /wss/ {
-       proxy_pass https://localhost:8443;
-       proxy_http_version 1.1;
-       proxy_set_header Upgrade $http_upgrade;
-       proxy_set_header Connection "Upgrade";
-       proxy_set_header Host $host;
-   }
+    include /etc/nginx/authelia_internal.conf;
 
-   location /inform {
-       proxy_pass http://localhost:8080;
+    location /wss/ {
+        #include /etc/nginx/require_auth.conf;
 
-       proxy_redirect off;
+        proxy_pass https://{{ bridgewithdns.unifi }}:443;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+        proxy_set_header Host $host;
+    }
+
+    location /inform {
+        proxy_pass http://localhost:8080;
+
         proxy_set_header   Host $host;
+        proxy_set_header   X-Real-IP $remote_addr;
+        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Host $server_name;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   Host $host;
+    }
 
-   }
+    location / {
+        #include /etc/nginx/require_auth.conf;
 
-
-   location / {
-        proxy_pass         https://localhost:8443/;
+        proxy_pass https://{{ bridgewithdns.unifi }}:443;
 
         proxy_redirect     off;
         proxy_set_header   Host $host;
@@ -34,15 +44,10 @@ server {
         proxy_set_header   X-Forwarded-Host $server_name;
         proxy_set_header   X-Forwarded-Proto $scheme;
 
-   }
+    }
 
     access_log /var/log/nginx/access_{{ unifi_url }}.log main;
     error_log /var/log/nginx/error_{{ unifi_url }}.log warn;
-
-    ssl_session_timeout 5m;
-
-    ssl_certificate /usr/local/etc/certs/{{ domain }}/fullchain.pem;
-    ssl_certificate_key /usr/local/etc/certs/{{ domain }}/privkey.pem;
 
     add_header Referrer-Policy "no-referrer" always;
     add_header X-Content-Type-Options "nosniff" always;

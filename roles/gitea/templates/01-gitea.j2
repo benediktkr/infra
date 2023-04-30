@@ -67,6 +67,10 @@ server {
        # gitea itself can also serve this file
        alias {{ gitea_user.home }}/data/gitea/sitemap.xml;
    }
+   location /user/login {
+       return 302 /user/oauth2/{{ gitea_oidc_name }};
+   }
+
 
    location /user/forgot_password {
        return 302 https://{{ authelia_login_url }}/reset-password/step1;
