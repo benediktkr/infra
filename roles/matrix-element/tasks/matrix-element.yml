@@ -39,7 +39,7 @@
 - name: start matrix-element container
   docker_container:
     name: matrix-element
-    image: bubuntux/element-web:latest
+    image: vectorim/element-web:latest
     auto_remove: false
     detach: true
     pull: true
@@ -54,7 +54,7 @@
     mounts:
       - type: bind
         source: "{{ systemuserlist.matrix.home }}/element/config.json"
-        target: /etc/element-web/config.json
+        target: /app/config.json
         read_only: true
   tags:
     - element-container
