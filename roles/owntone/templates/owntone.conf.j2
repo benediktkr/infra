@@ -4,7 +4,7 @@ general {
     # below, and full access to the databases, log and local audio
     uid = "owntone"
 
-    db_path = "/config/dbase_and_logs/songs3.db"
+    db_path = "/config/{{ owntone_db }}"
 
     # Database backup location
     # Uncomment and specify a full path to enable abilty to use REST endpoint
@@ -32,8 +32,14 @@ general {
     # client types like Remotes, DAAP clients (iTunes) and to the web
     # interface. Options are "any", "localhost" or the prefix to one or
     # more ipv4/6 networks. The default is { "localhost", "192.168", "fd" }
-    {% set s21 = s21_cidr.split(".")[:3] | join(".") -%}
-    trusted_networks = { "localhost", "{{ s21 }}", "fd" }
+
+    trusted_networks = {
+      {% for item in owntone_networks -%}
+      "{{ item.split(".")[:3] | join(".") | trim }}",
+      {% endfor -%}
+      "localhost",
+      "fd"
+    }
 
     # Enable/disable IPv6
     ipv6 = no
@@ -112,7 +118,7 @@ library {
     # albums and artists with only one track. The tracks will still be
     # visible in other lists, e.g. songs and playlists. This setting
     # currently only works in some remotes.
-    #hide_singles = false
+    hide_singles = true
 
     # Internet streams in your playlists will by default be shown in the
     # "Radio" library, like iTunes does. However, some clients (like

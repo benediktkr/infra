@@ -1,3 +1,7 @@
+map $request_uri $kill_stupid_serviceworker_cache {
+    ~*^/_nuxt/(.*)\.js$ 1;
+}
+
 server {
     listen 443 ssl http2;
     include listen-proxy-protocol.conf;
@@ -22,8 +26,6 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_set_header Host $host;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
 
         proxy_http_version 1.1;
 
@@ -34,8 +36,25 @@ server {
         add_header "Content-Type" "application/rss+xml";
 
     }
+    location /socket.io/ {
+        include /etc/nginx/require_auth.conf;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Protocol $scheme;
+        proxy_set_header X-Forwarded-Host $http_host;
+        proxy_pass http://{{ bridgewithdns.audiobookshelf }}:80;
+    }
     location / {
         include /etc/nginx/require_auth.conf;
+        if ($kill_stupid_serviceworker_cache) {
+            rewrite "^(.*)$" "$1?id=$request_id" redirect;
+        }
+
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_set_header Host $host;
@@ -43,6 +62,16 @@ server {
         proxy_set_header Connection "upgrade";
 
         proxy_http_version 1.1;
+
+        # nuke cache
+        add_header Last-Modified $date_gmt always;
+        add_header Cache-Control 'no-store' always;
+        if_modified_since off;
+        expires off;
+        etag off;
+
+        # nuke the service worker cache
+        sub_filter '.js' '.js?id=$request_id';
 
         proxy_pass http://{{ bridgewithdns.audiobookshelf }}:80;
         proxy_redirect http:// https://;

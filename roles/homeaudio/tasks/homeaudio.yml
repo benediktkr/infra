@@ -4,11 +4,20 @@
   apt:
     name:
       - avahi-utils
+      - eyed3
       - id3v2
       - ffmpeg
+      - pulseaudio-dlna
+      - pulseaudio-module-bluetooth
+      #- pulseaudio-module-raop
+      #- pulseaudio-module-zeroconf
+      #- pulseaudio-module-lirc
+      #- pulseaudio-module-jack
+
     state: present
   tags:
     - homeaudio-packages
+    - packages
 
 - name: install yt-dlp
   pip:

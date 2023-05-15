@@ -1,0 +1,141 @@
+---
+
+input_number:
+  sun_adaptive_max_brightness_pct:
+    name: sun_adaptive_max_brightness_pct
+    min: 0
+    max: 100
+    step: 1.0
+    mode: box
+    unit_of_measurement: "%"
+
+
+template:
+  - sensor:
+      - name: sun_zenith
+        unit_of_measurement: "°"
+        state_class: measurement
+        icon: >-
+          {% if states("sun.sun") == "above_horizon" %}
+            {% if state_attr("sun.sun", "rising") %}
+            mdi:weather-sunset-up
+            {% else %}
+            mdi:white-balance-sunny
+            {% endif %}
+          {% else %}
+          mdi:moon-waning-crescent
+          {% endif%}
+        state: >-
+          {{ state_attr("sun.sun", "elevation") | default(0.0) | float }}
+        attributes:
+          friendly_name: Solar zenith angle
+          below_horizon: >-
+            {{ states("sun.sun") == "below_horizon" }}
+          setting: >-
+            {{ state_attr("sun.sun", "rising") == false }}
+
+      # - name: sun_position
+      #   state_class: measurement
+      #   icon: mdi:white-balance-sunny
+      #   state: >-
+      #     {{ state_attr("switch.adaptive_lighting_adapt_brightness_home", "sun_position") }}
+
+      - name: sun_adaptive_brightness
+        unit_of_measurement: "%"
+        state_class: measurement
+        icon: >-
+          {{ state_attr("sensor.sun_zenith", "icon") }}
+        state: >-
+          {% set sun_zenith_pct = states("sensor.sun_zenith_pct") | float %}
+          {% set max_brightness_pct = states("input_number.sun_adaptive_max_brightness_pct") | default(100.0) | float %}
+          {% set brightness_pct = 100.0 - sun_zenith_pct %}
+          {{ brightness_pct | int }}
+        attributes:
+          friendly_name: Adaptive light brightness
+
+      - name: sun_zenith_pct
+        unit_of_measurement: "%"
+        state_class: measurement
+        icon: >-
+          {{ state_attr("sensor.sun_zenith", "icon") }}
+        state: >-
+          {% set sun_highest = states("sensor.sun_zenith_highest") | default(1.0) | float %}
+          {% set sun_zenith = states("sensor.sun_zenith") | default(0.0) | float %}
+          {% set daylight_pct = max(sun_zenith, 0) / sun_highest * 100.0 %}
+          {{ daylight_pct | round(1) }}
+
+      # - name: sun_time_until_dawn
+      #   unit_of_measurement: minutes
+      #   device_class: timestamp
+      #   state_class: measurement
+      #   state: >-
+      #     {% set sun_dawn = state_attr("sun.sun", "next_dawn") | as_datetime %}
+      #     {{ sun_dawn - now() }}
+      #   attributes:
+      #     friendly_name: "Time until dawn"
+
+      # - name: sun_time_until_dusk
+      #   unit_of_measurement: minutes
+      #   device_class: timestamp
+      #   state_class: measurement
+      #   state: >-
+      #     {% set sun_dusk = state_attr("sun.sun", "next_dusk") | as_datetime %}
+      #     {{ sun_dusk - now() }}
+      #   attributes:
+      #     friendly_name: "Time until dusk"
+
+      # - name: sun_time_until_midnight
+      #   state_class: measurement
+      #   device_class: timestamp
+      #   unit_of_measurement: minutes
+      #   state: >-
+      #     {% set sun_midnight = state_attr("sun.sun", "next_midnight") | as_datetime %}
+      #     {{ sun_midnight - now() }}
+      #   attributes:
+      #     friendly_name: "Time until midnight"
+
+      # - name: sun_time_until_noon
+      #   unit_of_measurement: minutes
+      #   state_class: measurement
+      #   device_class: timestamp
+      #   state: >-
+      #     {% set sun_noon = state_attr("sun.sun", "next_noon") | as_datetime %}
+      #     {{ now() - sun_noon - now() }}
+      #   attributes:
+      #     friendly_name: "Time until noon"
+
+      # - name: sun_time_until_rising
+      #   unit_of_measurement: minutes
+      #   device_class: timestamp
+      #   state_class: measurement
+      #   state: >-
+      #     {% set sun_rising = state_attr("sun.sun", "next_rising") | as_datetime %}
+      #     {{ sun_rising - now() }}
+      #   attributes:
+      #     friendly_name: "Time until rising"
+
+      # - name: sun_time_until_setting
+      #   unit_of_measurement: minutes
+      #   device_class: timestamp
+      #   state_class: measurement
+      #   state: >-
+      #     {% set sun_setting = state_attr("sun.sun", "next_setting") | as_datetime %}
+      #     {{ sun_setting - now() }}
+      #   attributes:
+      #     friendly_name: "Time until setting"
+
+
+sensor:
+  - name: sun_zenith_highest
+    platform: statistics
+    entity_id: sensor.sun_zenith
+    state_characteristic: value_max
+    max_age:
+      hours: 24
+
+  - name: sun_zenith_lowest
+    platform: statistics
+    entity_id: sensor.sun_zenith
+    state_characteristic: value_min
+    max_age:
+      hours: 24

@@ -1,0 +1,23 @@
+---
+
+# example of simple tts integration:
+# https://github.com/nagyrobi/home-assistant-custom-components-marytts/blob/main/custom_components/marytts/tts.py
+
+template:
+  - binary_sensor:
+      - name: glados_tts_is_in_hass
+        state: false
+
+notify:
+  - name: glados
+    platform: rest
+    resource: https://{{ hass_url }}/glados/say.mp3
+    method: POST_JSON
+    headers:
+      #Authorization:
+      content-type: application/json
+    data_template:
+      message: >-
+        {% raw -%}
+        {{ title ~ '\n' ~ message }}
+        {% endraw %}

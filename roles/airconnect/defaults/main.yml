@@ -10,6 +10,7 @@ airconnect_group:
 
 # for flac: 'flc'
 airconnect_codec: mp3:320
+airconnect_latency: 1000:2000
 
 airconnect_max_volume: "100"
 airconnect_upnp: []

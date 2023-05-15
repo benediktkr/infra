@@ -5,6 +5,7 @@ from datetime import datetime
 import subprocess
 import json
 import sys
+import shutil
 import os
 import time
 
@@ -13,7 +14,6 @@ from loguru import logger
 import dateutil.parser
 from dateutil.parser._parser import ParserError
 from mutagen.id3 import ID3
-
 
 def delete_file(file_path):
     try:
@@ -26,7 +26,10 @@ def delete_file(file_path):
 def replace_file(src, dest):
     try:
         logger.debug(f"src: {src}, dest: {dest}")
+        #delete_file(dest)
+        #shutil.move(src, dest)
         os.replace(src, dest)
+
         logger.debug(f"replaced '{dest}'")
     except (PermissionError, OSError, FileNotFoundError) as e:
         logger.error(e)
@@ -64,6 +67,7 @@ def ffmpeg_write_date_tag(podcast_file, out_file, iso_date_str):
         "-i", podcast_file,
         "-c",  "copy",
         "-metadata",  f"date={iso_date_str}",
+        #"-metadata", f"releasedate={iso_date_str}",
         out_file
     ]
 
@@ -80,22 +84,37 @@ def ffmpeg_write_date_tag(podcast_file, out_file, iso_date_str):
 
 
 def eyeD3_write_date_tag(podcast_file, iso_date_str):
+
+    # import eyeD3 ?
+
+    podcast_dir = os.path.basename(podcast_file)
+    cover_path = os.path.join(podcast_dir, "cover.jpg")
+
     cmd = [
         "eyeD3",
         "--release-date", iso_date_str,
         "--to-v2.4",
         "--user-text-frame", f"releasedate:{iso_date_str}",
-        # "--preserve-file-times",
+        #"--preserve-file-times",
         # "--recording-date", iso_date_str,
-        # "--orig-release-date", iso_date_str,
+        # "--force-update",
         podcast_file
+        #"--orig-release-date", iso_date_str,
+
+        # this overwrites 'release date' i think:
+        #"--release-year", iso_date_str.split("-")[0],
+
     ]
+    # if os.path.exists(cover_path):
+    #     cmd.extend(["--add-image", f"{cover_path}:FRONT_COVER"])
+    #cmd.append(podcast_file)
 
     logger.debug(" ".join(cmd))
 
     try:
         subprocess.run(cmd, capture_output=True, check=True, stdin=None)
         logger.debug(f"updated: '{podcast_file}'")
+        #logger.info(f"would write date: {iso_date_str}")
     except subprocess.CalledProcessError as e:
         logger.error(f"{cmd[0]} exited with returncode {e.returncode} \n{e.stderr.decode()}")
         raise SystemExit(e.returncode)
@@ -114,6 +133,7 @@ def get_podcast_name_from_dir(podcast_file):
 
 def eyeD3_write_album_tag(podcast_file, podcast_name):
     # "album" is the name of the podcast
+
     cmd = ["eyeD3", "--album", podcast_name, podcast_file]
     try:
         subprocess.run(cmd, capture_output=True, check=True, stdin=None)
@@ -123,9 +143,6 @@ def eyeD3_write_album_tag(podcast_file, podcast_name):
 
 
 def parse_iso_date(date_str):
-    if date_str is None:
-        return None
-
     try:
         dt = dateutil.parser.parse(date_str)
         return dt.date().isoformat()
@@ -133,36 +150,13 @@ def parse_iso_date(date_str):
         logger.warning(f"invalid date string: '{date_str}'")
         return None
 
-
-def parse_TDAT_tag(tag_tdat, tag_tyer):
-    if tag_tdat is None:
-        return None
-    if tag_tyer is None:
-        return None
-    if not isinstance(tag_tdat, str) or len(tag_tdat) != 4:
-        return None
-    if not isinstance(tag_tyer, str) or len(tag_tyer) != 4:
-        return None
-
-
-    # TDAT is id3 v2.3: DDMM
-    # TYER is id3 v2.3: YYYY
+def parse_TDAT_tag(tag_tdat):
     try:
-        #iso_date_str = tag_tdat.split(' ')[0]
-        #return parse_iso_date(iso_date_str)
-        DD = tag_tdat[0:2]
-        MM = tag_tdat[2:4]
-        YYYY = tag_tyer[0:4]
-        isofmt = f"{YYYY}-{MM}-{DD}"
-        if is_iso_string(isofmt):
-            return isofmt
-        else:
-            logger.warning(f"invalid TDAT: {tag_tdat} and TYER: {tag_tyer}")
-            return None
+        iso_date_str = tag_tdat.split(' ')[0]
+        return parse_iso_date(iso_date_str)
     except (AttributeError, IndexError) as e:
         logger.debug(f"invalid 'TDAT' tag: '{tag_tdat}'")
         return None
-
 
 def is_iso_string(iso_string):
     if iso_string is None:
@@ -173,51 +167,30 @@ def is_iso_string(iso_string):
     except ValueError:
         return False
 
+# def get_iso_date_in_file(file_path):
+#     tags = ffprobe_get_tags(file_path):
+
+#     search_tag_names = ["date", "releasedate", "TDAT"]
+#     tags_data = [tags.get(a) for a in search_tag_names]
+#     for item in tags_data:
+
+
+#     tags_parsed = [parse_iso_date(a) for a in tags_data]
+
+
+#     for item in ["date", "TDAT", "releasedate"]:
+#         tag_data = tags.get(item)
+#         parsed_data = parse_iso_date(tag_data)
+#         if is_iso_string(parsed_data)
+#             return parsed_data
+
+
+
 def get_iso_date_in_file(file_path):
-    tags = ffprobe_get_tags(file_path)
-    l = []
-
-    # print(tag_tdat)
-    # print(tag_tyer)
-    for item in ["releasedate", "date"]:
-        parsed = parse_iso_date(tags.get(item))
-        if is_iso_string(parsed):
-            l.append(parsed)
-
-
-    tag_tdat = tags.get("TDAT")
-    tag_tyer = tags.get("TYER")
-    if len(l) == 0 and (tag_tdat is not None and tag_tyer is not None):
-        logger.info(f"TDAT: {tag_tdat}")
-        logger.info(f"TYER: {tag_tyer}")
-        tdat = parse_TDAT_tag(tag_tdat, tag_tyer)
-        if is_iso_string(tdat):
-                l.append(tdat)
-
-
-    dates = set(l)
-    if len(dates) == 0:
-        logger.error(f"no valid date found for '{file_path}'")
-        raise SystemExit(3)
-
-
-    elif len(dates) == 1:
-        d = list(dates)[0]
-        logger.info(f"date found: {d}")
-        return d
-
-    else:
-        logger.info(f"multiple dates found: {dates}, picking earliest")
-        earliest = min([datetime.fromisoformat(a) for a in dates])
-        return earliest.isoformat()
-
-
-def get_iso_date_in_file2(file_path):
     tags = ffprobe_get_tags(file_path)
 
     tag_TDAT = tags.get("TDAT")
     tag_date = tags.get("date")
-    #tag_releasedate = tags.get("releasedate")
 
     parsed_TDAT = parse_TDAT_tag(tag_TDAT)
     parsed_date = parse_iso_date(tag_date)
@@ -238,6 +211,18 @@ def get_iso_date_in_file2(file_path):
     else:
         return parsed_TDAT
 
+
+# def file_dates_are_ok(file_path):
+#     tags = ffprobe_get_tags(file_path)
+#     tag_date = tags.get("date")
+#     try:
+#         dt = datetime.fromisoformat(tag_date)
+#         ts = time.mktime(dt.timetuple())
+
+#         os.stat(file_path).st_mtime == ts
+#     except ValueError:
+#         return False
+
 def st_time_to_iso(st_time):
     return datetime.fromtimestamp(st_time).isoformat()
 
@@ -252,10 +237,13 @@ def show_info(file_path):
     logger.info(f"ctime: {ctime}")
 
 
+
 def set_utime(file_path, iso_date_str):
     # settings access and modified times
     dt = dateutil.parser.parse(iso_date_str)
     ts = time.mktime(dt.timetuple())
+    # shutil.move(file_path, f"{file_path}.new")
+    # shutil.move(f"{file_path}.new", file_path)
     os.utime(file_path, (ts, ts))
     try:
         os.utime(os.path.dirname(file_path), (ts, ts))
@@ -270,6 +258,9 @@ def eyed3_dates(podcast_file, date):
 def mutagen_dates(podcast_file, date):
     id3 = ID3(podcast_file)
     print(type(id3))
+
+
+
 
 
 def parse_args():
@@ -291,6 +282,7 @@ def parse_args():
             logger.add(sys.stderr, level="ERROR")
         else:
             logger.add(sys.stderr, level="INFO")
+
     return args
 
 
@@ -307,7 +299,11 @@ def main():
         dt = set_utime(args.podcast_file, date)
         logger.info(f"set mtime for '{os.path.basename(args.podcast_file)}' to '{dt.isoformat()}' according to mp3 metadata")
 
+
     if args.action == "fix-dates":
+        # if file_dates_are_ok(args.podcast_file):
+        #     logger.info(f"metadata date and filesystem utimes are ok for {args.podcast_file}', did not modify file")
+        # else:
         if args.metadata_util == "ffmpeg":
             ffmpeg_write_date_tag(args.podcast_file, args.out_file, date)
         if args.metadata_util == "eyed3":
@@ -315,6 +311,7 @@ def main():
             eyed3_dates(args.podcast_file, date)
         if args.metadata_util == "mutagen":
             mutagen_dates(args.podcast_file, date)
+
 
         set_utime(args.podcast_file, date)
         logger.success(f"updated dates (metadata and file attributes) for '{args.podcast_file}' as {date}")
@@ -324,6 +321,7 @@ def main():
         if podcast_name is not None:
             eyeD3_write_album_tag(args.podcast_file, podcast_name)
             logger.info(f"set album tag to '{podcast_name}' for '{args.podcast_file}'")
+
 
 
 if __name__ == "__main__":

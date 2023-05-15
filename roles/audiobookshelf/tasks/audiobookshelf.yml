@@ -84,6 +84,28 @@
     - abs-container
     - docker-containers
 
+- name: install python utilies for mp3 metadata
+  apt:
+    name:
+      - eyed3
+      - python3-mutagen
+    state: present
+  tags:
+    - packages
+    - audiobookshelf-scripts
+
+- name: config file for podcast tools
+  copy:
+    dest: /usr/local/bin/podcasts.json
+    owner: root
+    group: "{{ audiobookshelf_group.gid }}"
+    mode: 0750
+    content: "{{ podcast_tools_config | to_nice_json }}"
+  tags:
+    - abs-scripts
+    - audiobookshelf-scripts
+    - podcast-tools
+
 - name: copy abs scripts
   copy:
     src: "{{ item }}"
@@ -96,3 +118,19 @@
   tags:
     - abs-scripts
     - audiobookshelf-scripts
+    - podcast-tools
+
+- name: cron file
+  template:
+    src: audiobookshelf-cron.j2
+    dest: /etc/cron.d/audiobookshelf
+    owner: root
+    group: root
+    mode: 0600
+  tags:
+    - cron
+    - abs-cron
+    - audiobookshelf-cron
+    - abs-scripts
+    - audiobookshelf-scripts
+    - podcast-tools

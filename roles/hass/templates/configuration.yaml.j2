@@ -64,6 +64,17 @@ scene: !include scenes.yaml
 template: !include templates.yaml
 #climate: !include climate.yaml
 
+http:
+  server_host: 127.0.0.1
+  server_port: 8123
+  trusted_proxies:
+    - 127.0.0.1
+  use_x_forwarded_for: true
+
+api:
+
+websocket_api:
+
 # Text to speech
 tts:
   - platform: voicerss
@@ -81,15 +92,6 @@ calendar:
     # {{ item.name | trim }}
     url: {{ item.url | trim }}
   {% endfor %}
-
-http:
-  server_host: 127.0.0.1
-  server_port: 8123
-  trusted_proxies:
-    - 127.0.0.1
-  use_x_forwarded_for: true
-
-api:
 
 frontend:
   themes: !include_dir_merge_named themes
@@ -261,16 +263,6 @@ sensor:
       #{% endfor %}
       #}
 
-  {% if blink1_enabled -%}
-  - platform: rest
-    resource: http://localhost:{{ blink1_server_port }}/blink1
-    name: blink1
-    json_attributes:
-      - rgb
-      - bright
-    value_template: "{%raw%}{{ value_json.rgb }}{%endraw%}"
-  {% endif %}
-
 binary_sensor:
   - platform: workday
     country: DE
@@ -335,13 +327,13 @@ device_tracker:
     # to known_devices.yaml when they are discovered, but they wont be
     # tracked unless 'track' is set to 'true' for a device there (edit
     # the file to track a discovered device).
-    track_new_devices: true
+    track_new_devices: false
     #new_device_defaults:
     #  track_new_devices: false
 
   - platform: bluetooth_tracker
     request_rssi: true
-    track_new_devices: true
+    track_new_devices: false
   - platform: ping
     # these are probably not used, because they are "global settings"
     # and only the first values from the first platform (bluetooth_le_tracker)
@@ -405,32 +397,6 @@ notify:
 shell_command:
   matrixmsg: /usr/local/bin/matrixmsg.py
 
-rest_command:
-  {% if blink1_enabled -%}
-  blink1_turn_on:
-    url: {{ hass_blink1_url }}/blink1/on?bright=250
-    #url: http://localhost:{{ blink1_server_port }}/blink1/fadeToRGB?rgb=ff0ff
-    method: GET
-    content_type: "application/json"
-  blink1_turn_off:
-    url: {{ hass_blink1_url }}/blink1/off
-    method: GET
-    content_type: "application/json"
-  blink1_turn_magenta:
-    url: {{ hass_blink1_url }}/blink1/fadeToRGB?rgb=ff00ff
-    method: GET
-    content_type: "application/json"
-  blink1_set_color:
-    url: "{{ hass_blink1_url }}/blink1/fadeToRGB?rgb={%raw%}{{ rgb }}{%endraw%}"
-    method: GET
-  {% endif %}
-
-light:
-  {% if blink1_enabled -%}
-  - platform: template
-    lights:
-      blink1: !include blink1.yaml
-  {% endif %}
 
 {#
  # feedreader:

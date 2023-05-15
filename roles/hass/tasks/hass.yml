@@ -69,7 +69,7 @@
     - hass-git
     - hass-git-clone
 
-- name: home assistant config files
+- name: home assistant config files and config packages
   template:
     src: "{{ item }}.j2"
     dest: "{{ systemuserlist.hass.home }}/home-assistant/config/{{ item }}"
@@ -83,13 +83,14 @@
     - templates.yaml
     - automations-ansible-managed.yaml
     - scripts-ansible-managed.yaml
-    - blink1.yaml
     # - packages/climate.yaml
+    - packages/blink1.yaml
     - packages/toothbrush.yaml
+    - packages/glados_tts.yaml
   tags:
     - hass-config
 
-- name: copy config files
+- name: copy config packages
   copy:
     src: "{{ item }}"
     dest: "{{ systemuserlist.hass.home }}/home-assistant/config/{{ item }}"
@@ -101,8 +102,11 @@
     - packages/usb_led_strings.yaml
     - packages/grow_lights.yaml
     - packages/fans.yaml
+    - packages/moosetv.yaml
+    - packages/adaptive_lighting.yaml
   tags:
     - hass-config
+    - hass-packages
 
 - name: copy dashboard config files
   copy:
@@ -126,6 +130,7 @@
     mode: 0775
     owner: hass
     group: hass
+  notify: git-hass-config.sh
   tags:
     - hass-git
 

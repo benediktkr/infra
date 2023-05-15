@@ -16,6 +16,14 @@ server {
 
     server_name {{ hass_url }};
 
+    location /glados/ {
+        # TEMP: while glados hass integration is WIP
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_pass {{ hass_glados_tts_url }};
+
+    }
+
     location / {
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
@@ -33,7 +41,7 @@ server {
     #     autoindex_exact_size off;
     # }
 
-    {% if blink1_enabled -%}
+    {% if blink1_server_port is defined -%}
     location /blink1/ {
         {% for cidr in my_local_cidrs -%}
         allow {{ cidr }};
@@ -139,6 +147,8 @@ server {
     ssl_session_timeout 5m;
     ssl_certificate /usr/local/etc/certs/{{ domain }}/fullchain.pem;
     ssl_certificate_key /usr/local/etc/certs/{{ domain }}/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers off;
 
     fastcgi_hide_header X-Powered-By;
 }

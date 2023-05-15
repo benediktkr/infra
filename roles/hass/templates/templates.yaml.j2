@@ -66,15 +66,6 @@
      #}
 
 - binary_sensor:
-    {% if blink1_enabled -%}
-    - name: "blink1_on"
-      device_class: light
-      state: >-
-        {% raw -%}
-        {{ state_attr('sensor.blink1', 'rgb') != "#000000" }}
-        {% endraw %}
-    {% endif %}
-
     - name: "heating_on"
       icon: "mdi:home-thermometer"
       device_class: heat

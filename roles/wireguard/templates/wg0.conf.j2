@@ -3,7 +3,7 @@
 ## NEW
 
 [Interface]
-Address = {{ wg.ip }}/32
+Address = {{ wg.ip }}/24
 {% if wg.listen|default(false) %}
 ListenPort = {{ wireguard_port }}
 {% endif %}

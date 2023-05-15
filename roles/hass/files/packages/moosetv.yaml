@@ -1,0 +1,8 @@
+---
+
+binary_sensor:
+  - platform: tod
+    unique_id: moosetv_schedule
+    name: moosetv_shedule
+    after: "06:00"
+    before: "01:00"
