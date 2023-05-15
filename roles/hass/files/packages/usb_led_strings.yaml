@@ -1,0 +1,88 @@
+input_boolean:
+  usb_led_string_1_state:
+    name: usb_led_string_1_state
+    initial: false
+
+script:
+  usb_led_string_1_on:
+    sequence:
+      - service: remote.send_command
+        target:
+          entity_id: remote.broadlink
+        data:
+          device: usb_led_string_1
+          command:
+            - power_on
+            - steady_on
+      - service: input_boolean.turn_on
+        data: {}
+        target:
+          entity_id: input_boolean.usb_led_string_1_state
+
+  usb_led_string_1_off:
+    sequence:
+      - service: remote.send_command
+        target:
+          entity_id: remote.broadlink
+        data:
+          device: usb_led_string_1
+          command:
+            - power_off
+      - service: input_boolean.turn_off
+        data: {}
+        target:
+          entity_id: input_boolean.usb_led_string_1_state
+
+automation:
+  - alias: usb_led_string_1_state
+    trigger:
+      - platform: state
+        entity_id: input_boolean.usb_led_string_1_state
+        for:
+          hours: 0
+          minutes: 5
+          seconds: 0
+        to: "on"
+        id: "on"
+      - platform: state
+        entity_id: input_boolean.usb_led_string_1_state
+        for:
+          hours: 0
+          minutes: 5
+          seconds: 0
+        to: "off"
+        id: "off"
+    condition: []
+    action:
+      - service: >-
+          script.usb_led_string_1_{{ trigger.id }}
+        data: {}
+
+  - alias: usb_led_string_1_hass_start
+    trigger:
+      - platform: homeassistant
+        event: start
+    condition: []
+    action:
+      - service: >-
+          {% if is_state('sun.sun', 'below_horizon') %}
+          light.turn_on
+          {% else %}
+          light.turn_off
+          {% endif %}
+        target:
+          entity_id: light.usb_led_string_1
+        data: {}
+
+light:
+  - platform: template
+    lights:
+      usb_led_string_1:
+        unique_id: usb_led_string_1
+        friendly_name: "USB LED string 1"
+        value_template: "{{ states('input_boolean.usb_led_string_1_state') }}"
+        icon_template: mdi:led-strip-variant
+        turn_on:
+          service: script.usb_led_string_1_on
+        turn_off:
+          service: script.usb_led_string_1_off

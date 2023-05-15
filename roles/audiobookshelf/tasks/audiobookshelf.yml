@@ -8,6 +8,7 @@
     group: "{{ audiobookshelf_group.gid }}"
   tags:
     - audiobookshelf-dirs
+    - abs-dirs
   loop_control:
     label: "{{ item.name }}"
   with_items:
@@ -43,6 +44,7 @@
   tags:
     - nginx
     - audiobookshelf-nginx
+    - abs-nginx
   notify: reload nginx
 
 - name: start audiobookshelf container
@@ -79,4 +81,18 @@
         target: /metadata
   tags:
     - audiobookshelf-container
+    - abs-container
     - docker-containers
+
+- name: copy abs scripts
+  copy:
+    src: "{{ item }}"
+    dest: "/usr/local/bin/{{ item }}"
+    owner: "{{ audiobookshelf_user.uid }}"
+    group: "{{ audiobookshelf_group.gid }}"
+    mode: 0755
+  with_items:
+   - fix-podcast-date.py
+  tags:
+    - abs-scripts
+    - audiobookshelf-scripts

@@ -62,7 +62,7 @@ automation ansible: !include automations-ansible-managed.yaml
 script: !include scripts.yaml
 scene: !include scenes.yaml
 template: !include templates.yaml
-climate: !include climate.yaml
+#climate: !include climate.yaml
 
 # Text to speech
 tts:
@@ -88,6 +88,8 @@ http:
   trusted_proxies:
     - 127.0.0.1
   use_x_forwarded_for: true
+
+api:
 
 frontend:
   themes: !include_dir_merge_named themes
@@ -158,6 +160,7 @@ homeassistant:
   customize:
     zone.home:
       friendly_name: S21
+  packages: !include_dir_named packages
 
 lovelace:
   mode: storage
@@ -227,6 +230,24 @@ sensor:
     {% endif -%}
     file_path: "/config/bvg/"
   {% endfor %}
+
+  - platform: worldclock
+    time_zone: UTC
+    name: UTC
+  - platform: worldclock
+    time_zone: Atlantic/Reykjavik
+    name: Iceland
+  - platform: worldclock
+    time_zone: Europe/Berlin
+    name: Berlin
+  - platform: worldclock
+    time_zone: America/New_York
+    name: Boston
+  - platform: worldclock
+    time_zone: America/Chicago
+    name: Austin
+
+
 
   - platform: waqi
     token: !secret waqi_token
@@ -306,24 +327,33 @@ input_text:
 
 device_tracker:
   - platform: bluetooth_le_tracker
+    # device tracker will only look for the following global settings
+    # under the configuration of the first configured platform
     interval_seconds: 12
-    track_new_devices: false
-    track_battery: false
-    consider_home: 150
-    new_device_defaults:
-      track_new_devices: false
+    consider_home: 120
+    # setting this to 'false' still results in new devices being added
+    # to known_devices.yaml when they are discovered, but they wont be
+    # tracked unless 'track' is set to 'true' for a device there (edit
+    # the file to track a discovered device).
+    track_new_devices: true
+    #new_device_defaults:
+    #  track_new_devices: false
+
   - platform: bluetooth_tracker
-    request_rssi: false
-    interval_seconds: 12
-    track_new_devices: false
-    consider_home: 150
-    new_device_defaults:
-      track_new_devices: false
+    request_rssi: true
+    track_new_devices: true
   - platform: ping
+    # these are probably not used, because they are "global settings"
+    # and only the first values from the first platform (bluetooth_le_tracker)
+    # are used according to the docs
+    interval_seconds: 30
+    track_new_devices: true
+    # but consider_hoem can be overridden
+    consider_home: 120
     hosts:
       {% for target in hass_ping -%}
       {% if target.device_tracker|default(true) -%}
-      {{ target.name }}: {{ target.host }}
+      ping_{{ target.name }}: {{ target.host }}
       {% endif -%}
       {% endfor %}
 
@@ -402,24 +432,19 @@ light:
       blink1: !include blink1.yaml
   {% endif %}
 
-# enable 'wake_on_lan' for 'samsungtv'
-wake_on_lan:
+{#
+ # feedreader:
+ #   urls:
+ #   {% for item in hass_feedreader -%}
+ #     - "{{ item.url | trim }}"
+ #   {% endfor %}
+ #}
 
-samsungtv:
-  - host: {{ hass_wifi_blackbox.tv_ip }}
-    name: The TV
-    turn_on_action:
-      - service: wake_on_lan.send_magic_packet
-        data:
-          mac: "{{ hass_wifi_blackbox.tv_mac }}"
+logger:
+  default: warning
+  logs:
+    pyatv: debug
+    homeassistant.components.apple_tv: debug
 
-feedreader:
-  urls:
-  {% for item in hass_feedreader -%}
-    - "{{ item.url | trim }}"
-  {% endfor %}
-
-{# logger:
- #   logs:
- #     pyatv: debug
- #     homeassistant.components.apple_tv: debug #}
+# enable SVT play
+svt_play:

@@ -11,7 +11,7 @@
     <max_volume>{{ airconnect_max_volume }}</max_volume>
     <http_length>-1</http_length>
     <upnp_max>1</upnp_max>
-    <codec>mp3:320</codec>
+    <codec>{{ airconnect_codec }}</codec>
     <metadata>1</metadata>
     <flush>1</flush>
     <artwork></artwork>
@@ -28,7 +28,9 @@
   <ports>0:0</ports>
   {% for item in airconnect_upnp -%}
   <device>
+    {% if 'local_uuid' in item -%}
     <udn>uuid:{{ item.local_uuid }}</udn>
+    {% endif -%}
     <name>{{ item.name }}</name>
     {% if 'mac' in item -%}
     <mac>{{ item.mac | upper }}</mac>

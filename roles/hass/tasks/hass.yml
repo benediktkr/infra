@@ -32,6 +32,7 @@
       mode: "0775"
     - name: home-assistant
     - name: home-assistant/config
+    - name: home-assistant/config/packages
     - name: home-assistant/config/python_scripts
     - name: home-assistant/config/bvg
     - name: home-assistant/.config # might not be needed, misread 'cache' as 'config'
@@ -68,7 +69,6 @@
     - hass-git
     - hass-git-clone
 
-
 - name: home assistant config files
   template:
     src: "{{ item }}.j2"
@@ -81,20 +81,36 @@
     - secrets.yaml
     - configuration.yaml
     - templates.yaml
-    - climate.yaml
     - automations-ansible-managed.yaml
     - scripts-ansible-managed.yaml
     - blink1.yaml
+    # - packages/climate.yaml
+    - packages/toothbrush.yaml
   tags:
     - hass-config
 
-- name: copy dashboards
+- name: copy config files
+  copy:
+    src: "{{ item }}"
+    dest: "{{ systemuserlist.hass.home }}/home-assistant/config/{{ item }}"
+    mode: 0644
+    owner: "{{ systemuserlist.hass.uid }}"
+    group: "{{ systemuserlist.hass.gid }}"
+  notify: restart hass container
+  with_items:
+    - packages/usb_led_strings.yaml
+    - packages/grow_lights.yaml
+    - packages/fans.yaml
+  tags:
+    - hass-config
+
+- name: copy dashboard config files
   copy:
     src: "private/hass/{{ item }}"
     dest: "{{ systemuserlist.hass.home }}/home-assistant/config/{{ item }}"
-    mode: 0755
-    owner: hass
-    group: hass
+    mode: 0644
+    owner: "{{ systemuserlist.hass.uid }}"
+    group: "{{ systemuserlist.hass.gid }}"
   notify: restart hass container
   with_items:
     - mini.yaml
@@ -200,6 +216,7 @@
       - mplayer
       - bluez
       - bluetooth
+      - espeak-ng     # for glados-tts
       - fapg
       - podget
       - sqlite3
@@ -281,8 +298,8 @@
 - name: start home-assistant container
   docker_container:
     name: hass
-    image: ghcr.io/home-assistant/home-assistant:stable
-    #image: git.sudo.is/ben/hass:latest
+    #image: ghcr.io/home-assistant/home-assistant:stable
+    image: git.sudo.is/ben/hass:latest
     detach: true
     pull: true
     restart_policy: "unless-stopped"

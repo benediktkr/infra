@@ -23,6 +23,7 @@
         title: 'device not reporting'
         message: 'stopped reporting: {%raw%}{{ trigger.id }}{%endraw%}'
 
+{% if hass_light_switches | length > 0 -%}
 - alias: refresh_light_switches_state
   description: the tkbhome switches dont automatically report their state
   trigger:
@@ -39,6 +40,7 @@
           - {{ item.entity_id }}
           {% endif -%}
           {% endfor %}
+{% endif -%}
 
 {% for item in hass_light_switches -%}
 {% set domain = item.entity_id.split('.')[0] %}

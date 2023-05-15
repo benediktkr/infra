@@ -1,3 +1,22 @@
+{#
+ # device attributes:
+ # - config_entries
+ # - connections
+ # - identifiers
+ # - manufacturer
+ # - model
+ # - name
+ # - sw_version
+ # - hw_version
+ # - entry_type
+ # - id
+ # - via_device_id
+ # - area_id
+ # - name_by_user
+ # - disabled_by
+ # - configuration_url
+ #}
+
 - sensor:
     - name: "chance_of_rain"
       unit_of_measurement: "%"
@@ -14,7 +33,7 @@
     {% if 'status' in radiator %}
 
     - name: "radiator_{{ radiator.name }}_last_updated"
-      unit_of_measurement: "minutes"
+      unit_of_measurement: "min"
       icon: "mdi:update"
       device_class: duration
       state: >-
@@ -29,6 +48,22 @@
     {% endfor %}
     {% for linux_tracker in hass_linux_presence_trackers -%}
     {% endfor %}
+
+
+
+    {# {% if is_state("sensor." ~ this.name ~ "_state", "unavailable") %}
+     # {{ false | bool }}
+     # {% elif is_state("sensor." ~ this.name ~ "_state", "unavailable") %}
+     # {{ false | bool }}
+     # {% elif is_state("sensor." ~ this.name ~ "_time", "unknown") %}
+     # {{ false | bool }}
+     # {% else %}
+     # {{ true | bool }}
+     #
+     # friendly_name: >-
+     #   {{ device_attr("sensor." ~ this.name ~ "_state", "name_by_user") }}
+     #
+     #}
 
 - binary_sensor:
     {% if blink1_enabled -%}
@@ -49,15 +84,6 @@
          {% set max_radiator_temp = all_radiators | max | default(0.0) | float %}
          {% set target_temp = states('input_number.target_temp_heat') | default(0.0) | float %}
          {{ max_radiator_temp >= target_temp }}
-         {% endraw %}
-
-    - name: s21_anyone_home
-      icon: "mdi:home-account"
-      attributes:
-         friendly_name: "Anyone home"
-      state: >-
-         {% raw -%}
-         {{ state_attr("zone.home", "persons") | default([]) | length > 0 }}
          {% endraw %}
 
     - name: doorbell_buzzer
@@ -87,6 +113,7 @@
         {{ current|default(0.0)|float > 0.14 or power|default(0.0)|float > 2.8 }}
         {% endif %}
         {% endraw %}
+
 
     {% for linux_tracker in hass_linux_presence_trackers -%}
     - name: {{ linux_tracker.name }}_active

@@ -1,0 +1,117 @@
+input_boolean:
+  amp_muted:
+    name: amp_muted
+
+input_text:
+  nad_c370_sonos:
+    name: NAD C370 input for Sonos
+    initial: disc
+    pattern: disc
+
+  nad_c370_apple_tv:
+    name: NAD C370 input for Apple TV
+    initial: cd
+    pattern: cd
+
+  nad_c370_tv:
+    name: NAD C370 input for TV
+    initial: cd
+    pattern: cd
+
+input_select:
+  amp_inputs:
+    name: amp_inputs
+    options:
+      - video
+      - disc
+      - cd
+      - aux
+      - tape1
+      - tape2
+
+script:
+  amp_on:
+    mode: single
+    sequence:
+      - service: switch.turn_on
+        target:
+          entity_id: switch.nad_c370
+
+  amp_off:
+    mode: single
+    sequence:
+      - service: switch.turn_off
+        target:
+          entity_id: switch.nad_c370
+
+  amp_mute_toggle:
+    mode: single
+    sequence:
+      - service: remote.send_command
+        target:
+          entity_id: remote.broadlink
+        data:
+          command: mute
+          device: nad_c370
+
+  amp_remote_select_input:
+    mode: single
+    sequence:
+      - service: remote.send_command
+        target:
+          entity_id: remote.broadlink
+        data:
+          command: input_{{ source }}
+          device: nad_c370
+
+  amp_select_input2:
+    mode: single
+    sequence:
+      - service: script.amp_remote_select_input
+        data:
+          soure: >-
+            {% set input_device = states('input_select.media_center_input') %}
+            {{ states('input_text.nad_c370' ~ input_device ) }}
+  amp_select_input:
+    mode: single
+    sequence:
+      - if:
+          - condition: state
+            entity_id: input_select.media_center_inputs
+            state: "tv"
+        then:
+          - service: input_boolean.amp_remote_select_input
+            data:
+              amp_input_source: cd
+      - if:
+          - condition: state
+            entity_id: input_select.media_center_inputs
+            state: "apple_tv"
+        then:
+          - service: input_boolean.amp_remtote_select_input
+            data:
+              amp_input_source: cd
+      - if:
+          - condition: state
+            entity_id: input_select.media_center_inputs
+            state: "sonos"
+        then:
+          - service: input_boolean.amp_remtote_select_input
+            data:
+              amp_input_source: disc
+
+
+media_player:
+  - platform: universal
+    name: NAD C370
+    universal_id: nad_c370
+    children: []
+    turn_on:
+      service: script.amp_on
+    turn_off:
+      service: script.amp_off
+
+    select_source:
+      service: script.amp_select_input
+
+    attributes: state_attr('input_select.amp_inputs', 'options') | source_list

@@ -105,7 +105,19 @@ def run_restic(repo_url, restic_args, dry_run, non_interactive):
         return
 
     # .run(env={}) is possible (but then child doesnt inherit parent env)
-    return subprocess.run(restic_cmd, check=True)
+    try:
+        ps = subprocess.run(restic_cmd, check=True, capture_output=False)
+        # if ps.stdout is not None:
+        #     summary = ps.stdout.decode().split('\n')[-7:]
+        #     if backup:
+        #         logger.success(f"{summary[2].strip()} ({summary[4]})")
+    except subprocess.CalledProcessError as e:
+        cmd = " ".join(e.cmd)
+        # e.stdout, e.strderr
+        if e.stderr is not None:
+            logger.error(e.stderr.decode())
+        logger.error(f"command '{cmd}' returned non-zero exit status {e.returncode}.")
+        raise SystemExit(e.returncode)
 
 def find_nobackup(config):
     # very interesting restic option:

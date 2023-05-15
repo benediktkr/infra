@@ -25,13 +25,26 @@ fi
 mkdir -p ${PATH_REPO}/config/
 mkdir -p ${PATH_REPO}/config/.storage
 
-{% for item in hass_config_repo_files -%}
-cp ${PATH_HASS}/config/{{ item }} ${PATH_REPO}/config/{{ item }}
+{% for item in hass_config_repo_cp -%}
+{% if item.dir|default(false) %}{% set cp_r = "r" -%}
+{% else %}{% set cp_r = "" -%}
+{% endif -%}
+{% if item.src.endswith("*") -%}
+{%   if item.src.count("/") > 0 -%}
+{%   set dest = item.src.split("/")[:-1] | join("/")  + "/" -%}
+{%   else -%}
+{%   set dest = "" -%}
+{%   endif -%}
+{% else -%}
+{% set dest = item.src %}
+{% endif %}
+cp -a{{ cp_r }} ${PATH_HASS}/config/{{ item.src }} ${PATH_REPO}/config/{{ dest }}
 {% endfor %}
 
+
 if test -n "$(git status --porcelain)" ; then
-    {% for item in hass_config_repo_files -%}
-    git add config/{{ item }} > /dev/null
+    {% for item in hass_config_repo_cp -%}
+    git add config/{{ item.src }} > /dev/null
     {% endfor %}
 
     git commit -m "config updated" > /dev/null

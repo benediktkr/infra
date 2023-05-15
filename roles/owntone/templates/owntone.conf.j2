@@ -224,12 +224,13 @@ audio {
     nickname = "Computer"
 
     # Type of the output (alsa, pulseaudio, dummy or disabled)
-    type = "disabled"
+    #type = "disabled"
+    type = "pulseaudio"
 
     # For pulseaudio output, an optional server hostname or IP can be
     # specified (e.g. "localhost"). If not set, connection is made via local
     # socket.
-    #server = ""
+    server = "localhost"
 
     # Audio PCM device name for local audio output - ALSA only
     #card = "default"
@@ -379,7 +380,7 @@ spotify {
     # Your Spotify playlists will by default be put in a "Spotify" playlist
     # folder. If you would rather have them together with your other
     # playlists you can set this option to true.
-    base_playlist_disable = true
+    base_playlist_disable = false
 
     # Spotify playlists usually have many artist, and if you dont want
     # every artist to be listed when artist browsing in Remote, you can set

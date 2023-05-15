@@ -8,6 +8,8 @@ airconnect_group:
   name: airconnect
   gid: 1337
 
+# for flac: 'flc'
+airconnect_codec: mp3:320
 
 airconnect_max_volume: "100"
 airconnect_upnp: []

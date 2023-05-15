@@ -1,0 +1,123 @@
+input_boolean:
+  tv_assumed_state:
+    name: tv_assumed_power_state
+    icon: mdi:television
+
+
+input_select:
+  media_center_inputs:
+    name: media_center_inputs
+    options:
+      - sonos
+      - apple_tv
+      - tv
+
+script:
+  tv_power_toggle:
+    mode: single
+    sequence:
+      - service: remote.send_command
+        target:
+          entity_id: remote.broadlink
+        data:
+          command: power_toggle
+          device: tv
+
+  tv_on:
+    mode: single
+    sequence:
+      - if:
+          - condition: state
+            entity_id: input_boolean.tv_assumed_power_state
+            state: "off"
+        then:
+          - service: script.tv_power_toggle
+          - service: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.tv_assumed_power_state
+
+  tv_off:
+    mode: single
+    sequence:
+      - if:
+          - condition: state
+            entity_id: input_boolean.tv_assumed_power_state
+            state: "on"
+        then:
+          - service: script.tv_power_toggle
+          - service: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.tv_assumed_power_state
+
+  apple_tv_on:
+    mode: single
+    sequence:
+      # - service: homeassistant.reload_config_entry
+      #   target:
+      #     entity_id:
+      #       #- media_player.apple_tv
+      #       - remote.apple_tv
+      - service: remote.send_command
+        data:
+          command:
+            - wakeup
+            - select
+          delay_secs: 1
+        target:
+          entity_id: media_player.apple_tv
+
+  apple_tv_off:
+    mode: single
+    sequence:
+      - service: remote.send_command
+        data:
+          command:
+            - home_hold
+            - select
+          delay_secs: 1
+        target:
+          entity_id: media_player.apple_tv
+      # - service: homeassistant.reload_config_entry
+      #   target:
+      #     entity_id:
+      #       #- media_player.apple_tv
+      #       - remote.apple_tv
+
+
+  media_center_select_input:
+    mode: single
+    sequence:
+      - service: input_select.select_option
+        target:
+          entity_id: input_boolean.media_center_inputs
+        data:
+          option: "{{ media_center_input }}"
+      - service: script.amp_select_input
+      # another one for tv?
+
+
+  media_center_on:
+    mode: single
+    sequence:
+      - service: script.amp_on
+      - service: script.tv_on
+      - service: script.apple_tv_on
+
+  media_center_off:
+    mode: single
+    sequence:
+      - service: script.amp_off
+      - service: script.tv_off
+      - service: script.apple_tv_off
+      - service: media_player.turn_off
+        target:
+          entity_id: media_player.owntone_output_living_room
+
+media_player:
+  - platform: universal
+    name: Media Center
+    universal_id: media_center
+    children:
+     - media_player.apple_tv
+      - media_player.living_room_audio
+      - media_player.owntone_server
