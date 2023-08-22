@@ -55,11 +55,11 @@ now the `.git/config` file should have the following `remote` and `branch` confi
        git pull origin main
        ```
 
-    2.  rebase your `b` branch, replacing the original commits with the squash commit in `main`:
-        ```shell
-        git checkout b
-        git rebase main
-        ```
+    2. rebase your `b` branch, replacing the original commits with the squash commit in `main`:
+       ```shell
+       git checkout b
+       git rebase main
+       ```
 
     3. then you need to force push that to the remote to keep it in sync
        ```shell
