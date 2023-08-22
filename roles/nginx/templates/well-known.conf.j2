@@ -1,16 +1,26 @@
 
 location = /.well-known/matrix/server {
     default_type application/json;
-    add_header Access-Control-Allow-Origin *;
+    # same as matrix.org returns
+    # add_header "x-content-type-options" "nosniff" always;
+    # add_header "x-frame-options" "SAMEORIGIN" always;
+    # add_header "x-xss-protection" "1; mode=block" always;
     return 200 '{"m.server": "{{ matrix_url }}:443"}';
 }
-
 location = /.well-known/matrix/client {
     default_type application/json;
-    add_header Access-Control-Allow-Origin *;
+    # same as matrix.org returns
+    # add_header "x-content-type-options" "nosniff" always;
+    # add_header "x-frame-options" "SAMEORIGIN" always;
+    # add_header "x-xss-protection" "1; mode=block" always;
+    add_header "Access-Control-Allow-Origin" "*" always;
     return 200 '{"m.homeserver":{"base_url":"https://{{ matrix_url }}"}}';
 }
-
+{% if 'matrix' not in group_names and 'matrixbrides' not in group_names %}
+location = /_matrix/client/versions {
+    return 301 https://{{ matrix_url }}/_matrix/client/versions;
+}
+{% endif %}
 location = /.well-known/carddav {
     return 301 https://{{ nextcloud_url }}/remote.php/dav;
 }

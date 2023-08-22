@@ -102,6 +102,7 @@
     - well-known
     - nginx-well-known
     - gitea-nginx
+    - www-nginx
   notify: reload nginx
 
 - name: template default index.html

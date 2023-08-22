@@ -63,6 +63,7 @@
     - name: jenkins_home/.docker
       mode: '0755'
 
+
 # - name: config files for poetry
 #   template:
 #     dest: "{{ jenkins_root }}/etc/{{ item.name }}"
@@ -137,6 +138,16 @@
   when: jenkins_docker
 
 
+- name: workaround for a job while we stilll are running in docker, JENKINS_HOME on the host needs to match what hte docker container thinks it is
+  mount:
+    path: /var/jenkins_home
+    src: "{{ jenkins_root }}/jenkins_home"
+    opts: bind
+    state: mounted
+    fstype: none
+  tags:
+    - jenkins-bind-mount
+
 - name: start docker container
   docker_container:
     name: "jenkins"
@@ -151,7 +162,7 @@
     state: started
     ports:
       - "{{ jenkins_bind_addr | default('127.0.0.1') }}:{{ jenkins_port }}:8080/tcp"
-      - "50000:50000/tcp"
+      - "{{ jenkins_bind_addr | default('127.0.0.1') }}:50000:50000/tcp"
     mounts:
       - type: bind
         source: "{{ jenkins_root }}/jenkins_home"

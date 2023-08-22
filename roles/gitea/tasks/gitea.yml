@@ -35,6 +35,7 @@
       # from role/gitea/files/tmpl/
     - name: data/gitea/templates
     - name: data/gitea/templates/custom
+    - name: data/gitea/templates/base
     #- name: data/gitea/templates/user/dashboard
 
     - name: data/gitea/conf
@@ -92,6 +93,7 @@
     - home.tmpl
     - custom/extra_links.tmpl
     - custom/extra_tabs.tmpl
+    - base/head_navbar.tmpl
     #- user/dashboard/feeds.tmpl
     #- user/dashboard/repolist.tmpl
   tags:

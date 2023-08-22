@@ -1,0 +1,29 @@
+{% macro is_button_pressed(button_name, button_key, button_value="KeyPressed") %}
+{{
+  is_state("sensor.button_pressed", button_name)
+  and is_state_attr("sensor.button_pressed", "key", button_key)
+  and is_state_attr("sensor.button_pressed", "value", button_value)
+}}
+{% endmacro %}
+
+{% set device = {
+  "button_hallway_wallmote": {
+    "device_id": "e6b5c5c6502ba5310d69f644f2e70a62",
+    "node_id": 31
+  },
+  "button_bathroom_yellow": {
+    "device_id": "56efe9abc87c0518758229a3137086f1",
+    "node_id": 58
+  }
+} %}
+
+{% macro is_button_event(device_name, property_key, action_name="KeyPressed") %}
+  {{
+  trigger.platform == "event"
+  and trigger.event.event_type == "zwave_js_value_notification"
+  and trigger.event.data.node_id == device[device_name]['node_id']
+  and trigger.event.data.device_id == device[device_name]['device_id']
+  and trigger.event.data.property_key_name == property_key
+  and trigger.event.data.value == action_name
+  }}
+{% endmacro %}

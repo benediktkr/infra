@@ -1,0 +1,6 @@
+---
+
+- name: restart radicale
+  service:
+    name: radicale
+    state: restarted

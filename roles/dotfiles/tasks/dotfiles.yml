@@ -85,3 +85,5 @@
   become_user: "{{ myusername }}"
   with_items:
     - "{{ dotfiles_rm }}"
+  when:
+    - not projects_dotfiles.stat.exists

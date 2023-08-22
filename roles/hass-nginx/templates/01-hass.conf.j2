@@ -1,0 +1,145 @@
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    #default $http_connection;
+    ''      close;
+}
+
+server {
+    listen 443 ssl http2;
+    {% if inventory_hostname in wg_clients -%}
+    listen {{ wg_clients[inventory_hostname].ip }}:443 ssl http2;
+    {% endif -%}
+
+    # include listen-proxy-protocol.conf;
+    include /etc/nginx/authelia_internal.conf;
+    include /etc/nginx/sudo-known.conf;
+
+    server_name {{ hass_url }};
+
+    location /glados/ {
+        # TEMP: while glados hass integration is WIP
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_pass {{ hass_glados_tts_url }}/;
+
+    }
+
+    location / {
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+        proxy_pass http://127.0.0.1:8123;
+    }
+
+    rewrite "^/(aui/.*)$" "/appdaemon/$1" redirect;
+    location /appdaemon {
+        return 302 /appdaemon/;
+    }
+    location /appdaemon/ {
+        include /etc/nginx/require_auth.conf;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+        proxy_redirect / /appdaemon/;
+
+        sub_filter_once off;
+        sub_filter_types "*";
+        #sub_filter ".js" ".js?id=$request_id";
+        sub_filter "/aui/" "/appdaemon/aui/";
+        sub_filter "/stream" "/appdaemon/stream";
+
+        proxy_pass http://{{ bridgewithdns.hass_ad }}:8000/;
+
+    }
+
+    location /entity_pictures/ {
+        alias /var/www/hass/entity_pictures/;
+        autoindex on;
+    }
+
+    {% if blink1_server_port is defined -%}
+    location /blink1/ {
+        {% for cidr in my_local_cidrs -%}
+        allow {{ cidr }};
+        {% endfor -%}
+        allow {{ my_public_ips[ansible_control_host] }}/32;
+        allow 127.0.0.1;
+        deny all;
+
+        {% if blink1_tiny_html|default(false) -%}
+        rewrite '^/blink1(/.*)$' $1 break;
+        sub_filter_once off;
+        sub_filter '"/' '"./';
+        {% else -%}
+        add_header Content-Type 'application/json' always;
+        {% endif -%}
+        proxy_http_version 1.1;
+        proxy_pass http://localhost:{{ blink1_server_port }};
+
+    }
+    {% endif %}
+    location = {{ nginx_podgrab_path }} {
+        return 302 https://{{ hass_url }}{{ nginx_podgrab_path }};
+    }
+
+    location /_media {
+       include /etc/nginx/require_auth.conf;
+       alias {{ systemuserlist.hass.home }}/home-assistant/media;
+
+       autoindex on;
+       autoindex_exact_size off;
+    }
+
+    # location {{ nginx_podgrab_path }} {
+    #     #include /etc/nginx/require_auth.conf;
+
+    #     # json for a tag:
+    #     # https://hass.sudo.is/podcasts/tags/${tag}
+
+    #     # add rss type or let podgrab handle it?
+    #     # slice out the url prefix
+    #     rewrite '^{{ nginx_podgrab_path }}(/.*)$' $1 break;
+
+    #     # rewrite html responses to add the url prefix
+    #     sub_filter_once off;
+    #     sub_filter 'href="/' 'href="{{ nginx_podgrab_path }}/';
+    #     sub_filter 'src="/' 'src="{{ nginx_podgrab_path }}/';
+    #     sub_filter '= "/' '= "{{ nginx_podgrab_path }}/';
+    #     sub_filter ':"/' ':"{{ nginx_podgrab_path }}/';
+    #     sub_filter ':href="\'/' ':href="\'{{ nginx_podgrab_path }}/';
+    #     sub_filter 'return "/' 'return "{{ nginx_podgrab_path }}/';
+    #     sub_filter '("/' '("{{ nginx_podgrab_path }}/';
+    #     sub_filter '`/' '`{{ nginx_podgrab_path }}/';
+    #     sub_filter '/ws' '{{ nginx_podgrab_path }}/ws';
+
+    #     # nuke the service worker cache
+    #     sub_filter '.js' '.js?id=$request_id';
+    #     sub_filter '.css' '.css?id=$request_id';
+
+    #     # headers for websockets
+    #     #proxy_set_header Upgrade $http_upgrade;
+    #     #proxy_set_header Connection $connection_upgrade;
+    #     proxy_set_header X-Real-IP $remote_addr;
+    #     #proxy_set_header X-Forwarded-Proto $scheme;
+    #     #proxy_set_header X-Forwarded-Host $http_host;
+    #     #proxy_set_header Host $http_host;
+
+    #     proxy_pass http://localhost:{{ podgrab_port }}{{ nginx_podgrab_path }}/;
+    # }
+
+    access_log /var/log/nginx/access_{{ hass_url }}.log main;
+    error_log /var/log/nginx/error_{{ hass_url }}.log warn;
+
+    ssl_session_timeout 5m;
+    ssl_certificate /usr/local/etc/certs/{{ domain }}/fullchain.pem;
+    ssl_certificate_key /usr/local/etc/certs/{{ domain }}/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers off;
+
+    fastcgi_hide_header X-Powered-By;
+}

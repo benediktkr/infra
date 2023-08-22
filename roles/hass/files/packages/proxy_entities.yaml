@@ -1,0 +1,14 @@
+---
+
+fan:
+  - platform: group
+    name: livingroom
+    entities:
+      - fan.standing_fan_1
+
+
+homeassistant:
+  customize:
+    fan.livingroom:
+      friendly_name: "Livingroom fan"
+      package: proxy_entities

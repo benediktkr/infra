@@ -1,0 +1,13 @@
+{%- set human_users = default_users + extra_users|default([]) %}
+{% for item in human_users -%}
+{% if 'sudo' in userlist[item].groups -%}
+user:{{ userlist[item].username }}@pam:1:0::::::
+{% endif %}
+{% endfor %}
+user:root@pam:1:0::::::
+
+{% for item in human_users -%}
+{% if 'sudo' in userlist[item].groups -%}
+acl:1:/:{{ userlist[item].username }}@pam:PVEAdmin:
+{% endif %}
+{% endfor %}

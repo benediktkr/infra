@@ -1,10 +1,13 @@
+# ansible_managed
+
+
 general {
     # Username
     # Make sure the user has read access to the library directories you set
     # below, and full access to the databases, log and local audio
     uid = "owntone"
 
-    db_path = "/config/{{ owntone_db }}"
+    db_path = "{{ deadspace_root }}/owntone/data/db/songs3.db"
 
     # Database backup location
     # Uncomment and specify a full path to enable abilty to use REST endpoint
@@ -47,10 +50,11 @@ general {
     # Set this if you want the server to bind to a specific IP address. Can
     # be ipv6 or ipv4. Default (commented out or "::") is to listen on all
     # IP addresses.
-    #bind_address = "{{ owntone_interface }}"
+    #bind_address = {{ owntone_nginx_ip }}
+    #bind_address = "127.0.0.1"
 
     # Location of cache database
-    cache_path = "/config/dbase_and_logs/cache.db"
+    cache_path = "{{ deadspace_root }}/owntone/data/db/cache.db"
 
     # DAAP requests that take longer than this threshold (in msec) get their
     # replies cached for next time. Set to 0 to disable caching.
@@ -63,7 +67,7 @@ general {
     # Most modern systems have a high-resolution clock, but if you are on an
     # unusual platform and experience audio drop-outs, you can try changing
     # this option
-    #high_resolution_clock = yes
+    high_resolution_clock = yes
 }
 
 # Library configuration
@@ -79,7 +83,7 @@ library {
     #password = "{{ owntone_library_pass }}"
 
     # Directories to index
-    directories = { "/audio" }
+    directories = { "{{ deadspace_root }}" }
 
     # Follow symlinks. Default: true.
     #follow_symlinks = true
@@ -104,7 +108,7 @@ library {
     # names. If there is a match all items in the directory are marked as
     # compilations.
     # (changing this setting only takes effect after rescan, see the README)
-    compilations = { "/compilations" }
+    compilations = { "/local/compilations" }
 
     # Compilations usually have many artists, and sometimes no album artist.
     # If you dont want every artist to be listed in artist views, you can
@@ -166,7 +170,8 @@ library {
     # may lead to OwnTones database coming out of sync with the
     # library. If that happens read the instructions in the README on how
     # to trigger a rescan.
-    #filescan_disable = false
+    {% set filescan_disabled = not owntone_filescan_enabled|default(true)|bool -%}
+    filescan_disable = {{ filescan_disabled | string | lower }}
 
     # Should metadata from m3u playlists, e.g. artist and title in EXTINF,
     # override the metadata we get from radio streams?
@@ -215,7 +220,7 @@ library {
     # A directory in one of the library directories that will be used as the default
     # playlist directory. OwnTone creates new playlists in this directory if only
     # a playlist name is provided (requires "allow_modify_stored_playlists" set to true).
-    default_playlist_directory = "/audio/playlists"
+    default_playlist_directory = "/deadspace/playlists"
 
     # By default OwnTone will - like iTunes - clear the playqueue if
     # playback stops. Setting clear_queue_on_stop_disable to true will keep
@@ -230,13 +235,13 @@ audio {
     nickname = "Computer"
 
     # Type of the output (alsa, pulseaudio, dummy or disabled)
-    #type = "disabled"
-    type = "pulseaudio"
+    type = "disabled"
+    #type = "pulseaudio"
 
     # For pulseaudio output, an optional server hostname or IP can be
     # specified (e.g. "localhost"). If not set, connection is made via local
     # socket.
-    server = "localhost"
+    #server = "localhost"
 
     # Audio PCM device name for local audio output - ALSA only
     #card = "default"
@@ -288,11 +293,11 @@ audio {
 
 # Pipe output
 # Allows OwnTone to output audio data to a named pipe
-# fifo {
-#     nickname = "fifo"
-#     # placed outside of library
-#     path = "/tmp/output.fifo"
-# }
+fifo {
+    nickname = "fifo"
+    # placed outside of library
+    path = "/fifo/output.fifo"
+}
 
 # AirPlay settings common to all devices
 #airplay_shared {

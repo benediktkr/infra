@@ -51,4 +51,5 @@
   tags:
     - nginx
     - matrix-nginx
+    - matrix-nginx-conf
   notify: reload nginx

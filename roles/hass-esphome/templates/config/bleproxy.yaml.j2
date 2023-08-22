@@ -1,0 +1,88 @@
+
+# based on:
+# https://github.com/esphome/bluetooth-proxies/blob/main/esp32-generic.yaml
+
+esphome:
+  # name is hostname
+  name: esphome-bleproxy
+  friendly_name: BLE Proxy
+  name_add_mac_suffix: false
+  #project:
+  #  name: esphome.bluetooth-proxy
+  #  version: "1.0"
+
+esp32:
+  # board: esp32dev
+  board: esp-wrover-kit
+  framework:
+    # arduino framework uses significantly more memory and performs
+    # poorly with the Bluetooth proxy enabled.
+    type: esp-idf
+
+logger:
+
+api:
+  password: "{{ hass_esphome_api_password }}"
+
+ota:
+  password: "{{ hass_esphome_ota_password }}"
+
+wifi:
+  ssid: "{{ hass_esphome_wifi_ssid }}"
+  password: "{{ hass_esphome_wifi_password }}"
+  domain: .{{ inventory_hostname.split('.')[1:] | join('.') }}
+
+  ap:
+    # use device_name
+    # ssid:
+    password: "{{ hass_esphome_fallback_wifi_password }}"
+
+mdns:
+  disabled: true
+
+esp32_ble_tracker:
+  scan_parameters:
+    active: true
+#    # defaults
+#    # interval: 320ms
+#    # window: 30ms
+#    # max chances
+#    #interval: 1100ms
+#    #window: 1100ms
+#    # try next
+#    interval: 1100ms
+#    window: 550ms
+
+bluetooth_proxy:
+  active: true
+  cache_services: true  # defaults to true
+
+text_sensor:
+  # for reading with appdaemon
+  # its excluded from the recorder in home assistant
+  - platform: ble_scanner
+    name: "json ble scanner"
+    #id: esphome_bleproxy_ble_scanner
+
+binary_sensor:
+  - platform: status
+    name: Status
+    entity_category: "diagnostic"
+    id: esphome_bleproxy_status
+
+switch:
+  - platform: restart
+    name: "Reboot"
+    icon: mdi:power-cycle
+    id: esphome_bleproxy_reboot
+
+# ------------------------------------------------
+
+
+# from esphome/bluetooth-proxies/esp32-generic.yaml, see https://esphome.io/components/improv_serial.html
+# improv_serial:
+
+
+# also from esphome/bluetooth-proxies
+#dashboard_import:
+#  package_import_url: github://esphome/bluetooth-proxies/esp32-generic.yaml@main

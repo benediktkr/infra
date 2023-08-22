@@ -6,6 +6,7 @@
     mode: "{{ item.mode | default('0750') }}"
     owner: "{{ audiobookshelf_user.uid }}"
     group: "{{ audiobookshelf_group.gid }}"
+    state: directory
   tags:
     - audiobookshelf-dirs
     - abs-dirs
@@ -13,11 +14,25 @@
     label: "{{ item.name }}"
   with_items:
     - name: ''
-    - name: audiobooks
     - name: config
       mode: "0755"
     - name: metadata
-    - name: podcasts
+    - name: backups
+
+- name: ensure podcast and audiobooks dirs exists in {{ deadspace_root }}
+  file:
+    path: "{{ deadspace_root }}/{{ item }}"
+    mode:  0750
+    owner: "{{ audiobookshelf_user.uid }}"
+    group: "{{ audiobookshelf_group.gid }}"
+  tags:
+    - audiobookshelf-dirs
+    - abs-dirs
+  loop_control:
+    label: "{{ deadspace_root }}/{{ item }}"
+  with_items:
+    - audiobooks
+    - podcasts
 
 - name: install certs
   copy:
@@ -54,7 +69,7 @@
     image: ghcr.io/advplyr/audiobookshelf:latest
     detach: true
     pull: true
-    restart_policy: "no"
+    restart_policy: "unless-stopped"
     state: started
     container_default_behavior: compatibility
     networks_cli_compatible: false
@@ -68,10 +83,10 @@
     user: "{{ audiobookshelf_user.uid }}:{{ audiobookshelf_group.gid }}"
     mounts:
       - type: bind
-        source: "{{ audiobookshelf_path }}/audiobooks"
+        source: "{{ deadspace_root }}/audiobooks"
         target: /audiobooks
       - type: bind
-        source: "{{ audiobookshelf_path }}/podcasts"
+        source: "{{ deadspace_root }}/podcasts"
         target: /podcasts
       - type: bind
         source: "{{ audiobookshelf_path }}/config"
@@ -79,6 +94,9 @@
       - type: bind
         source: "{{ audiobookshelf_path }}/metadata"
         target: /metadata
+      - type: bind
+        source: "{{ audiobookshelf_path }}/backups"
+        target: /backups
   tags:
     - audiobookshelf-container
     - abs-container

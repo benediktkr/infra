@@ -39,8 +39,9 @@ server {
         proxy_set_header   X-Forwarded-Proto $scheme;
 
     }
-    # dont require auth for build icons
-    location /buildStatus/icon {
+    # dont require auth for build icons and "health check"
+    {% for item in ["/buildStatus/icon", "/static/health/"] %}
+    location {{ item }} {
         proxy_pass         http://127.0.0.1:{{ jenkins_port }};
 
         proxy_redirect     off;
@@ -51,6 +52,7 @@ server {
         proxy_set_header   X-Forwarded-Proto $scheme;
 
     }
+    {% endfor %}
 
     access_log /var/log/nginx/access_{{ jenkins_url }}.log main;
     error_log /var/log/nginx/error_{{ jenkins_url }}.log warn;

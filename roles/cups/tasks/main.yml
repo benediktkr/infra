@@ -1,0 +1,3 @@
+---
+ - import_tasks: cups.yml
+   tags: cups

@@ -6,9 +6,4 @@
     state: reloaded
 
 - name: restart owntone container
-  docker_container:
-    name: owntone
-    state: started
-    restart: true
-  when:
-    - owntone_restart_handler|default(true)
+  include_tasks: restart_owntone.yml

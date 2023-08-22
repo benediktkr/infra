@@ -1,0 +1,68 @@
+---
+
+# example of simple tts integration:
+# https://github.com/nagyrobi/home-assistant-custom-components-marytts/blob/main/custom_components/marytts/tts.py
+
+# template:
+#   - binary_sensor:
+#       - name: glados_tts_is_in_hass
+#         state: false
+
+# script:
+#   glados_dummy:
+#     alias: "glados_dummy"
+#     description: "test"
+#     fields:
+#       entities:
+#         name: output
+#         description: "where to play"
+#         required: true
+#         example: "media_player.living_room"
+#         selector:
+#           target:
+#             entity:
+#               domain: media_player
+#       message:
+#         name: message
+#         description: what to speak
+#         required: true
+#         example: "hello"
+#         selector:
+#           text:
+#       # use_cache:
+#       #   description: use the cache
+#       #   selector:
+#       #     boolean:
+#       #       value: true
+#     mode: single
+#     sequence: []
+#
+script:
+  glados_tts:
+    alias: glados_tts_disabled
+    sequence:
+      - service: notify.notify
+        data:
+          message: >-
+            {{ target }}: {{ text }}
+
+  glados_tts_real:
+    alias: glados_tts
+    sequence:
+      - service: media_player.play_media
+        data:
+          media_content_id: >-
+            https://www.sudo.is/api/glados/say.wav?text={{ text | urlencode }}
+          media_content_type: music
+          enqueue: replace
+        target:
+          entity_id: media_player.{{ target }}
+
+    fields:
+      text:
+        description: Text to be read by GLaDOS
+        example: Hello
+      target:
+        description: Media player entity_id to play on (without the media_player domain)
+        example: living_room
+    mode: single

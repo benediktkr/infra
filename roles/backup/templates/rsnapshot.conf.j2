@@ -138,7 +138,7 @@ link_dest	0
 {% for path in rsnapshot_default %}
 {%   if inventory_hostname == hostname %}
 backup	{{ path }}		{{ hostname }}/
-{%   elif hostname in rsnapshot_exclude_hosts  %}
+{%   elif hostname in rsnapshot_exclude_hosts or hostvars[hostname]['rsnapshot_disabled']|default(false)  %}
 # not backing up: {{ hostname }}:{{ path }}
 {%   else %}
 backup	{{ rsnapshot_user }}@{{ hostname }}:{{ path }}	{{ hostname }}/
@@ -162,6 +162,9 @@ backup	{{ deadspace_user }}@{{ origin }}:{{ item.path }}/	{{ origin }}/
 # my example:
 # backup	user@host:/home/	host/	exclude=foo/
 
+{% for item in rsnapshot_extra_hosts|default([]) -%}
+backup	{{ item.user|default(rsnapshot_user) }}@{{ item.hostname }}:{{ item.path }}/	{{ item.hostname }}/
+{% endfor %}
 
 # examples from default file:
 

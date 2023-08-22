@@ -1,0 +1,4 @@
+---
+ - import_tasks: common-ufw.yml
+   tags:
+     - common-ufw

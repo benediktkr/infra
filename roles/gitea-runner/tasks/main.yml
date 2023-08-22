@@ -1,0 +1,3 @@
+---
+ - import_tasks: gitea-runner.yml
+   tags: gitea-runner

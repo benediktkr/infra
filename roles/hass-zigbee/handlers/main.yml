@@ -1,0 +1,13 @@
+---
+
+- name: udevadm reload rules
+  command: udevadm control --reload-rules
+
+- name: restart hass-zigbee container
+  docker_container:
+    name: hass-zigbee
+    state: started
+    restart: true
+  when:
+    #- not hass_zigbee_container.changed
+    - hass_container_state|default("stopped") == "started"

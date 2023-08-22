@@ -1,0 +1,59 @@
+---
+
+- name: create dir structure
+  file:
+    path: "{{ systemuserlist.hass.home }}/{{ item.name }}"
+    state: directory
+    mode: "{{ item.mode | default('0755') }}"
+    owner: hass
+    group: hass
+  tags:
+    - hass-dirs
+    - hass-mqtt-dirs
+  loop_control:
+    label: "{{ item.name }}"
+  with_items:
+    - name: mqtt
+    - name: mqtt/data
+    - name: mqtt/log
+
+- name: template mqtt config
+  template:
+    src: mqtt.conf.j2
+    dest: "{{ systemuserlist.hass.home }}/mqtt/mqtt.conf"
+    owner: hass
+    group: hass
+    mode: 0644
+  tags:
+    - hass-mqtt-config
+
+- name: hass-mqtt container
+  docker_container:
+    name: hass-mqtt
+    image: eclipse-mosquitto:2.0
+    detach: true
+    auto_remove: false
+    pull: true
+    restart_policy: "no"
+    state: "{{ hass_mqtt_container_state | default('stopped') }}"
+    container_default_behavior: compatibility
+    user: "{{ systemuserlist.hass.uid }}:{{ systemuserlist.hass.gid }}"
+    networks_cli_compatible: false
+    network_mode: bridgewithdns
+    ports:
+      - "1883:1883"
+    networks:
+      - name: bridgewithdns
+        ipv4_address: "{{ bridgewithdns.hass_mqtt }}"
+    mounts:
+      - type: bind
+        source: "{{ systemuserlist.hass.home }}/mqtt"
+        target: "/mqtt"
+    # default file bundled with container
+    #command: "mosquitto -c /mosquitto-auth.conf"
+    command: "mosquitto -c /mqtt/mqtt.conf"
+  tags:
+    - hass-zigbee-container
+    - hass-mqtt-container
+    - hass-container
+    - docker-containers

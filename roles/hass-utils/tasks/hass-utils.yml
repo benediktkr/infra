@@ -1,0 +1,33 @@
+---
+
+- name: create dir structure
+  file:
+    path: "{{ systemuserlist.hass.home }}/{{ item.name }}"
+    state: directory
+    mode: "{{ item.mode | default('0755') }}"
+    owner: hass
+    group: hass
+  tags:
+    - hass-dirs
+    - hass-utils-dirs
+  loop_control:
+    label: "{{ item.name }}"
+  with_items:
+    - name: utils
+    - name: utils/bin
+    - name: utils/etc
+    - name: utils/log
+
+
+- name: template configs
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ systemuserlist.hass.home }}/utils/etc/{{ item }}"
+    owner: "{{ systemuserlist.hass.uid }}"
+    group: "{{ systemuserlist.hass.gid }}"
+    mode: 0644
+  with_items:
+    - valetudo.json
+  tags:
+    - hass-utils
+    - hass-utils-config

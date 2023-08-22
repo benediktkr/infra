@@ -1,0 +1,65 @@
+---
+
+- name: install ufw
+  apt:
+    name:
+      - ufw
+    state: present
+  tags:
+    - packages
+
+# ufw supports connection rate limiting, which is useful for protecting
+# against brute-force login attacks. ufw will deny connections if an IP
+# address has attempted to initiate 6 or more connections in the last
+# 30 seconds. See  http://www.debian-administration.org/articles/187
+# for details. Typical usage is:
+# - community.general.ufw:
+#     rule: limit
+#     port: ssh
+#     proto: tcp
+
+- name: allow loopback
+  ufw:
+    rule: allow
+    interface: lo
+  tags:
+    - ufw
+
+- name: allow ssh
+  ufw:
+    rule: allow
+    port: ssh
+    proto: tcp
+
+- name: allow wireguard incoming connections
+  ufw:
+    rule: allow
+    port: "{{ wireguard_port }}"
+    proto: udp
+  when:
+    - inventory_hostname in wg_clients
+    - ansible_wg0 is defiend and ansible_wg0.ipv4.address is defined
+
+- name: allow wireguard
+  ufw:
+    rule: allow
+    interface: wg0
+  when:
+    - inventory_hostname in wg_clients
+    - ansible_wg0 is defiend and ansible_wg0.ipv4.address is defined
+
+- name: allow open ports
+  ufw:
+    rule: allow
+    port: "{{ item.port }}"
+    proto: "{{ item.proto }}"
+  with_items: "{{ ufw_open_ports }}"
+  when: "{{ ufw_open_ports | default([]) | length > 0 }}"
+
+- name: enable ufw
+  ufw:
+    # enabled reloads firewall and enables firewall on boot.
+    state: enabled
+    # change to 'deny'
+    #rule: deny
+    rule: allow

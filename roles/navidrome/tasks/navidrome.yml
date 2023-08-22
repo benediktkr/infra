@@ -1,0 +1,75 @@
+---
+
+- name: create dir structure
+  file:
+    state: directory
+    path: "{{ navidrome_path }}/{{ item.name }}"
+    mode: "{{ item.mode | default('0770') }}"
+    owner: "{{ systemuserlist.jellyfin.uid }}"
+    group: "{{ grouplist.media.gid }}"
+  tags:
+    - owntone-dirs
+  loop_control:
+    label: "{{ navidrome_path }}/{{ item.name }}"
+  with_items:
+    - name: ''
+    - name: data
+
+- name: template navidrome config file
+  template:
+    src: navidrome.toml.j2
+    dest: "{{ navidrome_path }}/data/navidrome.toml"
+    mode: "0644"
+    owner: "{{ systemuserlist.jellyfin.uid }}"
+    group: "{{ grouplist.media.gid }}"
+  tags:
+    - navidrome-config
+
+# nginx config currently lives in roles/owntone/templates/01-owntone.conf.j2
+
+- name: "navidrome container"
+  docker_container:
+    name: navidrome
+    image: deluan/navidrome:latest
+    detach: true
+    pull: true
+    auto_remove: false
+    restart_policy: "unless-stopped"
+    state: "{{ navidrome_container_state | default('started') }}"
+    container_default_behavior: compatibility
+    user: "{{ systemuserlist.jellyfin.uid }}:{{ grouplist.media.gid }}"
+    networks_cli_compatible: false
+    network_mode: bridgewithdns
+    networks:
+      - name: bridgewithdns
+        ipv4_address: "{{ bridgewithdns.navidrome }}"
+    env:
+      TZ: "Europe/Berlin"
+      ND_MUSICFOLDER: "/audio"
+      ND_LOGLEVEL: "info"
+      ND_BASEURL: "/navidrome"
+      ND_CONFIGFILE: "/data/navidrome.toml"
+      ND_REVERSEPROXYUSERHEADER: "Remote-User"
+      ND_REVERSEPROXYWHITELIST: >-
+        {%- set cidrs = [
+        "127.0.0.0/8",
+        "172.17.0.0/16",
+        bridgewithdns_cidr,
+        s21_cidr,
+        wireguard_cidr
+        ] -%}
+        {{ cidrs | join(",") }}
+    mounts:
+      - type: bind
+        source: "{{ navidrome_path }}/data"
+        target: /data
+      - type: bind
+        source: "{{ deadspace_root }}/podcasts"
+        target: /audio/podcasts
+      - type: bind
+        source: "{{ deadspace_root }}/music"
+        target: /audio/music
+  register: navidrome_container
+  tags:
+    - navidrome-container
+    - docker-containers

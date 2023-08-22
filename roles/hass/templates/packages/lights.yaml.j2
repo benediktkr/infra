@@ -1,0 +1,55 @@
+---
+
+automation:
+  {% for item in hass_light_switches -%}
+  {% set domain = item.entity_id.split('.')[0] -%}
+  {% set name = item.entity_id.split('.')[1] -%}
+
+  {% if 'auto_off_after' in item -%}
+  - alias: auto_light_off_{{ name }}
+    id: auto_light_off_{{ name }}
+    description: automatically turn off {{ item.entity_id }}
+    trigger:
+      {% if "motion_sensor" in item -%}
+      - platform: state
+        entity_id:
+          - {{ item.motion_sensor | trim }}
+        from: "on"
+        to: "off"
+        for:
+          minutes: {{ item.auto_off_after | trim }}
+      {% endif -%}
+      - platform: state
+        entity_id:
+          - {{ item.entity_id | trim}}
+        to: "on"
+        for:
+          minutes: {{ item.auto_off_after | trim }}
+    condition:
+      {% for cond in item.extra_conditions | default([]) -%}
+      {% set condition = [cond] | to_nice_yaml(indent=2) -%}
+      {{ condition | indent(6) | trim }}
+      {% endfor -%}
+      {% if 'motion_sensor' in item -%}
+      - condition: state
+        entity_id: {{ item.motion_sensor }}
+        state: "off"
+        for:
+          minutes: {{ item.auto_off_after|int -1  }}
+      {% endif -%}
+      - condition: state
+        entity_id: {{ item.entity_id }}
+        state: "on"
+    action:
+      - service: {{ domain }}.turn_off
+        {% if 'auto_off_transition_time' in item -%}
+        data:
+          transition: {{ item.auto_off_transition_time  }}
+        {% else -%}
+        data: {}
+        {% endif -%}
+        target:
+          entity_id: {{ item.entity_id }}
+    mode: single
+  {% endif -%}
+  {% endfor %}

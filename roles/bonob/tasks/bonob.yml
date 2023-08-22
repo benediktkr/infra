@@ -1,0 +1,38 @@
+---
+
+# nginx config currently lives in roles/owntone/templates/01-owntone.conf.j2
+
+# sudo docker run --rm \
+#  -e BNB_SONOS_SEED_HOST={{ bonob_seed_host }} simojenki/bonob register https://{{ owntone_url }}/bonob
+
+- name: bonob container
+  docker_container:
+    name: bonob
+    image: simojenki/bonob
+    detach: true
+    pull: true
+    auto_remove: false
+    restart_policy: "unless-stopped"
+    state: "{{ bonob_container_state | default('started') }}"
+    container_default_behavior: compatibility
+    user: "{{ systemuserlist.jellyfin.uid }}:{{ grouplist.media.gid }}"
+    networks_cli_compatible: false
+    network_mode: bridgewithdns
+    networks:
+      - name: bridgewithdns
+        ipv4_address: "{{ bridgewithdns.bonob }}"
+    env:
+      TZ: "Europe/Berlin"
+      BNB_PORT: "{{ bonob_port | string }}"
+      BNB_SECRET: "{{ bonob_secret }}"
+      BNB_SONOS_SEED_HOST: "{{ bonob_seed_host }}"
+      BNB_SONOS_SERVICE_ID: "{{ bonob_service_id }}"
+      BNB_SONOS_AUTO_REGISTER: "true"
+      BNB_SONOS_DEVICE_DISCOVERY: "true"
+      # BNB_URL is used by sonos devices
+      BNB_URL: "https://{{ owntone_url }}/bonob"
+      BNB_SUBSONIC_URL: "https://{{ owntone_url }}/navidrome"
+  register: bonob_container
+  tags:
+    - bonob-container
+    - docker-containers

@@ -2,6 +2,9 @@
 
 dependencies:
   - unifi
+  - nfs
+  - samba
   - sudoisbot
   - hass
+  - hass-appdaemon
   - homeaudio

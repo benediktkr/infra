@@ -1,0 +1,148 @@
+---
+
+substitutions:
+  id_prefix: "{{ item.name.replace('-', '_') }}"
+  name: "{{ item.name }}"
+
+esphome:
+  name: "{{ item.name }}"
+  name_add_mac_suffix: false
+
+esp8266:
+  board: nodemcuv2
+
+logger:
+
+api:
+  # amount of time before rebooting when there are no api connections
+  reboot_timeout: "15min"
+  password: "{{ hass_esphome_api_password }}"
+  # encryption:
+  #   key: "{{ hass_esphome_api_encryption_key }}"
+
+ota:
+  password: "{{ hass_esphome_ota_password }}"
+
+wifi:
+  ssid: "{{ hass_esphome_wifi_ssid }}"
+  password: "{{ hass_esphome_wifi_password }}"
+  domain: .{{ inventory_hostname.split('.')[1:] | join('.') }}
+  # use_address:
+
+  ap:
+    password: "{{ hass_esphome_fallback_wifi_password }}"
+
+mdns:
+  disabled: true
+
+captive_portal:
+
+web_server:
+  port: 80
+
+# esp32_ble_tracker:
+
+binary_sensor:
+    # GPIO
+  - platform: gpio
+    name: "{{ item.name }} pressure mat"
+    device_class: "occupancy"
+    publish_initial_state: true
+    # anti-flapping, if needed
+    #filters:
+    #  - delayed_on: 10ms
+    #  - delayed_off: 10ms
+    pin:
+      number: D5
+      inverted: true
+      mode:
+        input: true
+        # enable if it flaps
+        # pullup: true
+
+  # ESPHOME
+  - platform: status
+    name: "{{ item.name }} ESHome status"
+    entity_category: "diagnostic"
+    id: ${id_prefix}_status
+
+switch:
+  # ESPHome
+  - platform: restart
+    name: "{{ item.name }} Reboot"
+    icon: mdi:power-cycle
+
+light:
+  - platform: status_led
+    name: "{{ item.name }} Status LED 1"
+    icon: "mdi:alarm-light"
+    entity_category: "config"
+    pin:
+      # GPIO 16
+      number: D0
+      inverted: true
+
+  - platform: status_led
+    name: "{{ item.name }} Status LED 2"
+    icon: "mdi:alarm-light"
+    entity_category: "config"
+    pin:
+      # GPIO02
+      number: D4
+      inverted: true
+
+sensor:
+  - platform: adc
+    pin: A0
+    name: "{{ item.name }} ADC A0"
+    update_interval: 0.05s
+    accuracy_decimals: 2
+    filters:
+      - delta: 0.015
+      - throttle: 200ms
+
+  - platform: wifi_signal
+    internal: true
+    name: "{{ item.name }} WiFi signal strength"
+    id: ${id_prefix}_wifi_signal_strength
+    update_interval: 60s
+    entity_category: "diagnostic"
+    unit_of_measurement: "dBm"
+    filters:
+      - throttle: 900s
+    # Reports the WiFi signal strength in %
+
+  - platform: copy
+    source_id: ${id_prefix}_wifi_signal_strength
+    name: "{{ item.name }} WiFi signal"
+    unit_of_measurement: "%"
+    device_class: power_factor
+    entity_category: "diagnostic"
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+
+button:
+  # ESPHome
+  - platform: wake_on_lan
+    name: "Wake-on-LAN TV Livingroom"
+    target_mac_address: {{ s21_mac_samsung_tv }}
+
+text_sensor:
+  # ESPHome
+  - platform: wifi_info
+    ip_address:
+      name: "{{ item.name }} IP address"
+      entity_category: "diagnostic"
+    ssid:
+      name: "{{ item.name }} SSID"
+      entity_category: "diagnostic"
+    mac_address:
+      name: "{{ item.name }} WiFi mac address"
+      entity_category: "diagnostic"
+    dns_address:
+      name: "{{ item.name }} DNS address"
+      entity_category: "diagnostic"
+  - platform: version
+    id: ${id_prefix}_version
+    entity_category: "diagnostic"
+    name: "{{ item.name }} ESPHome version"

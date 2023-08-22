@@ -1,0 +1,44 @@
+---
+
+  # {% set node_statuses = states | selectattr("entity_id", "match", "sensor.node_status_smoke") | map(attribute="entity_id") | list %}
+  # {{ node_statuses }}:
+  #   ['sensor.node_status_smoke_hallway', 'sensor.node_status_smoke_bedroom']
+
+  # {% set node_states = node_statuses | map("states") | list %}
+  # {{ node_states }}:
+  #   ['alive', 'asleep']
+
+  # {% set ok_states = ["alive", "asleep"] %}
+  # {{ node_status_entity_ids | reject("is_state", ok_states) | list }}:
+  #   [] (empty list if all are ok)
+  #   ['sensor.node_status_$name'] (if $name is not in 'ok_states')
+
+  # get area name:
+  # {{ node_status_entity_ids | reject("is_state", ok_states) | map("area_name") | list }}:
+  #   ['Bedroom'] (for example)
+
+  #   can go into oneliner.. also 'map("device_entities")'
+  #   used in smoke alarm monitoring automation
+
+
+
+template:
+  - binary_sensor:
+      - name: dead_smoke_detectors
+        device_class: problem
+        availability: >-
+          {{ state_attr(this.entity_id, "failed_areas") is defined }}
+        state: >-
+          {% set a = state_attr(this.entity_id, "failed_areas") or [] %}
+          {{ a | length > 0 }}
+        attributes:
+          failed areas: >-
+            {% set ok_states = ["alive", "asleep"] %}
+            {{ states | selectattr("entity_id", "match", "sensor.node_status_smoke") | map(attribute="entity_id") | reject("is_state", ok_states) | map("area_name") | list }}
+
+homeassistant:
+  customize:
+    binary_sensor.dead_smoke_detectors:
+      friendly_name: "Dead smoke detectors"
+      package: smoke_detectors
+      templated: true

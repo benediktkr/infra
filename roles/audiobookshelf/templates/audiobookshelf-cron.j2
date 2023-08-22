@@ -1,6 +1,6 @@
 # m h  dom mon dow   command
 
-*/1 * * * * {{ audiobookshelf_user.username }} find {{ audiobookshelf_path }}/podcasts -mmin -20 -name "*.mp3" -exec /usr/local/bin/fix-podcast-date.py fix-dates --podcast-file {} {# --quiet #}\;
+*/1 * * * * {{ audiobookshelf_user.username }} find {{ deadspace_root }}/podcasts -mmin -20 -name "*.mp3" -exec /usr/local/bin/fix-podcast-date.py fix-dates --podcast-file {} {# --quiet #}\;
 
 
 #

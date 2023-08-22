@@ -1,0 +1,201 @@
+---
+
+substitutions:
+  id_prefix: "{{ item.name.replace('-', '_') }}"
+  name: "{{ item.name }}"
+
+esphome:
+  name: "{{ item.name }}"
+  name_add_mac_suffix: false
+  #friendly_name: tesp32
+  #project:
+  #  name: esphome.bluetooth-proxy
+  #  version: "1.0"
+
+esp32:
+  board: nodemcu-32s
+
+logger:
+
+api:
+  # amount of time before rebooting when there are no api connections
+  reboot_timeout: "15min"
+  password: "{{ hass_esphome_api_password }}"
+  # encryption:
+  #   key: "{{ hass_esphome_api_encryption_key }}"
+
+ota:
+  password: "{{ hass_esphome_ota_password }}"
+
+wifi:
+  ssid: "{{ hass_esphome_wifi_ssid }}"
+  password: "{{ hass_esphome_wifi_password }}"
+  domain: .{{ inventory_hostname.split('.')[1:] | join('.') }}
+  # use_address:
+
+  ap:
+    # ssid:
+    password: "{{ hass_esphome_fallback_wifi_password }}"
+
+mdns:
+  disabled: true
+
+captive_portal:
+
+web_server:
+  port: 80
+
+# esp32_ble_tracker:
+
+binary_sensor:
+  # GPIO
+  - platform: gpio
+    name: "{{ item.name }} Water tank (float switch)"
+    id: gpio_float_switch_water_tank
+    device_class: "problem"
+    publish_initial_state: true
+    filters:
+      # enabling the pullup resistor on the board seems to be enough
+      # to stop it from flapping
+      - delayed_on: 10ms
+      - delayed_off: 10ms
+    pin:
+      number: GPIO23
+      # soaked in water in a bowl in my kitchen, it is reporting true/on
+      # closes the circuit when the magnet touches the base
+      # open circuit when the magnet is not touching the base (like when floating in water)
+      #
+      # in water = open = false
+      # no water = closed = true
+      inverted: true
+      mode:
+        input: true
+        # it flaps on/off unless we enable the pull-up restor on the board
+        pullup: true
+    on_state:
+      then:
+        - if:
+            condition:
+              binary_sensor.is_on: gpio_float_switch_water_tank
+            then:
+              - switch.turn_off: gpio_relay_irrigation_pump
+              - light.turn_on: ${id_prefix}_status_led
+              - light.turn_on: ${id_prefix}_indicator_led
+            else:
+              - switch.turn_on: gpio_relay_irrigation_pump
+              - light.turn_off: ${id_prefix}_status_led
+              - light.turn_off: ${id_prefix}_indicator_led
+
+  # ESPHOME
+  - platform: status
+    name: "{{ item.name }} ESHome status"
+    entity_category: "diagnostic"
+    id: ${id_prefix}_status
+
+switch:
+  - platform: gpio
+    name: "{{ item.name }} Irrigation pump"
+    id: "gpio_relay_irrigation_pump"
+    icon: "mdi:sprinkler-variant"
+    # attempt to restore state and default to false/off if not possible
+    restore_mode: RESTORE_DEFAULT_OFF
+    pin:
+      number: GPIO19
+      inverted: true
+
+  # ESPHome
+  - platform: restart
+    name: "{{ item.name }} Reboot"
+    icon: "mdi:power-cycle"
+
+light:
+  - platform: status_led
+    name: "{{ item.name }} Status LED"
+    id: ${id_prefix}_status_led
+    icon: "mdi:alarm-light"
+    restore_mode: ALWAYS_OFF
+    pin: GPIO02
+
+  - platform: binary
+    name: "{{ item.name }} Indicator LED"
+    id: ${id_prefix}_indicator_led
+    icon: mdi:led-outline
+    restore_mode: RESTORE_DEFAULT_OFF
+    output: gpio12_led
+
+output:
+  - platform: gpio
+    id: gpio12_led
+    pin: GPIO12
+
+sensor:
+  # ESPHome
+  - platform: internal_temperature
+    name: "ESP Temperature"
+
+  - platform: wifi_signal
+    internal: true
+    name: "{{ item.name }} WiFi signal strength"
+    id: ${id_prefix}_wifi_signal_strength
+    update_interval: 60s
+    entity_category: "diagnostic"
+    unit_of_measurement: "dBm"
+    filters:
+      - throttle: 900s
+    # Reports the WiFi signal strength in %
+
+  - platform: copy
+    source_id: ${id_prefix}_wifi_signal_strength
+    name: "{{ item.name }} WiFi signal"
+    unit_of_measurement: "%"
+    device_class: power_factor
+    entity_category: "diagnostic"
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+
+button:
+  # ESPHome
+  - platform: wake_on_lan
+    name: "Wake-on-LAN TV Livingroom"
+    target_mac_address: {{ s21_mac_samsung_tv }}
+
+
+text_sensor:
+  # # for reading with appdaemon
+  # # its excluded from the recorder in home assistant
+  # - platform: ble_scanner
+  #   name: "json ble scanner"
+  #   #id: esphome_json_ble_scanner
+
+  # ESPHome
+  - platform: wifi_info
+    ip_address:
+      name: "{{ item.name }} IP address"
+      entity_category: "diagnostic"
+    ssid:
+      name: "{{ item.name }} SSID"
+      entity_category: "diagnostic"
+    mac_address:
+      name: "{{ item.name }} WiFi mac address"
+      entity_category: "diagnostic"
+    dns_address:
+      name: "{{ item.name }} DNS address"
+      entity_category: "diagnostic"
+  - platform: version
+    id: ${id_prefix}_version
+    entity_category: "diagnostic"
+    name: "{{ item.name }} ESPHome version"
+
+
+# first used: "0fe8a717-9e9f-6666-d4b0-d6bc41f3c30a"
+esp32_ble_beacon:
+  type: iBeacon
+  uuid: "1d918b8e-14c3-552e-f830-b9f4457089e4"
+  id: "${id_prefix}_ibeacon"
+  tx_power: 9
+  major: 1
+  minor: 2
+
+
+# from esphome/bluetooth-proxies/esp32-generic.yaml, see https://esphome.io/components/improv_serial.html
+# improv_serial:

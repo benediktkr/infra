@@ -1,0 +1,43 @@
+server {
+    {% set domain = valetudo_url.split('.')[1:] | join('.') %}
+
+    listen 443 ssl http2;
+    {% if inventory_hostname in wg_clients -%}
+    listen {{ wg_clients[inventory_hostname].ip }}:443 ssl http2;
+    {% endif -%}
+
+    # include listen-proxy-protocol.conf;
+    include /etc/nginx/authelia_internal.conf;
+    include /etc/nginx/sudo-known.conf;
+
+    server_name {{ valetudo_url }};
+    location /valetudo-api.json {
+        alias /var/www/hass/valetudo-api.json;
+        default_type application/json;
+    }
+    location / {
+        include /etc/nginx/require_auth.conf;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+        {% set basic_cleartext = hass_valetudo.valetudo_server.user ~ ":" ~ hass_valetudo.valetudo_server.passwd -%}
+        # {{ basic_cleartext }}
+        proxy_set_header Authorization "Basic {{ basic_cleartext | b64encode }}";
+        proxy_pass_header Authorization;
+
+        proxy_pass http://{{ hass_valetudo.vacuum_hostname }};
+    }
+    access_log /var/log/nginx/access_{{ valetudo_url }}.log main;
+    error_log /var/log/nginx/error_{{ valetudo_url }}.log warn;
+
+    ssl_session_timeout 5m;
+    ssl_certificate /usr/local/etc/certs/{{ domain }}/fullchain.pem;
+    ssl_certificate_key /usr/local/etc/certs/{{ domain }}/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers off;
+
+    fastcgi_hide_header X-Powered-By;
+}

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
-from datetime import datetime
+from datetime import datetime, date, timedelta
 import subprocess
 import json
 import sys
@@ -203,7 +203,7 @@ def get_iso_date_in_file(file_path):
 
     elif len(dates) == 1:
         d = list(dates)[0]
-        logger.info(f"date found: {d}")
+        logger.debug(f"date found: {d}")
         return d
 
     else:
@@ -263,11 +263,11 @@ def set_utime(file_path, iso_date_str):
         pass
     return dt
 
-def eyed3_dates(podcast_file, date):
+def eyed3_dates(podcast_file, date_str):
     a = eyed3.load(podcast_file)
 
 
-def mutagen_dates(podcast_file, date):
+def mutagen_dates(podcast_file, date_str):
     id3 = ID3(podcast_file)
     print(type(id3))
 
@@ -284,13 +284,19 @@ def parse_args():
     parser.add_argument("--podcast-name")
     args = parser.parse_args()
 
+    LOG_FORMAT = " ".join([
+        "<green><dim>{time:YYYY-MM-DDT}</dim>{time:HH:mm}<dim>{time:Z}</dim></green>",
+        "<dim><level>{level: >8}</level></dim>",
+        "<level>{message}</level>"
+    ])
+
     if not args.debug:
         logger.remove()
 
         if args.quiet:
-            logger.add(sys.stderr, level="ERROR")
+            logger.add(sys.stderr, level="ERROR", format=LOG_FORMAT)
         else:
-            logger.add(sys.stderr, level="INFO")
+            logger.add(sys.stderr, level="INFO", format=LOG_FORMAT)
     return args
 
 
@@ -298,26 +304,38 @@ def main():
     args = parse_args()
     logger.debug(f"checking: '{os.path.basename(args.podcast_file)}'")
 
-    date = get_iso_date_in_file(args.podcast_file)
+    podcast_date = get_iso_date_in_file(args.podcast_file)
 
     if args.action == "show":
         show_info(args.podcast_file)
 
     if args.action == "utime-only":
-        dt = set_utime(args.podcast_file, date)
+        dt = set_utime(args.podcast_file, podcast_date)
         logger.info(f"set mtime for '{os.path.basename(args.podcast_file)}' to '{dt.isoformat()}' according to mp3 metadata")
 
     if args.action == "fix-dates":
         if args.metadata_util == "ffmpeg":
-            ffmpeg_write_date_tag(args.podcast_file, args.out_file, date)
+            ffmpeg_write_date_tag(args.podcast_file, args.out_file, podcast_date)
         if args.metadata_util == "eyed3":
-            eyeD3_write_date_tag(args.podcast_file, date)
-            eyed3_dates(args.podcast_file, date)
+            eyeD3_write_date_tag(args.podcast_file, podcast_date)
+            eyed3_dates(args.podcast_file, podcast_date)
         if args.metadata_util == "mutagen":
-            mutagen_dates(args.podcast_file, date)
+            mutagen_dates(args.podcast_file, podcast_date)
 
-        set_utime(args.podcast_file, date)
-        logger.success(f"updated dates (metadata and file attributes) for '{args.podcast_file}' as {date}")
+
+        _today = date.today()
+        _yesterday = date.today() - timedelta(days=1)
+        if datetime.fromisoformat(podcast_date).date() == _today:
+            utime = datetime.now() - timedelta(hours=1)
+            utime_iso = utime.isoformat()
+            set_utime(args.podcast_file, utime_iso)
+        else:
+            set_utime(args.podcast_file, podcast_date)
+
+        logger.debug(f'updated podcast_file="{args.podcast_file}" podcast_date="{podcast_date}"')
+        ep_name = os.path.basename(args.podcast_file)
+        podcast_name = os.path.basename(os.path.dirname(args.podcast_file))
+        logger.success(f'podcast_name="{podcast_name}" ep_name="{ep_name}" podcast_date="{podcast_date}"')
 
     if args.action == "fix-album-tag":
         podcast_name = get_podcast_name_from_dir(args.podcast_file)

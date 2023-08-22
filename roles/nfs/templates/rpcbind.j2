@@ -1,7 +1,5 @@
-# ansible_distributed
+# ansible_managed
 # /etc/init.d/rpcbind
 
-OPTIONS="-w -h {{ wg_clients[inventory_hostname]['ip'] }} -h 127.0.0.1 -l "
-
-# Uncomment the following line to enable libwrap TCP-Wrapper connection logging
-# OPTIONS="${OPTIONS} -l "
+{% set wg_ip = wg_clients[inventory_hostname]['ip'] -%}
+#OPTIONS="-w{% if wg_ip is defined %}-h {{ wg_ip }}{% endif %} -h 127.0.0.1 -l "

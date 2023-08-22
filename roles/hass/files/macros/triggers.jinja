@@ -1,0 +1,14 @@
+{% macro triggered_by_person(trigger) %}
+  {{
+  trigger.platform == "state"
+  and trigger.to_state is defined
+  and trigger.to_state.state is defined
+  and trigger.to_state.state in ['on', 'off']
+  and trigger.to_state.context is defined
+  and (
+    trigger.to_state.context.id is not none
+    and trigger.to_state.context.parent_id is none
+    and trigger.to_state.context.user_id is none
+  )
+  }}
+{% endmacro %}

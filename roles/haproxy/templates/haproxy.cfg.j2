@@ -68,6 +68,8 @@ listen health
     option httpchk
     option dontlognull
 
+
+
 frontend https-redirect
     mode http
     bind :80
@@ -121,4 +123,16 @@ backend {{ item.fqdn }}
     {% endfor %}
 
 {% endif %}
+{% endfor %}
+
+{% for item in lb_forward_ports|default([]) %}
+
+frontend {{ item.frontend_name }}
+    bind *:{{ item.src_port }}
+    mode {{ item.mode }}
+    default_backend {{ item.backend_name }}
+
+backend {{ item.backend_name }}
+    mode {{ item.mode }}
+    server {{ item.dest_host }} {{ item.dest_host }}:{{ item.dest_port }}
 {% endfor %}

@@ -2,3 +2,16 @@
 
 - name: update grub
   command: update-grub
+
+- name: restart pveproxy
+  service:
+    name: "{{ item }}"
+    state: restarted
+  with_items:
+    - pveproxy
+    - spiceproxy
+
+- name: reload nginx
+  service:
+    name: nginx
+    state: reloaded

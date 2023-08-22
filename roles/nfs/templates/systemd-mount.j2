@@ -1,13 +1,19 @@
 [Unit]
 Description=deadspace nfs mounts
-#After=network.target
+{% if nfs_mounts_after_wg|default(true) %}
+#After=network-online.target
 After=wg-quick@wg0.service
+{% else %}
+After=network-online.target
+#After=wg-quick@wg0.service
+{% endif %}
 
 [Mount]
 What={{ item.what }}
 Where={{ item.where }}
 Type=nfs4
-Options=_netdev,auto
+Options=_netdev,auto{% if not item.lookupcache|default(true) %},lookupcache=none{%endif %}
+
 
 [Install]
 WantedBy=multi-user.target

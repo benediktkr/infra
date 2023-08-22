@@ -1,0 +1,57 @@
+---
+
+- name: create dir structures
+  file:
+    path: "{{ gitea_runner_root }}/{{ item[0].level }}/{{ item[0].name }}/{{ item[1] }}"
+    state: directory
+    mode: 0755
+    owner: "{{ item[0].owner | default(gitea_runner_user.username) }}"
+    group: "{{ item[0].group | default(gitea_runner_user.username) }}"
+  loop_control:
+    label: "{{ item[0].name }}/{{ item[1] }}"
+  with_nested:
+    - "{{ gitea_runners }}"
+    - ['data', 'config']
+
+- name: ensure config.yaml exists
+  file:
+    state: touch
+    path: "{{ gitea_runner_root }}/{{ item.level }}/{{ item.name }}/config/config.yaml"
+    mode: 0644
+    owner: "{{ item.owner | default(gitea_runner_user.username) }}"
+    group: "{{ item.group | default(gitea_runner_user.username) }}"
+  with_items: "{{ gitea_runners }}"
+
+
+- name: start gitea runner containers
+  docker_container:
+    name: gitea-runner-{{ item.name }}
+    image: gitea/act_runner:nightly
+    detach: true
+    pull: true
+    auto_remove: true
+    restart_policy: "no"
+    state: "started"
+    container_default_behavior: compatibility
+    mounts:
+      - type: bind
+        source: "{{ gitea_runner_root }}/{{ item.level }}/{{ item.name }}/config"
+        target: "/config"
+      - type: bind
+        source: "{{ gitea_runner_root }}/{{ item.level }}/{{ item.name }}/data"
+        target: "/data"
+      - type: bind
+        source: "/var/run/docker.sock"
+        target: "/var/run/docker.sock"
+    env:
+      CONFIG_FILE: "/config/config.yaml"
+      GITEA_INSTANCE_URL: "https://{{ gitea_url }}"
+      GITEA_RUNNER_REGISTRATION_TOKEN: "{{ item.token }}"
+      GITEA_RUNNER_NAME: "{{ item.name }}"
+      GITEA_RUNNER_LABELS: "{{ item.level }}"
+    networks_cli_compatible: false
+  with_items: "{{ gitea_runners }}"
+  tags:
+    - gitea-runner-container
+    - gitea-runners-container
+    - docker-containers

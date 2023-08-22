@@ -1,15 +1,5 @@
 ---
 
-- name: reload nginx
-  service:
-    name: nginx
-    state: reloaded
-
-- name: restart nginx
-  service:
-    name: nginx
-    state: restarted
-
 - name: restart hass container
   docker_container:
     name: hass
@@ -19,15 +9,6 @@
     - hass_container is not defined or not hass_container.changed
     - hass_container_state|default("stopped") == "started"
     - hass_restart_handler|default(true)
-
-- name: restart zwavejs container
-  docker_container:
-    name: zwavejs
-    state: started
-    restart: true
-  when:
-    - zwavejs_container is not defined or not zwavejs_container.changed
-    - hass_container_state|default("stopped") == "started"
 
 - name: udevadm reload rules
   command: udevadm control --reload-rules

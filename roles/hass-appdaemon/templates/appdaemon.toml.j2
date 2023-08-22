@@ -1,0 +1,57 @@
+secrets = "/etc/appdaemon/secrets.toml"
+
+[appdaemon]
+time_zone = "CET"
+latitude = {{ hass_zones.home.latitude }}
+longitude = {{ hass_zones.home.longitude }}
+elevation = 0
+app_dir = "/usr/local/lib/appdaemon/apps/"
+missing_app_warnings = true
+invalid_config_warnigns = true
+use_dictionary_unpacking = true
+
+# in seconds
+thread_duration_warning_threshold = 20
+
+# false: AppDaemon checks for changes in Apps and app config files
+# every second.
+# true: AppDaemon checks for changes in Apps and app config files only
+# on restart
+production_mode = {{ hass_ad_prod_mode | default('true') | string | lower }}
+
+[http]
+url = "http://{{ bridgewithdns.hass_ad }}:8000"
+# password = "!secret http_password"
+
+# enables appdaemon api and admin interface, no values/arguments
+[api]
+[admin]
+
+[logs]
+main_log.filename = "/var/log/appdaemon/appdaemon.log"
+error_log.filename = "/var/log/appdaemon/errors.log"
+diag_log.filename = "/var/log/appdaemon/diagnostic.log"
+access_log.filename = "/dev/null"
+[logs.apple_tv]
+name = "apple_tv"
+filename = "/var/log/appdaemon/apple_tv.log"
+date_format = "%Y-%m-%dT%H-%M:%S"
+format = "{asctime} {message}"
+
+[appdaemon.plugins.HASS]
+type = "hass"
+ha_url = "https://{{ hass_url }}"
+token = "!secret hass_token"
+cert_verify = true
+# Port the AppDaemon RESTFul API will listen on. If not specified, the
+# RESTFul API will be turned off.
+api_port = 8001
+# If specified, when AppDaemon connects to HASS each time, it will
+# wait for this number of seconds before initializing apps and
+# listening for events. This is useful for HASS instances that have
+# subsystems that take time to initialize (e.g., zwave).
+#app_init_delay = 10
+# time in seconds between retries to connect to hass (default: 5)
+retry_secs = 5
+
+[hadashboard]

@@ -1,3 +1,4 @@
 ---
  - import_tasks: nfs.yml
-   tags: nfs
+   tags:
+     - nfs

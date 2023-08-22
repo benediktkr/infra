@@ -1,0 +1,130 @@
+---
+
+- name: udev rule for sdr
+  template:
+    src: "{{ item }}.j2"
+    dest: /etc/udev/rules.d/{{ item }}
+    owner: root
+    group: root
+    mode: 0644
+  notify: udevadm reload rules
+  with_items:
+    - 20-sdr.rules
+  tags:
+    - hass-udev
+
+- name: create dir structure
+  file:
+    path: "{{ systemuserlist.hass.home }}/{{ item.name }}"
+    state: directory
+    mode: "{{ item.mode | default('0755') }}"
+    owner: hass
+    group: hass
+  tags:
+    - hass-dirs
+    - hass-rtl433-dirs
+  loop_control:
+    label: "{{ item.name }}"
+  with_items:
+    - name: rtl433
+    - name: rtl433/data
+    - name: rtl433/etc
+    - name: rtl433/bin
+
+- name: install packages
+  apt:
+    name:
+      - rtl-sdr
+      - rtl-433
+      - python3-paho-mqtt
+      - librtlsdr-dev
+      # this installed lighttpd
+      #- dump1090-mutability
+      - gqrx-sdr
+    state: latest
+  tags:
+    - packages
+    - hass-packages
+    - hass-rtl-packages
+
+- name: template moderately sane run.sh files
+  template:
+    src: run-{{ item }}.sh.j2
+    dest: "{{ systemuserlist.hass.home }}/rtl433/bin/run-{{ item }}.sh"
+    owner: hass
+    group: hass
+    mode: 0755
+  with_items:
+    - hass-rtl-mqtt-autodiscovery
+
+- name: template rtl_433 config file
+  template:
+    src: rtl_433.conf.j2
+    dest: "{{ systemuserlist.hass.home }}/rtl433/etc/rtl_433.conf"
+    owner: hass
+    group: hass
+    mode: 0755
+
+- name: start hass-rtl433-mqtt-autodiscovery container
+  when: false
+  docker_container:
+    name: hass-rtl433-mqtt-autodiscovery
+    image: ghcr.io/pbkhrv/rtl_433-hass-addons-rtl_433_mqtt_autodiscovery-amd64
+    detach: true
+    pull: true
+    restart_policy: "no"
+    state: "{{ hass_container_state | default('stopped') }}"
+    container_default_behavior: compatibility
+    user: "{{ systemuserlist.hass.uid }}:{{ systemuserlist.hass.gid }}"
+    networks_cli_compatible: false
+    network_mode: bridgewithdns
+    networks:
+      - name: bridgewithdns
+    env:
+      MQTT_HOST: "{{ bridgewithdns.hass_mqtt }}"
+      MQTT_PORT: "1883"
+      MQTT_RETAIN: "false"
+      RTL_TOPIC: "rtl_433/+/events"
+      DISCOVERY_PREFIX: homeassistant
+      DISCOVERY_INTERVAL: "600"
+      OTHER_ARGS: "-I 6031955 --debug"
+      #LOG_LEVEL: "debug"
+      FORCE_UPDATE: "false"
+    mounts:
+      - type: bind
+        source: "{{ systemuserlist.hass.home }}/rtl433/bin/run-hass-rtl-mqtt-autodiscovery.sh"
+        target: /run.sh
+        read_only: true
+  tags:
+    - hass-rtl433-container
+    - hass-rtl433-autodiscovery
+    - hass-container
+    - docker-containers
+
+- name: start hass-rtl433-sdr container
+  when: false
+  docker_container:
+    name: hass-rtl433-sdr
+    image: hertzg/rtl_433
+    detach: true
+    pull: true
+    restart_policy: "no"
+    state: "{{ hass_container_state | default('stopped') }}"
+    container_default_behavior: compatibility
+    #user: "{{ systemuserlist.hass.uid }}:{{ systemuserlist.hass.gid }}"
+    networks_cli_compatible: false
+    network_mode: bridgewithdns
+    devices:
+      #- "/dev/rtl_sdr/dev/rtl_sdr:rwm"
+      - "/dev/bus/usb/001/009"
+    networks:
+      - name: bridgewithdns
+    mounts:
+      - type: bind
+        source: "{{ systemuserlist.hass.home }}/rtl433/etc/rtl_433.conf"
+        target: /etc/rtl_433/rtl_433.conf
+        read_only: true
+  tags:
+    - hass-rtl433-container
+    - hass-container
+    - docker-containers

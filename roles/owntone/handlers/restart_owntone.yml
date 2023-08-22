@@ -1,0 +1,25 @@
+---
+
+- name: set 'filescan_disable' to restart without rescan
+  template:
+    src: owntone.conf.j2
+    dest: "{{ owntone_path }}/config/owntone.conf"
+  vars:
+    owntone_filescan_enabled: false
+  when:
+    - owntone_restart_handler|default(true)
+
+- name: restart owntone
+  docker_container:
+    name: owntone
+    state: started
+    restart: true
+  when:
+    - owntone_restart_handler|default(true)
+
+- name: restore 'filescan_disable'
+  template:
+    src: owntone.conf.j2
+    dest: "{{ owntone_path }}/config/owntone.conf"
+  when:
+    - owntone_restart_handler|default(true)

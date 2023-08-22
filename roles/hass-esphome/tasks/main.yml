@@ -1,0 +1,5 @@
+---
+ - import_tasks: hass-esphome.yml
+   tags:
+     - hass
+     - hass-esphome

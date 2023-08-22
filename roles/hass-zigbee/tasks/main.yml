@@ -1,0 +1,5 @@
+---
+ - import_tasks: hass-zigbee.yml
+   tags:
+     - hass
+     - hass-zigbee

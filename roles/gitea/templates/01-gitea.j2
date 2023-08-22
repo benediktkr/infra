@@ -28,6 +28,7 @@ server {
   {% endfor %}
 
   location / {
+
       proxy_pass         http://{{ bridgewithdns.gitea }}:{{ gitea_docker_port }};
 
       proxy_redirect     off;
@@ -38,6 +39,10 @@ server {
       proxy_set_header   X-Forwarded-Proto $scheme;
 
       set $header_sudo_gitea "gitea";
+
+      # ben/glados-tts generates a HUGE docker image
+      client_max_body_size 7G;
+      proxy_max_temp_file_size 2048m;
    }
 
    location /{{ gitea_team_org }}/issues {
@@ -67,10 +72,9 @@ server {
        # gitea itself can also serve this file
        alias {{ gitea_user.home }}/data/gitea/sitemap.xml;
    }
-   location /user/login {
-       return 302 /user/oauth2/{{ gitea_oidc_name }};
+   location /user/sso {
+       return 302 /user/oauth2/{{ gitea_oidc_name }}?redirect_to=$arg_redirect_to;
    }
-
 
    location /user/forgot_password {
        return 302 https://{{ authelia_login_url }}/reset-password/step1;

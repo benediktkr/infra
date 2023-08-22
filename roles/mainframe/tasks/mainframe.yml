@@ -192,11 +192,13 @@
     - letsencrypt-certs
     - mainframe-nginx
     - static-sites
+    - mainframe-certs
   notify: reload nginx
   with_items:
     - "{{ archives_url }}"
     - "{{ archivebox_url }}"
     - static.{{ domain }}
+    - "{{ inventory_hostname }}"
     - "{{ xmr_url }}"
 
 - name: template nginx vhost(s)

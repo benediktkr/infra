@@ -1,0 +1,13 @@
+#!/bin/bash
+
+set -e
+
+{% for item in ['podcasts', 'audiobooks', 'music'] -%}
+if [[ ! -f "{{ deadspace_root }}/{{ item }}/.checkfile" ]]; then
+    echo "{{ deadspace_root }}/{{ item }}/.checkfile is gone!"
+    exit 1
+fi
+{% endfor %}
+
+rescan_type=$1
+touch {{ deadspace_root }}/local/owntone/trigger.${rescan_type}-rescan

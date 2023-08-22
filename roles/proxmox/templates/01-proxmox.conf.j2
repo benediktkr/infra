@@ -1,0 +1,46 @@
+server {
+    listen 443 ssl http2;
+    {% if inventory_hostname in wg_clients -%}
+    listen {{ wg_clients[inventory_hostname].ip }}:443 ssl http2;
+    {% endif -%}
+
+    # include listen-proxy-protocol.conf;
+    include /etc/nginx/authelia_internal.conf;
+    include /etc/nginx/sudo-known.conf;
+
+    server_name {{ proxmox_url }};
+    # server_name {{ proxmox_url }} default_server;
+
+    location / {
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+
+        proxy_buffering off;
+        client_max_body_size 0;
+
+        proxy_connect_timeout  3600s;
+        proxy_read_timeout  3600s;
+        proxy_send_timeout  3600s;
+        send_timeout  3600s;
+
+        proxy_redirect off;
+
+        proxy_pass https://127.0.0.1:8006;
+
+    }
+
+    access_log /var/log/nginx/access_{{ proxmox_url }}.log main;
+    error_log /var/log/nginx/error_{{ proxmox_url }}.log warn;
+
+    {# ssl on; #}
+
+    ssl_session_timeout 5m;
+
+    {% set cert_name = inventory_hostname.split('.')[1:] | join('.') -%}
+    ssl_certificate /usr/local/etc/certs/{{ cert_name }}/fullchain.pem;
+    ssl_certificate_key /usr/local/etc/certs/{{ cert_name }}/privkey.pem;
+
+    fastcgi_hide_header X-Powered-By;
+
+}

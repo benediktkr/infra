@@ -1,5 +1,12 @@
+
 server {
     listen 444 ssl;
+
+    {# {% if owntone_nginx_ip is defined -%}
+     # listen {{ owntone_nginx_ip }}:443 ssl;
+     # {% endif %} #}
+
+    #listen {{ ansible_default_ipv4.address }}:443 ssl;
     listen 443 ssl http2;
     # listen 443 ssl http2;
     # listen {{ owntone_port_tcp }};
@@ -8,8 +15,8 @@ server {
     listen {{ wg_clients[inventory_hostname].ip }}:443 ssl http2;
     {% endif -%}
 
+    # include listen-proxy-protocol.conf;
     include /etc/nginx/authelia_internal.conf;
-    include listen-proxy-protocol.conf;
     include /etc/nginx/sudo-known.conf;
 
     server_name {{ owntone_url }};
@@ -24,18 +31,69 @@ server {
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_prefer_server_ciphers off;
 
+    {# location /client {
+     #     alias /var/www/owntone/htdocs/;
+     # }
+     # location ~ "^/client/api/(.*)$" {
+     #     return 307 '/api/$1';
+    # } #}
+
+
+    location /bonob {
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+
+        proxy_pass http://{{ bridgewithdns.bonob }}:{{ bonob_port }};
+    }
+    location /navidrome {
+        # uses proxy auth
+        include /etc/nginx/require_auth.conf;
+        include /etc/nginx/require_auth_proxy.conf;
+
+
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Protocol $scheme;
+        proxy_set_header X-Forwarded-Host $http_host;
+        proxy_buffering off;
+
+        proxy_pass http://{{ bridgewithdns.navidrome }}:4533;
+    }
+
+    # root /var/www/owntone/htdocs;
+    # location /ws {
+    #      proxy_pass http://127.0.0.1:{{ owntone_port_ws }}/;
+    #      proxy_set_header Host $host;
+    #      proxy_set_header X-Real-IP $remote_addr;
+    #      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    #      proxy_set_header X-Forwarded-Proto $scheme;
+    #      proxy_http_version 1.1;
+    #      proxy_set_header Upgrade $http_upgrade;
+    #      proxy_set_header Connection "upgrade";
+    # }
     location / {
-        sub_filter 'owntone.local:3689' '{{ owntone_url }}';
-        sub_filter 'http%3A%2F%2Fowntone.local%3A3689' 'https%3A%2F%2F{{ owntone_url }}';
-        sub_filter 'http://owntone.local:3689' 'https://{{ owntone_url }}';
-        sub_filter_types '*';
-        sub_filter_once off;
+        {# sub_filter 'owntone.local:3689' '{{ owntone_url }}';
+         # sub_filter 'http%3A%2F%2Fowntone.local%3A3689' 'https%3A%2F%2F{{ owntone_url }}';
+         # sub_filter 'http://owntone.local:3689' 'https://{{ owntone_url }}';
+         # sub_filter_types '*';
+         # sub_filter_once off; #}
+
 
         proxy_pass http://127.0.0.1:{{ owntone_port_tcp }}$request_uri;
         proxy_http_version 1.1;
 
-        proxy_set_header Host "{{ owntone_url }}";
+        proxy_set_header Host {{ owntone_url }};
         #proxy_set_header Host "owntone.local:3689";
+        #proxy_set_header Host $host;
 
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $remote_addr;
@@ -45,31 +103,35 @@ server {
     }
 }
 server {
-    # only needs to be accessed by players that are being streamed to
-    # maybe need to remove 'http2'
-    listen {{ ansible_default_ipv4.address }}:{{ owntone_port_ws }} ssl http2;
+     {% if owntone_nginx_ip is defined -%}
+     listen {{ owntone_nginx_ip }}:{{ owntone_port_ws }} ssl;
+     {% endif %}
 
-    server_name {{ owntone_url }};
+     #listen {{ ansible_default_ipv4.address }}:{{ owntone_port_ws }} ssl;
+     #listen {{ owntone_port_ws }} ssl;
 
-    access_log /var/log/nginx/access_{{ owntone_url }}_{{ owntone_port_ws }}.log main;
-    error_log /var/log/nginx/error_{{ owntone_url }}_{{ owntone_port_ws }}.log warn;
 
-    ssl_certificate /usr/local/etc/certs/{{ domain }}/fullchain.pem;
-    ssl_certificate_key /usr/local/etc/certs/{{ domain }}/privkey.pem;
+     server_name {{ owntone_url }};
 
-    # !
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_prefer_server_ciphers off;
+     access_log /var/log/nginx/access_{{ owntone_url }}_{{ owntone_port_ws }}.log main;
+     error_log /var/log/nginx/error_{{ owntone_url }}_{{ owntone_port_ws }}.log warn;
 
-    location / {
-        proxy_pass http://127.0.0.1:{{ owntone_port_ws }}/;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-    }
+     ssl_certificate /usr/local/etc/certs/{{ domain }}/fullchain.pem;
+     ssl_certificate_key /usr/local/etc/certs/{{ domain }}/privkey.pem;
+
+     # !!
+     ssl_protocols TLSv1.2 TLSv1.3;
+     ssl_prefer_server_ciphers off;
+
+     location / {
+         proxy_pass http://127.0.0.1:{{ owntone_port_ws }}/;
+         proxy_set_header Host $host;
+         proxy_set_header X-Real-IP $remote_addr;
+         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+         proxy_set_header X-Forwarded-Proto $scheme;
+         proxy_http_version 1.1;
+         proxy_set_header Upgrade $http_upgrade;
+         proxy_set_header Connection "upgrade";
+     }
 
 }

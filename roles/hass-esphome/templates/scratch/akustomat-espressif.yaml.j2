@@ -1,0 +1,75 @@
+esphome:
+  name: esphome-akustomat-espressif
+
+esp32:
+  board: esp-wrover-kit
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: "{{ hass_esphome_api_password }}"
+
+ota:
+  password: "{{ hass_esphome_ota_password }}"
+
+mdns:
+  disabled: true
+
+wifi:
+  ssid: "{{ hass_esphome_wifi_ssid }}"
+  password: "{{ hass_esphome_wifi_password }}"
+
+  # manual_ip:
+  #   static_ip:
+  #   gateway:
+  #   subnet:
+  #   dns1:
+  domain: .{{ inventory_hostname.split('.')[1:] | join('.') }}
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "esphome fallback"
+    password: "{{ hass_esphome_fallback_wifi_password }}"
+
+captive_portal:
+
+web_server:
+  port: 80
+
+esp32_ble_tracker:
+
+binary_sensor:
+{% for item in hass_esphome_ble_presence %}
+  - platform: ble_presence
+    mac_address: {{ item.mac }}
+    name: "{{ item.name }}"
+{% endfor %}
+
+sensor:
+  - platform: adc
+    pin: GPIO34
+    name: "esphome_volume_knob"
+    update_interval: 1s
+    attenuation: auto
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    filters:
+      - lambda: !lambda |-
+          return 100-(x/3.13*100);
+      - lambda: !lambda |-
+          if (x < 0) return 0;
+          return int(x);
+      - lambda: !lambda |-
+          return int(x);
+      - delta: 0.5
+
+# different syntax that also works in esphome:
+#           return int(100-(x/3.13*100));
+
+# return (x/3.13)*100;
+
+#<<: !include {{ systemuserlist.hass.home }}/home-assistant/config/secrets.yaml

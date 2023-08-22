@@ -1,0 +1,30 @@
+---
+
+- name: install radicale
+  apt:
+    name:
+      - radicale
+    state: present
+  tags:
+    - packages
+
+- name: template config
+  template:
+    src: "{{ item }}.j2"
+    dest: /etc/radicale/{{ item }}
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - config
+    - logging
+    - rights
+  notify: restart radicale
+  tags:
+    - radicale-config
+
+- name: enable and start service
+  service:
+    name: radicale
+    enabled: false
+    state: started

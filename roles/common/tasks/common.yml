@@ -6,26 +6,6 @@
   tags:
     - hostname
 
-- name: ensure hostname in /etc/hosts
-  lineinfile:
-    dest: /etc/hosts
-    line: "{{ etc_hosts_ip }} {{ inventory_hostname }} {{ inventory_hostname.split('.')[0] }}"
-    state: present
-  when: etc_hosts_ip is defined
-  tags:
-    - etc-hosts
-
-- name: ensure no 127.0.0.0/8 entries for hostname in /etc/hosts (when required)
-  lineinfile:
-    dest: /etc/hosts
-    regexp: "^127.*{{ item }}.*"
-    state: absent
-  with_items:
-    - "{{ inventory_hostname }}"
-    - "{{ inventory_hostname.split('.')[0] }}"
-  when: etc_hosts_rm|default(false)
-  tags: etc-hosts
-
 # - name: set image hostname
 #   hostname:
 #     name: "sensor-image"
@@ -100,6 +80,9 @@
   notify:
     - systemctl daemon reload
 
+- meta: flush_handlers
+
+
 - name: copy sensor-image keys when relevant
   copy:
     src: "{{ item }}"
@@ -111,7 +94,41 @@
     - image
     - hostkeys
 
+
+- name: install iw to for the service to stop powersave on brcmfmac
+  apt:
+    name: iw
+    state: present
+  when: brcmfmac_disable_wifi_pm|default(false)
+  tags:
+    - brcmfmac
+
+- name: create a systemd service to disable powersave for brcmfmac wifi kernel module
+  template:
+    src: disable-brcmfmac-wifi-powersave.service.j2
+    dest: /etc/systemd/system/disable-brcmfmac-wifi-powersave.service
+    owner: root
+    group: root
+    mode: 0644
+  when: brcmfmac_disable_wifi_pm|default(false)
+  tags:
+    - brcmfmac
+  notify:
+    - systemctl daemon reload
+
 - meta: flush_handlers
+  tags:
+    - brcmfmac
+
+- name: enable the systemd service to disable power save for brmfmac
+  service:
+    name: disable-brcmfmac-wifi-powersave
+    state: started
+    enabled: true
+  when: brcmfmac_disable_wifi_pm|default(false)
+  tags:
+    - brcmfmac
+
 
 - name: make dir for host keys
   file:
@@ -172,7 +189,7 @@
       - python3-setuptools
       - python3-venv
       - python3-dev
-      - python-setuptools
+      - python3-setuptools
     update_cache: true
     state: latest
   tags:
@@ -277,7 +294,7 @@
       - mtr
       - nano
       - ncdu
-      - netcat
+      - "{{ pkg_netcat_name |default('netcat') }}"
       - nethogs
       - nmap
       - mergerfs
@@ -303,64 +320,78 @@
     - packages
     - common-packages
 
+- name: install host specific packages
+  apt:
+    name: "{{ host_extra_packages | default([]) | list }}"
+    state: latest
+  environment:
+    PATH: "{{ ansible_env.PATH }}:/sbin:/usr/sbin"
+  tags:
+    - packages
+    - common-packages
+    - common-host-packages
+
+
 #- python-dateutil
-- name: install common pip packages
-  pip:
-    name:
-      - poetry
-      - influxdb
-      - loguru
-      - requests
-      - psutil
-      - humanize # added because of telegraf/vnstat.py
-    state: present
-    executable: pip3
-  tags:
-    - pip
-    - common-pip
-    - common-pip-packages
-    - packages
-    - pip-latest
+# - name: install common pip packages
+#   pip:
+#     name:
+#       - poetry
+#       - influxdb
+#       - loguru
+#       - requests
+#       - psutil
+#       - humanize # added because of telegraf/vnstat.py
+#     state: present
+#     executable: pip3
+#   when: install_common_pip_packges|default(true)
+#   tags:
+#     - pip
+#     - common-pip
+#     - common-pip-packages
+#     - packages
+#     - pip-latest
 
-- name: remove pip packages that are only needed on mainframe
-  pip:
-    name:
-      - ansible
-      - certbot
-      - netaddr
-    state: absent
-    executable: pip3
-  when: 'inventory_hostname != "mainframe.sudo.is"'
-  tags:
-    - remove-packages
-    - pip
-    - packages
+# - name: remove pip packages that are only needed on mainframe
+#   pip:
+#     name:
+#       - ansible
+#       - certbot
+#       - netaddr
+#     state: absent
+#     executable: pip3
+#   when: 'inventory_hostname != "mainframe.sudo.is"'
+#   tags:
+#     - remove-packages
+#     - pip
+#     - packages
 
-- name: set python minor version
-  set_fact:
-    python_minor: "{{ ansible_python_version.split('.')[1] }}"
-  tags:
-    - python
-    - pip
-    - packages
-    - fakelibs
-    - sudoisinflux
+# - name: set python minor version
+#   set_fact:
+#     python_minor: "{{ ansible_python_version.split('.')[1] }}"
+#   tags:
+#     - python
+#     - pip
+#     - packages
+#     - fakelibs
+#     - sudoisinflux
 
-- name: template common simple shorthand fake libraries
-  template:
-    src: "{{ item }}.j2"
-    dest: "/usr/local/lib/python3.{{ python_minor }}/dist-packages/{{ item }}"
-    owner: root
-    group: root
-    mode: 0775
-  with_items:
-    - sudoisinflux.py
-  tags:
-    - python
-    - pip
-    - packages
-    - fakelibs
-    - sudoisinflux
+# - name: template common simple shorthand fake libraries
+#   template:
+#     src: "{{ item }}.j2"
+#     dest: "/usr/local/lib/python3.{{ python_minor }}/dist-packages/{{ item }}"
+#     owner: root
+#     group: root
+#     mode: 0775
+#   when: install_common_pip_packages|default(true)
+#   with_items:
+#     - sudoisinflux.py
+#   tags:
+#     - python
+#     - pip
+#     - packages
+#     - fakelibs
+#     - sudoisinflux
 
 - name: remove packages
   apt:
@@ -372,6 +403,17 @@
     state: absent
     purge: true
   tags: packages
+
+- name: disable cloud-init (when set, defaults to false)
+  copy:
+    content: ""
+    dest: "/etc/cloud/cloud-init.disabled"
+    force: false
+    owner: root
+    group: root
+    mode: 0644
+  when: disable_cloudinit|default(false)
+
 
 - name: make sure openssh-server is installed
   apt:
@@ -531,6 +573,7 @@
     - update_omzsh.sh
     - matrixmsg.py
     - authelia-auth.py
+  when: install_common_pip_packages|default(true)
   tags:
     - common-scripts
     - update_omzsh

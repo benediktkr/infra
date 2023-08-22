@@ -1,4 +1,7 @@
+---
+
 - alias: monitor_radiators_reporting
+  id: monitor_radiators_reporting
   description: monitor that the battery-powered radiator knobs are working
   trigger:
     {% for radiator in hass_radiators -%}
@@ -6,7 +9,7 @@
     - platform: state
       id: "radiator {{ radiator.name }}"
       entity_id:
-        - binary_sensor.radiator_{{ radiator.name }}_reporting
+        - binary_sensor.radiator_{{ radiator.name }}_is_reporting
       to: 'off'
     {% endif -%}
     {% endfor %}
@@ -23,53 +26,10 @@
         title: 'device not reporting'
         message: 'stopped reporting: {%raw%}{{ trigger.id }}{%endraw%}'
 
-{% if hass_light_switches | length > 0 -%}
-- alias: refresh_light_switches_state
-  description: the tkbhome switches dont automatically report their state
-  trigger:
-    - platform: time_pattern
-      minutes: "/1"
-  condition: []
-  mode: single
-  action:
-    - service: zwave_js.refresh_value
-      data:
-        entity_id:
-          {% for item in hass_light_switches -%}
-          {% if item.automation_refresh|default(false) -%}
-          - {{ item.entity_id }}
-          {% endif -%}
-          {% endfor %}
-{% endif -%}
-
-{% for item in hass_light_switches -%}
-{% set domain = item.entity_id.split('.')[0] %}
-{% set name = item.entity_id.split('.')[1] %}
-{% if 'auto_off' in item %}
-- alias: {{ name }}_turn_off
-  description: automatically turn off {{ name }} {{ domain}}
-  trigger:
-    - platform: state
-      entity_id:
-        - {{ item.entity_id }}
-      to: "on"
-      for:
-        minutes: {{ item.auto_off }}
-  condition:
-    - condition: state
-      entity_id: {{ item.entity_id }}
-      state: "on"
-  action:
-    - service: {{ domain }}.turn_off
-      data: {}
-      target:
-        entity_id: {{ item.entity_id }}
-  mode: single
-{% endif -%}
-{% endfor %}
 
 {% for linux_tracker in hass_linux_presence_trackers -%}
 - alias: "webhook_presence_trackers_{{ linux_tracker.name }}"
+  unique_id: "webhook_presence_trackers_{{ linux_tracker.name }}"
   description: ""
   trigger:
     - platform: webhook
@@ -77,71 +37,23 @@
       id: webhook
   mode: single
   action:
-    - if:
-        - condition: template
-          value_template: >-
-            {%raw -%} {% {%endraw%} set current_value = states('input_text.webhook_{{ linux_tracker.name }}') {%raw%} %} {%endraw%}
-            {% raw %}
-            {{ current_value != trigger.json['state'] }}
-            {% endraw %}
-
-      then:
-        - service: input_text.set_value
-          target:
-            entity_id: input_text.webhook_{{ linux_tracker.name }}
-          data:
-            value: "{% raw %}{{ trigger.json.state }}{% endraw %}"
-
-- alias: "inactive_webhook_presence_trackers_{{ linux_tracker.name }}"
-  description: ""
-  trigger:
-    - platform: state
-      entity_id: binary_sensor.{{ linux_tracker.name }}_webhook_triggering
-      to: "off"
-  action:
-    - service: input_text.set_value
+    - service: >-
+        {% raw -%}
+        {% if trigger.json['state'] | default(false) %}
+        input_boolean.turn_on
+        {% else %}
+        input_boolean.turn_off
+        {% endif %}
+        {% endraw -%}
+      data: {}
       target:
-        entity_id: input_text.webhook_{{ linux_tracker.name }}
-      data:
-        value: "inactive"
+        entity_id: input_boolean.webhook_{{ linux_tracker.name }}_last_state
 
 {% endfor %}
 
-- alias: flood_sensor_washing_machine
-  description: ""
-  trigger:
-    - platform: state
-      entity_id:
-        - binary_sensor.flood_sensor_water_leak_detected
-      to: "on"
-  condition: []
-  mode: single
-  action:
-    - service: switch.turn_off
-      data: {}
-      target:
-        entity_id: switch.washing_machine
-    - service: notify.notify
-      data:
-        title: "FLOOD SENSOR BATHROOM"
-        message: "WATER DETECTED! power to washing machine was cut"
-    - if:
-        - condition: zone
-          entity_id: person.ben
-          zone: zone.home
-      then:
-        - service: switch.turn_on
-          data: {}
-          target:
-            entity_id: switch.nad_c370
-        - service: media_player.play_media
-          data:
-            media_content_type: video/webm
-            media_content_id: media-source://media_source/media/flood_alert.mp3
-          target:
-            entity_id: media_player.den_tv
 
 - alias: buzzer_normally_closed
+  id: buzzer_normally_closed
   description: "keep the buzzer switch closed"
   mode: single
   trigger:
@@ -159,18 +71,3 @@
       data: {}
       target:
         entity_id: switch.doorbell_buzzer
-
-{% for item in hass_feedreader -%}
-- alias: "podcast_parse_feed_{{ item.short_name }}"
-  trigger:
-    platform: event
-    event_type: feedreader
-    event_data:
-      feed_url: "{{ item.url }}"
-  action:
-    service: persistent_notification.create
-    data:
-      title: "Podcast parsed"
-      message: {% raw %}"{{ trigger.event.data }}"{% endraw %}
-
-{% endfor %}

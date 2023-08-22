@@ -9,7 +9,7 @@
       - gpio
       - dialout
       - sensors
-    append: yes
+    append: true
 
 - name: wifi
   template:
@@ -26,7 +26,7 @@
   lineinfile:
     path: /boot/config.txt
     line: "dtoverlay=w1-gpio"
-    create: no
+    create: false
   when: "'ds18b20' in sensors.temp|map(attribute='kind')"
   register: bootconfig
 
@@ -42,7 +42,6 @@
   when:
     - bootconfig.changed
     - "'ds18b20' in sensors.temp|map(attribute='kind')"
-
 
 - name: install build dedendencies for dht.c
   apt:
@@ -235,6 +234,9 @@
       - pi-bluetooth
       - bluez
       - libgirepository1.0-dev
+      # for monitor.sh
+      - bc
+      - bluez-hcidump
       # - bluez-utils
       # - bluetooth
       # - blueman
@@ -307,7 +309,7 @@
     - restart sudoisbot temp_pub
     - restart sudoisbot rain_pub
 
-- name: remove sudoisbot as pip package
+- name: sudoisbot as pip package
   pip:
     name: sudoisbot
     state: latest

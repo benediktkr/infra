@@ -1,0 +1,28 @@
+
+# smartir:
+#   # installed with HACS
+#   check_updates: false
+
+script:
+  ir_send_command:
+    mode: single
+    description: "Send an IR command with remote.broadlink"
+    fields:
+      device:
+        description: "device to send command to"
+        example: "tv"
+      command:
+        description: "command to send code for"
+        example: "power_toggle"
+    sequence:
+      service: remote.send_command
+      target:
+        entity_id: remote.broadlink
+      data:
+        command: "{{ command }}"
+        device: "{{ device }}"
+
+homeassistant:
+  customize:
+    script.ir_send_command:
+      package: "broadlink"

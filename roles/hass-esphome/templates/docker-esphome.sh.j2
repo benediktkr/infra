@@ -1,0 +1,24 @@
+#!/bin/bash
+
+docker pull ghcr.io/esphome/esphome
+
+if [[ -b "/dev/ttyUSB0" ]]; then
+    DEVICE_ARG="--device=/dev/ttyUSB0"
+else
+    DEVICE_ARG=""
+fi
+
+set -x
+docker run \
+       --rm \
+       --dns {{ docker_container_dns_servers | join(",") }} \
+       --name esphome \
+       --privileged \
+       -v "{{ systemuserlist.hass.home }}/esphome/builds:/config/.esphome" \
+       -v "{{ systemuserlist.hass.home }}/esphome/cache:/root/.cache" \
+       -v "{{ systemuserlist.hass.home }}/esphome/local:/root/.local" \
+       -v "{{ systemuserlist.hass.home }}/esphome/config":/config \
+       $DEVICE_ARG \
+       -it \
+       ghcr.io/esphome/esphome \
+       $@

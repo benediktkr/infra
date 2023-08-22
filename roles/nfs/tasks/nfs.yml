@@ -1,5 +1,9 @@
 ---
 
+- name: test
+  debug:
+    var: nfs_export_paths
+
 - name: install nfs
   apt:
     name:
@@ -10,6 +14,29 @@
   tags:
     - packages
 
+- name: ensure /export exists
+  file:
+    state: directory
+    path: /export
+    owner: root
+    group: root
+    mode: 0755
+  when:
+    - nfs_exports | length > 0
+
+- name: bind mount exported paths in /export
+  mount:
+    path: /export/{{ item.nfs_name }}
+    src: "{{ item.path }}"
+    opts: bind
+    state: mounted # adds to fstab
+    fstype: none
+  loop_control:
+    label: /export/{{ item.nfs_name }}
+  when:
+    - nfs_exports | length > 0
+  with_items: "{{ nfs_exports }}"
+
 - name: template /etc/exports
   template:
     src: "{{ item }}.j2"
@@ -19,8 +46,14 @@
   with_items:
     - nfs.conf
     - exports
+  tags:
+    - nfs-export
+    - nfs-exports
+  when:
+    - nfs_exports | length > 0
   notify:
-    - call exportfs
+    - reload nfs-kernel-server
+    #- reload idmap
 
 - name: template configs
   template:
@@ -29,31 +62,36 @@
     owner: root
     group: root
   with_items:
-    - rpcbind
     - nfs-kernel-server
+    - rpcbind
+    - nfs-common
   notify:
     - reload nfs-kernel-server
-    #- restart rpcbind
+    #- reload idmap
 
 - name: load kernel module
   modprobe:
-    name: nfsd
+    name: "{{ item }}"
     state: present
+  with_items:
+    - nfsd
+    - nfs
 
 - name: enable nfs-kernel-server
   service:
     name: nfs-kernel-server
     enabled: true
     state: started
+  when:
+    - nfs_exports | length > 0
 
-- name: mask rpcbind
+- name: mask rpcbind (since only NFSv4 or higher is enabled, which does need rpcbind)
   service:
     name: "{{ item }}"
     masked: true
   with_items:
     - rpcbind.service
     - rpcbind.socket
-
 
 - name: template systemd mounts
   template:
@@ -67,10 +105,11 @@
   vars:
     systemd_name: "{{ item.where.split('/')[1:] | join('-') }}.mount"
   when:
-    systemd_name != ".mount"
+    - nfs_mounts | length > 0
+    - systemd_name != ".mount"
   tags:
     - nfs-mounts
-  with_items: "{{ deadspace_nfs_mounts[inventory_hostname] }}"
+  with_items: "{{ nfs_mounts }}"
 
 - name: start nfs mounts
   service:
@@ -83,7 +122,8 @@
   vars:
     systemd_name: "{{ item.where.split('/')[1:] | join('-') }}.mount"
   when:
-    systemd_name != ".mount"
-  with_items: "{{ deadspace_nfs_mounts[inventory_hostname] }}"
+    - nfs_mounts | length > 0
+    - systemd_name != ".mount"
+  with_items: "{{ nfs_mounts }}"
   tags:
     - nfs-mounts

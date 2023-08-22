@@ -1,0 +1,41 @@
+#!/bin/bash
+
+set -e
+
+# see roles/hass-esphome/defaults
+{% for item in hass_esphome_configs %}
+{% if item.enabled|default(false) %}
+{% set hostname = item.name ~ "." ~ hass_esphome_domain %}
+
+echo
+echo "------------------"
+echo "name: {{ item.name }}"
+echo "hostname: {{ hostname }}"
+echo "config: {{ item.config }}"
+echo
+echo "------------------"
+
+{% if item.clean_first|default(false) %}
+/usr/local/bin/docker-esphome.sh \
+    clean \
+    {{ item.config }}
+{% endif %}
+
+/usr/local/bin/docker-esphome.sh \
+    run \
+    --device {{ hostname }} \
+    --no-logs \
+    {{ item.config }}
+
+{% endif %}
+{% endfor %}
+
+
+set +e
+echo "OTA finished, pinging the hosts"
+
+{% for item in hass_esphome_configs %}
+{% if item.enabled|default(false) %}
+ping -i 2 -c 2 {{ item.name }}.{{ hass_esphome_domain }}
+{% endif %}
+{% endfor %}

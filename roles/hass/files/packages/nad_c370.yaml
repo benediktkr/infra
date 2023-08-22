@@ -1,0 +1,169 @@
+---
+
+
+template:
+  - binary_sensor:
+      - name: nad_c370
+        icon: "mdi:audio-video"
+        device_class: power
+        delay_off: "00:00:0"
+        availability: >-
+          {{
+          states('sensor.electric_w_switch_nad_c370') is defined
+          and has_value('sensor.electric_w_switch_nad_c370')
+          and is_number(states('sensor.electric_w_switch_nad_c370'))
+          and states('switch.nad_c370') is defined
+          }}
+        state: >-
+          {% set power_w = states('sensor.electric_w_switch_nad_c370')|float %}
+          {% set power_on = is_state('switch.nad_c370', 'on') %}
+          {{
+          power_on
+          and power_w >= 5.0
+          }}
+        attributes:
+          source_power_entity_id: "sensor.electric_w_switch_nad_c370"
+          source_switch_entity_id: "switch.nad_c370"
+
+homeassistant:
+  customize:
+    binary_sensor.nad_c370:
+      friendly_name: "NAD C370"
+      name: "NAD C370"
+      templated: true
+      package: "nad_c370"
+      proto: "Z-Wave"
+
+    # Z-Wave device entities
+    switch.nad_c370:
+      friendly_name: "NAD C370"
+      device_class: "switch"
+      icon: "mdi:audio-video"
+      package: "nad_c370"
+      proto: "Z-Wave"
+
+    sensor.electric_a_switch_nad_c370:
+      friendly_name: "NAD C370 Electric [A]"
+      package: "nad_c370"
+      proto: "Z-Wave"
+    sensor.electric_kWh_switch_nad_c370:
+      friendly_name: "NAD C370 Electric [kWh]"
+      package: "nad_c370"
+      proto: "Z-Wave"
+    sensor.electric_v_switch_nad_c370:
+      friendly_name: "NAD C370 Electric [V]"
+      package: "nad_c370"
+      proto: "Z-Wave"
+    sensor.electric_w_switch_nad_c370:
+      friendly_name: "NAD C370 Electric [W]"
+      package: "nad_c370"
+      proto: "Z-Wave"
+
+
+# https://www.home-assistant.io/integrations/universal/
+
+# script:
+#   media_player_nad_c370_remote_command:
+#     mode: single
+#     fields:
+#       remote_command:
+#         name: remote_command
+#         description: the name of the command
+#         required: true
+#         example: power_on
+#     sequence:
+#       - service: remote.send_command
+#         target:
+#           entity_id: remote.broadlink
+#         data:
+#           device: nad_c370
+#           # hold_secs: 0.01
+#           # num_repeats: 1
+#           command: "{{ remote_command }}"
+
+#   media_player_nad_c370_turn_on:
+#     mode: restart
+#     sequence:
+#       - if:
+#           - condition: state
+#             entity_id: media_player.nad_c370
+#             state: standby
+#         then:
+#           - service: script.media_player_nad_c370_remote_command
+#             data:
+#               remote_command: power_on
+#         else:
+#           - service: switch.turn_on
+#             data: {}
+#             target:
+#               entity_id: switch.nad_c370
+
+#   media_player_nad_c370_turn_off:
+#     mode: restart
+#     sequence:
+#       # first send an IR command to put the amp into standby
+#       - service: script.media_player_nad_c370_remote_command
+#         data:
+#           remote_command: power_off
+#       - wait_for_trigger:
+#           - platform: numeric_state
+#             entity_id: sensor.nad_c370_electric_consumption_w
+#             below: 5
+#             for:
+#               hours: 0
+#               minutes: 0
+#               seconds: 10
+#         timeout:
+#           hours: 0
+#           minutes: 1
+#           seconds: 0
+#           milliseconds: 0
+#       # then turn off the power
+#       - service: switch.turn_off
+#         data: {}
+#         target:
+#           entity_id: switch.nad_c370
+
+
+# # {% if is_state("media_player.owntone_output_living_room", "playing") or is_state('media_player.apple_tv', "playing") %}
+# # playing
+# # {% else %}
+# # on
+# # {% endif %}
+
+# media_player:
+#   platform: universal
+#   name: living_room_combined
+#   state_template: >-
+#     {% if is_state("switch.nad_c370", "off") %}
+#     off
+#     {% else %}
+#     {% set watts = sensor.nad_c370_electric_consumption_w | default(0.0) float %}
+#     {% if watts > 5.0 %}
+#     on
+#     {% else %}
+#     standby
+#     {% endif %}
+#     {% endif %}
+#   commands:
+#     turn_on:
+#       service: script.media_player_nad_c370_turn_on
+#       data: {}
+#     turn_off:
+#       service: script.media_player_nad_c370_turn_on
+#       data: {}
+#     volume_up:
+#       service: script.media_player_nad_c370_remote_command
+#       data:
+#         remote_command: volume_up
+#     volume_down:
+#       service: script.media_player_nad_c370_remote_command
+#       data:
+#         remote_command: volume_down
+#     volume_mute:
+#       service: script.media_player_nad_c370_remote_command
+#       data:
+#         remote_command: mute
+#   browse_media_entity: media_player.owntone_server
+#   device_class: receiver
+#   unique_id: nad_c370

@@ -15,5 +15,6 @@ gitea_reverse_proxy_auth_enabled: false
 gitea_indexer_es_enabled: false
 gitea_openid_enabled: false
 gitea_federation_enabled: false
+gitea_actions_enabled: false
 
 shieldsio_enabled: false

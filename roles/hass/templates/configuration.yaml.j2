@@ -56,13 +56,80 @@ default_config:
 #   webhook:
 #   zeroconf:
 #   zone:
-
+# mysql://user:password@SERVER_IP:ALTERNATE_PORT/DB_NAME?charset=utf8mb4
 automation ui: !include automations.yaml
 automation ansible: !include automations-ansible-managed.yaml
 script: !include scripts.yaml
 scene: !include scenes.yaml
 template: !include templates.yaml
 #climate: !include climate.yaml
+
+device_tracker:
+  # - platform: bluetooth_tracker
+  #   #request_rssi: true
+  #   track_new_devices: true
+  #   new_device_defaults:
+  #     track_new_devices: true
+  - platform: bluetooth_le_tracker
+    # device tracker will only look for the following global settings
+    # under the configuration of the first configured platform
+    interval_seconds: 12
+    consider_home: 120
+    # setting this to 'false' still results in new devices being added
+    # to known_devices.yaml when they are discovered, but they wont be
+    # tracked unless 'track' is set to 'true' for a device there (edit
+    # the file to track a discovered device).
+    track_new_devices: false
+    track_battery: false
+    new_device_defaults:
+      track_new_devices: false
+
+  - platform: ping
+    # these are probably not used, because they are "global settings"
+    # and only the first values from the first platform (bluetooth_le_tracker)
+    # are used according to the docs
+    # interval_seconds: 30
+    # track_new_devices: true
+    # # but consider_hoem can be overridden
+    # consider_home: 120
+    hosts:
+      {% for target in hass_ping -%}
+      ping_{{ target.name }}: {{ target.host }}
+      {% endfor %}
+
+
+homeassistant:
+  auth_providers:
+    - type: command_line
+      command: /usr/local/bin/authelia-auth.py
+      args:
+        - {{ hass_url }}
+    - type: homeassistant
+  name: Home
+  currency: EUR
+  unit_system: metric
+  time_zone: "Europe/Berlin"
+  country: DE
+  external_url: https://{{ hass_url }}
+  internal_url: https://{{ hass_url }}
+  allowlist_external_dirs:
+    - "/usr/var/media"
+  allowlist_external_urls:
+    - "https://{{ static_url }}"
+    - "https://{{ hass_notflix_url }}"
+  media_dirs:
+    media: "/usr/var/media"
+  packages: !include_dir_named packages
+  customize:
+    sensor.mariadb_database_size:
+      friendly_name: MariaDB hass DB size
+      package: configuration
+    sensor.mariadb_database_size_hourly:
+      friendly_name: MariaDB hass DB size mb/hour
+      package: configuration
+    sensor.mariadb_database_size_daily:
+      friendly_name: MariaDB hass DB size mb/day
+      package: configuration
 
 http:
   server_host: 127.0.0.1
@@ -72,8 +139,18 @@ http:
   use_x_forwarded_for: true
 
 api:
-
 websocket_api:
+wake_on_lan:
+# /api/prometheus
+# default: all entities are included
+prometheus:
+
+system_log:
+  fire_event: true
+
+{% set zones = {'zone': hass_zones.values() | list } -%}
+{% set zones_yaml = zones | to_nice_yaml(indent=2) -%}
+{{ zones_yaml | indent(2) | trim }}
 
 # Text to speech
 tts:
@@ -83,15 +160,21 @@ tts:
   - platform: picotts
     language: "en-GB"
 
+{% if hass_caldav | length > 0 -%}
 calendar:
-  {% for item in hass_caldav.calendars -%}
+  {% for item in hass_caldav -%}
+  # {{ item.name }}
   - platform: caldav
-    days: 30
-    username: !secret caldav_user
-    password: !secret caldav_passwd
-    # {{ item.name | trim }}
     url: {{ item.url | trim }}
+    {% if 'username_secret' in item -%}
+    username: !secret {{ item.username_secret | trim }}
+    password: !secret {{ item.passwd_secret | trim }}
+    {% endif -%}
+    {# this can filter for events and create binary_sensor's for matches #}
+    {# custom_calendars: [] #}
+
   {% endfor %}
+{% endif %}
 
 frontend:
   themes: !include_dir_merge_named themes
@@ -101,7 +184,70 @@ panel_custom:
     sidebar_title: Z-Wave
     sidebar_icon: mdi:z-wave
     js_url: /api/hassio/app/entrypoint.js
-    url_path: 'config/devices/dashboard?historyBack=1&config_entry=d6e38621854098348266029e18f93048'
+    url_path: 'config/integrations/integration/zwave_js'
+    embed_iframe: true
+    require_admin: true
+    config:
+      ingress: core_configurator
+  - name: esphome
+    sidebar_title: ESPHome
+    sidebar_icon: mdi:car-esp
+    js_url: /api/hassio/app/entrypoint.js
+    url_path: 'config/integrations/integration/esphome'
+    embed_iframe: true
+    require_admin: true
+    config:
+      ingress: core_configurator
+  - name: vaccum_robot
+    sidebar_title: Valetudo
+    sidebar_icon: mdi:robot-vacuum
+    js_url: /api/hassio/app/entrypoint.js
+    url_path: 'config/devices/device/1bda4ef775ea71dd7477102faec7c094'
+    embed_iframe: true
+    require_admin: false
+    config:
+      ingress: core_configurator
+  - name: sonos
+    sidebar_title: Sonos
+    sidebar_icon: mdi:speaker
+    js_url: /api/hassio/app/entrypoint.js
+    url_path: 'config/integrations/integration/sonos'
+    embed_iframe: true
+    require_admin: false
+    config:
+      ingress: core_configurator
+  - name: apple_tv
+    sidebar_title: Apple TV
+    sidebar_icon: mdi:apple
+    js_url: /api/hassio/app/entrypoint.js
+    url_path: 'config/integrations/integration/apple_tv'
+    embed_iframe: true
+    require_admin: false
+    config:
+      ingress: core_configurator
+  - name: met_no
+    sidebar_title: met.no
+    sidebar_icon: mdi:cloud-question
+    js_url: /api/hassio/app/entrypoint.js
+    url_path: 'config/integrations/integration/met'
+    embed_iframe: true
+    require_admin: false
+    config:
+      ingress: core_configurator
+  - name: open_meteo
+    sidebar_title: Open-Meteo
+    sidebar_icon: mdi:cloud-question
+    js_url: /api/hassio/app/entrypoint.js
+    url_path: 'config/integrations/integration/open_meteo'
+    embed_iframe: true
+    require_admin: false
+    config:
+      ingress: core_configurator
+  - name: logs
+    sidebar_title: Logs
+    sidebar_icon: mdi:file
+    js_url: /api/hassio/app/entrypoint.js
+    url_path: 'config/logs'
     embed_iframe: true
     require_admin: true
     config:
@@ -130,39 +276,18 @@ panel_custom:
     js_url: /api/hassio/app/entrypoint.js
     url_path: 'config/integrations'
     embed_iframe: true
+    require_admin: false
+    config:
+      ingress: core_configurator
+  - name: entities
+    sidebar_title: Entities
+    sidebar_icon: mdi:clover
+    js_url: /api/hassio/app/entrypoint.js
+    url_path: 'config/entities'
+    embed_iframe: true
     require_admin: true
     config:
       ingress: core_configurator
-
-
-{% set zone = {'zone': hass_zones} %}
-{{ zone | to_nice_yaml }}
-
-
-homeassistant:
-  auth_providers:
-    - type: command_line
-      command: /usr/local/bin/authelia-auth.py
-      args:
-        - {{ hass_url }}
-  name: Home
-  currency: EUR
-  unit_system: metric
-  time_zone: "Europe/Berlin"
-  country: DE
-  external_url: https://{{ hass_url }}
-  internal_url: https://{{ hass_url }}
-  allowlist_external_dirs:
-    - "/usr/var/media"
-  allowlist_external_urls:
-    - "https://{{ static_url }}"
-    - "https://{{ hass_notflix_url }}"
-  media_dirs:
-    media: "/usr/var/media"
-  customize:
-    zone.home:
-      friendly_name: S21
-  packages: !include_dir_named packages
 
 lovelace:
   mode: storage
@@ -182,22 +307,91 @@ lovelace:
       require_admin: false
       filename: ui-test.yaml
 
-  {# resources:
-   #   - url: /config/custom_components/ui_lovelace_minimalist/cards/button-card/button-card.js
-   #     type: module
-   #   - url: /config/custom_components/ui_lovelace_minimalist/cards/button-card/button-card.js
-   #     type: module #}
-
 recorder:
-  purge_keep_days: 3
+  db_url: mysql://{{ systemuserlist.hass.username }}:@localhost/{{ systemuserlist.hass.username }}?charset=utf8mb4&unix_socket=/run/mysqld/mysqld.sock
+  auto_purge: true
+  auto_repack: true
+  purge_keep_days: 30
   exclude:
+    entities:
+      - sensor.esphmoe_ble_names
+      - sensor.esphome_ble_names
+      - sensor.ble_proxy_json_ble_scanner
+      - sensor.austin
+      - sensor.boston
+      - sensor.iceland
+      - sensor.utc
+      - sensor.berlin
+      - sensor.button_pressed_event_context_id
+      - sensor.time
+      - sensor.date
+      - sensor.date_time
+      - sensor.date_time_utc
+      - sensor.date_time_iso
+      - sensor.time_date
+      - sensor.ptime_utc
+      - binary_sensor.morning_alarm_is_today
+      - sensor.morning_alarm_next
+      - sensor.morning_alarm_next_wihout_offset
+      - sensor.sorted_motion_last_changed
     entity_globs:
-      - binary_sensor.1066d799*
-      - sensor.1066d799*
-      - light.1066d799*
+      - sensor.uptime_*
+      - sensor.*_uptime
+      - sensor.unifi_uptime_*
+      - sensor.esphome_uptime_*
+      - sensor.*_adc_a0
+      - sensor.*_adc_*
+      - sensor.rssi_*
+      - sensor.*_rssi
+      - sensor.*_ble_scanner
+      - sensor.*_json_ble_scanner
 
+      #- "device_tracker.*_*_*_*_*_*"
+
+sql:
+  - name: mariadb_database_size
+    query: 'SELECT table_schema "{{ systemuserlist.hass.username }}", ROUND(SUM(data_length + index_length) / 1024 / 1024, 1) "value" FROM information_schema.tables WHERE table_schema="{{ systemuserlist.hass.username}}" GROUP BY table_schema;'
+    column: "value"
+    device_class: data_size
+    unit_of_measurement: MB
+
+# ping_motion_hallway_west
+# firmware_motion_hallway_west
+# idle_tamper_motion_hallway_west
+# idle_motion_hallway_west
+# battery_level_motion_hallway_west
+# node_status_motion_hallway_west
+# illuminance_motion_hallway_west
+# air_temparature_hallway_west_motion
+# basic_motion_hallway_north
+# sensor_status_motion_bedroom_east
+# tamper_motion_bedroom_east
+# seismic_intensity_motion_study_north
 
 sensor:
+  - platform: time_date
+    display_options:
+      - 'time'
+      - 'date'
+      - 'date_time'
+      - 'date_time_utc'
+      - 'date_time_iso'
+      - 'time_date'
+      - 'time_utc'
+  - platform: derivative
+    source: sensor.mariadb_database_size
+    name: mariadb_database_size_hourly
+    round: 2
+    unit_time: h
+    time_window: "01:00:00"
+  - platform: derivative
+    source: sensor.mariadb_database_size
+    name: mariadb_database_size_daily
+    round: 2
+    unit_time: d
+    time_window: "24:00:00"
+
+  # YAML config was removed :(
   # https://www.home-assistant.io/integrations/dwd_weather_warnings/
   # https://www.dwd.de/DE/leistungen/opendata/help/warnungen/warning_codes_pdf.pdf?__blob=publicationFile&v=5
   # https://www.dwd.de/DE/leistungen/opendata/help/warnungen/cap_warncellids_csv.html
@@ -209,29 +403,18 @@ sensor:
   # 911000000;Berlin;;Land Berlin;LBE
   # 911100000;Berlin;;Berlin;BXZ
   # 995000000;Brandenburg/Berlin;;Berlin/Brandenb;DWPD
-
-  - platform: dwd_weather_warnings
-    # Berlin - Friedrichshain-Kreuzberg
-    region_name: 711000002
-
-  - platform: dwd_weather_warnings
-    # Berlin - Pankow
-    region_name: 711000003
-
-  - platform: dwd_weather_warnings
-    # Stadt Berlin
-    region_name: 811000000
-
-  {% for item in hass_bvg -%}
-  - platform: bvg_berlin_public_transport
-    name: {{ item.name }}
-    stop_id: "{{ item.stop_id }}"
-    direction: {{ item.direction | trim }}
-    {% if item.walking_distance is defined -%}
-    walking_distance: {{ item.walking_distance | trim }}
-    {% endif -%}
-    file_path: "/config/bvg/"
-  {% endfor %}
+  #
+  #- platform: dwd_weather_warnings
+  #  # Berlin - Friedrichshain-Kreuzberg
+  #  region_name: 711000002
+  #
+  #- platform: dwd_weather_warnings
+  #  # Berlin - Pankow
+  #  region_name: 711000003
+  #
+  #- platform: dwd_weather_warnings
+  #  # Stadt Berlin
+  #  region_name: 811000000
 
   - platform: worldclock
     time_zone: UTC
@@ -249,8 +432,6 @@ sensor:
     time_zone: America/Chicago
     name: Austin
 
-
-
   - platform: waqi
     token: !secret waqi_token
     locations:
@@ -262,30 +443,6 @@ sensor:
       #- "{{ item | trim }}"
       #{% endfor %}
       #}
-
-binary_sensor:
-  - platform: workday
-    country: DE
-    workdays: [mon, tue, wed, thu, fri]
-    excludes: [sat, sun, holiday]
-
-  {% for radiator in hass_radiators -%}
-  {% if 'status' in radiator -%}
-  - platform: threshold
-    entity_id: sensor.radiator_{{ radiator.name }}_last_updated
-    # defined in templates.yaml
-    name: radiator_{{ radiator.name }}_reporting
-    # minutes
-    lower: 10
-  {% endif -%}
-  {% endfor -%}
-  {% for target in hass_ping -%}
-  - platform: ping
-    name: ping_{{ target.name }}
-    host: {{ target.host }}
-    count: {{ target.count | default('1') }}
-    scan_interval: {{ target.interval_secs | default('30') }}
-  {% endfor %}
 
 input_select:
   heating_mode_test:
@@ -308,46 +465,12 @@ input_number:
     max: 35
     step: 0.5
 
-input_text:
-  {% for linux_tracker in hass_linux_presence_trackers -%}
-  webhook_{{ linux_tracker.name }}:
-    name: webhook_{{ linux_tracker.name }}
-    icon: "mdi:laptop"
-    initial: "inactive"
-    pattern: "^active|inactive$"
-  {% endfor %}
-
-device_tracker:
-  - platform: bluetooth_le_tracker
-    # device tracker will only look for the following global settings
-    # under the configuration of the first configured platform
-    interval_seconds: 12
-    consider_home: 120
-    # setting this to 'false' still results in new devices being added
-    # to known_devices.yaml when they are discovered, but they wont be
-    # tracked unless 'track' is set to 'true' for a device there (edit
-    # the file to track a discovered device).
-    track_new_devices: false
-    #new_device_defaults:
-    #  track_new_devices: false
-
-  - platform: bluetooth_tracker
-    request_rssi: true
-    track_new_devices: false
-  - platform: ping
-    # these are probably not used, because they are "global settings"
-    # and only the first values from the first platform (bluetooth_le_tracker)
-    # are used according to the docs
-    interval_seconds: 30
-    track_new_devices: true
-    # but consider_hoem can be overridden
-    consider_home: 120
-    hosts:
-      {% for target in hass_ping -%}
-      {% if target.device_tracker|default(true) -%}
-      ping_{{ target.name }}: {{ target.host }}
-      {% endif -%}
-      {% endfor %}
+{# input_boolean:
+ #   {% for linux_tracker in hass_linux_presence_trackers -%}
+ #   webhook_{{ linux_tracker.name }}_last_state:
+ #     name: webhook_{{ linux_tracker.name }}_last_state
+ #     icon: "mdi:laptop"
+ #   {% endfor %} #}
 
 
 influxdb:
@@ -378,11 +501,15 @@ matrix:
     - word: hass
       name: hass
 
+digital_ocean:
+  access_token: !secret do_token
+
 notify:
   - name: matrix
     platform: matrix
     default_room: !secret matrix_default_room
   - name: pagerduty
+    timeout: 60
     platform: smtp
     sender: hass@{{ domain }}
     recipient:
@@ -397,20 +524,34 @@ notify:
 shell_command:
   matrixmsg: /usr/local/bin/matrixmsg.py
 
-
-{#
- # feedreader:
- #   urls:
- #   {% for item in hass_feedreader -%}
- #     - "{{ item.url | trim }}"
- #   {% endfor %}
- #}
-
 logger:
   default: warning
   logs:
-    pyatv: debug
-    homeassistant.components.apple_tv: debug
+    pyatv: warning
+    homeassistant.components.apple_tv: warning
 
 # enable SVT play
 svt_play:
+
+sonos:
+  # useful for not using docker host networking
+  # and for avoiding auto discovery in general
+  media_player:
+    # tells the sonos devices how to reach hass
+    advertise_addr: {{ local_ip }}
+    # tells hass how to reach the sonos speakers
+    #hosts:
+    #  - sonos-bedroom.{{ inventory_hostname.split('.')[1:] | join(".") }}
+    #  - sonos-hallway.{{ inventory_hostname.split('.')[1:] | join(".") }}
+    #  - sonos-study.{{ inventory_hostname.split('.')[1:] | join(".") }}
+    #  - sonos-kitchen.{{ inventory_hostname.split('.')[1:] | join(".") }}
+    #  - sonos-livingroom.{{ inventory_hostname.split('.')[1:] | join(".") }}
+
+{# media_player:
+ #   - platform: mpd
+ #     host: audio.{{ domain }}
+ #     name: mpdtone #}
+
+{# mqtt:
+ #   sensor:
+ #     - state_topic: rtl_433/+/events #}

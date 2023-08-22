@@ -1,0 +1,113 @@
+---
+
+homeassistant:
+  customize:
+    package.node_anchors:
+      common_attrs: &common_attrs
+        package: "weather"
+      common_attrs_templated: &common_attrs_templated
+        templated: true
+        <<: *common_attrs
+
+    input_boolean.skylight_lock:
+      friendly_name: "Skylight lock state"
+      <<: *common_attrs_templated
+
+    binary_sensor.skylight_lock:
+      friendly_name: "Skylight position locked"
+      <<: *common_attrs_templated
+
+    binary_sensor.skylight_close_weather:
+      friendly_name: "Skylight should be closed due to weather"
+      <<: *common_attrs_templated
+
+    binary_sensor.skylight_open_weather:
+      friendly_name: "Skylight weather conditions allow for open skylight"
+      <<: *common_attrs_templated
+
+    sensor.skylight_position:
+      friendly_name: "Skylight position"
+      <<: *common_attrs_templated
+
+    sensor.electric_w_shutter_hallway_skylight_max_30d:
+      friendly_name: Hallway Skylight Electrix [W] max over 30d
+      <<: *common_attrs
+    sensor.electric_w_shutter_hallway_skylight_max_24h:
+      friendly_name: Hallway Skylight Electrix [W] max over 24h
+      <<: *common_attrs
+
+
+input_boolean:
+  skylight_lock:
+    name: skylight_lock
+
+template:
+
+  # see comments in weather.yaml
+  - binary_sensor:
+      - name: skylight_close_weather
+        device_class: problem
+        state: >-
+          {{
+          is_state("binary_sensor.weather_precipitation", "on")
+          or is_state("binary_sensor.weather_rain", "on")
+          or is_state("binary_sensor.weather_lightning", "on")
+          }}
+
+  - binary_sensor:
+      - name: skylight_lock
+        icon: >-
+          {% if is_state("input_boolean.skylight_lock", "on") %}
+          mdi:lock
+          {% else %}
+          mdi:lock-open-variant
+          {% endif %}
+        availability: >-
+          {{
+          states("input_boolean.skylight_lock") is defined
+          and has_value("input_boolean.skylight_lock")
+          }}
+        state: >-
+          {{ is_state("input_boolean.skylight_lock", "on") }}
+        attributes:
+          source_entity_id: input_boolean.skylight_lock
+
+
+  - sensor:
+      # {% set ipma_2h = state_attr('weather.ipma_hourly_home', 'forecast')[:2] | map(attribute='precipitation_probability') %} #}
+      # {% set ipma_1h = state_attr('weather.ipma_hourly_home', 'forecast')[0]['precipitation_probability'] | int %} #}
+
+
+      - name: skylight_position
+        icon: >-
+          {% if states("sensor.skylight_position") | int(0) > 0 %}
+          mdi:electric-switch
+          {% else %}
+          mdi:electric-switch-closed
+          {% endif %}
+        state_class: measurement
+        unit_of_measurement: "%"
+        state: >-
+          {% set source_id = state_attr(this.entity_id, "source_entity_id") or "" %}
+          {{ state_attr(source_id, "current_position") }}
+        attributes:
+          source_entity_id: cover.flush_shutter
+          area_id: >-
+            {{ area_id(state_attr(this.entity_id, "source_entity_id")) }}
+          area_name: >-
+            {{ area_id(state_attr(this.entity_id, "source_entity_id")) }}
+
+
+sensor:
+  - name: electric_w_shutter_hallway_skylight_max_30d
+    platform: statistics
+    entity_id: sensor.electric_w_shutter_hallway_skylight
+    state_characteristic: value_max
+    max_age:
+      days: 30
+  - name: electric_w_shutter_hallway_skylight_max_24h
+    platform: statistics
+    entity_id: sensor.electric_w_shutter_hallway_skylight
+    state_characteristic: value_max
+    max_age:
+      hours: 24

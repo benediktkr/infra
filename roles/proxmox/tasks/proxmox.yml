@@ -1,48 +1,96 @@
 ---
 
-- name: add apt repo
-  apt_repository:
-    repo: "deb [arch=amd64] http://download.proxmox.com/{{ ansible_lsb.id | lower }}/pve {{ ansible_lsb.codename | lower}} pve-no-subscription"
+# https://pve.proxmox.com/wiki/Install_Proxmox_VE_on_Debian_12_Bookworm
+
+- name: ensure hostname in /etc/hosts
+  lineinfile:
+    dest: /etc/hosts
+    line: "{{ etc_hosts_ip }} {{ inventory_hostname }} {{ inventory_hostname.split('.')[0] }}"
     state: present
-    update_cache: false
-    filename: /etc/apt/sources.list.d/pve-install-repo
+  #when: etc_hosts_ip is defined
   tags:
-    - packages
-    - proxmox-repo
+    - etc-hosts
+
+- name: ensure no 127.0.0.0/8 entries for hostname in /etc/hosts (when required)
+  lineinfile:
+    dest: /etc/hosts
+    regexp: "^127.*{{ item }}.*"
+    state: absent
+  with_items:
+    - "{{ inventory_hostname }}"
+    - "{{ inventory_hostname.split('.')[0] }}"
+  #when: etc_hosts_rm|default(false) or 'proxmox' in group_names
+  tags: etc-hosts
+
 
 - name: copy gpg key for repo
   copy:
-    src: proxmox-release-bullseye.gpg
-    dest: /etc/apt/trusted.gpg.d/proxmox-release-bullseye.gpg
+    src: proxmox-release-{{ ansible_distribution_release }}.gpg
+    dest: /etc/apt/keyrings/proxmox-release-{{ ansible_distribution_release }}.gpg
     owner: root
     group: root
     mode: "0644"
   tags:
+    - proxmox-repo
     - packages
+
+# - name: template sources file
+#   template:
+#     src: proxmox-release.sources.j2
+#     dest: /etc/apt/sources.list.d/proxmox-release.sources
+#     owner: root
+#     group: root
+#     mode: 0644
+#   register: proxmox_repo
+#   tags:
+#     - proxmox-repo
+#     - pacakges
+
+- name: add apt repo
+  apt_repository:
+    repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/proxmox-release-{{ ansible_distribution_release }}.gpg] http://download.proxmox.com/{{ ansible_distribution | lower }}/pve {{ ansible_distribution_release }} pve-no-subscription"
+    state: present
+    update_cache: false
+    filename: /etc/apt/sources.list.d/proxmox-release
+  register: proxmox_repo
+  tags:
+    - packages
+    - proxmox-repo
+    - proxmox-repo-list
 
 - name: apt-get update
   apt:
     update_cache: true
+    upgrade: full
+  #when: promox_repo.changed
   tags:
     - packages
-
-# NOTE: not in ansible yet, docs say to do a "apt full-upgrade" now.
 
 - name: install proxmox kernel
   apt:
-    name: pve-kernel-5.15
+    name: pve-kernel-6.2
     state: present
+  register: proxmox_kernel
   tags:
     - packages
 
-# NOTE: also not in ansible, reboot after this.
+- name: reboot prompt, lets do it manually for now
+  pause:
+    prompt: "pve-kernel installed, please reboot, unlock and return here (or restart playbook"
+  when: proxmox_kernel.changed
 
-- name: install poxmox ve
+- name: check if it worked
+  pause:
+    prompt: "did it work?"
+  when: proxmox_kernel.changed
+
+- name: install VE and etc
   apt:
     name:
-      - proxmox-ve
       #- postfix
+      - proxmox-ve
       - open-iscsi
+      - ifupdown2
     state: present
   tags:
     - packages
@@ -53,6 +101,7 @@
     state: absent
   tags:
     - packages
+    - proxmox-post-reboot
   register: enterprise_removed
 
 - name: update apt if enterprise repo removed
@@ -60,15 +109,62 @@
     update_cache: true
   tags:
     - packages
+    - proxmox-post-reboot
   when: enterprise_removed.changed
 
-- name: remove debian kernel and os-prober
-  apt:
-    name:
-      - linux-image-amd64
-      - 'linux-image-5.10*'
-      - os-prober
-    state: absent
-  notify: update grub
+# - name: remove debian kernel and os-prober
+#   apt:
+#     name:
+#       - linux-image-amd64
+#       - 'linux-image-6.1*'
+#       - os-prober
+#     state: absent
+#   notify: update grub
+#   tags:
+#     - packages
+#     - proxmox-post-reboot
+
+- name: install certs
+  copy:
+    src: "/usr/local/etc/letsencrypt/live/{{ item }}"
+    dest: "/usr/local/etc/certs/"
+    owner: root
+    group: root
+    mode: 0755
   tags:
-    - packages
+    - letsencrypt-certs
+  notify: reload nginx
+  vars:
+    prediff_cmd: echo
+  with_items:
+    - "{{ inventory_hostname.split('.')[1:] | join('.') }}"
+
+- name: nginx config
+  template:
+    src: 01-proxmox.conf.j2
+    dest: /etc/nginx/sites-enabled/01-proxmox.conf
+    owner: root
+    group: root
+    mode: 0644
+  notify: reload nginx
+  tags:
+    - proxmox-nginx
+
+- name: template file to stop the web interface to listen on all ports, we have reverse proxies for that
+  template:
+    src: default-pveproxy.j2
+    dest: /etc/default/pveproxy
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart pveproxy
+
+- name: configure users
+  template:
+    src: user.cfg.j2
+    dest: /etc/pve/user.cfg
+    owner: root
+    group: www-data #???
+    mode: 640
+  tags:
+    - proxmox-users

@@ -1,0 +1,5 @@
+---
+ - import_tasks: hass-mqtt.yml
+   tags:
+     - hass
+     - hass-mqtt

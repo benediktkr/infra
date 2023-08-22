@@ -1,0 +1,5 @@
+---
+ - import_tasks: hass-appdaemon.yml
+   tags:
+     - hass-appdaemon
+     - hass-ad

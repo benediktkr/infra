@@ -1,0 +1,13 @@
+---
+
+sensor:
+  {% for item in hass_bvg -%}
+  - platform: bvg_berlin_public_transport
+    name: {{ item.name }}
+    stop_id: "{{ item.stop_id }}"
+    direction: {{ item.direction | trim }}
+    {% if item.walking_distance is defined -%}
+    walking_distance: {{ item.walking_distance | trim }}
+    {% endif -%}
+    file_path: "/config/bvg/"
+  {% endfor %}

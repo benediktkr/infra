@@ -68,3 +68,4 @@ host_vars/
 playbooks/
 
 /*.yml
+/cups.yml

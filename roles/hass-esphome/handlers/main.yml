@@ -1,0 +1,6 @@
+---
+
+# - name: esphome ota
+#   debug:
+#     msg: >-
+#       docker-esphome.sh run --device {{ item.name }}.{{ inventory_hostname.split('.')[1:] | join('.') }} --no-logs {{ item.config }}

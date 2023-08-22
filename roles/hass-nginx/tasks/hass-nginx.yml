@@ -1,0 +1,83 @@
+---
+
+- name: install certs
+  copy:
+    src: "/usr/local/etc/letsencrypt/live/{{ item }}"
+    dest: "/usr/local/etc/certs/"
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - letsencrypt-certs
+  notify: reload nginx
+  vars:
+    prediff_cmd: echo
+  with_items:
+    - "{{ domain }}"
+- name: create dir structure
+  file:
+    path: "/var/www/{{ item }}"
+    state: directory
+    mode: 0755
+    owner: hass
+    group: hass
+  tags:
+    - hass-dirs
+    - hass-nginx-dirs
+  loop_control:
+    label: "{{ item }}"
+  with_items:
+    - hass
+    - hass/entity_pictures
+
+- name: copy entity picture files
+  copy:
+    src: "entity_pictures/{{ item }}"
+    dest: "/var/www/hass/entity_pictures/{{ item }}"
+    mode: 0644
+    owner: hass
+    group: hass
+  with_items:
+    - sonos_dark.png
+  tags:
+    - hass-entity-pictures
+
+- name: copy valetudo swagger json
+  copy:
+    src: valetudo-api.json
+    dest: /var/www/hass/valetudo-api.json
+    mode: 0644
+    owner: www-data
+    group: www-data
+
+- name: template nginx vhosts for hass and friends
+  template:
+    src: "01-{{ item }}.conf.j2"
+    dest: /etc/nginx/sites-enabled/{{ item }}.conf
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - hass
+    - zwavejs
+    - valetudo
+  tags:
+    - nginx
+    - hass-nginx
+    - zwave-nginx
+    - hass-zwave
+    - hass-zigbee
+  notify: reload nginx
+
+# different task because its better for the hass config to restart nginx
+- name: template nginx vhost for grafana-proxy
+  template:
+    src: 01-grafana-proxy.j2
+    dest: /etc/nginx/sites-enabled/01-grafana
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - nginx
+    - grafana-proxy-nginx
+  notify: reload nginx

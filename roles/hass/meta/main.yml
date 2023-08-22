@@ -1,0 +1,12 @@
+---
+
+dependencies:
+  - hass-nginx
+  - hass-utils
+  - hass-zwave
+  - hass-esphome
+  - hass-mqtt
+  - hass-zigbee
+
+  - hass-usbip
+  - hass-rtl433

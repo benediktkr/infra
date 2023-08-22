@@ -1,0 +1,35 @@
+---
+
+# https://wiki.archlinux.org/title/USB/IP
+
+- name: install usbip
+  apt:
+    name:
+      - linux-tools-common
+      - linux-tools-generic
+    state: latest
+  tags:
+    - packages
+    - hass-packages
+
+- name: "ensure usbip-core kernel module is {{ modprobe_task_str }}"
+  modprobe:
+    name: usbip-core
+    state: >-
+        {%- if hass_usbip_enabled -%}
+        present
+        {%- else -%}
+        absent
+        {%- endif %}
+
+# The daemon will accept connections on TCP port 3240.
+- name: copy systemd unit file
+  copy:
+    src: usbip-bind@.service
+    dest: /etc/systemd/system/usbip-bind@.service
+    owner: root
+    group: root
+    mode: 0644
+  notify: systemctl daemon reload
+  tags:
+    - hass-usbip-systemd

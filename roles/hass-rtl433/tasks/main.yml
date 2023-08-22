@@ -1,0 +1,5 @@
+---
+ - import_tasks: hass-rtl433.yml
+   tags:
+     - hass
+     - hass-rtl433

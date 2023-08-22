@@ -3,5 +3,7 @@
 dependencies:
   - podgrab
   - airconnect
-  - shairplay
+  #- shairplay
   - owntone
+  - navidrome
+  - bonob

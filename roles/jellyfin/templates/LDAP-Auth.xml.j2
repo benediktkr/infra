@@ -6,7 +6,7 @@
   <LdapSearchAttributes>uid, cn, mail, displayName</LdapSearchAttributes>
   <LdapUsernameAttribute>uid</LdapUsernameAttribute>
   <LdapSearchFilter>(&amp;(|(objectclass=inetOrgPerson))(|(memberof=cn=notflix,ou=groups,{{ openldap_dc }})))</LdapSearchFilter>
-  <LdapAdminFilter>(&amp;(|(objectclass=inetOrgPerson))(|(memberof=cn=admin,ou=groups,{{ openldap_dc }})))</LdapAdminFilter>
+  <LdapAdminFilter>(&amp;(|(objectclass=inetOrgPerson))(|(memberof=cn=notflix-admin,ou=groups,{{ openldap_dc }})(memberof=cn=admin,ou=groups,{{ openldap_dc }})))</LdapAdminFilter>
   <LdapBindUser>cn=readonly,{{ openldap_dc }}</LdapBindUser>
   <LdapBindPassword>{{ openldap_readonly_pass }}</LdapBindPassword>
   <CreateUsersFromLdap>true</CreateUsersFromLdap>

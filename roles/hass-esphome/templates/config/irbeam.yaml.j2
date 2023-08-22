@@ -1,0 +1,223 @@
+substitutions:
+  id_prefix: "{{ item.name.replace("-", "_") }}"
+
+esphome:
+  name: "{{ item.name }}"
+  friendly_name: "IR Beam"
+  name_add_mac_suffix: false
+
+esp8266:
+  board: nodemcuv2
+
+logger:
+
+api:
+  password: "{{ hass_esphome_api_password }}"
+ota:
+  password: "{{ hass_esphome_ota_password }}"
+
+wifi:
+  ssid: "{{ hass_esphome_wifi_ssid }}"
+  password: "{{ hass_esphome_wifi_password }}"
+  domain: .{{ inventory_hostname.split('.')[1:] | join('.') }}
+  # use_address:
+
+  ap:
+    # no ssdi = uses device name
+    # ssid:
+    password: "{{ hass_esphome_fallback_wifi_password }}"
+
+mdns:
+  disabled: true
+
+captive_portal:
+
+web_server:
+  port: 80
+
+sensor:
+
+  - platform: adc
+    id: ${id_prefix}_adc_a0
+    pin: A0
+    name: "ADC A0"
+    update_interval: 0.05s
+    accuracy_decimals: 2
+
+  - id: ${id_prefix}_percent
+    #platform: adc
+    #pin: A0
+    #update_interval: 0.05s
+    platform: copy
+    source_id: ${id_prefix}_adc_a0
+    name: "Percent"
+    accuracy_decimals: 0
+    device_class: "power_factor"
+    unit_of_measurement: "%"
+    filters:
+      # esp32 espressif
+      # - lambda: !lambda |-
+      #     return 100-(x/3.13*100);
+      # nodemcu
+      - lambda: !lambda |-
+          return 100-(x*100);
+      - delta: 1.0
+      - lambda: !lambda |-
+          if (x < 0) return 0;
+          return int(x);
+      - throttle: 0.1s
+
+  # ESPHome
+  - platform: wifi_signal
+    internal: true
+    name: "WiFi signal strength"
+    id: ${id_prefix}_wifi_signal_strength
+    update_interval: 60s
+    entity_category: "diagnostic"
+    unit_of_measurement: "dBm"
+    filters:
+      - throttle: 900s
+
+    # Reports the WiFi signal strength in %
+  - platform: copy
+    source_id: ${id_prefix}_wifi_signal_strength
+    name: "WiFi signal"
+    unit_of_measurement: "%"
+    device_class: power_factor
+    entity_category: "diagnostic"
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: "IP address"
+      entity_category: "diagnostic"
+    ssid:
+      name: "SSID"
+      entity_category: "diagnostic"
+    mac_address:
+      name: "WiFi mac address"
+      entity_category: "diagnostic"
+    dns_address:
+      name: "DNS address"
+      entity_category: "diagnostic"
+  - platform: version
+    id: ${id_prefix}_version
+    entity_category: "diagnostic"
+    name: "version"
+
+binary_sensor:
+  - platform: gpio
+    name: none
+    device_class: "motion"
+    icon: "mdi:motion"
+    publish_initial_state: true
+    pin:
+      # was using D8 / GPIO15 (same as status_led)
+      # GPIO14
+      number: D5
+      inverted: true
+    filters:
+      - delayed_on: 10ms
+      - delayed_off: 10ms
+  - platform: status
+    name: status
+    entity_category: "diagnostic"
+    id: ${id_prefix}_status
+
+light:
+  - platform: status_led
+    name: "Status LED 1"
+    id: ${id_prefix}_status_led_1
+    icon: "mdi:alarm-light"
+    entity_category: "config"
+    pin:
+      # GPIO 16
+      number: D0
+      inverted: true
+
+  - platform: status_led
+    name: "Status LED 2"
+    id: ${id_prefix}_status_led_2
+    icon: "mdi:alarm-light"
+    entity_category: "config"
+    pin:
+      # GPIO02
+      number: D4
+      inverted: true
+
+  #  # was trying to use: D0, D1, D2 for rgb led
+  - name: "Green Indicator LED"
+    icon: mdi:led-outline
+    #restore_mode: RESTORE_DEFAULT_OFF
+    restore_mode: ALWAYS_OFF
+    output: D6_PWM
+
+    # platform: binary
+    # enables using some effects and default_transition_length
+    platform: monochromatic
+    # default: 1s
+    default_transition_length: 1s
+    effects:
+      - pulse:
+          name: pulse
+      - pulse:
+          name: pulse_fast
+          transition_length: 0.5s
+          update_interval: 0.5s
+          min_brightness: 0%
+          max_brightness: 100%
+      - pulse:
+          name: pulse_slow
+          transition_length: 2.5s
+          update_interval: 2.5s
+          min_brightness: 0%
+          max_brightness: 100%
+      - strobe:
+      - strobe:
+          name: strobe_slow
+          colors:
+            - state: true
+              duration: 1s
+            - state: false
+              duration: 0.5s
+      - strobe:
+          name: strobe_slower
+          colors:
+            - state: true
+              duration: 3s
+            - state: false
+              duration: 1s
+      - flicker:
+          name: flicker
+      - flicker:
+          name: flicker_95
+          alpha: 95%
+          intensity: 1.5%
+      - flicker:
+          name: flicker_50
+          alpha: 50%
+          intensity: 12.5%
+
+
+output:
+  - platform: esp8266_pwm
+    # GPIO 12
+    id: D6_PWM
+    pin: D6
+
+switch:
+  - platform: safe_mode
+    name: "reboot (safe mode)"
+    entity_category: config
+    id: ${id_prefix}_safe_mode_boot
+  - platform: restart
+    name: "reboot"
+    icon: mdi:power-cycle
+    id: ${id_prefix}_reboot
+
+button:
+  - platform: wake_on_lan
+    name: "Wake-on-LAN TV Livingroom"
+    target_mac_address: {{ s21_mac_samsung_tv }}

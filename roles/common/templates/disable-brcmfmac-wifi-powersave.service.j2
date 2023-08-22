@@ -1,0 +1,11 @@
+[Unit]
+Description=Disable pwr_save set by the brcmfmac module since ubuntu doesnt seem to include the patch disabling it
+After=sys-subsystem-net-devices-{{ brcmfmac_interface}}.device
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/sbin/iw dev {{ brcmfmac_interface }} set power_save off
+
+[Install]
+WantedBy=sys-subsystem-net-devices-{{ brcmfmac_interface }}.device

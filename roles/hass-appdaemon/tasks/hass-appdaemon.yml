@@ -1,0 +1,175 @@
+---
+
+- name: create dir structure
+  file:
+    path: "{{ item.path_prefix | default(systemuserlist.hass.home + '/') }}{{ item.path }}"
+    state: directory
+    mode: "{{ item.mode | default('0755') }}"
+    owner: hass
+    group: hass
+  tags:
+    - hass-dirs
+    - hass-ad-redis
+    - hass-ad-dirs
+    - hass-appdaemon-dirs
+  loop_control:
+    label: "{{ item.path }}"
+  with_items:
+    - path: appdaemon
+      # working around the container being hardcoded to write to /conf
+      # and not expecting to not be run as root
+    - path: appdaemon/.default-conf
+    - path: appdaemon/requirements
+    - path: appdaemon/etc
+    - path: appdaemon/etc/dashboards
+    - path: appdaemon/apps
+    - path: appdaemon/local
+    - path: /var/log/appdaemon
+      path_prefix: ""
+      # files in the www dir are available under {{ bridgewithdns.hass_ad }}:8000/local/
+    - path: appdaemon/etc/www
+    - path: redis
+      owner: '999'
+      group: '999'
+    - path: redis/data
+      owner: '999'
+      group: '999'
+
+
+- name: template appdaemon config files
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ systemuserlist.hass.home }}/appdaemon/etc/{{ item }}"
+    owner: "{{ systemuserlist.hass.uid }}"
+    group: "{{ systemuserlist.hass.gid }}"
+    mode: 0644
+  no_log: "{{ item.startswith('secret') }}"
+  notify: restart hass-ad container
+  with_items:
+    - secrets.toml
+    - appdaemon.toml
+    - dashboards/Hello.dash
+  tags:
+    - hass-config
+    - hass-ad-config
+    - hass-appdameon-config
+
+- name: copy apps
+  copy:
+    src: "{{ item }}"
+    dest: "{{ systemuserlist.hass.home }}/appdaemon/{{ item }}"
+    mode: >-
+      {% if item != 'apps/apps.toml' and item.startswith('apps/')%}
+      0755
+      {% else %}
+      0644
+      {% endif %}
+    owner: "{{ systemuserlist.hass.uid }}"
+    group: "{{ systemuserlist.hass.gid }}"
+  notify: restart hass-ad container
+  with_items:
+    - requirements/glados
+    - requirements/apple_tv
+    - requirements/buttons
+    - requirements/occupancy/
+    - apps/helloworld.py
+    - apps/glados.py
+    - apps/apple_tv.py
+    - apps/blemon.py
+    - apps/buttons.py
+    - apps/toothbrush.py
+    - apps/entity_ids.py
+    - apps/occupancy.py
+    # should be last
+    - apps/apps.toml
+  when:
+    - (hass_ad_app is not defined) or item.endswith(hass_ad_app)
+  tags:
+    - hass-ad-apps
+    - hass-ad-apps-requirements
+    - hass-appdameon-apps
+
+- name: redis container for hass-appdaemon
+  docker_container:
+    name: hass-ad-redis
+    image: "redis:latest"
+    restart_policy: "unless-stopped"
+    auto_remove: false
+    detach: true
+    pull: true
+    state: started
+    container_default_behavior: compatibility
+    env:
+      REDIS_HOST: hass-ad-redis
+    networks_cli_compatible: false
+    networks:
+      - name: bridgewithdns
+    healthcheck:
+      interval: 30s
+      timeout: 60s
+      start_period: 10s
+      test: "redis-cli --raw incr ping"
+    mounts:
+      - type: bind
+        source: "{{ systemuserlist.hass.home }}/redis/data"
+        target: /data
+  tags:
+    - redis
+    - hass-ad-redis-container
+    - hass-redis
+    - hass-redis-container
+    - hass-ad-redis-contaoner
+    - hass-ad-redis
+    - hass-ad-container
+    - hass-container
+    - docker-containers
+
+- name: start hass-ad container
+  docker_container:
+    name: hass-ad
+    image: acockburn/appdaemon:latest
+    detach: true
+    pull: true
+    restart_policy: "unless-stopped"
+    auto_remove: false
+    state: "{{ hass_ad_container_state | default('stopped') }}"
+    container_default_behavior: compatibility
+    user: "{{ systemuserlist.hass.uid }}:{{ systemuserlist.hass.gid }}"
+    networks_cli_compatible: false
+    network_mode: bridgewithdns
+    networks:
+      - name: bridgewithdns
+        ipv4_address: "{{ bridgewithdns.hass_ad }}"
+    dns_servers: "{{ docker_container_dns_servers }}"
+    ports:
+      - "127.0.0.1:8001:8001"
+    mounts:
+      - type: bind
+        source: "{{ systemuserlist.hass.home }}/appdaemon/etc"
+        target: /etc/appdaemon
+      - type: bind
+        source: "{{ systemuserlist.hass.home }}/appdaemon/apps"
+        target: /usr/local/lib/appdaemon/apps
+      - type: bind
+        source: /var/log/appdaemon
+        target: /var/log/appdaemon
+        # working around the container not expeting to be run with the config
+        # in a standard location, and not expecting to run as non-root
+      - type: bind
+        source: "{{ systemuserlist.hass.home }}/appdaemon/.default-conf"
+        target: /conf
+        # and it looks for the requirements.txt files in /conf (set by $CONF)
+      - type: bind
+        source: "{{ systemuserlist.hass.home }}/appdaemon/requirements"
+        target: /conf/requirements
+        # this is apparently the homedir?
+      - type: bind
+        source: "{{ systemuserlist.hass.home }}/appdaemon/local"
+        target: /.local
+    entrypoint: ["/usr/src/app/dockerStart.sh", "--toml", "-c", "/etc/appdaemon"]
+  register: hass_ad_container
+  tags:
+    - hass-appdaemon-container
+    - hass-ad-container
+    - hass-container
+    - docker-containers

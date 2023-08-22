@@ -1,0 +1,283 @@
+---
+
+substitutions:
+  id_prefix: esphome_uher_akustomat_f411
+
+esphome:
+  name: esphome-akustomat-f411
+  comment: UHER Akustomat F411
+  friendly_name: UHER Akustomat F411
+  #name_add_mac_suffix: true
+
+esp8266:
+  board: nodemcuv2
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: "{{ hass_esphome_api_password }}"
+
+ota:
+  password: "{{ hass_esphome_ota_password }}"
+
+wifi:
+  ssid: "{{ hass_esphome_wifi_ssid }}"
+  password: "{{ hass_esphome_wifi_password }}"
+
+  # manual_ip:
+  #   static_ip:
+  #   gateway:
+  #   subnet:
+  #   dns1:
+  # use_address:
+  domain: .{{ inventory_hostname.split('.')[1:] | join('.') }}
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    # no ssid == device name
+    # ssid:
+    password: "{{ hass_esphome_fallback_wifi_password }}"
+
+mdns:
+  disabled: true
+
+captive_portal:
+
+web_server:
+  port: 80
+
+sensor:
+  # esp32 espressif: 0-3.3V
+  # esp8266 nodemcu: 0-1.0V
+  - platform: adc
+    id: ${id_prefix}_volume
+    pin: A0
+    name: "Volume"
+    update_interval: 0.05s
+    accuracy_decimals: 0
+    device_class: "power_factor"
+    unit_of_measurement: "%"
+    filters:
+      # esp32 espressif
+      # - lambda: !lambda |-
+      #     return 100-(x/3.13*100);
+      # nodemcu
+      - lambda: !lambda |-
+          return 100-(x*100);
+      - delta: 1.0
+      - lambda: !lambda |-
+          if (x < 0) return 0;
+          return int(x);
+
+  - platform: copy
+    source_id: ${id_prefix}_volume
+    name: "Volume level"
+    id: ${id_prefix}_volume_level
+    device_class: "power_factor"
+    accuracy_decimals: 2
+    filters:
+      - lambda: |-
+          return float(x) / 100.0;
+      - delta: 0.01
+
+  - platform: copy
+    source_id: ${id_prefix}_volume
+    name: "Volume level"
+    id: ${id_prefix}_horny_volume_level
+    accuracy_decimals: 2
+    filters:
+      - lambda: |-
+          return float(x) / 100.0;
+      - delta: 0.01
+
+  - platform: homeassistant
+    internal: false
+    name: "OwnTone volume"
+    id: ${id_prefix}_owntone_volume
+    entity_id: media_player.owntone_server
+    attribute: volume_level
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    device_class: "power_factor"
+    filters:
+      - lambda: |-
+          return float(x) * 100.0;
+      - lambda: |
+          return int(x);
+      - delta: 1.0
+
+    # ESPHome
+  - platform: wifi_signal
+    internal: true
+    name: "WiFi signal strength"
+    id: ${id_prefix}_wifi_signal_strength
+    update_interval: 60s
+    entity_category: "diagnostic"
+    unit_of_measurement: "dBm"
+    filters:
+      - throttle: 900s
+
+    # Reports the WiFi signal strength in %
+  - platform: copy
+    source_id: ${id_prefix}_wifi_signal_strength
+    name: "WiFi signal"
+    unit_of_measurement: "%"
+    device_class: power_factor
+    entity_category: "diagnostic"
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: "IP address"
+      entity_category: "diagnostic"
+    ssid:
+      name: "SSID"
+      entity_category: "diagnostic"
+    # bssid:
+    #   name: "BSSID"
+    #   entity_category: "diagnostic"
+    mac_address:
+      name: "WiFi mac address"
+      entity_category: "diagnostic"
+    # scan_results:
+    #   name: "Latest scan results"
+    #   entity_category: "diagnostic"
+    dns_address:
+      name: "DNS address"
+      entity_category: "diagnostic"
+  - platform: version
+    id: ${id_prefix}_version
+    entity_category: "diagnostic"
+    name: "ESPHome version"
+
+binary_sensor:
+  - platform: homeassistant
+    internal: false
+    id: ${id_prefix}_owntone_volume_synced
+    name: "OwnTone volume synced"
+    entity_id: binary_sensor.owntone_uher_akustomat_f411_volume_synced
+
+  - platform: homeassistant
+    internal: false
+    id: ${id_prefix}_owntone_playing
+    name: "OwnTone"
+    device_class: "running"
+    entity_id: binary_sensor.owntone_playing
+
+  - platform: homeassistant
+    internal: false
+    id: ${id_prefix}_owntone_playing_podcast
+    name: "OwnTone playing a podcast"
+    device_class: "running"
+    entity_id: binary_sensor.owntone_playing_podcast
+
+  - platform: status
+    name: Status
+    entity_category: "diagnostic"
+    id: ${id_prefix}_status
+
+light:
+  - platform: status_led
+    name: "Status LED 1"
+    id: ${id_prefix}_status_led_1
+    icon: "mdi:alarm-light"
+    entity_category: "config"
+    restore_mode: ALWAYS_OFF
+    pin:
+      # GPIO 16
+      number: D0
+      inverted: true
+
+  - platform: status_led
+    name: "Status LED 2"
+    id: ${id_prefix}_status_led_2
+    icon: "mdi:alarm-light"
+    entity_category: "config"
+    restore_mode: ALWAYS_OFF
+    pin:
+      # GPIO02
+      number: D4
+      inverted: true
+
+  - platform: monochromatic
+    name: "Indicator S"
+    id: ${id_prefix}_indicator_s
+    icon: mdi:led-outline
+    # GPIO 5
+    output: D6_PWM
+    # default: 1s
+    default_transition_length: 1s
+    restore_mode: RESTORE_DEFAULT_OFF
+    effects:
+      - pulse:
+          name: pulse
+      - pulse:
+          name: pulse_fast
+          transition_length: 0.5s
+          update_interval: 0.5s
+          min_brightness: 0%
+          max_brightness: 100%
+      - pulse:
+          name: pulse_slow
+          transition_length: 2.5s
+          update_interval: 2.5s
+          min_brightness: 0%
+          max_brightness: 100%
+      - strobe:
+      - strobe:
+          name: strobe_slow
+          colors:
+            - state: true
+              duration: 1s
+            - state: false
+              duration: 0.5s
+      - strobe:
+          name: strobe_slower
+          colors:
+            - state: true
+              duration: 3s
+            - state: false
+              duration: 1s
+      - flicker:
+          name: flicker
+      - flicker:
+          name: flicker_95
+          alpha: 95%
+          intensity: 1.5%
+      - flicker:
+          name: flicker_50
+          alpha: 50%
+          intensity: 12.5%
+      - flicker:
+          name: flicker_45
+          alpha: 45%
+          intensity: 25.5%
+
+
+output:
+  - platform: gpio
+    # GPIO 12
+    id: D6_LED
+    pin: D6
+  - platform: esp8266_pwm
+    id: D6_PWM
+    pin: D6
+
+switch:
+  - platform: safe_mode
+    name: "Reboot (safe mode)"
+    entity_category: config
+    id: ${id_prefix}_safe_mode_boot
+  - platform: restart
+    name: "Reboot"
+    icon: mdi:power-cycle
+    id: ${id_prefix}_reboot
+
+button:
+  - platform: wake_on_lan
+    name: "Wake-on-LAN TV Livingroom"
+    target_mac_address: {{ s21_mac_samsung_tv }}

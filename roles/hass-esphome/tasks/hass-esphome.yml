@@ -1,0 +1,112 @@
+---
+
+- name: create dir structure
+  file:
+    path: "{{ systemuserlist.hass.home }}/{{ item.path }}"
+    state: directory
+    mode: '0755'
+    owner: "{{ item.owner|default('hass') }}"
+    group: "{{ item.group|default('hass') }}"
+  with_items:
+    - path: esphome
+    - path: esphome/config
+    - path: esphome/builds
+    - path: esphome/cache
+      owner: root
+      group: root
+    - path: esphome/local
+      owner: root
+      group: root
+  loop_control:
+    label: "{{ item.path }}"
+  tags:
+    - hass-dirs
+    - hass-esphome-dirs
+
+- name: template scripts
+  template:
+    src: "{{ item }}.j2"
+    dest: /usr/local/bin/{{ item }}
+    owner: hass
+    group: hass
+    mode: 0755
+  with_items:
+    - docker-esphome.sh
+    - esphome-ota-all.sh
+
+- name: copy esp config files
+  copy:
+    src: "{{ item }}"
+    dest: "{{ systemuserlist.hass.home }}/esphome/config/{{ item }}"
+    mode: '0755'
+    owner: hass
+    group: hass
+  tags:
+    - esphome-configs
+    - hass-esphome-configs
+  loop_control:
+    label: "{{ item }}"
+  with_items:
+    # copied from https://github.com/screek-workshop/screek-human-sensor/tree/main/1u/yaml/disbale_uart_output
+    - screek-humen-dectet-1u.yaml
+
+- name: template esp config files
+  template:
+    src: "config/{{ item.config }}.j2"
+    dest: "{{ systemuserlist.hass.home }}/esphome/config/{{ item.config }}"
+    mode: '0755'
+    owner: hass
+    group: hass
+  tags:
+    - esphome-configs
+    - hass-esphome-configs
+  loop_control:
+    label: "{{ item.config }}"
+  # see roles/hass-esphome/defaults
+  with_items: "{{ hass_esphome_configs }}"
+  when: item.enabled|default(false) == true
+  # notify:
+  #   - esphome ota
+
+- name: remove disabled configs
+  file:
+    dest: "{{ systemuserlist.hass.home }}/esphome/config/{{ item.config }}"
+    state: absent
+  tags:
+    - esphome-configs
+    - hass-esphome-configs
+  loop_control:
+    label: "{{ item.config }}"
+  with_items: "{{ hass_esphome_configs }}"
+  when: item.enabled|default(false) == false
+
+- name: start hass-esphome-dash container
+  docker_container:
+    name: hass-esphome-dash
+    image: ghcr.io/esphome/esphome
+    detach: true
+    pull: true
+    restart_policy: "no"
+    state: "{{ hass_container_state | default('stopped') }}"
+    container_default_behavior: compatibility
+    user: "{{ systemuserlist.hass.uid }}:{{ systemuserlist.hass.gid }}"
+    networks_cli_compatible: false
+    network_mode: bridgewithdns
+    ports:
+      - "127.0.0.1:6052:6052"
+    env:
+      ESPHOME_DASHBOARD_USE_PING: "true"
+    networks:
+      - name: bridgewithdns
+        ipv4_address: "{{ bridgewithdns.hass_esphome_dash }}"
+    mounts:
+      - type: bind
+        source: "{{ systemuserlist.hass.home }}/esphome/config"
+        target: "/config"
+      - type: bind
+        source: "{{ systemuserlist.hass.home }}/esphome/builds"
+        target: "/config/.esphome"
+  tags:
+    - hass-esphome-container
+    - hass-container
+    - docker-containers

@@ -1,0 +1,502 @@
+
+# {{ state_attr("weather.home", "forecast")[0]['precipitation'] }}
+# {{ state_attr("weather.forecast_home_hourly", "forecast")[0]['precipitation'] }}
+# {{ state_attr("weather.forecast_home_hourly", "forecast")[1]['precipitation'] }}
+
+# {{ state_attr("weather.owm_home", "forecast")[0]['precipitation'] }}
+# {{ state_attr("weather.openmeteo_home", "forecast")[0]['precipitation'] }}
+
+# {{ states("weather.openmeteo_home")|default("") == "rainy" }}
+# {{ states("weather.home")|default("") == "rainy" }}
+# {{ states("weather.forecast_home_hourly")|default("") == "rainy" }}
+# {{ states("weather.owm_home")|default("") == "rainy" }}
+
+
+homeassistant:
+  customize:
+    package.node_anchors:
+      common_attrs: &common_attrs
+        package: "weather"
+      common_attrs_templated: &common_attrs_templated
+        templated: true
+        <<: *common_attrs
+
+    binary_sensor.meteoalarm:
+      friendly_name: "MeteoAlarm (EUMETNET)"
+      integration: true
+      <<: *common_attrs_templated
+
+    # sensor.met_no_daily_current_precipitation:
+    #   friendly_name: "Current precipitation (met.no - default)"
+    #   <<: *common_attrs_templated
+
+    sensor.met_no_current_precipitation:
+      friendly_name: "Current precipitation (met.no)"
+      <<: *common_attrs_templated
+
+    sensor.chance_of_rain:
+      friendly_name: "Chance of rain"
+      <<: *common_attrs_templated
+
+    sensor.owm_home_current_precipitation_combined:
+      friendly_name: "Current precipitation (OWM, rain + snow combined)"
+      <<: *common_attrs_templated
+
+    binary_sensor.weather_precipitation_owm_met_no_combined:
+      friendly_name: "Current precipitation (met.no and owm)"
+      <<: *common_attrs_templated
+
+    sensor.current_precipitation:
+      friendly_name: "Current precipitation (met.no and owm)"
+      <<: *common_attrs_templated
+
+    binary_sensor.weather_precipitation_meteoalarm:
+      friendly_name: "Precipitation: MeteoAlarm (EUMETNET)"
+      <<: *common_attrs_templated
+
+    binary_sensor.weather_precipitation_met_no:
+      friendly_name: "Precipitation: met.no"
+      <<: *common_attrs_templated
+
+    binary_sensor.weather_precipitation_pirateweather:
+      friendly_name: "Precipitation: PirateWeather"
+      <<: *common_attrs_templated
+
+    binary_sensor.weather_precipitation_owm:
+      friendly_name: "Precipitation: OWM"
+      <<: *common_attrs_templated
+
+    binary_sensor.weather_lightning:
+      friendly_name: "Lightning"
+      <<: *common_attrs_templated
+
+    binary_sensor.weather_precipitation:
+      friendly_name: "Precipitation"
+      <<: *common_attrs_templated
+    binary_sensor.weather_rain:
+      friendly_name: "Rain"
+      comment: "easier to spell alias for binary_sensor.weather_precipitation"
+      <<: *common_attrs_templated
+
+    # statistics sensor
+    sensor.lightning_closest_distance:
+      friendly_name: "Lightning closest distance"
+      icon: "mdi:flash"
+      <<: *common_attrs
+
+automation:
+  - alias: meteoalarm_warning_notifications
+    id: meteoalarm_warning_notifications
+    trigger:
+      platform: state
+      entity_id: binary_sensor.meteoalarm
+      to: 'on'
+    action:
+      - service: notify.persistent_notification
+        data:
+          title: |
+            {% from 'formatting.jinja' import meteoalarm_title %}
+            {{ meteoalarm_title() }}
+          message: |
+            {% from 'formatting.jinja' import meteoalarm_message %}
+            {{ meteoalarm_message() }}
+      - service: notify.notify
+        data:
+          title: |
+            {% from 'formatting.jinja' import meteoalarm_title %}
+            {{ meteoalarm_title() }}
+          message: |
+            {% from 'formatting.jinja' import meteoalarm_message %}
+            {{ meteoalarm_message() }}
+
+  - alias: nina_warning_notifications
+    id: nina_warning_notifications
+    description: ""
+    mode: queued
+    trigger:
+      - platform: state
+        entity_id:
+          - binary_sensor.nina_warn_berlin_1
+          - binary_sensor.nina_warn_berlin_2
+          - binary_sensor.nina_warn_berlin_3
+          - binary_sensor.nina_warn_berlin_4
+          - binary_sensor.nina_warn_berlin_5
+        to: "on"
+    condition: []
+    action:
+      - service: notify.persistent_notification
+        data:
+          message: |
+            {% from 'formatting.jinja' import nina_message %}
+            {% set nina = trigger.entity_id %}
+            {{ nina_message(nina) }}
+          title: |
+            {% set nina = trigger.entity_id %}
+            {% from 'formatting.jinja' import nina_title %}
+            {{ nina_title(nina) }}
+      - service: notify.notify
+        data:
+          message: |
+            {% from 'formatting.jinja' import nina_message %}
+            {% set nina = trigger.entity_id %}
+            {{ nina_message(nina) }}
+          title: |
+            {% set nina = trigger.entity_id %}
+            {% from 'formatting.jinja' import nina_title %}
+            {{ nina_title(nina) }}
+
+
+template:
+
+  - sensor:
+
+      - name: "chance_of_rain"
+        unit_of_measurement: "%"
+        icon: "mdi:weather-pouring"
+        state: >-
+          {% set ipma = 0 %}
+          {% set owm_precip_probability = states('sensor.owm_home_forecast_precipitation_probability') | int %}
+          {{ [owm_precip_probability, ipma, 0] | max | int }}
+        attributes:
+          ipma: "disabled"
+          owm: "enabled"
+
+      - name: owm_home_current_precipitation_combined
+        unit_of_measurement: "mm"
+        state_class: measurement
+        icon: "mdi:weather-rainy"
+        availability: >-
+          {{
+          states("sensor.owm_home_rain") is defined
+          and states("sensor.owm_home_snow") is defined
+          and is_number(states("sensor.owm_home_rain"))
+          and is_number(states("sensor.owm_home_snow"))
+          }}
+        state: >-
+          {% set rain = states("sensor.owm_home_rain") %}
+          {% set snow = states("sensor.owm_home_snow") %}
+          {% set combined = rain|float + snow|float %}
+          {{ combined|float | round(1) }}
+        attributes:
+          source_rain: "sensor.owm_home_rain"
+          source_snow: "sensor.owm_home_rain"
+
+      # - name: met_no_daily_current_precipitation
+      #   unit_of_measurement: "mm"
+      #   state_class: measurement
+      #   icon: "mdi:weather-rainy"
+      #   availability: >-
+      #     {{
+      #     states("weather.home") is defined
+      #     and state_attr("weather.home", "forecast") is defined
+      #     and state_attr("weather.home", "forecast") | length > 0
+      #     and is_number(state_attr("weather.home", "forecast")[0]["precipitation"])
+      #     }}
+      #   state: >-
+      #     {{ state_attr("weather.home", "forecast")[0]["precipitation"] | float | round(1) }}
+      #   attributes:
+      #     source_entity_id: weather.home
+
+
+      - name: met_no_current_precipitation
+        unit_of_measurement: "mm"
+        state_class: measurement
+        icon: "mdi:weather-rainy"
+        availability: >-
+          {{
+          states("weather.forecast_home_hourly") is defined
+          and has_value("weather.forecast_home_hourly")
+          and state_attr("weather.forecast_home_hourly", "forecast") is defined
+          and state_attr("weather.forecast_home_hourly", "forecast") | length > 0
+          and is_number(state_attr("weather.forecast_home_hourly", "forecast")[0]["precipitation"])
+          }}
+        state: >-
+          {{ state_attr("weather.forecast_home_hourly", "forecast")[0]["precipitation"] | float | round(1) }}
+        attributes:
+          source_entity_id: weather.forecast_home_hourly
+
+      - name: current_precipitation
+        icon: "mdi:weather-rainy"
+        state_class: measurement
+        unit_of_measurement: "mm"
+        availability: >-
+          {{
+          states("sensor.met_no_current_precipitation") is defined
+          and states("sensor.owm_home_current_precipitation_combined") is defined
+          }}
+        state: >-
+          {% set met_no = states("sensor.met_no_current_precipitation") %}
+          {% set owm = states("sensor.owm_home_current_precipitation_combined") %}
+          {{ max(met_no, owm) | float | round(1) }}
+        attributes:
+          source_entity_ids: >-
+            {{ [
+              "sensor.met_no_current_precipitation",
+              "sensor.owm_home_current_precipitation_combined"
+            ] }}
+
+
+  - binary_sensor:
+      - name: weather_precipitation_owm_met_no_combined
+        icon: >-
+          {% if is_state(this.entity_id, "on") %}
+          mdi:weather-rainy
+          {% else %}
+          mdi:weather-cloudy
+          {% endif %}
+        state: >-
+          {% set c = states('sensor.current_precipitation') %}
+          {{ is_number(c) and c|float > 0.0 }}
+        attributes:
+          source_entity_id: "sesnor.current_precipitation"
+
+      - name: weather_lightning
+        device_class: problem
+        icon: >-
+          {% if is_state(this.entity_id, "on") %}
+          mdi:weather-lightning
+          {% else %}
+          mdi:weather-cloudy
+          {% endif %}
+        state: >-
+          {{
+            has_value("sensor.blitzortung_lightning_counter")
+            and has_value("binary_sensor.blitzortung_lightning_distance")
+            and is_number(states("binary_sensor.blitzortung_lightning_distance"))
+            and states("sensor.blitzortung_lightning_counter")|int > 0
+            and states("binary_sensor.blitzortung_lightning_distance")|int<=50.0
+          }}
+        attributes:
+          source_entity_id: >-
+            {{ [
+              "sensor.blitzortung_lightning_counter",
+              "binary_sensor.blitzortung_lightning_distance"
+            ] }}
+
+      - name: weather_precipitation_met_no
+        device_class: problem
+        icon: >-
+          {% if is_state(this.entity_id, "on") %}
+          mdi:weather-rainy
+          {% else %}
+          mdi:weather-cloudy
+          {% endif %}
+        state: >-
+          {{
+          states("weather.forecast_home_hourly") is defined
+          and has_value("weather.forecast_home_hourly")
+          and state_attr("weather.forecast_home_hourly", "forecast") is defined
+          and state_attr("weather.forecast_home_hourly", "forecast") | length > 0
+          and is_number(state_attr("weather.forecast_home_hourly", "forecast")[0]["precipitation"])
+          and state_attr("weather.forecast_home_hourly", "forecast")[0]["precipitation"]|float>0.0
+          }}
+        attributes:
+          source_entity_id: weather.forceast_home_hourly
+
+      - name: weather_precipitation_pirateweather
+        device_class: problem
+        icon: >-
+          {% if is_state(this.entity_id, "on") %}
+          mdi:weather-rainy
+          {% else %}
+          mdi:weather-cloudy
+          {% endif %}
+        state: >-
+          {{
+          is_state("sensor.pirateweather_icon", "rain")
+          or is_state("sensor.pirateweather_icon_0h", "rain")
+          or is_state("sensor.pirateweather_minutely_summary", "Rain")
+          or is_state("sensor.pirateweather_precip", "rain")
+          or is_state("sensor.pirateweather_precip_0h", "rain")
+          }}
+        attributes:
+          source_entity_id:  >-
+            {{ [
+              "sensor.pirateweather_icon",
+              "sensor.pirateweather_icon_0h",
+              "sensor.pirateweather_minutely_summary",
+              "sensor.pirateweather_precip",
+              "sensor.pirateweahter_precip_0h"
+            ] }}
+
+      - name: weather_precipitation_owm
+        device_class: problem
+        icon: >-
+          {% if is_state(this.entity_id, "on") %}
+          mdi:weather-rainy
+          {% else %}
+          mdi:weather-cloudy
+          {% endif %}
+        state: >-
+          {{
+          not is_state("sensor.owm_home_precipitation_kind", "None")
+          or is_state("sensor.owm_home_condition", "rainy")
+          or (
+            has_value("sensor.owm_home_condition")
+            and "rain" in states("sensor.owm_home_condition")|lower
+          )
+          or (
+            has_value("sensor.owm_home_current_precipitation_combined")
+            and states("sensor.owm_home_current_precipitation_combined")|float>0.0
+          )
+          or (
+            has_value("sensor.owm_home_weather")
+            and "rain" in states("sensor.owm_home_weather")|lower
+          )
+          }}
+        attributes:
+          source_entity_id: >-
+            {{ [
+              "sensor.owm_home_precipitation_kind",
+              "sensor.own_home_condition",
+              "sensor.own_home_current_precipitation_combined",
+              "sensor.owm_home_weather"
+            ] }}
+
+        # needs more data/research to see what values are in the event/category attributes
+      - name: weather_precipitation_meteoalarm
+        device_class: problem
+        icon: >-
+          {% if is_state(this.entity_id, "on") %}
+          mdi:weather-rainy
+          {% else %}
+          mdi:weather-cloudy
+          {% endif %}
+        state: >-
+          {{
+          is_state("binary_sensor.meteoalarm", "on")
+          and is_state_attr("binary_sensor.meteoalarm", "category", "Met")
+          and (
+            "rain" in state_attr("binary_sensor.meteoalarm", "event")|lower
+            or "rain" in state_attr("binary_sensor.meteoalarm", "description")|lower
+            or "thunderstorm" in state_attr("binary_sensor.meteoalarm", "event")|lower
+            or "thunderstorm" in state_attr("binary_sensor.meteoalarm", "description")|lower
+          )
+          }}
+        attributes:
+          source_entity_id: binary_sensor.meteoalarm
+
+
+      - name: weather_precipitation
+        device_class: problem
+        icon: >-
+          {% if is_state(this.entity_id, "on") %}
+          mdi:weather-rainy
+          {% else %}
+          mdi:weather-cloudy
+          {% endif %}
+        state: >-
+          {{
+          is_state("binary_sensor.weather_precipitation_pirateweather", "on")
+          or is_state("binary_sensor.weather_precipitation_meteoalarm", "on")
+          or is_state("binary_sensor.weather_precipitation_owm", "on")
+          or is_state("binary_sensor.weather_lightning", "on")
+          or states("sensor.chance_of_rain")|float(0.0)|round(0) > 90
+          }}
+        attributes:
+          source_entity_id: >-
+            {{ [
+              "binary_sensor.weather_precipitation_pirateweather",
+              "binary_sensor.weather_precipitation_meteoalarm",
+              "binary_sensor.weather_precipitation_owm",
+              "binary_sensor.weather_lightning",
+              "sensor.chance_of_rain"
+            ] }}
+
+      - name: weather_rain
+        device_class: problem
+        icon: >-
+          {{ state_attr("binary_sensor.weather_precipitation", "icon") }}
+        availability: >-
+          {{ has_value("binary_sensor.weather_precipitation") }}
+        state: >-
+          {{ states("binary_sensor.weather_precipitation") }}
+        attributes:
+          source_entity_id: >-
+            {{ state_attr("binary_sensor.weather_precipitation", "source_entity_id") }}
+
+
+binary_sensor:
+  - platform: meteoalarm
+    country: "germany"
+    province: "Berlin"
+
+    # example that should not affect the skylight
+    # {
+    # "language":"en",
+    # "category":"Health",
+    # "event":"strong heat",
+    # "responseType":"Prepare",
+    # "urgency":"Immediate",
+    # "severity":"Minor",
+    # "certainty":"Likely",
+    # "effective":"2023-08-13T09:38:00+02:00",
+    # "onset":"2023-08-14T11:00:00+02:00",
+    # "expires":"2023-08-14T19:00:00+02:00",
+    # "senderName":"Zentrum für Medizin-Meteorologische Forschung",
+    # "headline":"Official WARNING of STRONG HEAT",
+    # "description":"The expected weather will bring a situation of strong heat stress. (Level 1 of 3)\nHeight range: < 200 m",
+    # "instruction":"NOTE: be aware that this is an automatically generated product. The manually created original text warning is only available in German.It is issued by the DWD - Centre for Human Biometeorological Research (ZMMF) in Freiburg.",
+    # "web":"https://www.wettergefahren.de",
+    # "contact":"Deutscher Wetterdienst",
+    # "awareness_level":"2; yellow; Moderate",
+    # "awareness_type":"5; high-temperature",
+    # "attribution":"Information provided by MeteoAlarm",
+    # "device_class":"safety",
+    # "friendly_name":"MeteoAlarm (EUMETNET)",
+    # "integration":true,"
+    # templated":false,
+    # "package":"weather"
+    # }
+    #
+    # another one:
+    #
+    # {
+    # "language":"en",
+    # "category":"Health",
+    # "event":"extreme heat",
+    # "responseType":"Prepare",
+    # "urgency":"Immediate",
+    # "severity":"Severe",
+    # "certainty":"Likely",
+    # "effective":"2023-08-14T10:02:00+02:00",
+    # "onset":"2023-08-15T11:00:00+02:00",
+    # "expires":"2023-08-15T19:00:00+02:00",
+    # "senderName":"Zentrum für Medizin-Meteorologische Forschung",
+    # "headline":"Official SEVERE WARNING of EXTREME HEAT",
+    # "description":"The expected weather will bring a situation of extreme heat stress. (Level 3 of 3)\nHeight range: < 200 m",
+    # "instruction":"NOTE: be aware that this is an automatically generated product. The manually created original text warning is only available in German.It is issued by the DWD - Centre for Human Biometeorological Research (ZMMF) in Freiburg.",
+    # "web":"https://www.wettergefahren.de",
+    # "contact":"Deutscher Wetterdienst",
+    # "awareness_level":"4; red; Extreme",
+    # "awareness_type":"5; high-temperature",
+    # "attribution":"Information provided by MeteoAlarm",
+    # "device_class":"safety",
+    # "friendly_name":"MeteoAlarm (EUMETNET)",
+    # "package":"weather",
+    # "templated":true,"integration":true
+    # }
+    #
+    #
+    # binary_sensor.meteoalarm:
+    # category: "Health"
+    # event: "strong heat"
+    #
+    # same with dwd_current_warning_level sensors:
+    #
+    # {{ states.sensor.dwd_current_warning_level_fhain.attributes.warning_1_name }}
+    # STARKE HITZE
+    # {{ states.sensor.dwd_current_warning_level_fhain.attributes.warning_2_name }}
+    # EXTREME HITZE
+    # this should: {"language":"en","category":"Met","event":"heavy thunderstorms with gale- or storm-force gusts and heavy rain","responseType":"Prepare","urgency":"Immediate","severity":"Moderate","certainty":"Likely","effective":"2023-08-15T00:55:00+02:00","onset":"2023-08-15T01:00:00+02:00","expires":"2023-08-15T03:00:00+02:00","senderName":"Deutscher Wetterdienst","headline":"Official WARNING of HEAVY THUNDERSTORMS","description":"There is a risk of heavy thunderstorms with gale- or storm-force gusts and heavy rain (level 2 of 4).\nOccurrence: isolated; Approaching from: south-west; Max. gusts: < 70 km/h; Precipitation amounts: 15-25 l/m²/1h","instruction":"NOTE: Be aware of the following possible dangers: There is a risk of local lightning. Lightning strikes pose a danger to life. For instance, trees may sporadically be uprooted and roofs be damaged. Especially watch out for falling branches, tiles and other debris. The downpours can cause temporary traffic disruption.","web":"https://www.wettergefahren.de","contact":"Deutscher Wetterdienst","gusts":"<70 [km/h]","precipitation":"15-25 [l/m² in 1h]","occurrence":"isolated","direction of approach":"south-west","awareness_level":"3; orange; Severe","awareness_type":"3; Thunderstorm","attribution":"Information provided by MeteoAlarm","device_class":"safety","friendly_name":"MeteoAlarm (EUMETNET)","package":"weather","templated":true,"integration":true}
+    # {{ states.sensor.dwd_current_warning_level_fhain.attributes.warning_1_name }}
+
+    # STARKES GEWITTER
+
+sensor:
+  - name: lightning_closest_distance
+    platform: statistics
+    entity_id: sensor.blitzortung_lightning_distance
+    state_characteristic: value_min
+    max_age:
+      hours: 6

@@ -1,0 +1,13 @@
+---
+
+- name: restart hass-ad container
+  docker_container:
+    name: hass-ad
+    state: started
+    restart: true
+  when:
+    - hass_ad_container is not defined or not hass_ad_container.changed
+    - hass_ad_container_state|default("stopped") == "started"
+    - hass_ad_restart_handler|default(true)
+    - hass_ad_app is not defined
+  #when: false

@@ -1,0 +1,4 @@
+---
+
+samba_interfaces: []
+samba_nmbd: true

@@ -1,87 +1,102 @@
 # distributed from ansible
 #
-# NOTE: Whenever you modify this file you should run the command
-# "testparm" to check that you have not made any basic syntactic
-# errors.
+{% if inventory_hostname in wg_clients %}
+{# wireguard_cidr #}
+{% set interfaces = samba_interfaces + [wg_clients[inventory_hostname].ip + "/24"] %}
+{% else %}
+{% set interfaces = samba_interfaces %}
+{% endif %}
 
 #======================= Global Settings =======================
 
 [global]
 
-   workgroup = WORKGROUP
-   #netbios name = {{ inventory_hostname.split('.')[0].upper() }}
-   #server string = %h server (Samba)
-   server string = {{ ansible_inventory_hostname.split('.')[0] }}
 
-   interfaces = 127.0.0.0/8 {{ samba_interfaces | default([]) | join(" ") }}
+   netbios name = {{ inventory_hostname | replace("-", "") }}
+   interfaces = 127.0.0.0/8 {{ interfaces | join(" ") }}
+   #hosts allow = 192.168.21. 10.102.47.
+   server string = {{ inventory_hostname.split('.')[0] }}
+   unix charset = UTF-8
+   workgroup = WORKGROUP
+
    bind interfaces only = yes
 
    log file = /var/log/samba/log.%m
    max log size = 1000
    logging = file
-   panic action = /usr/share/samba/panic-action %d
+
+   ## time for inactive connections to-be closed in minutes
+   ## 2880 mins = 2 days
+   deadtime = 2880
+
+   ## disable core dumps
+   enable core files = no
+
+   # possible values: auto, user, domain, ads
+   security = user
+   invalid users = root
+   map to guest = Bad User
+   null passwords = no
+   passdb backend = smbpasswd
+   unix password sync = no
+   passwd program = /usr/bin/passwd %u
+   passwd chat = *Enter\snew\s*\spassword:* %n\n *Retype\snew\s*\spassword:* %n\n *password\supdated\ssuccessfully* .
+   # This boolean controls whether PAM will be used for password changes
+   # when requested by an SMB client instead of the program listed in
+   # 'passwd program'. The default is 'no'.
+   # pam password change = yes
+
+   socket options = IPTOS_LOWDELAY TCP_NODELAY
+
+   load printers = yes
+   printcap name = /dev/usb/lp0
+   disable spoolss = yes
+   # printing = cups
+   # printing = CUPS
+   # printcap name = sambacap
+   # printcap = cups
+
+   ## Allows the server name that is advertised through MDNS to be set to the hostname rather than the Samba NETBIOS name.
+   ## This allows an administrator to make Samba registered MDNS records match the case of the hostname rather than being in all capitals.
+   ## (netbios, mdns)
+   # mdns name = mdns
+
+   ## Clients that only support netbios won't be able to see your samba server when netbios support is disabled.
+   disable netbios = No
+
+   #domain master = yes
+   ## Setting this value to no will cause nmbd never to become a local master browser.
+   local master = yes
+
+   ## (auto, yes) If this is set to yes, on startup, nmbd will force
+   ## an election, and it will have a slight advantage in winning the
+   ## election. It is recommended that this parameter is used in
+   ## conjunction with domain master = yes, so that nmbd can guarantee
+   ## becoming a domain master.
+   preferred master = no
+
+   ## This is a list of files and directories that are neither visible nor accessible.
+   ## Each entry in the list must be separated by a '/', which allows spaces to be included in the entry. '*' and '?' can be used to specify multiple files or directories as in DOS wildcards.
+   veto files = /Thumbs.db/.DS_Store/._.DS_Store/.apdisk/
+   ## If a directory that is to be deleted contains nothing but veto files this deletion will fail unless you also set the delete veto files parameter to yes.
+   delete veto files = yes
 
    # Possible values are "standalone server", "member server",
    # "classic primary domain controller", "classic backup domain
    # controller", "active directory domain controller".
    server role = standalone server
+
    obey pam restrictions = yes
 
-   unix password sync = yes
-   passwd program = /usr/bin/passwd %u
-   passwd chat = *Enter\snew\s*\spassword:* %n\n *Retype\snew\s*\spassword:* %n\n *password\supdated\ssuccessfully* .
-   pam password change = yes
-   map to guest = bad user
-
-   invalid users = root
-
-   unix charset = UTF-8
-
-   # possible values: auto, user, domain, ads
-   security = user
+   # here
 
 
 
-   local master = yes
-   preferred master = yes
-   domain master = yes
+   # Samba attempts to sync the Unix password with the SMB password when the
+   # sets unix pass to smb pass
 
-   # printing = CUPS
-   # printcap name = sambacap
+   panic action = /usr/share/samba/panic-action %d
 
-   # load printers = yes
-   # printcap = cups
-
-
-
-
-####### Authentication #######
-
-# Server role. Defines in which mode Samba will operate.
-#
-# Most people will want "standalone server" or "member server".
-# Running as "active directory domain controller" will require first
-# running "samba-tool domain provision" to wipe databases and create a
-# new domain.
-   # server role = standalone server
-
-   #
-
-# This boolean parameter controls whether Samba attempts to sync the Unix
-# password with the SMB password when the encrypted SMB password in the
-# passdb is changed.
-   unix password sync = no
-
-# For Unix password sync to work on a Debian GNU/Linux system, the following
-# parameters must be set (thanks to Ian Kahan <<kahan@informatik.tu-muenchen.de> for
-# sending the correct chat script for the passwd program in Debian Sarge).
-   passwd program = /usr/bin/passwd %u
-   passwd chat = *Enter\snew\s*\spassword:* %n\n *Retype\snew\s*\spassword:* %n\n *password\supdated\ssuccessfully* .
-
-# This boolean controls whether PAM will be used for password changes
-# when requested by an SMB client instead of the program listed in
-# 'passwd program'. The default is 'no'.
-   pam password change = no
 
 
 ########## Domains ###########
@@ -154,32 +169,6 @@
 
 #======================= Share Definitions =======================
 
-# Un-comment the following (and tweak the other settings below to suit)
-# to enable the default home directory shares. This will share each
-# user's home directory as \\server\username
-;[homes]
-;   comment = Home Directories
-;   browseable = no
-
-# By default, the home directories are exported read-only. Change the
-# next parameter to 'no' if you want to be able to write to them.
-;   read only = yes
-
-# File creation mask is set to 0700 for security reasons. If you want to
-# create files with group=rw permissions, set next parameter to 0775.
-;   create mask = 0700
-
-# Directory creation mask is set to 0700 for security reasons. If you want to
-# create dirs. with group=rw permissions, set next parameter to 0775.
-;   directory mask = 0700
-
-# By default, \\server\username shares can be connected to by anyone
-# with access to the samba server.
-# Un-comment the following parameter to make sure that only "username"
-# can connect to \\server\username
-# This might need tweaking when using external authentication schemes
-;   valid users = %S
-
 # Un-comment the following and create the netlogon directory for Domain Logons
 # (you need to configure Samba to act as a domain controller too.)
 ;[netlogon]
@@ -222,16 +211,6 @@
 #    printable = yes
 
 
-# Windows clients look for this share name as a source of downloadable
-# printer drivers
-[print$]
-   comment = Printer Drivers
-   path = /srv/samba/printers
-   guest ok = yes
-   browseable = yes
-   read only = no
-   writable = yes
-
 # [sambaprint]
 #    comment = "raw printer for samba"
 #    path = /var/spool/samba
@@ -268,3 +247,46 @@
 # Please note that you also need to set appropriate Unix permissions
 # to the drivers directory for these users to have write rights in it
 ;   write list = root, @lpadmin
+
+
+# Windows clients look for this share name as a source of downloadable
+# printer drivers
+[print$]
+   comment = Printer Drivers
+   path = /var/lib/samba/printers
+   guest ok = yes
+   browseable = yes
+   read only = no
+   writable = yes
+
+# Enables the default home directory shares. This will share each
+# user's home directory as \\server\username
+# [homes]
+#    comment = Home Directories
+#    browseable = no
+#    create mask = 0700
+#    directory mask = 0700
+#    valid users = %S
+#    guest ok = no
+#    inherit owner = yes
+{% for item in samba_shares %}
+
+[{{ item.name }}]
+{% set guest_ok = "yes" if item.guest_ok|default(false) else "no" %}
+    path = {{ item.path }}
+    {% if 'valid_users' in item -%}
+    valid users = {{ item.valid_users }}
+    {% endif -%}
+    {% if 'comment' in item -%}
+    comment = {{ item.comment }}
+    {% endif -%}
+    {% if item.browseable|default(false) == true-%}
+    browseable = yes
+    {% endif -%}
+    create mask = 0660
+    directory mask = 0770
+    read only = no
+    guest ok = {{ guest_ok }}
+    inherit owner = yes
+
+{% endfor %}

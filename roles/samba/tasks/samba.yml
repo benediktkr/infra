@@ -1,31 +1,31 @@
 ---
 
-- name: create dirs
-  file:
-    state: directory
-    path: /srv/samba/{{ item.path }}
-    owner: "{{ item.owner }}"
-    group: "{{ item.group }}"
-    mode: "{{ item.mode }}"
-  loop_control:
-    label: "{{ item.path }}"
-  with_items:
-    - path: ""
-      owner: root
-      group: root
-      mode: '0775'
-    - path: printers
-      owner: nobody
-      group: nogroup
-      mode: '0775'
-    - path: drivers
-      owner: nobody
-      group: nogroup
-      mode: '0775'
-    - path: drivers/hp1010
-      owner: nobody
-      group: nogroup
-      mode: '0775'
+# - name: create dirs
+#   file:
+#     state: directory
+#     path: /srv/samba/{{ item.path }}
+#     owner: "{{ item.owner }}"
+#     group: "{{ item.group }}"
+#     mode: "{{ item.mode }}"
+#   loop_control:
+#     label: "{{ item.path }}"
+#   with_items:
+#     - path: ""
+#       owner: root
+#       group: root
+#       mode: '0775'
+#     - path: printers
+#       owner: nobody
+#       group: nogroup
+#       mode: '0775'
+#     - path: drivers
+#       owner: nobody
+#       group: nogroup
+#       mode: '0775'
+#     - path: drivers/hp1010
+#       owner: nobody
+#       group: nogroup
+#       mode: '0775'
 
 - name: install samba
   apt:

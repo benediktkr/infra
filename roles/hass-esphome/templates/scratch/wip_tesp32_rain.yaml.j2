@@ -1,0 +1,219 @@
+substitutions:
+  id_prefix: esphome_tesp32
+  resistor_value: "10.0kOhm"
+
+  # TODO: Handle case where resistance higher than max_resistance
+
+  # Skip the value not in the range
+  min_resistance: "1000"
+  max_resistance: "500000"
+
+  # Value of the resistance at which a significant change is considered
+  # to occur
+  rain_detection_threshold: "4000"
+
+  # If the resistance increases by this value, the sensor is considered
+  # to be dry
+  dry_detection_threshold: "4000"
+
+  # When booting, if the resistance is lower this value, assume sensor is wet
+  wet_resistance_when_booting: "50000"
+
+  # +------------------------------+
+  # | Delay between 2 rain measure |
+  # +------------------------------+
+  # In dry mode
+  measure_interval_dry: "5000"
+
+  # In wet mode
+  # Must be large enough not to damage the tracks prematurely
+  # but small enough to be reactive enough.
+  measure_interval_wet: "30000"
+
+  # Stabilization before reading the resistance
+  # A too short delay will not allow to read the low resistances
+  stabilization_delay: 2sec
+
+esphome:
+  name: esphome-tesp32
+  name_add_mac_suffix: false
+  #friendly_name: tesp32
+  #project:
+  #  name: esphome.bluetooth-proxy
+  #  version: "1.0"
+
+esp32:
+  board: nodemcu-32s
+
+logger:
+
+api:
+  password: "{{ hass_esphome_api_password }}"
+
+ota:
+  password: "{{ hass_esphome_ota_password }}"
+
+wifi:
+  ssid: "{{ hass_esphome_wifi_ssid }}"
+  password: "{{ hass_esphome_wifi_password }}"
+  domain: .{{ inventory_hostname.split('.')[1:] | join('.') }}
+  # use_address:
+
+  ap:
+    # ssid:
+    password: "{{ hass_esphome_fallback_wifi_password }}"
+
+mdns:
+  disabled: true
+
+captive_portal:
+
+web_server:
+  port: 80
+
+binary_sensor:
+  - platform: gpio
+    name: "Float switch"
+    device_class: "problem"
+    publish_initial_state: true
+    # if its unstable
+    # filters:
+    #   - delayed_on: 20ms
+    #   - delayed_off: 20ms
+    pin:
+      number: GPIO23
+      # soaked in water in a bowl in my kitchen, it is reporting true/on
+      inverted: true
+      mode:
+        input: true
+        # it flaps on/off unless we enable the pull-up restor on the board
+        pullup: true
+
+
+
+sensor:
+    # good: https://github.com/hugokernel/esphome-rain-detector
+  - platform: adc
+    id: source_sensor
+    name: ADC
+    pin: GPIO32
+    #pin: GPIO33
+    attenuation: 11db
+    internal: false
+
+    # It is important to have a low update interval so that
+    # the measurement has time to be done correctly during
+    # the activation of the voltage AND taking into account the median filter
+    update_interval: 250ms
+
+    filters:
+      - multiply: 0.846153 # 3.9 (11db attenuation full-scale voltage) -> 3.3V
+      - median:
+          window_size: 7
+          send_every: 4
+          send_first_at: 3
+
+  - platform: resistance
+    sensor: source_sensor
+    id: real_resistance_sensor
+    #name: "${friendly_name} resistance"
+    configuration: DOWNSTREAM
+    resistor: "10.0kOhm"
+    reference_voltage: 3.3V
+    internal: false
+    icon: "mdi:omega"
+    filters:
+      - lambda: 'return max((float)$min_resistance, x);'
+      - lambda: 'return min((float)$max_resistance, x);'
+    on_value:
+      then:
+        - if:
+            condition:
+              lambda: |-
+                  return (
+                      id(real_resistance_sensor).state > $min_resistance
+                      &&
+                      id(real_resistance_sensor).state <= $max_resistance
+                  );
+            then:
+              - sensor.template.publish:
+                  id: resistance_sensor
+                  state: !lambda "return id(real_resistance_sensor).state;"
+
+  - platform: uptime
+    name: Uptime
+    id: ${id_prefix}_uptime
+    update_interval: 10s
+    entity_category: "diagnostic"
+    filters:
+      - throttle: 900s
+
+  - platform: wifi_signal
+    internal: true
+    name: "WiFi signal strength"
+    id: ${id_prefix}_wifi_signal_strength
+    update_interval: 60s
+    entity_category: "diagnostic"
+    unit_of_measurement: "dBm"
+    filters:
+      - throttle: 900s
+    # Reports the WiFi signal strength in %
+  - platform: copy
+    source_id: ${id_prefix}_wifi_signal_strength
+    name: "WiFi signal"
+    unit_of_measurement: "%"
+    device_class: power_factor
+    entity_category: "diagnostic"
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+
+switch:
+  - platform: gpio
+    id: resistance_bias
+    name: "resistance bias"
+    icon: "mdi:power"
+    pin:
+      number: GPIO19
+      mode: OUTPUT
+
+  - platform: restart
+    name: "Reboot"
+    icon: mdi:power-cycle
+    id: ${id_prefix}_reboot
+
+button:
+  - platform: wake_on_lan
+    name: "Wake-on-LAN TV Livingroom"
+    target_mac_address: {{ s21_mac_samsung_tv }}
+
+# esp32_ble_tracker:
+
+text_sensor:
+  # # for reading with appdaemon
+  # # its excluded from the recorder in home assistant
+  # - platform: ble_scanner
+  #   name: "json ble scanner"
+  #   #id: esphome_json_ble_scanner
+
+  - platform: wifi_info
+    ip_address:
+      name: "IP address"
+      entity_category: "diagnostic"
+    ssid:
+      name: "SSID"
+      entity_category: "diagnostic"
+    mac_address:
+      name: "WiFi mac address"
+      entity_category: "diagnostic"
+    dns_address:
+      name: "DNS address"
+      entity_category: "diagnostic"
+  - platform: version
+    id: ${id_prefix}_version
+    entity_category: "diagnostic"
+    name: "ESPHome version"
+
+
+
+# from esphome/bluetooth-proxies/esp32-generic.yaml, see https://esphome.io/components/improv_serial.html
+# improv_serial:

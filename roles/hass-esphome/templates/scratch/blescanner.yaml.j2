@@ -1,0 +1,103 @@
+substitutions:
+  id_prefix: esphome_blescanner
+
+esphome:
+  name: esphome-blescanner
+  friendly_name: BLE Scanner slash testboard
+  name_add_mac_suffix: false
+  #project:
+  #  name: esphome.bluetooth-proxy
+  #  version: "1.0"
+
+esp32:
+  board: nodemcu-32s
+
+logger:
+
+api:
+  password: "{{ hass_esphome_api_password }}"
+
+ota:
+  password: "{{ hass_esphome_ota_password }}"
+
+wifi:
+  ssid: "{{ hass_esphome_wifi_ssid }}"
+  password: "{{ hass_esphome_wifi_password }}"
+  domain: .{{ inventory_hostname.split('.')[1:] | join('.') }}
+  # use_address:
+
+  ap:
+    # ssid:
+    password: "{{ hass_esphome_fallback_wifi_password }}"
+
+mdns:
+  disabled: true
+
+captive_portal:
+
+web_server:
+  port: 80
+
+sensor:
+  - platform: wifi_signal
+    internal: true
+    name: "WiFi signal strength"
+    id: ${id_prefix}_wifi_signal_strength
+    update_interval: 60s
+    entity_category: "diagnostic"
+    unit_of_measurement: "dBm"
+    filters:
+      - throttle: 900s
+
+    # Reports the WiFi signal strength in %
+  - platform: copy
+    source_id: ${id_prefix}_wifi_signal_strength
+    name: "WiFi signal"
+    unit_of_measurement: "%"
+    device_class: power_factor
+    entity_category: "diagnostic"
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+
+switch:
+  - platform: restart
+    name: "Reboot"
+    icon: mdi:power-cycle
+    id: ${id_prefix}_reboot
+
+button:
+  - platform: wake_on_lan
+    name: "Wake-on-LAN TV Livingroom"
+    target_mac_address: {{ s21_mac_samsung_tv }}
+
+# esp32_ble_tracker:
+
+text_sensor:
+  # # for reading with appdaemon
+  # # its excluded from the recorder in home assistant
+  # - platform: ble_scanner
+  #   name: "json ble scanner"
+  #   #id: esphome_json_ble_scanner
+
+  - platform: wifi_info
+    ip_address:
+      name: "IP address"
+      entity_category: "diagnostic"
+    ssid:
+      name: "SSID"
+      entity_category: "diagnostic"
+    mac_address:
+      name: "WiFi mac address"
+      entity_category: "diagnostic"
+    dns_address:
+      name: "DNS address"
+      entity_category: "diagnostic"
+  - platform: version
+    id: ${id_prefix}_version
+    entity_category: "diagnostic"
+    name: "ESPHome version"
+
+
+
+# from esphome/bluetooth-proxies/esp32-generic.yaml, see https://esphome.io/components/improv_serial.html
+# improv_serial:

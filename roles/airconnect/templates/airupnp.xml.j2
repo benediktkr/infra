@@ -16,7 +16,7 @@
     <flush>1</flush>
     <artwork></artwork>
     <latency>{{ airconnect_latency }}</latency>
-    <drift>0</drift>
+    <drift>{{ airconnect_drift }}</drift>
   </common>
   <main_log>info</main_log>
   <upnp_log>info</upnp_log>
@@ -34,6 +34,9 @@
     <name>{{ item.name }}</name>
     {% if 'mac' in item -%}
     <mac>{{ item.mac | upper }}</mac>
+    {% endif -%}
+    {% if 'latency' in item -%}
+    <latency>{{ item.latency }}</latency>
     {% endif -%}
     <enabled>{% if item.enabled|default(true) %}1{% else %}0{% endif %}</enabled>
   </device>

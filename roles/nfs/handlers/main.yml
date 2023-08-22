@@ -4,11 +4,13 @@
   service:
     name: nfs-kernel-server
     state: reloaded
+  when:
+    - nfs_exports | length > 0
 
-- name: restart rpcbind
-  service:
-    name: rpcbind
-    state: restarted
+# - name: reload idmap
+#   service:
+#     name: idmap
+#     state: reloaded
 
-- name: call exportfs
-  command: exportfs -a
+# - name: call exportfs
+#   command: exportfs -a

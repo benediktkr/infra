@@ -119,7 +119,7 @@
     ipam_config:
       - subnet: "{{ bridgewithdns_cidr }}"
         gateway: "{{ bridgewithdns.host }}"
-    internal: no
+    internal: false
   tags:
     - docker-network
     - docker-network-bridgewithdns
@@ -190,19 +190,48 @@
 - name: make .docker dir
   file:
     state: directory
-    path: "{{ systemuserlist[ansible_user].home }}/.docker"
-    owner: "{{ systemuserlist[ansible_user].uid }}"
-    group: "{{ systemuserlist[ansible_user].gid }}"
+    path: "{{ item.destdir }}/.docker"
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
     mode: 0700
+  loop_control:
+    label: "{{ item.destdir }}/.docker"
+  with_items:
+    - destdir: /root
+      owner: root
+      group: root
+    - destdir: "{{ systemuserlist[ansible_user].home }}"
+      owner: "{{ systemuserlist[ansible_user].uid }}"
+      group: "{{ systemuserlist[ansible_user].gid }}"
   tags:
     - docker-auth
 
 - name: docker auth config
   copy:
-    dest: "{{ systemuserlist[ansible_user].home }}/.docker/config.json"
+    dest: "{{ item.destdir }}/.docker/config.json"
     mode: 0750
-    owner: "{{ systemuserlist[ansible_user].uid }}"
-    group: "{{ systemuserlist[ansible_user].gid }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
     content: "{{ docker_config | to_nice_json }}"
+  loop_control:
+    label: "{{ item.destdir }}/.docker/config.json"
+  with_items:
+    - destdir: /root
+      owner: root
+      group: root
+    - destdir: "{{ systemuserlist[ansible_user].home }}"
+      owner: "{{ systemuserlist[ansible_user].uid }}"
+      group: "{{ systemuserlist[ansible_user].gid }}"
   tags:
     - docker-auth
+
+- name: cron file
+  template:
+    src: docker-cron.j2
+    dest: /etc/cron.d/docker
+    owner: root
+    group: root
+    mode: 0640
+  tags:
+    - cron
+    - docker-cron

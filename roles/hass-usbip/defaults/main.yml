@@ -1,0 +1,9 @@
+---
+
+hass_usbip_enabled: false
+modprobe_task_str: >-
+  {%- if hass_usbip_enabled -%}
+  loaded
+  {%- else -%}
+  unloaded
+  {% endif %}

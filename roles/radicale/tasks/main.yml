@@ -1,0 +1,4 @@
+---
+ - import_tasks: radicale.yml
+   tags:
+     - radicale

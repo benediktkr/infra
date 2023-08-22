@@ -1,0 +1,5 @@
+---
+ - import_tasks: hass-zwave.yml
+   tags:
+     - hass
+     - hass-zwave

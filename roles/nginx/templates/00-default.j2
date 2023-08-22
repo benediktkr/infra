@@ -12,9 +12,12 @@ server {
 
   root /var/www/html;
   server_name {{ inventory_hostname }};
+
+  include /etc/nginx/well-known.conf;
+  include /etc/nginx/sudo-known.conf;
   include /etc/nginx/authelia_internal.conf;
 
-    location = /server_status {
+  location = /server_status {
         stub_status;
 
         access_log off;

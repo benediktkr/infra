@@ -1,0 +1,240 @@
+---
+
+homeassistant:
+
+
+# command_class: 91
+# wallmote:
+#  device_id: e6b5c5c6502ba5310d69f644f2e70a62
+#  label: 'Scene 004'
+#  property_key: '004'
+#  property_key_name: '004'
+#  property: scene
+#  property_name: scene
+#  value: KeyPressed
+#  value_raw: 0
+#  node_id: 31
+#
+# yellow_button:
+#  device_id: 56efe9abc87c0518758229a3137086f1
+#  label: 'Scene 001'
+#  property_key: '001'
+#  property_key_name: '001'
+#  property: scene
+#  property_name: scene
+#  value: KeyPressed
+#  value_raw: 0
+#  node_id: 58
+#
+#
+# automation
+# this:
+#   context:
+#     id: 01H6MEMV6GWK64MQ7GBDK8ZWD8
+#     parent_id: 01H6MEMV6DKAADNNTMQ3X6TXB4
+# trigger:
+#   event:
+#     context:
+#       id: 01H6MEPW2VZ044G6HWPK9SNJA3
+#       parent_id: null
+#       user_id: null
+#
+#
+# script
+# this:
+#   context:
+#     # matches this.context.id for automation
+#     id: 01H6MEMV6GWK64MQ7GBDK8ZWD8
+#     # matches this.context.parent_id for automation
+#     parent_id: 01H6MEMV6DKAADNNTMQ3X6TXB4
+#     user_id: null
+# # sent with data dict in automation
+# trigger:
+#   # name of automation
+#   id: wallmote
+#   # automation platform trigger
+#   platform: event
+# # sent automatically
+# context:
+#   # unique to the context of executing the script
+#   id: 01H6MEPW3143VNRQYVJEPNQFH6
+#   # matches trigger.event.context.id in automation -- pass this in the data dict
+#   parent_id: 01H6MEPW2VZ044G6HWPK9SNJA3
+#   user_id: null
+
+  customize:
+    package.node_anchors:
+      common_attrs: &common_attrs
+        package: "buttons"
+      common_attrs_templated: &common_attrs_templated
+        templated: true
+        <<: *common_attrs
+
+      # button_attrs: &button_attrs
+      #   value_raw: >-
+      #     {% if trigger.platform == "event" and is_state(this.entity_id, "on") %}
+      #     {{ trigger.event.data.value_raw }}
+      #     {% else %}
+      #     {{ state_attr(this.entity_id, "value_raw") }}
+      #     {% endif %}
+      #   this_entity_id: >-
+      #     {{ this.entity_id }}
+      #   event_context_id: >-
+      #     {% if trigger.platform == "event" and is_state(this.entity_id, "on") %}
+      #     {{ trigger.event.context.id }}
+      #     {% else %}
+      #     {{ state_attr(this.entity_id, "event_context_id") }}
+      #     {% endif %}
+
+    # Yellow button (ignoring KeyPressed2x, etc)
+    binary_sensor.button_bathroom_yellow:
+      friendly_name: "Yellow button pressed"
+      <<: *common_attrs_templated
+
+    # Wallmote 001
+    binary_sensor.button_hallway_wallmote_001:
+      friendly_name: "Wallmote button 1 pressed"
+      <<: *common_attrs_templated
+    binary_sensor.button_hallway_wallmote_001_held:
+      friendly_name: "Wallmote button 1 held"
+      <<: *common_attrs_templated
+    binary_sensor.button_hallway_wallmote_001_released:
+      friendly_name: "Wallmote button 1 released"
+      <<: *common_attrs_templated
+
+    # Wallmote 002
+    binary_sensor.button_hallway_wallmote_002:
+      friendly_name: "Wallmote button 2 pressed"
+      <<: *common_attrs_templated
+    binary_sensor.button_hallway_wallmote_002_held:
+      friendly_name: "Wallmote button 2 held"
+      <<: *common_attrs_templated
+    binary_sensor.button_hallway_wallmote_002_released:
+      friendly_name: "Wallmote button 2 released"
+      <<: *common_attrs_templated
+
+    # Wallmote 003
+    binary_sensor.button_hallway_wallmote_003:
+      friendly_name: "Wallmote button 3 pressed"
+      <<: *common_attrs_templated
+    binary_sensor.button_hallway_wallmote_003_held:
+      friendly_name: "Wallmote button 2 held"
+      <<: *common_attrs_templated
+    binary_sensor.button_hallway_wallmote_003_released:
+      friendly_name: "Wallmote button 3 released"
+      <<: *common_attrs_templated
+
+    # Wallmote 004
+    binary_sensor.button_hallway_wallmote_004:
+      friendly_name: "Wallmote button 4 pressed"
+      <<: *common_attrs_templated
+    binary_sensor.button_hallway_wallmote_004_held:
+      friendly_name: "Wallmote button 4 held"
+      <<: *common_attrs_templated
+    binary_sensor.button_hallway_wallmote_004_released:
+      friendly_name: "Wallmote button 4 released"
+      <<: *common_attrs_templated
+
+template:
+  - trigger:
+      - platform: time_pattern
+        minutes: "*"
+      - platform: event
+        event_type: zwave_js_value_notification
+        event_data:
+          command_class: 91
+
+
+    sensor:
+      - name: button_pressed_event_context_id
+        state: >-
+          {% if trigger.platform == "event" and trigger.event.event_type == "zwave_js_value_notification" %}
+          {{ trigger.event.context.id }}
+          {% elif this.entity_id is defined %}
+          {{ states(this.entity_id) }}
+          {% else %}
+          DEADBEEF
+          {% endif %}
+        attributes:
+          device_name: "button_hallway_wallmote"
+
+    binary_sensor:
+      # Yellow button (ignoring KeyPressed2x, etc)
+      - name: button_bathroom_yellow
+        state: >-
+          {% from 'buttons_zwave.jinja' import is_button_event with context %}
+          {{ is_button_event('button_bathroom_yellow', '001') }}
+        # attributes:
+        #   event_context_id: >-
+        #     {% from 'buttons_zwave.jinja' import is_button_event with context %}
+        #     {% if is_button_event('button_bathroom_yellow', '001') and trigger.event is defined and trigger.platform == "event" %}
+        #     {{ trigger.event.context.id }}
+        #     {% else %}
+        #     {{ state_attr(this.entity_id, "event_context_id") }}
+        #     {% endif %}
+
+
+      # Wallmote 001
+      - name: button_hallway_wallmote_001
+        state: >-
+          {% from 'buttons_zwave.jinja' import is_button_event with context %}
+          {{ is_button_event('button_hallway_wallmote', '001') }}
+      - name: button_hallway_wallmote_001_held
+        state: >-
+          {% from 'buttons_zwave.jinja' import is_button_event with context %}
+          {{ is_button_event('button_hallway_wallmote', '001', 'KeyHeldDown') }}
+      - name: button_hallway_wallmote_001_released
+        state: >-
+          {% from 'buttons_zwave.jinja' import is_button_event with context %}
+          {{ is_button_event('button_hallway_wallmote', '001', 'KeyReleased') }}
+
+      # Wallmote 002
+      - name: button_hallway_wallmote_002
+        state: >-
+          {% from 'buttons_zwave.jinja' import is_button_event with context %}
+          {{ is_button_event('button_hallway_wallmote', '002') }}
+      - name: button_hallway_wallmote_002_held
+        state: >-
+          {% from 'buttons_zwave.jinja' import is_button_event with context %}
+          {{ is_button_event('button_hallway_wallmote', '002', 'KeyHeldDown') }}
+      - name: button_hallway_wallmote_002_released
+        state: >-
+          {% from 'buttons_zwave.jinja' import is_button_event with context %}
+          {{ is_button_event('button_hallway_wallmote', '002', 'KeyReleased') }}
+
+      # Wallmote 003
+      - name: button_hallway_wallmote_003
+        state: >-
+          {% from 'buttons_zwave.jinja' import is_button_event with context %}
+          {{ is_button_event('button_hallway_wallmote', '003') }}
+      - name: button_hallway_wallmote_003_held
+        state: >-
+          {% from 'buttons_zwave.jinja' import is_button_event with context %}
+          {{ is_button_event('button_hallway_wallmote', '003', 'KeyHeldDown') }}
+      - name: button_hallway_wallmote_003_released
+        state: >-
+          {% from 'buttons_zwave.jinja' import is_button_event with context %}
+          {{ is_button_event('button_hallway_wallmote', '003', 'KeyReleased') }}
+
+      # Wallmote 004
+      - name: button_hallway_wallmote_004
+        state: >-
+          {% from 'buttons_zwave.jinja' import is_button_event with context %}
+          {{ is_button_event('button_hallway_wallmote', '004') }}
+        # attributes:
+        #   event_context_id: >-
+        #     {% from 'buttons_zwave.jinja' import is_button_event with context %}
+        #     {% if is_button_event('button_hallway_wallmote', '004') and trigger.event is defined and trigger.platform == "event" %}
+        #     {{ trigger.event.context.id }}
+        #     {% else %}
+        #     {{ state_attr(this.entity_id, "event_context_id") }}
+        #     {% endif %}
+
+      - name: button_hallway_wallmote_004_held
+        state: >-
+          {% from 'buttons_zwave.jinja' import is_button_event with context %}
+          {{ is_button_event('button_hallway_wallmote', '004', 'KeyHeldDown') }}
+      - name: button_hallway_wallmote_004_released
+        state: >-
+          {% from 'buttons_zwave.jinja' import is_button_event with context %}
+          {{ is_button_event('button_hallway_wallmote', '004', 'KeyReleased') }}

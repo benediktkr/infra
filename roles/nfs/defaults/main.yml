@@ -1,0 +1,6 @@
+---
+
+nfs_exports: "{{ deadspace[inventory_hostname] | default({}) | selectattr('nfs') | list | default([]) }}"
+nfs_export_paths: "{{ nfs_exports | map(attribute='path') | list }}"
+
+nfs_mounts: []

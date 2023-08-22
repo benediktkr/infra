@@ -1,5 +1,30 @@
+{# server {
+ #     server_name {%- for d in server_names %} {{ d }}{% endfor %};
+ #
+ #     {% if inventory_hostname in wg_clients -%}
+ #     listen {{ wg_clients[inventory_hostname].ip }}:443 ssl http2;
+ #     {% endif -%}
+ #     listen 443 ssl http2;
+ #
+ #     include listen-proxy-protocol.conf;
+ #
+ #     # but still include /.well-known/ and /.sudo-known/ urls.
+ #     include /etc/nginx/well-known.conf;
+ #     include /etc/nginx/sudo-known.conf;
+ #
+ #     ssl_certificate /usr/local/etc/certs/www.{{ domain }}/fullchain.pem;
+ #     ssl_certificate_key /usr/local/etc/certs/www.{{ domain }}/privkey.pem;
+ #
+ #     location / {
+ #         return 301 https://www.$http_host$request_uri;
+ #     }
+ #
+ #     access_log /var/log/nginx/access_{{ domain }}.log main;
+ #     error_log /var/log/nginx/error_{{ domain }}.log warn;
+ # } #}
+
 server {
-    server_name {%- for d in server_names %} {{ d }}{% endfor %};
+    server_name {%- for d in server_names %} {{ d }} www.{{ d }}{% endfor %};
 
     {% if inventory_hostname in wg_clients -%}
     listen {{ wg_clients[inventory_hostname].ip }}:443 ssl http2;
@@ -7,49 +32,104 @@ server {
     listen 443 ssl http2;
 
     include listen-proxy-protocol.conf;
-
-    ssl_certificate /usr/local/etc/certs/www.{{ domain }}/fullchain.pem;
-    ssl_certificate_key /usr/local/etc/certs/www.{{ domain }}/privkey.pem;
-
-    location / {
-        return 301 https://www.$http_host$request_uri;
-    }
-
-    access_log /var/log/nginx/access_{{ domain }}.log main;
-    error_log /var/log/nginx/error_{{ domain }}.log warn;
-}
-
-server {
-    server_name {%- for d in server_names %} www.{{ d }}{% endfor %};
-
-    {% if inventory_hostname in wg_clients -%}
-    listen {{ wg_clients[inventory_hostname].ip }}:443 ssl http2;
-    {% endif -%}
-    listen 443 ssl http2;
-
-    include listen-proxy-protocol.conf;
-
-    charset utf-8;
-    root /var/www/www.{{ domain }};
-
-    ssl_certificate /usr/local/etc/certs/www.{{ domain }}/fullchain.pem;
-    ssl_certificate_key /usr/local/etc/certs/www.{{ domain }}/privkey.pem;
-
-    autoindex on;
-    autoindex_exact_size off;
-
-    include /etc/nginx/authelia_internal.conf;
 
     # include /.well-known/ and /.sudo-known/ urls.
     include /etc/nginx/well-known.conf;
     include /etc/nginx/sudo-known.conf;
 
-    location /{{ www_stream }} {
-        proxy_pass https://{{ owntone_url }}/{{ www_stream_owntone }};
-    }
-    location {{ coolcats }} {
-        include /etc/nginx/require_auth.conf;
+    charset utf-8;
+
+    ssl_certificate /usr/local/etc/certs/www.{{ domain }}/fullchain.pem;
+    ssl_certificate_key /usr/local/etc/certs/www.{{ domain }}/privkey.pem;
+
+    include /etc/nginx/authelia_internal.conf;
+
+    root /var/www/www.{{ domain }};
+
+    location / {
+        location {{ coolcats }} {
+            include /etc/nginx/require_auth.conf;
+            add_header "sudo-user" $authelia_user;
+        }
+        location /whoami {
+            include /etc/nginx/require_auth.conf;
+            add_header "sudo-user" $authelia_user;
+            add_header "content-type" "text/plain; charset=utf-8";
+            alias /var/www/www.{{ domain }}/robots.txt;
+        }
+
+        add_header Referrer-Policy "no-referrer" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        #add_header X-Download-Options "noopen" always;
+        add_header Content-Security-Policy "frame-ancestors 'self' {{ cast_refer }} {%- for d in server_names %} https://*.{{ d }}{% endfor %};" always;
+        add_header X-Permitted-Cross-Domain-Policies "none" always;
+        # add_header X-Robots-Tag "none" always;
+        add_header X-XSS-Protection "1; mode=block" always;
+
         autoindex on;
+        autoindex_exact_size off;
+
+    }
+
+    location /cal/ {
+        include /etc/nginx/require_auth.conf;
+        include /etc/nginx/require_auth_proxy.conf;
+
+        {% set radicale_hostname = groups['radicale'][0] -%}
+        {% set radicale_upstream = wg_clients[radicale_hostname]['ip'] -%}
+        {% set radicale_port = hostvars[radicale_hostname]['radicale_port'] -%}
+        proxy_pass http://{{ radicale_upstream }}:{{ radicale_port }}/;
+
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Remote-User $authelia_user;
+        proxy_set_header Authorization "Basic dXNlcjo=";
+        proxy_set_header Host $http_host;
+
+         add_header X-Remote-User $authelia_user always;
+   }
+
+    location /_media {
+        include /etc/nginx/require_auth.conf;
+
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Remote-User $authelia_user;
+        proxy_pass https://{{ hass_url }};
+    }
+
+    location /api {
+        default_type application/json;
+        return 200 '{"apis":["/api/glados","/api/health","/api/whoami"]}';
+    }
+
+    location /api/whoami {
+        #return 200 '{"user":"$authelia_user","groups":"$authelia_groups","name":"$authelia_name","email":"$authelia_email"}';
+        add_header "content-type" "application/json";
+        add_header "sudo-user" $authelia_user;
+        return 200 $authelia_user;
+    }
+
+    location ^~ /api/ {
+        default_type application/json;
+        location = /api/glados/ {
+            return 307 /api/glados/docs/;
+        }
+        {% set glados_hostname = groups['glados'][0] -%}
+        {% set glados_upstream = wg_clients[glados_hostname]['ip'] -%}
+        location /api/glados/ {
+            proxy_set_header Host $host;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            #proxy_pass http://{{ glados_upstream }}:8125/;
+            proxy_pass http://amine.sudo.is:8125/;
+        }
+        location /api/health {
+            return 200 '{"health":{"www":true}}';
+        }
+
+    }
+
+    location /{{ www_stream }} {
+        include /etc/nginx/require_auth.conf;
+        proxy_pass https://{{ owntone_url }}/{{ www_stream_owntone }};
     }
     location ~* ^.+\.json$ {
         add_header Content-Type application/json;
@@ -61,20 +141,13 @@ server {
      #     proxy_hide_header "X-Robots-Tag";
      # } #}
 
-    # sometimes clients misbehave and contact the top level domain when they
-    # shouldnt so we point them to {{ matrix_url }} instead
-    location ~* "^/_matrix.*" {
-        return 301 https://{{ matrix_url }}$request_uri;
-    }
+    # # sometimes clients misbehave and contact the top level domain when they
+    # # shouldnt so we point them to {{ matrix_url }} instead
+    # location ~* "^/_matrix.*" {
+    #     return 301 https://{{ matrix_url }}$request_uri;
+    # }
 
     access_log /var/log/nginx/access_www.{{ domain }}.log main;
     error_log /var/log/nginx/error_www.{{ domain }}.log warn;
 
-    add_header Referrer-Policy "no-referrer" always;
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header X-Download-Options "noopen" always;
-    add_header Content-Security-Policy "frame-ancestors 'self' {{ cast_refer }} {%- for d in server_names %} https://*.{{ d }}{% endfor %};" always;
-    add_header X-Permitted-Cross-Domain-Policies "none" always;
-    # add_header X-Robots-Tag "none" always;
-    add_header X-XSS-Protection "1; mode=block" always;
 }

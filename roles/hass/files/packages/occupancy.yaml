@@ -1,0 +1,548 @@
+---
+
+homeassistant:
+  customize:
+    package.node_anchors:
+      package_name: &package_name "occupancy"
+      common_attrs: &common_attrs
+        package: *package_name
+
+      binary_sensor_lightswitch_light: &binary_sensor_lightswitch_light
+        device_class: occupancy
+        state: >-
+          {% set delay_off = "00:10:00" %}
+          {% set source_entity_id = this.attributes.source_entity_id %}
+          {{
+          source_entity_id is string
+          and is_state(source_entity_id, "on")
+          and state_attr(source_entity_id, "last") is string
+          and now() - state_attr(source_entity_id, "last")|as_datetime < delay_off|as_timedelta
+          }}
+        attributes:
+          comment: for use as signal for occupancy detenction
+
+    binary_sensor.lightswitch_light_bathroom:
+      friendly_name: Bathroom lightswitch change detected
+      templated: true
+      source_entity_id: >-
+        binary_sensor.manual_light_bathroom
+      <<: *common_attrs
+    binary_sensor.lightswitch_light_bedroom:
+      friendly_name: Bedroom lightswitch change detected
+      templated: true
+      source_entity_id: >-
+        binary_sensor.manual_light_bedroom
+      <<: *common_attrs
+    binary_sensor.lightswitch_light_livingroom:
+      friendly_name: Livingroom lightswitch change detected
+      templated: true
+      source_entity_id: >-
+        binary_sensor.manual_light_livingroom
+      <<: *common_attrs
+    binary_sensor.lightswitch_light_study:
+      friendly_name: Study lightswitch change detected
+      templated: true
+      source_entity_id: >-
+        binary_sensor.manual_light_study
+      <<: *common_attrs
+
+    binary_sensor.home_entry:
+      friendly_name: Home entry detected
+      <<: *common_attrs
+    binary_sensor.home_exit:
+      friendly_name: Home exit detected
+      <<: *common_attrs
+
+    # permiter enter/exit box/wasp
+    binary_sensor.perimeter_bedroom_entered:
+      friendly_name: Bedroom perimeter entered
+      templated: true
+      <<: *common_attrs
+    binary_sensor.perimeter_bedroom_exited:
+      friendly_name: Bedroom perimeter exited
+      templated: true
+      <<: *common_attrs
+
+    # combining radar, still target and moving target with logical OR
+    binary_sensor.radar_bedroom_bed:
+      friendly_name: Bed radar
+      location: "Under bed"
+      templated: true
+      proto: esphome
+      <<: *common_attrs
+    binary_sensor.radar_study_desk:
+      friendly_name: Desk radar
+      location: "on desk"
+      templated: true
+      proto: esphome
+      <<: *common_attrs
+
+    # occupancy (bedroom bed)
+    binary_sensor.occupancy_bedroom_bed:
+      friendly_name: Bed occupancy
+      templated: true
+      proto: esphome
+      <<: *common_attrs
+    binary_sensor.ben_in_bed:
+      friendly_name: Ben is in bed
+      templated: true
+      <<: *common_attrs
+    sensor.hours_since_bedroom_bed_occupied:
+      friendly_name: Hours since bed was occupied
+      templated: true
+      <<: *common_attrs
+
+    # occupancy (study desk)
+    binary_sensor.occupancy_study_desk:
+      friendly_name: Desk occupancy
+      templated: true
+      proto: esphome
+      <<: *common_attrs
+    sensor.hours_since_study_desk_occupied:
+      friendly_name: Hours since desk was occupied
+      templated: true
+      <<: *common_attrs
+
+    binary_sensor.occusig_study_ble_mouse:
+      friendly_name: Mouse M720 wakig up
+      templated: true
+      <<: *common_attrs
+
+
+template:
+  - binary_sensor:
+      - name: lightswitch_light_bathroom
+        <<: *binary_sensor_lightswitch_light
+
+      - name: lightswitch_light_bedroom
+        <<: *binary_sensor_lightswitch_light
+
+      - name: lightswitch_light_livingroom
+        <<: *binary_sensor_lightswitch_light
+
+      - name: lightswitch_light_study
+        <<: *binary_sensor_lightswitch_light
+
+      - unique_id: occusig_study_ble_mouse
+        name: occusig_study_ble_mouse
+        icon: "mdi:mouse-bluetooth"
+        delay_off: "00:10:00"
+        state: >-
+          {{
+          is_state("device_tracker.m720_triathlon", "home")
+          or is_state("device_tracker.ble_m720_triathlon_2", "home")
+          or is_state("device_tracker.ble_m720_triathlon", "home")
+          or is_state("binary_sensor.ble_m720_triathlon_4a1a", "on")
+          or is_state("binary_sensor.ble_m720_triathlon_4a1b", "on")
+          or is_state("binary_sensor.ble_m720_triathlon_4a1c", "on")
+          or is_state("binary_sensor.ble_m720_triathlon_4a1d", "on")
+          or is_state("binary_sensor.ble_m720_triathlon_4a1e", "on")
+          }}
+        attributes:
+          source: "BLE"
+          comment: >-
+            for use as signal for occupancy detection. briefly turns on while
+            searching for bluetooth connection.
+
+  - trigger:
+      - platform: state
+        entity_id: binary_sensor.door_entrance
+        from: "off"
+        to: "on"
+    binary_sensor:
+      - unique_id: home_entry_2
+        name: home_entry_2
+        delay_off: "00:00:30"
+        icon: >-
+          {% if this.state is true %}
+          mdi:home-import-outline
+          {% else %}
+          mdi:home-outline
+          {% endif %}
+        state: >-
+          {{ is_state("binary_sensor.motion_hallway", "off") }}
+      - unique_id: home_exit_2
+        name: home_exit_2
+        delay_off: "00:00:30"
+        icon: >-
+          {% if this.state is true %}
+          mdi:home-export-outline
+          {% else %}
+          mdi:home-outline
+          {% endif %}
+        state: >-
+          {{ is_state("binary_sensor.motion_hallway", "on") }}
+
+  - trigger:
+      - platform: state
+        entity_id: binary_sensor.door_entrance
+    binary_sensor:
+      - unique_id: home_entry_3
+        name: home_entry_3
+        icon: >-
+          {% if this.state is true %}
+          mdi:home-import-outline
+          {% else %}
+          mdi:home-outline
+          {% endif %}
+        state: >-
+          {{ trigger.to_state.state == "on" and is_state("binary_sensor.motion_hallway", "off") }}
+      - unique_id: home_exit_3
+        name: home_exit_3
+        icon: >-
+          {% if this.state is true %}
+          mdi:home-export-outline
+          {% else %}
+          mdi:home-outline
+          {% endif %}
+        state: >-
+          {{ trigger.to_state.state == "on" and is_state("binary_sensor.motion_hallway", "on") }}
+
+    # permiter experiments (appdaemon is better for this)
+
+  - trigger:
+      - platform: state
+        entity_id:
+          - binary_sensor.motion_bedroom_south
+          - binary_sensor.door_bedroom
+          #- light.bedroom_ceiling
+          #- binary_sensor.motion_hallway_east
+          #- binary_sensor.motion_hallway
+    binary_sensor:
+      - name: perimeter_bedroom_entered
+        icon: >-
+          {% if is_state(this.entity_id, 'on') %}
+          mdi:dots-grid
+          {% else %}
+          mdi:dots-square
+          {% endif %}
+        device_class: occupancy
+        delay_off: "00:00:15"
+        state: >-
+          {# set entity_domain = trigger.entity_id.split('.') | list | first #}
+          {# set human_action = trigger.to_state.context.user_id is none #}
+          {# set light_switch_on = human_action|bool and entity_domain == "light" #}
+          {{
+          is_state('binary_sensor.motion_hallway_east', 'on')
+          and trigger.to_state.state in ['on', 'off']
+          }}
+
+  - trigger:
+      - platform: state
+        entity_id:
+          - binary_sensor.motion_hallway_east
+          - binary_sensor.door_bedroom
+    binary_sensor:
+      - name: perimeter_bedroom_exited
+        icon: >-
+          {% if is_state(this.entity_id, 'on') %}
+          mdi:dots-grid
+          {% else %}
+          mdi:dots-square
+          {% endif %}
+        device_class: occupancy
+        delay_off: "00:00:15"
+        state: >-
+          {{
+          is_state('binary_sensor.motion_bedroom_south', 'on')
+          and trigger.to_state.state in ['on', 'off']
+          }}
+
+  - binary_sensor:
+      - unique_id: home_entry
+        name: home_entry
+        delay_off: "00:01:00"
+        icon: >-
+          {% if this.state is true %}
+          mdi:home-import-outline
+          {% else %}
+          mdi:home-outline
+          {% endif %}
+        state: >-
+          {{
+          is_state("binary_sensor.door_entrance", "on")
+          and is_state("binary_sensor.motion_hallway", "off")
+          }}
+      - unique_id: home_exit
+        name: home_exit
+        delay_off: "00:01:00"
+        icon: >-
+          {% if this.state is true %}
+          mdi:home-export-outline
+          {% else %}
+          mdi:home-outline
+          {% endif %}
+        state: >-
+          {{
+          is_state("binary_sensor.door_entrance", "on")
+          and is_state("binary_sensor.motion_hallway", "on")
+          }}
+
+      - name: radar_bedroom_bed
+        device_class: occupancy
+        state: >-
+          {% set presence = is_state('binary_sensor.radar_bedroom_bed_presence', 'on') %}
+          {% set still_target = is_state('binary_sensor.radar_bedroom_bed_still_target', 'on') %}
+          {% set moving_target = is_state('binary_sensor.radar_bedroom_bed_moving_target', 'on') %}
+          {{
+          presence|bool
+          or (still_target|bool or moving_target|bool)
+          }}
+      - name: radar_study_desk
+        device_class: occupancy
+        state: >-
+          {% set presence = is_state('binary_sensor.radar_study_desk_presence', 'on') %}
+          {% set still_target = is_state('binary_sensor.radar_study_desk_still_target', 'on') %}
+          {% set moving_target = is_state('binary_sensor.radar_study_desk_moving_target', 'on') %}
+          {{
+          presence|bool
+          or (still_target|bool or moving_target|bool)
+          }}
+
+      - name: occupancy_bedroom_bed
+        icon: >-
+          {% if is_state(this.entity_id, 'on') %}
+          mdi:bed
+          {% else %}
+          mdi:bed-empty
+          {% endif %}
+        device_class: occupancy
+        delay_off: "00:05:00"
+        state: >-
+          {#
+            {% set dt_since_last_ld2410 = now() - states("button.reboot_ld2410_radar_bedroom_bed")|as_datetime %}
+            {% set secs_since_last_ld2410 = dt_since_last_ld2410.total_seconds() %}
+            {% if secs_since_last_ld2410|int < 20 and radar|bool == true %}
+            {{ this.state }}
+            {% else %}
+            {% endif %}
+          #}
+          {% set radar = is_state('binary_sensor.radar_bedroom_bed', 'on') %}
+          {% set still_target = is_state('binary_sensor.radar_bedroom_bed_still_target', 'on') %}
+          {% set moving_target = is_state('binary_sensor.radar_bedroom_bed_moving_target', 'on') %}
+          {{
+          radar|bool
+          or (still_target|bool or moving_target|bool)
+          }}
+        attributes:
+          radar_entity_id: "binary_sensor.radar_bedroom_bed"
+          last_occupied: >-
+            {{ state_attr("automation.trigger_occupancy_bedroom_bed", "last_triggered") }}
+
+      - name: occupancy_study_desk
+        icon: >-
+          {% if is_state(this.entity_id, 'on') %}
+          mdi:keyboard
+          {% else %}
+          mdi:keyboard-off
+          {% endif %}
+        device_class: occupancy
+        delay_off: "00:05:00"
+        state: >-
+          {% set radar = is_state('binary_sensor.radar_study_desk', 'on') %}
+          {#
+            {% set dt_since_last_ld2410 = now() - states("button.reboot_ld2410_radar_study_desk")|as_datetime %}
+            {% set secs_since_last_ld2410 = dt_since_last_ld2410.total_seconds() %}
+            {% if secs_since_last_ld2410|int < 20 and radar|bool == true %}
+            {{ this.state }}
+            {% else %}
+            {% endif %}
+          #}
+          {{ radar|bool }}
+        attributes:
+          radar_entity_id: "binary_sensor.radar_study_desk"
+          last_occupied: >-
+            {{ state_attr("automation.trigger_occupancy_study_desk", "last_triggered") }}
+
+      # experiment
+      - name: ben_in_bed
+        icon: >-
+          {% if is_state(this.entity_id, 'on') %}
+          mdi:bed
+          {% else %}
+          mdi:bed-empty
+          {% endif %}
+        device_class: occupancy
+        state: >-
+          {% set ben_home = is_state('binary_sensor.home_ben', 'on') %}
+          {% set podcast = is_state('owntone_playing_podcast', 'on') %}
+          {% set owntone_bedroom = is_state('media_player.owntone_output_bedroom', 'on') %}
+          {% set owntone_study = is_state('media_player.owntone_output_study', 'on') %}
+          {% set podcast_bed = podcast|bool and owntone_bedroom|bool and not owntone_study %}
+          {% set bed_occupancy = is_state('binary_sensor.occupancy_bedroom_bed', 'on') %}
+          {% set monitor_off = is_state('binary_sensor.study_desk_monitor', 'off') %}
+          {% set tv_off = is_state('binary_sensor.tv_livingroom', 'off') %}
+          {% set amp_off = is_state('switch.nad_c370', 'off') %}
+          {% set atv_playing = is_state('binary_sensor.apple_tv_is_playing', 'off') %}
+          {% set screens_off = monitor_off|bool and tv_off|bool and amp_off|bool and not atv_playing|bool %}
+          {% set bedroom_ceiling_light = is_state('light.bedroom_ceiling', 'on') %}
+          {% set phone_charging = is_state('sensor.ben_phone_battery_state', 'Charging') %}
+          {% set motion_hallway = is_state('binary_sensor.motion_hallway', 'on') %}
+          {% set motion_study = is_state('binary_sensor.motion_study', 'on') %}
+          {% set radar_study_desk = is_state('binary_sensor.radar_study_desk', 'on') %}
+          {% set motion_livingroom = is_state('binary_sensor.motion_livingroom', 'on') %}
+          {{
+          ben_home
+          and not bedroom_ceiling_light
+          and (
+            screens_off
+            or phone_charging
+          )
+          and (
+            podcast_bed
+            or bed_occupancy
+          )
+          and (
+            not motion_hallway
+            and not motion_study
+            and not radar_study_desk
+            and not motion_livingroom
+          )
+          }}
+
+
+  - sensor:
+      # {% set ble_scanner = states("sensor.esphome_ble_scanner") %}
+      # {% set j = ble_scanner | from_json %}
+      # {% set name = j.name|default(none) %}
+      # {% if name is string and name|length > 0 %}
+      # {{ name | trim }}
+      # {% elif this.state is string %}
+      # {{ this.state }}
+      # {% endif %}
+      # attributes:
+      #   payload: >-
+      #     {{ states("sensor.esphome_ble_scanner") }}
+
+      - unique_id: esphome_ble_names
+        name: esphome_ble_names
+        # when disabled in hass, the sensor is "unknown"
+        availability: >-
+          {{
+          states("sensor.esphome_ble_scanner") is string
+          and not is_state("sensor.esphome_ble_scanner", "unknown")
+          }}
+        state: >-
+          stopped
+
+      - name: hours_since_bedroom_bed_occupied
+        state_class: measurement
+        unit_of_measurement: hours
+        availability: >-
+          {{
+          states('automation.trigger_occupancy_bedroom_bed') is defined
+          and states('automation.trigger_occupancy_bedroom_bed') is defined
+          and state_attr('automation.trigger_occupancy_bedroom_bed', 'last_triggered') is not none
+          }}
+        state: >-
+          {% set last_triggered = state_attr("automation.trigger_occupancy_bedroom_bed", "last_triggered") %}
+          {% if is_state("binary_sensor.occupancy_bedroom_bed", "on") %}
+          {% set hours = 0 %}
+          {% else %}
+          {% set triggered_delta = now() - last_triggered %}
+          {% set hours = triggered_delta.seconds / 60 / 60 %}
+          {% endif %}
+          {{ hours | round(0) | int }}
+        attributes:
+          last_occupied: >-
+            {{ state_attr("automation.trigger_occupancy_bedroom_bed", "last_triggered") }}
+
+      - name: hours_since_study_desk_occupied
+        state_class: measurement
+        unit_of_measurement: hours
+        availability: >-
+          {{
+          states('automation.trigger_occupancy_study_desk') is defined
+          and states('automation.trigger_occupancy_study_desk') is defined
+          and state_attr('automation.trigger_occupancy_study_desk', 'last_triggered') is not none
+          }}
+        state: >-
+          {% set last_triggered = state_attr("automation.trigger_occupancy_study_desk", "last_triggered") %}
+          {% if is_state("binary_sensor.occupancy_study_desk", "on") %}
+          {% set hours = 0 %}
+          {% else %}
+          {% set triggered_delta = now() - last_triggered %}
+          {% set hours = triggered_delta.seconds / 60 / 60 %}
+          {% endif %}
+          {{ hours | round(0) | int }}
+        attributes:
+          last_occupied: >-
+            {{ state_attr("automation.trigger_occupancy_study_desk", "last_triggered") }}
+
+automation:
+  - alias: trigger_occupancy_bedroom_bed
+    id: trigger_occupancy_bedroom_bed
+    description: "last_triggered used to calculate value for sensor.hours_since_bedroom_bed_occupied"
+    mode: single
+    trigger:
+      - platform: state
+        entity_id:
+          - sensor.hours_since_bedroom_bed_occupied
+        to: "unavailable"
+        for:
+          seconds: 5
+      - platform: state
+        entity_id:
+          - binary_sensor.occupancy_bedroom_bed
+        from: "on"
+        to: "off"
+      - platform: state
+        entity_id:
+          - binary_sensor.occupancy_bedroom_bed
+        from: "off"
+        to: "on"
+    condition: []
+    action: []
+  - alias: trigger_occupancy_study_desk
+    id: trigger_occupancy_study_desk
+    description: "last_triggered used to calculate value for sensor.hours_since_study_desk_occupied"
+    mode: single
+    trigger:
+      - platform: state
+        entity_id:
+          - sensor.hours_since_study_desk_occupied
+        to: "unavailable"
+        for:
+          seconds: 5
+      - platform: state
+        entity_id:
+          - binary_sensor.occupancy_study_desk
+        from: "on"
+        to: "off"
+      - platform: state
+        entity_id:
+          - binary_sensor.occupancy_study_desk
+        from: "off"
+        to: "on"
+    condition: []
+    action: []
+
+
+
+# - sensor:
+#   - name: lightswitch_bathroom_ceiling_last_changed
+#     icon: mdi:calendar-clock
+#     device_class: timestamp
+#     availability: >-
+#       {{
+#       has_value("binary_sensor.lightswitch_bathroom_ceiling")
+#       and state_attr("binary_sensor.lightswitch_bathroom_ceiling", "last") is defined
+#       }}
+#     state: >-
+#       {% if is_state("binary_sensor.lightswitch_bathroom_ceiling", "on") %}
+#       {% set dt = state_attr("binary_sensor.lightswitch_bathroom_ceiling", "last") | as_datetime %}
+#       {{ dt.isoformat() }}
+#       {% else %}
+#       {{ states(this.entity_id) }}
+#       {% endif %}
+# - trigger:
+#     - platform: state
+#       entity_id: binary_sensor.lightswitch_bathroom_ceiling
+#       from: "off"
+#       to: "on"
+#   sensor:
+#     - name: lightswitch_bathroom_ceiling_last_changed
+#       icon: mdi:calendar-clock
+#       device_class: timestamp
+#       state: >-
+#         {{ now().isoformat() }}

@@ -1,0 +1,23 @@
+---
+
+{% if hass_openwrt_luci|default(false) %}
+device_tracker:
+  - platform: luci
+    host: {{ s21_router_hostname }}
+    username: {{ systemuserlist.hass.username }}
+    password: !secret s21_router_password
+    verify_ssl: false
+    track_new_devices: true
+    new_device_defaults:
+      track_new_devices: true
+
+{% endif %}
+
+{% if hass_openwrt_ubus|default(false) %}
+device_tracker:
+  - platform: ubus
+    host: {{ s21_router_hostname }}
+    username: {{ systemuserlist.hass.username }}
+    password: !secret s21_router_password
+
+{% endif %}

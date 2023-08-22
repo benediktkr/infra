@@ -38,11 +38,11 @@ def certbot_new(fqdn, wildcard, www):
         print(f"domain '{domain}' not found in '{dns_file}'!")
         sys.exit(2)
 
-    dns_flag = f"--dns-{dns_provider}"
     certbot_cmd = [
         "/usr/local/bin/certbot",
         "certonly",
-        dns_flag,
+        f"--dns-{dns_provider}",
+        "--deploy-hook", "/usr/local/bin/letsencrypt-hook.py",
         "-d", fqdn
     ]
     if wildcard:

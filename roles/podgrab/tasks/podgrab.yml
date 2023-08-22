@@ -15,7 +15,7 @@
   tags:
     - podgrab-dirs
 
-- name: start podgrab container
+- name: podgrab container
   docker_container:
     name: podgrab
     image: akhilrex/podgrab

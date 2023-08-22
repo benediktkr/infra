@@ -1,7 +1,55 @@
 ---
 
-- import_tasks: homeaudio.yml
-  tags: homeaudio
+- name: install packages for dealing with usb drive bay
+  apt:
+    name:
+      - hd-idle
+      - hdparm
+      - smartmontools
+    state: present
+  tags:
+    - packages
+    - hdd-packages
 
-- import_tasks: mopidy.yml
-  tags: mopidy
+- name: install python package for controlling usb drive bay fan
+  pip:
+    name:
+      - hddfancontrol
+    state: present
+  tags:
+    - packages
+    - pip-packages
+    - hdd-packages
+
+
+- name: install audio and metadata related packages
+  apt:
+    name:
+      - avahi-utils
+      - eyed3
+      - id3v2
+      - ffmpeg
+      - pulseaudio-dlna
+      - pulseaudio-module-bluetooth
+      #- pulseaudio-module-raop
+      #- pulseaudio-module-zeroconf
+      #- pulseaudio-module-lirc
+      #- pulseaudio-module-jack
+
+    state: present
+  tags:
+    - homeaudio-packages
+    - packages
+
+- name: install yt-dlp
+  pip:
+    name: yt-dlp
+    state: latest
+  tags:
+    - packages
+    - pip-packages
+    - yt-dlp
+    - homeaudio-packages
+
+# - import_tasks: mopidy.yml
+#   tags: mopidy

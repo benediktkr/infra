@@ -97,6 +97,7 @@
           password: {{ systemuserlist.invidious.postgres_passwd }}
           host: 172.17.0.1
           port: 5432
+        hmac_key: {{ invidious_hmac_key }}
         admins:
           - {{ invidious_admin }}
         full_refresh: false

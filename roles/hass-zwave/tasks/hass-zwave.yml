@@ -1,0 +1,112 @@
+---
+
+- name: udev rule for z-wave
+  template:
+    src: "{{ item }}.j2"
+    dest: /etc/udev/rules.d/{{ item }}
+    owner: root
+    group: root
+    mode: 0644
+  notify: udevadm reload rules
+  with_items:
+    - 10-zwave.rules
+  tags:
+    - hass-zwave-udev
+
+- name: create dir structure
+  file:
+    path: "{{ systemuserlist.hass.home }}/{{ item.name }}"
+    state: directory
+    mode: "{{ item.mode | default('0755') }}"
+    owner: hass
+    group: hass
+  tags:
+    - hass-dirs
+    - hass-zwave-dirs
+  loop_control:
+    label: "{{ item.name }}"
+  with_items:
+    - name: zwavejs
+    - name: zwavejs/logs
+    - name: zwavejs/data
+    - name: zwavejs/config-db
+
+- name: create backup dir
+  file:
+    path: "/srv/zwavejs_backups"
+    state: directory
+    mode: "0750"
+    owner: hass
+    group: hass
+  tags:
+    - hass-dirs
+    - hass-zwave-dirs
+
+
+# docker run --run -it -p 8091:8091 -p 3000:3000 --network
+#bridgewithdns --device /dev/ttyACM0:/dev/zwave -v
+# /home/ben/zwavejs:/usr/src/app/store zwavejs/zwavejs2mqtt:latest
+
+# the name has changed to zwave-js-ui:
+# https://github.com/zwave-js/zwave-js-ui/pull/2650
+- name: start zwavejs container
+  docker_container:
+    name: zwavejs
+    image: zwavejs/zwave-js-ui:latest
+    detach: true
+    pull: true
+    auto_remove: false
+    restart_policy: "unless-stopped"
+    state: "{{ hass_container_state | default('stopped') }}"
+    container_default_behavior: compatibility
+    user: "{{ systemuserlist.hass.uid }}:dialout"
+    networks_cli_compatible: false
+    network_mode: bridgewithdns
+    networks:
+      - name: bridgewithdns
+        ipv4_address: "{{ bridgewithdns.zwavejs }}"
+    devices:
+      # without udev rule in place:
+      #- "/dev/serial/by-id/usb-0658_0200-if00:/dev/zwave:rwm"
+      # with udev rule in place:
+      - "/dev/zwave0:/dev/zwave:rwm"
+    exposed_ports:
+      - 3000
+    ports:
+      # ws for hass<->zwavejs
+      # hass is configured to use localhost:3000 to talk to zwavejs, but can
+      # also use {{ bridgewithdns.zwavejs }}, but hass is very fragile and
+      # you have to manually work around it if it cant access zwaevjs because
+      # the ip/dns changed or the container moved networks. it is not
+      # configured in a config file either. so using localhost is the least
+      # fragile strategy.
+      - "3000:3000"
+    env:
+      BASE_PATH: "/"
+      SESSION_SECRET: "{{ zwavejs_session_secret }}"
+      ZWAVEJS_EXTERNAL_CONFIG: /usr/src/app/store/.config-db
+      ZWAVEJS_LOGS_DIR: /usr/src/app/store/logs
+      KEY_S0_Legacy: "{{ zwavejs_KEY_S0_Legacy }}"
+      KEY_S2_Unauthenticated: "{{ zwavejs_KEY_S2_Unauthenticated }}"
+      KEY_S2_Authenticated: "{{ zwavejs_KEY_S2_Authenticated }}"
+      KEY_S2_AccessControl: "{{ zwavejs_KEY_S2_AccessControl }}"
+
+    mounts:
+      - type: bind
+        source: "{{ systemuserlist.hass.home }}/zwavejs/data"
+        target: /usr/src/app/store
+      - type: bind
+        source: "{{ systemuserlist.hass.home }}/zwavejs/logs"
+        target: /usr/src/app/store/logs
+      - type: bind
+        source: "/srv/zwavejs_backups"
+        target: /usr/src/app/store/backups
+      - type: bind
+        source: "{{ systemuserlist.hass.home }}/zwavejs/config-db"
+        target: /usr/src/app/store/.config-db
+  register: zwavejs_container
+  tags:
+    - zwavejs
+    - zwavejs-container
+    - hass-container
+    - docker-containers

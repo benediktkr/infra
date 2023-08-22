@@ -1,0 +1,32 @@
+---
+
+- name: install cups
+  apt:
+    name: cups
+    state: present
+  tags: packages
+
+- name: cups config files
+  template:
+    src: "{{ item }}.j2"
+    dest: /etc/cups/{{ item }}
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - cupsd.conf
+
+- name: install certs
+  copy:
+    src: "/usr/local/etc/letsencrypt/live/{{ item }}"
+    dest: "/usr/local/etc/certs/"
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - letsencrypt-certs
+  notify: reload nginx
+  vars:
+    prediff_cmd: echo
+  with_items:
+    - "{{ inventory_hostname.split('.')[1:] | join('.')  }}"

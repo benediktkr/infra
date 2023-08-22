@@ -1,0 +1,75 @@
+---
+
+- name: udev rule for zigbee
+  template:
+    src: "{{ item }}.j2"
+    dest: /etc/udev/rules.d/{{ item }}
+    owner: root
+    group: root
+    mode: 0644
+  notify: udevadm reload rules
+  with_items:
+    - 11-zigbee.rules
+  tags:
+    - hass-zigbee-udev
+
+- name: create dir structure
+  file:
+    path: "{{ systemuserlist.hass.home }}/{{ item.name }}"
+    state: directory
+    mode: "{{ item.mode | default('0755') }}"
+    owner: hass
+    group: hass
+  tags:
+    - hass-dirs
+    - hass-zigbee-dirs
+  loop_control:
+    label: "{{ item.name }}"
+  with_items:
+    - name: zigbee2mqtt
+    - name: zigbee2mqtt/data
+    - name: zigbee2mqtt/log
+
+- name: template zigbee2mqtt configuration.yaml
+  template:
+    src: configuration.yaml.j2
+    dest: "{{ systemuserlist.hass.home }}/zigbee2mqtt/data/configuration.yaml"
+    owner: hass
+    group: hass
+    mode: 0644
+  notify: restart hass-zigbee container
+  tags:
+    - hass-zigbee-config
+
+- name: start hass-zigbee container
+  docker_container:
+    name: hass-zigbee
+    image: koenkk/zigbee2mqtt
+    detach: true
+    pull: true
+    auto_remove: false
+    restart_policy: "unless-stopped"
+    state: "{{ hass_container_state | default('stopped') }}"
+    container_default_behavior: compatibility
+    user: "{{ systemuserlist.hass.uid }}:dialout"
+    networks_cli_compatible: false
+    network_mode: bridgewithdns
+    networks:
+      - name: bridgewithdns
+        ipv4_address: "{{ bridgewithdns.hass_zigbee }}"
+    devices:
+      - "/dev/zigbee0:/dev/zigbee:rwm"
+    env:
+      TZ: "Europe/Berlin"
+    mounts:
+      - type: bind
+        source: "{{ systemuserlist.hass.home }}/zigbee2mqtt/data"
+        target: /app/data
+      - type: bind
+        source: "{{ systemuserlist.hass.home }}/zigbee2mqtt/log"
+        target: /app/data/log
+  register: hass_zigbee_container
+  tags:
+    - hass-zigbee-container
+    - hass-container
+    - docker-containers

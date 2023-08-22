@@ -1,0 +1,21 @@
+permit_join: true
+homeassistant: true
+mqtt:
+  base_topic: zigbee2mqtt
+  server: {{ hass_zigbee_mqtt }}
+serial:
+  port: /dev/zigbee
+  adapter: deconz
+frontend:
+  port: 8633
+  url: https://{{ zwavejs_url }}/_zigbee/
+{% if hass_zigbee_network_key | length > 0 -%}
+advanced:
+  network_key:
+  {% set network_key =  hass_zigbee_network_key | to_nice_yaml(indent=2) %}
+  {{ network_key | indent(4) | trim }}
+{{ {'devices': hass_zigbee_devices} | to_nice_yaml(indent=2, sort_keys=false) | trim }}
+{% else -%}
+advanced:
+  network_key: GENERATE
+{% endif %}

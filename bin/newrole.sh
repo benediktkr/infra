@@ -28,10 +28,10 @@ echo "/${1}.yml" >> .gitignore
 
 (
     cd private/
-    git st
-    git add site2.yml
-    git add playbooks/$1.yml
-    git commit -m "new role: $1"
-    git push
-    git st
+    #git st
+    #git add site2.yml
+    #git add playbooks/$1.yml
+    #git commit -m "new role: $1"
+    #git push
+    #git st
 )

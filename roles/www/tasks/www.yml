@@ -36,6 +36,7 @@
     dest: /etc/nginx/sites-enabled/01-{{ domain }}.conf
   notify: reload nginx
   tags:
+    - www-nginx
     - nginx-config
     - www.sudo.is
     - wwwsudo.is
