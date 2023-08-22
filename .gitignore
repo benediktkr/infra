@@ -51,12 +51,6 @@ flycheck_*.el
 .terraform
 *.tfvars
 
-# OpenVPN
-index.txt
-*.key
-*.pem
-*.csr
-
 # Ansible
 *.retry
 private/
