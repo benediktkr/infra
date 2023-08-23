@@ -62,7 +62,7 @@
   apt:
     update_cache: true
     upgrade: full
-  #when: promox_repo.changed
+  when: promox_repo.changed|default(false)
   tags:
     - packages
 
@@ -165,6 +165,6 @@
     dest: /etc/pve/user.cfg
     owner: root
     group: www-data #???
-    mode: 640
+    mode: 0640
   tags:
     - proxmox-users

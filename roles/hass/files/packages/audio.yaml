@@ -85,20 +85,19 @@ automation:
 
 
 media_player:
-  #- platform: universal
-  #  name: owntone_bedroom
-  #  children:
-  #    - media_player.owntone_output_bedroom
-  #    - media_player.owntone_server
-
   - platform: universal
     name: bedroom
     children:
       - media_player.owntone_server
       - media_player.sonos_bedroom
-      #- media_player.owntone_output_bedroom
     browse_media_entity: media_player.owntone_server
     device_class: speaker
+    active_child_template: >-
+      {% if is_state("media_player.owntone_output_bedroom", "on") %}
+      media_player.owntone_server
+      {% else %}
+      media_player.sonos_bedroom
+      {% endif %}
     state_template: >-
       {% if is_state("media_player.owntone_output_bedroom", "on") %}
       {{ states("media_player.owntone_server") }}
@@ -147,7 +146,10 @@ media_player:
     attributes:
       volume_level: media_player.sonos_bedroom|volume_level
       is_volume_muted: media_player.sonos_bedroom|is_volume_muted
-      source_list: media_player.owntone_server|source_list
+      #source_list: media_player.owntone_server|source_list
+      source_list: None, OwnTone
+
+
 
 
 template:

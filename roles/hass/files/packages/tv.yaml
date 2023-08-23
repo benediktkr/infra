@@ -21,14 +21,18 @@ homeassistant:
       notes: "Helper for binary_sensor.tv_livingroom"
       <<: *common_attrs_templated
 
-    binary_sensor.tv_livingroom:
-      friendly_name: "Livingroom TV"
+    binary_sensor.tv_livingroom_power:
+      friendly_name: "Livingroom TV (power)"
       proto: "Z-Wave"
       <<: *common_attrs_templated
 
     binary_sensor.tv_livingroom_samsung:
       friendly_name: "Livingroom TV (samsungtv)"
       proto: "samsungtv"
+      <<: *common_attrs_templated
+
+    binary_sensor.tv_livingroom:
+      friendly_name: "Livingroom TV"
       <<: *common_attrs_templated
 
     binary_sensor.apple_tv_is_playing:
@@ -90,18 +94,20 @@ script:
       used for the turn_off service of media_player.tv_livingroom
       to be able to eecute more than one command.
     sequence:
+      - service: media_player.turn_off
+        data: {}
+        target:
+          entity_id:
+           - media_player.apple_tv
+           - media_player.livingroom_tv_samsung_43_dog
       - service: media_player.media_stop
         data: {}
         target:
           entity_id: media_player.sonos_livingroom
-      - service: media_player.turn_off
-        data: {}
-        target:
-          entity_id: media_player.livingroom_tv_samsung_43_dog
-      - service: media_player.turn_off
-        data: {}
-        target:
-          entity_id: media_player.apple_tv
+      #- service: media_player.turn_off
+      #  data: {}
+      #  target:
+      #    entity_id: media_player.apple_tv
 
   media_player_tv_livingroom_turn_on:
     icon: "mdi:television"
@@ -124,7 +130,7 @@ script:
                 entity_id: sensor.electric_w_switch_tv_livingroom
                 above: 0
                 for:
-                  seconds: 1
+                  seconds: 3
       - service: media_player.turn_on
         data: {}
         target:
@@ -140,7 +146,7 @@ script:
         target:
           entity_id: media_player.sonos_livingroom
       - wait_template: |
-          {{ state_attr("media_player.sonos_livingroom", "source") == "Line-in" }}
+          {{ is_state_attr("media_player.sonos_livingroom", "source", "Line-in") }}
         continue_on_timeout: false
         timeout: "00:00:10"
       - service: media_player.media_play
@@ -232,7 +238,7 @@ template:
           source_power: "sensor.electric_w_switch_tv_livingroom"
           source_proto: "z-wave"
 
-      - name: tv_livingroom
+      - name: tv_livingroom_power
         icon: >-
           {% if is_state(this.entity_id, "on") %}
           mdi:television
@@ -258,7 +264,6 @@ template:
           power_on
           and not standby
           and power_w > 1
-          and power_w < 1000
           }}
         attributes:
           source_power_entity_id: "sensor.electric_w_switch_tv_livingroom"
@@ -286,6 +291,18 @@ template:
           notes: >-
             tracking when the samsungtv integration reports the
             tv as being on
+      - name: tv_livingroom
+        icon: >-
+          {% if is_state(this.entity_id, "on") %}
+          mdi:television
+          {% else %}
+          mdi:television-off
+          {% endif %}
+        device_class: power
+        state: >-
+          {{ is_state("binary_sensor.tv_livingroom_samsung", "on") }}
+        attributes:
+          source_entity_id: "media_player.tv_livingroom_samsung"
 
 
   - binary_sensor:
@@ -319,6 +336,18 @@ template:
           source_entity_id: "media_player.chromecast_den_tv"
 
   - sensor:
+      - name: state_tv_livingroom
+        icon: >-
+          {% if is_state(this.entity_id, "on") %}
+          mdi:television
+          {% else %}
+          mdi:television-off
+          {% endif %}
+        state: >-
+          {{ states("media_player.tv_livingroom") }}
+        attributes:
+          source_entity_id: "media_player.tv_livingroom"
+
       - name: state_apple_tv
         icon: >-
           {% if is_state(this.entity_id, "on") %}
@@ -375,6 +404,8 @@ media_player:
       - media_player.livingroom_tv_samsung_43_dog
     browse_media_entity: media_player.apple_tv
     device_class: "tv"
+    active_child_template: >-
+      media_player.apple_tv
     state_template: >-
       {% if is_state("binary_sensor.apple_tv_is_playing", "on") %}
       playing
