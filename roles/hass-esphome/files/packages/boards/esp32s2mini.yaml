@@ -1,0 +1,43 @@
+---
+
+esp32:
+  board: lolin_s2_mini
+  variant: ESP32S2
+  framework:
+      type: esp-idf
+      #version: 4.4.3
+      #platform_version: 5.3.0
+
+light:
+  - platform: status_led
+    name: "${hostname} Status LED"
+    id: esp_status_led
+    icon: "mdi:alarm-light"
+    #restore_mode: ALWAYS_OFF
+    pin: 
+      number: GPIO15
+      inverted: false
+    effects: 
+      - strobe:
+          name: Blink
+      - strobe:
+          name: Blink slow
+          colors:
+            - state: true
+              duration: 1s
+            - state: false
+              duration: 0.5s
+      - strobe:
+          name: Blink slower
+          colors:
+            - state: true
+              duration: 3s
+            - state: false
+              duration: 1s
+
+wifi:
+  # ESP32 S2 Mini specific, the default power saving mode causes it disconnect somewhat frequntly
+  # the default for esp32 is 'light'
+  power_save_mode: none
+  output_power: 15dB
+

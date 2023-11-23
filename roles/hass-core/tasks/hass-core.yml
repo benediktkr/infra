@@ -1,0 +1,513 @@
+---
+
+- name: create mariadb db
+  mysql_db:
+    name: "{{ systemuserlist.hass.username }}"
+    encoding: utf8mb4
+    collation: utf8mb4_general_ci
+    login_unix_socket: /run/mysqld/mysqld.sock
+  tags:
+    - mariadb-users
+    - hass-mariadb
+
+- name: mariadb user without password
+  mysql_user:
+    state: present
+    name: "{{ systemuserlist.hass.username }}"
+    host: 'localhost'
+    priv: "{{ systemuserlist.hass.username }}.*:ALL"
+    login_unix_socket: /run/mysqld/mysqld.sock
+  tags:
+    - mariadb-users
+    - hass-mariadb
+
+- name: remove mariadb user with password (used for migration, hass doesnt use it)
+  mysql_user:
+    state: absent
+    name: "{{ systemuserlist.hass.username }}"
+    host: "{{ item }}"
+    priv: "{{ systemuserlist.hass.username }}.*:ALL"
+    password: "{{ systemuserlist.hass.mariadb_pass }}"
+    login_unix_socket: /run/mysqld/mysqld.sock
+  loop_control:
+    label: "'{{ systemuserlist.hass.username }}'@'{{ item }}'"
+  when:
+    - "item | ansible.utils.ipaddr('private') or item.endswith('%')"
+  with_items:
+    - "{{ ansible_default_ipv4.address }}"
+    - "{{ bridgewithdns_mariadb }}"
+  tags:
+    - mariadb-users
+    - hass-mariadb
+
+- name: copy ssh keys for {{ hass_config_repo_name }}
+  template:
+    src: "private/sshkeys/{{ item }}"
+    dest: "{{ systemuserlist.hass.home }}/.ssh/{{ item }}"
+    owner: "{{ systemuserlist.hass.uid }}"
+    group: "{{ systemuserlist.hass.gid }}"
+    mode: 0600
+  no_log: true
+  with_items:
+    - "{{ hass_config_repo_name }}"
+    - "{{ hass_config_repo_name }}.pub"
+    - "{{ systemuserlist.hass.username }}"
+    - "{{ systemuserlist.hass.username }}.pub"
+  tags:
+    - hass-git
+
+# hass + zwave
+
+- name: create dir structure
+  file:
+    path: "{{ systemuserlist.hass.home }}/{{ item.name }}"
+    state: directory
+    mode: "{{ item.mode | default('0755') }}"
+    owner: hass
+    group: hass
+  tags:
+    - hass-dirs
+    - hass-core-dirs
+  loop_control:
+    label: "{{ item.name }}"
+  with_items:
+    - name:
+    - name: .ssh
+      mode: "0700"
+    - name: .cache
+    - name: .local
+      mode: "0775"
+    - name: .homeassistant
+    - name: .config
+    - name: home-assistant
+    - name: home-assistant/config
+    - name: home-assistant/config/custom_templates
+    - name: home-assistant/config/packages
+    - name: home-assistant/config/python_scripts
+    - name: home-assistant/media
+      mode: "0775"
+    - name: home-assistant/media/cameras
+      mode: "0775"
+    - name: home-assistant/media/cameras/recordings
+      mode: "0775"
+    - name: home-assistant/media/cameras/snapshots
+      mode: "0775"
+    - name: git
+
+- name: template gitconfig
+  template:
+    src: gitconfig.j2
+    dest: "{{ systemuserlist.hass.home }}/.gitconfig"
+    owner: "{{ systemuserlist.hass.uid }}"
+    group: "{{ systemuserlist.hass.gid }}"
+    mode: 0644
+  tags:
+    - hass-git
+
+- name: set up the {{ hass_config_repo_name }} repo
+  when: false
+  git:
+    repo: "{{ hass_config_repo }}"
+    dest: "{{ systemuserlist.hass.home }}/git/{{ hass_config_repo_name }}"
+    version: main
+    clone: true
+    update: false
+    force: false
+    accept_newhostkey: true
+    #key_file: "{{ systemuserlist.hass.home }}/.ssh/{{ hass_config_repo_name }}"
+  become_user: "{{ systemuserlist.hass.username }}"
+  tags:
+    - hass-git
+    - hass-git-clone
+
+- debug:
+    var: ansible_default_ipv4
+  tags:
+    - hass-core-configg
+
+- name: home assistant config files and config packages
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ systemuserlist.hass.home }}/home-assistant/config/{{ item }}"
+    owner: "{{ systemuserlist.hass.uid }}"
+    group: "{{ systemuserlist.hass.gid }}"
+    mode: 0644
+  notify: restart hass container
+  no_log: "{{ item.startswith('secret') }}"
+  with_items:
+    - secrets.yaml
+    - configuration.yaml
+    - templates.yaml
+    - automations-ansible-managed.yaml
+    - scripts-ansible-managed.yaml
+    - packages/blink1.yaml
+    - packages/lights.yaml
+    - packages/openwrt.yaml
+    # - packages/bvg.yaml
+    # - packages/climate.yaml
+  tags:
+    - hass-config
+    - hass-packages
+    - hass-core-config
+
+- name: copy macros
+  copy:
+    src: "macros/{{ item }}"
+    dest: "{{ systemuserlist.hass.home }}/home-assistant/config/custom_templates/{{ item }}"
+    mode: 0644
+    owner: "{{ systemuserlist.hass.uid }}"
+    group: "{{ systemuserlist.hass.gid }}"
+  notify: restart hass container
+  with_items:
+    - remotes_zwave.jinja
+    - formatting.jinja
+    - triggers.jinja
+    - weather.jinja
+  tags:
+    - hass-config
+    - hass-packages
+    - hass-package
+    - hass-macros
+    - hass-core-config
+    - hass-core-packages
+  when:
+    - (hass_package is not defined) or item.startswith(hass_package)
+
+- name: copy config packages
+  copy:
+    src: "packages/{{ item }}"
+    dest: "{{ systemuserlist.hass.home }}/home-assistant/config/packages/{{ item }}"
+    mode: 0644
+    owner: "{{ systemuserlist.hass.uid }}"
+    group: "{{ systemuserlist.hass.gid }}"
+  notify: restart hass container
+  with_items:
+    - adaptive_lighting.yaml
+    - air_temps.yaml
+    - audio.yaml
+    - broadlink.yaml
+    - doorbell.yaml
+    - electric.yaml
+    - fans.yaml
+    - glados_tts.yaml
+    - grow_lights.yaml
+    - home.yaml
+    - moosetv.yaml
+    - more_lights.yaml
+    - motion_sensor_hacks.yaml
+    - nad_c370.yaml
+    - internet_online.yaml
+    - occupancy.yaml
+    - proxy_entities.yaml
+    - remotes.yaml
+    - smoke_detectors.yaml
+    - skylight.yaml
+    - study.yaml
+    - tv.yaml
+    - usb_led_strings.yaml
+    - vacuum_robot.yaml
+    - washing_machine.yaml
+    - weather.yaml
+    # - nad_c370.yaml
+  tags:
+    - hass-config
+    - hass-packages
+    - hass-package
+    - hass-core-config
+    - hass-core-packages
+  when:
+    - (hass_package is not defined) or item.startswith(hass_package)
+
+- name: copy private packages
+  copy:
+    src: "private/hass/{{ item }}"
+    dest: "{{ systemuserlist.hass.home }}/home-assistant/config/packages/{{ item }}"
+    mode: 0644
+    owner: "{{ systemuserlist.hass.uid }}"
+    group: "{{ systemuserlist.hass.gid }}"
+  notify: restart hass container
+  with_items:
+    #- air_quality.yaml
+    - morning_alarm.yaml
+    - bathroom.yaml
+    - tgtg.yaml
+    - private_package.yaml
+    - persons.yaml
+  tags:
+    - hass-config
+    - hass-package
+    - hass-packages
+    - hass-packages-private
+    - hass-private
+    - hass-core-config
+    - hass-core-packages
+  when:
+    - (hass_private_package is not defined) or item.startswith(hass_private_package)
+
+- name: remove config files
+  file:
+    path: "{{ systemuserlist.hass.home }}/home-assistant/config/{{ item }}"
+    state: absent
+  notify: restart hass container
+  loop_control:
+    label: "{{ item }}"
+  with_items:
+    - packages/apple_tv.yaml
+    - packages/toothbrush.yaml
+    - packages/bvg.yaml
+    - mini.yaml
+    - ui-test.yaml
+    - card_room.yaml
+    - packages/buttons.yaml
+    - custom_templates/buttons_zwave.jinja
+  tags:
+    - hass-config
+    - hass-package
+    - hass-packages
+    - hass-core-config
+
+- name: copy dashboard config file (disabled, removed in another task)s
+  copy:
+    src: "private/hass/{{ item }}"
+    dest: "{{ systemuserlist.hass.home }}/home-assistant/config/{{ item }}"
+    mode: 0644
+    owner: "{{ systemuserlist.hass.uid }}"
+    group: "{{ systemuserlist.hass.gid }}"
+  notify: restart hass container
+  when: false
+  with_items:
+    - mini.yaml
+    - ui-test.yaml
+    - card_room.yaml
+  tags:
+    - hass-config
+    - hass-core-config
+
+- name: install git sync script
+  template:
+    src: git-hass-config.sh.j2
+    dest: /usr/local/bin/git-hass-config.sh
+    mode: 0775
+    owner: hass
+    group: hass
+  notify: git-hass-config.sh
+  tags:
+    - hass-git
+
+- name: copy scripts
+  copy:
+    src: "{{ item }}"
+    dest: /usr/local/bin/{{ item }}
+    mode: 0755
+    owner: root
+    group: root
+  with_items:
+    - check-arp-scan.sh
+  tags:
+    - hass-scripts
+    - scripts
+
+- name: cron file
+  template:
+    src: hass-cron.j2
+    dest: /etc/cron.d/hass
+    owner: root
+    group: root
+    mode: 0640
+  tags:
+    - cron
+    - hass-cron
+    - hass-git
+
+# key source:
+# - http://download.ag-projects.com/agp-debian-gpg.key
+# - http://download.ag-projects.com/agp-debian-key.key
+# gpg --enarmor roles/hass/files/agp-debian-gpg.key
+# binary keys: .gpg
+# ascii armor: .asc (or .key?)
+- name: add apt key for sip tools
+  copy:
+    src: "{{ item }}"
+    dest: /etc/apt/trusted.gpg.d/{{ item }}
+    owner: root
+    group: root
+    mode: "0644"
+  with_items:
+    - agp-debian-gpg.asc
+    - agp-debian-key.asc
+  tags:
+    - packages
+    - hass-sip
+    - sip
+
+# - debug:
+#     msg: "deb [signed-by=/usr/share/keyrings/agp-debian-gpg.key] http://ag-projects.com/{{ ansible_lsb.id | lower }} {{ ansible_lsb.codename }} main"
+#   tags: hass-sip
+
+# [signed-by=/usr/share/keyrings/agp-debian-gpg.gpg]
+# [signed-by=/etc/apt/trusted.gpg.d/agp-debian-gpg.asc]
+- name: add repo for sip tools
+  apt_repository:
+    #repo: "{{ item }} [signed-by=/etc/apt/trusted.gpg.d/agp-debian-key.asc] http://ag-projects.com/{{ ansible_lsb.id | lower }} {{ ansible_lsb.codename }} main"
+    repo: "{{ item }} [signed-by=/etc/apt/trusted.gpg.d/agp-debian-key.asc] http://ag-projects.com/{{ ansible_lsb.id | lower }} sid main"
+    state: present
+    update_cache: false
+  with_items:
+    - "deb"
+    - "deb-src"
+  register: sip_repo
+  tags:
+    - packages
+    - hass-sip
+    - sip
+  when: false
+
+- name: update apt if new repo was added
+  apt:
+    update_cache: true
+  tags:
+    - packages
+    - hass-sip
+    - sip
+  when:
+    - sip_repo.changed
+    - false
+
+  # the host needs to have bluez installed for the container to use bluetooth
+- name: install packages
+  apt:
+    name:
+      - arp-scan
+      - ustreamer
+      - vlc
+      - mplayer
+      - btscanner
+      - bluez
+      - bluetooth
+      - espeak-ng     # for glados-tts
+      - fapg
+      - podget
+      - sqlite3
+      - blink1  # git.sudo.is/ben/build-blink1
+      #- mosquitto
+      # # sip tools
+      # - python3-sipsimple
+      # - sipclients3
+    state: latest
+  tags:
+    - packages
+    - hass-bluetooth
+    - hass-packages
+    - hass-sip
+    - sip
+
+- name: ensure bluetooth service is started and enabled
+  service:
+    name: bluetooth
+    state: started
+    enabled: true
+  tags:
+    - hass-bluetooth
+
+- name: add container ips to /etc/hosts
+  lineinfile:
+    dest: /etc/hosts
+    line: "{{ bridgewithdns[item.replace('-', '_')] }} {{ item }}"
+    state: present
+  with_items:
+    - hass-ad
+    - hass-mqtt
+    - hass-zigbee
+    - zwavejs
+    - unifi
+    - zflux
+  tags:
+    - etc-hosts
+    - hass-etc-hosts
+    - hass-container
+    - docker-containers
+    - hass-rtl433
+    - hass-zigbee
+    - hass-mqtt
+    - hass-appdaemon
+    - hass-ad
+
+# docker run --rm it --name hass -p 8123:8123 -e TZ=Etc/UTC -v
+# /home/ben/hass:/config --network=bridgewithdns
+# ghcr.io/home-assistant/home-assistant:stable
+
+- name: home-assistant container
+  docker_container:
+    name: hass
+    #image: ghcr.io/home-assistant/home-assistant:stable
+    image: git.sudo.is/ben/hass-upstream:latest
+    detach: true
+    pull: true
+    auto_remove: false
+    restart_policy: "unless-stopped"
+    state: "{{ hass_container_state | default('stopped') }}"
+    container_default_behavior: compatibility
+    user: "{{ systemuserlist.hass.uid }}:{{ systemuserlist.hass.gid }}"
+    # networks:
+    #   - name: bridgewithdns
+    #     ipv4_address: "{{ bridgewithdns.hass }}"
+    # ports:
+    #   - "127.0.0.1:8123:8123"
+    network_mode: host
+    privileged: true
+    capabilities:
+      - SYS_ADMIN
+      - NET_ADMIN
+    env:
+      TZ: "Etc/UTC"
+    mounts:
+      - type: bind
+        source: "{{ systemuserlist.hass.home }}/home-assistant/config"
+        target: /config
+      - type: bind
+        source: "{{ systemuserlist.hass.home }}/.config"
+        target: /.config
+      - type: bind
+        source: "{{ systemuserlist.hass.home }}/.cache"
+        target: /.cache
+      - type: bind
+        source: "{{ systemuserlist.hass.home }}/.local"
+        target: /.local
+      - type: bind
+        source: "{{ systemuserlist.hass.home }}/.homeassistant"
+        target: /.homeassistant
+      - type: bind
+        source: "{{ systemuserlist.hass.home }}/home-assistant/media"
+        target: /usr/var/media
+      - type: bind
+        read_only: true
+        source: /run/dbus
+        target: /run/dbus
+      - type: bind
+        read_only: false
+        source: /run/mysqld/mysqld.sock
+        target: /run/mysqld/mysqld.sock
+      - type: bind
+        source: /usr/local/bin/check-arp-scan.sh
+        target: /usr/local/bin/check-arp-scan.sh
+      # - type: bind
+      #   read_only: true
+      #   source: /tmp/arp-scan.txt
+      #   target: /tmp/arp-scan.txt
+      # - type: bind
+      #   source: /etc/bluetooth/main.conf
+      #   target: /etc/bluetooth/main.conf
+      #   read_only: true
+      # scripts from role: common
+      # only depends on requests, which hass image has
+      - type: bind
+        source: /usr/local/bin/authelia-auth.py
+        target: /usr/local/bin/authelia-auth.py
+      - type: bind
+        source: /usr/local/bin/matrixmsg.py
+        target: /usr/local/bin/matrixmsg.py
+  tags:
+    - hass-container
+    - hass-core-container
+    - docker-containers
+  register: hass_container

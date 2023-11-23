@@ -1,0 +1,42 @@
+---
+
+  - pulse:
+      name: pulse
+  - pulse:
+      name: pulse_fast
+      transition_length: 0.5s
+      update_interval: 0.5s
+      min_brightness: 0%
+      max_brightness: 100%
+  - pulse:
+      name: pulse_slow
+      transition_length: 2.5s
+      update_interval: 2.5s
+      min_brightness: 0%
+      max_brightness: 100%
+  - strobe:
+  - strobe:
+      name: strobe_slow
+      colors:
+        - state: true
+          duration: 1s
+        - state: false
+          duration: 0.5s
+  - strobe:
+      name: strobe_slower
+      colors:
+        - state: true
+          duration: 3s
+        - state: false
+          duration: 1s
+  - flicker:
+      name: flicker
+  - flicker:
+      name: flicker_95
+      alpha: 95%
+      intensity: 1.5%
+  - flicker:
+      name: flicker_50
+      alpha: 50%
+      intensity: 12.5%
+

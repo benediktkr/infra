@@ -25,7 +25,9 @@
     state: absent
   #notify: reload nginx
   with_items: "{{ letsencrypt_domains }}"
-  when: letsencrypt_wildcards == false
+  when:
+    - false
+    - not (letsencrypt_allow_wildcards == true or letsencrypt_wildcards == true)
   vars:
     prediff_cmd: echo
   loop_control:

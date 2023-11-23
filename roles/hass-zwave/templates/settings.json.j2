@@ -1,0 +1,83 @@
+{
+  "zwave": {
+    "deviceConfigPriorityDir": "/usr/src/app/store/config",
+    "enableSoftReset": false,
+{% if hass_ser2net_zwave == true %}
+    "port": "tcp://{{ hass_ser2net_host }}:{{ hass_ser2net_port_zwave }}",
+{% else %}
+    "port": "/dev/zwave",
+{% endif %}
+    "allowBootloaderOnly": false,
+    "commandsTimeout": 300,
+    "logLevel": "warn",
+    "rf": {
+      "txPower": {}
+    },
+    "logEnabled": true,
+    "securityKeys": {
+      "S0_Legacy": "{{ zwavejs_KEY_S0_Legacy }}",
+      "S2_Unauthenticated": "{{ zwavejs_KEY_S2_Unauthenticated }}",
+      "S2_Authenticated": "{{ zwavejs_KEY_S2_Authenticated }}",
+      "S2_AccessControl": "{{ zwavejs_KEY_S2_AccessControl }}"
+    },
+    "logToFile": true,
+    "maxFiles": 7,
+    "serverEnabled": true,
+    "serverServiceDiscoveryDisabled": true,
+    "enableStatistics": true,
+    "serverPort": {{ hass_zwavejs_ws_port }},
+    "maxNodeEventsQueueSize": 100,
+    "higherReportsTimeout": false,
+    "disclaimerVersion": 1
+  },
+  "mqtt": {
+    "name": "Zwavejs2Mqtt",
+    "host": "127.0.0.1",
+    "port": 1883,
+    "qos": 1,
+    "prefix": "zwave",
+    "reconnectPeriod": 3000,
+    "retain": true,
+    "clean": true,
+    "auth": false,
+    "_ca": "",
+    "ca": "",
+    "_cert": "",
+    "cert": "",
+    "_key": "",
+    "key": "",
+    "disabled": true
+  },
+  "gateway": {
+    "type": 0,
+    "plugins": [],
+    "authEnabled": false,
+    "payloadType": 0,
+    "nodeNames": true,
+    "hassDiscovery": true,
+    "discoveryPrefix": "homeassistant",
+    "logEnabled": true,
+    "logLevel": "info",
+    "logToFile": true,
+    "values": [],
+    "jobs": [],
+    "disableChangelog": false,
+    "notifyNewVersions": false,
+    "https": false,
+    "versions": {{ zwavejs_versions | to_json(indent=2) | indent(4) }}
+  },
+  "backup": {
+    "storeBackup": true,
+    "storeCron": "0 0 * * *",
+    "storeKeep": 7,
+    "nvmBackup": true,
+    "nvmBackupOnEvent": false,
+    "nvmCron": "4 4 * * 4",
+    "nvmKeep": 7
+  },
+  "ui": {
+    "darkMode": true,
+    "navTabs": false,
+    "compactMode": false
+  }
+}

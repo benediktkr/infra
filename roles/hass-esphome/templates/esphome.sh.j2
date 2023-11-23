@@ -1,0 +1,100 @@
+#!/bin/bash
+
+set -e
+#set -x
+#trap 'echo $?' DEBUG
+
+export TERM="xterm256-color"
+export VIRTUALENV_PATH={{ systemuserlist.hass.home }}/.cache/virtualenvs/esphome/bin
+
+CPU_GOV=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor)
+ESPHOME_DIR={{ systemuserlist.hass.home }}/esphome
+
+restore_cpufreq() {
+    set +x
+    echo "restoring cpu frequncy govenor to: ${CPU_GOV}"
+    set -x
+    sudo cpupower frequency-set -g ${CPU_GOV}
+}
+
+if [[ -b "/dev/ttyUSB0" ]]; then
+    TTY_DEVICE="/dev/ttyUSB0"
+elif [[ -b "/dev/ttyACM2" ]]; then
+    TTY_DEVICE="/dev/ttyACM2"
+fi  
+
+for arg in "$@"; do
+    case $arg in 
+        -h|--help|-v|--verbose|-q|--quiet)
+            esphome_args="$arg $esphome_args"
+            shift
+            ;;
+        -s|--substitution)
+            shift
+            key=$1
+            shift
+            value=$1
+            esphome_args="-s $key $value $esphome_args"
+            shift
+            ;;
+        *)
+            break
+    esac    
+done
+
+if [[ ! -z "$1" ]]; then
+    esphome_command=$1
+    shift
+
+    for arg in "$@"; do 
+        case $arg in 
+            *.yaml|*.yml)
+                device_config=$arg
+                shift
+                break
+                ;;  
+        esac
+    done
+fi
+
+case $esphome_command in 
+    config|compile|upload|logs|run|clean)
+        esphome_command_args="${ESPHOME_DIR}/config/${device_config}"
+        ;;
+esac
+
+case $esphome_command in   
+    run|upload)
+        if [[ ! -z "${TTY_DEVICE}" ]]; then
+            echo "found tty device: ${TTY_DEVICE}"
+            if [[ "$@" != *"--device"* ]]; then
+                esphome_command_args="--device ${TTY_DEVICE} ${esphome_args}"
+            fi
+        fi
+esac
+
+case $esphome_command in 
+    compile|run)
+        # set to perforamnce to compile faster, gets restored on exit
+        echo "current frequency governor (will be restored): ${CPU_GOV}"
+        echo "temporarily setting cpu frequency governor to: performance"
+        # cpupower frequency-info| grep "current policy:" -A 2
+        set -x 
+        trap restore_cpufreq EXIT
+        sudo cpupower frequency-set -g performance
+        set +x
+  
+        ;;
+esac    
+
+echo
+echo "  esphome_args: $esphome_args"
+echo "  esphome_command: $esphome_command"
+echo "  esphome_command_args: $esphome_command_args"
+echo "  extra args: $@"
+echo
+#echo "  executing: 'esphome $esphome_args $esphome_command $esphome_command_args $@'"
+#echo
+
+set -x
+sudo -u hass $VIRTUALENV_PATH/esphome $esphome_args $esphome_command $esphome_command_args $@

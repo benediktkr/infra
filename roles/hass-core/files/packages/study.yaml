@@ -1,0 +1,122 @@
+homeassistant:
+  customize:
+    package.node_anchors:
+      common_attrs: &common_attrs
+        package: "study"
+      common_attrs_templated: &common_attrs_templated
+        templated: true
+        <<: *common_attrs
+    
+    binary_sensor.wakeup_ble_mouse:
+      friendly_name: Mouse waking up
+      templated: true
+      <<: *common_attrs
+
+    binary_sensor.study_desk_monitor:
+      friendly_name: "Desk monitor"
+      <<: *common_attrs_templated
+
+    # binary_sensor.study_desk_monitor_standby:
+    #   friendly_name: "Desk monitor (Standby state)"
+    #   templated: true
+    #   package: "study"
+
+    sensor.electric_w_switch_study_desk_monitor_min_24h:
+      friendly_name: Study Computer Monitor min power [W] over 24h
+      <<: *common_attrs
+
+    # Z-Wave device entities
+    switch.study_desk_monitor:
+      friendly_name: Study desk monitor
+      icon: "mdi:monitor"
+      <<: *common_attrs
+
+
+
+template:
+
+  - trigger:
+      - platform: event
+        event_type: event_template_reloaded
+        id: "reload"
+    sensor: []
+
+  - binary_sensor:
+
+      - unique_id: wakeup_ble_mouse
+        name: wakeup_ble_mouse
+        icon: "mdi:mouse-bluetooth"
+        delay_off: "00:10:00"
+        state: >-
+          {% set mx_720 = is_state("device_tracker.ble_m720_triathlon", "home")
+            or is_state("device_tracker.ble_m720_triathlon_2", "home")
+            or is_state("device_tracker.ble_m720_triathlon", "home")
+            or is_state("binary_sensor.ble_m720_triathlon_4a1a", "on")
+            or is_state("binary_sensor.ble_m720_triathlon_4a1b", "on")
+            or is_state("binary_sensor.ble_m720_triathlon_4a1c", "on")
+            or is_state("binary_sensor.ble_m720_triathlon_4a1d", "on")
+            or is_state("binary_sensor.ble_m720_triathlon_4a1e", "on")
+            or is_state("binary_sensor.ble_m720_triathlon_4a1e", "on")
+          %}
+          {% set mx_ergo = is_state("device_tracker.ble_mx_ergo", "home") 
+            or is_state("device_tracker.ble_mx_ergo_2", "home")
+            or is_state("binary_sensor.ble_mx_ergo_e9af", "on")  
+            or is_state("binary_sensor.ble_mx_ergo_e9b0", "on")
+            or is_state("binary_sensor.ble_mx_ergo_e9b1", "on")
+          %}
+          {% set mx_vertical = is_state("device_tracker.ble_mx_vertical", "home") 
+            or is_state("binary_sensor.ble_mx_vertical_7db7", "on")  
+          %}
+          {{ mx_720 or mx_ergo or mx_vertical }}       
+        attributes:
+          source: "BLE"
+          comment: >-
+            for use as signal for occupancy detection. briefly turns on while
+            searching for bluetooth connection.
+
+      - name: study_desk_monitor
+        icon: >-
+          {% if is_state(this.entity_id, 'off') or false %}
+          mdi:monitor-off
+          {% else %}
+          mdi:monitor
+          {% endif %}
+        availability: >-
+          {{
+          states("sensor.electric_w_switch_study_desk_monitor") is defined
+          and has_value("sensor.electric_w_switch_study_desk_monitor")
+          and is_number(states("sensor.electric_w_switch_study_desk_monitor"))
+          and states("switch.study_desk_monitor") is defined
+          and has_value("switch.study_desk_monitor")
+          }}
+        delay_off: "00:00:30"
+        delay_on: "00:00:15"
+        state: >-
+          {% set power_w = states('sensor.electric_w_switch_study_desk_monitor')|float %}
+          {% set power_on = is_state('switch.study_desk_monitor', 'on') %}
+          {{
+          power_on
+          and power_w > 19.0
+          and power_w < 1000
+          }}
+        attributes:
+          source_power_entity_id: "sensor.electric_w_switch_study_desk_monitor"
+          source_switch_entity_id: "switch.study_desk_monitor"
+          source_proto: "zwave"
+          notes: >-
+            uses ca 23.68 W when not powering/charging a laptop over usb-c
+            while charing a laptop, power usage fluctuates between ca 55-110W
+
+      # - name: study_desk_monitor_standby
+      #   icon: mdi:monitor-shimmer
+      #   availability: >-
+      #     {{
+      #     states("binary_sensor.study_desk_monitor") is defined
+      #     and has_value("binary_sensor.study_desk_monitor")
+      #     }}
+      #   state: >-
+      #     {% set power_w = states('sensor.electric_w_switch_study_desk_monitor')|float %}
+      #     {{ power_w > 0.0 and power_w <= 15 }}
+      #   attributes:
+      #     source__entity_id: sensor.electric_w_switch_study_desk_monitor
+      #     source_proto: "zwave"

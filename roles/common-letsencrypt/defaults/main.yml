@@ -2,3 +2,4 @@
 
 letsencrypt_manager: no
 letsencrypt_wildcards: false
+letsencrypt_allow_wildcards: false

@@ -1,0 +1,11 @@
+---
+
+
+esp32:
+  board: esp-wrover-kit
+  framework:
+    # arduino framework uses significantly more memory and performs
+    # poorly with the Bluetooth proxy enabled.
+    #type: esp-idf
+    type: arduino
+

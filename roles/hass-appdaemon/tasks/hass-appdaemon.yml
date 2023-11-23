@@ -97,7 +97,7 @@
     auto_remove: false
     detach: true
     pull: true
-    state: started
+    state: "{{ hass_container_state | default('stopped') }}"
     container_default_behavior: compatibility
     env:
       REDIS_HOST: hass-ad-redis
@@ -124,7 +124,7 @@
     - hass-container
     - docker-containers
 
-- name: start hass-ad container
+- name: "hass-ad container ({{ hass_ad_container_state | default('stopped') }})"
   docker_container:
     name: hass-ad
     image: acockburn/appdaemon:latest

@@ -1,0 +1,119 @@
+---
+
+
+packages:
+  board: !include ../packages/boards/esp32s2mini.yaml
+  esphome: !include ../packages/common/esphome.yaml
+  network: !include ../packages/common/network.yaml
+  http_server: !include ../packages/common/http_server.yaml
+  sensors_esp32: !include ../packages/sensors/esp32.yaml
+  sensors_esphome: !include ../packages/sensors/esphome.yaml
+  sensors_wifi: !include ../packages/sensors/wifi.yaml
+  #sensors_generic_motion: !include
+  #  file: ../packages/sensors/generic_motion.yaml
+  #  vars:
+  #    pin_generic_motion: GPIO16
+  #    name_generic_motion: "${hostname} Cat motion"
+  #sensors_rfid: !include ../packages/sensors/rfid.yaml
+  light_catled: !include 
+    file: ../packages/lights/ledc.yaml
+    vars:
+      ledc_name: Catsensor LED
+      #ledc_gpio: GPIO18
+      ledc_gpio: GPIO21
+  #light_lcd_backligt: !include 
+  #  file: ../packages/lights/ledc.yaml
+  #  vars:
+  #    ledc_name: "${hostname} LCD LED Backlight"
+  #    ledc_gpio: GPIO17
+  #sensors_rfid: !include
+  #  file: ../packages/sensors/rfid.yaml
+  #  vars:
+  #    pin_pn532_sda: GPIO05
+  #    pin_pn532_scl: GPIO07
+  #display_max7219: !include 
+  #  file: ../packages/displays/max7219.yaml
+  #  vars:
+  #    pin_max7219_spi_clk: GPIO09
+  #    pin_max7219_spi_cs: GPIO11
+  #    pin_max7219_spi_din: GPIO12
+  
+ 
+  
+
+i2c:
+  sda: GPIO33
+  scl: GPIO35
+  #sda: GPIO16
+  #scl: GPIO18
+  sda_pullup_enabled: false
+  scl_pullup_enabled: false
+  frequency: 100kHz
+#  # on esp32 s2, increasing the frequency to 400kHz sometimes seems to help
+#  # https://community.home-assistant.io/t/bh1750-with-nodemcuv3-found-no-i2c-devices/247982/13
+#
+#
+display:
+  - platform: lcd_pcf8574
+    dimensions: 20x4
+    id: lcd_display
+    #address: 0x27
+    lambda: |-
+       it.print("Hello World!");
+ 
+#switch:
+#  - platform: template
+#    id: lcd_backlight
+#    name: "${hostname} LCD backlight"
+#    restore_mode: RESTORE_DEFAULT_ON
+#    turn_on_action:
+#      - lambda: |-
+#          id(lcd_display).backlight();
+#    turn_off_action:
+#      - lambda: |-
+#          id(lcd_display).no_backlight();
+# 
+# 
+
+#remote_receiver:
+  # Use the pin next to GND
+  # Pin next to VCC is unused
+  #pin: GPIO16
+  #dump: all
+  
+  #on_raw:
+  #  then: 
+  #    - text_sensor.template.publish:
+  #        id: rf_reciever_raw
+  #        state: !lambda |-
+  #          return x.c_str();
+
+#text_sensor:
+#  - platform: template
+#    id: rf_reciever_raw
+#    name: "${hostname} RF Reciever RAW"
+ 
+#spi:
+ #  miso_pin: GPIO9
+ #  mosi_pin: GPIO7
+ #  # SCK = Serial ClocK
+ #  clk_pin: GPIO10  
+
+#i2c:
+#  sda: GPIO16
+#  scl: GPIO18
+#  scan: true
+#  #id: bus_a
+
+#sensor:
+#  - platform: vl53l0x
+#    name: "VL53L0x cat distance"  
+#    address: 0x29
+#    #long_range: false
+#    #enable_pin: GPIO33
+#    # default: 0.25. lower = more sensitive. signal amplitude
+#    signal_rate_limit: 0.1
+#    timeout: 200us
+#    update_interval: 500ms
+#    unit_of_measurement: "m"
+  

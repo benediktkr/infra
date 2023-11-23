@@ -3,6 +3,15 @@
 # authelia: https://github.com/linuxserver/reverse-proxy-confs/blob/master/pihole.subfolder.conf.sample
 # also has generally better reverse proxy config
 
+- name: systemd-resolved is started and enabled
+  service:  
+    name: systemd-resolved
+    state: started
+    enabled: true
+  when: pihole_systemd_resolved|default(true)
+  tags:
+    - systemd
+
 - name: install certs
   copy:
     src: "/usr/local/etc/letsencrypt/live/{{ item }}"
@@ -16,7 +25,7 @@
   vars:
     prediff_cmd: echo
   with_items:
-    - "{{ pihole_url }}"
+    - "{{ pihole_ssl }}"
 
 - name: template nginx vhost
   template:
@@ -52,12 +61,12 @@
     owner: "{{ item['owner'] | default('999') }}"
     group: "{{ item['group'] | default('999') }}"
   with_items:
-    - { dir: "etc/pihole" }
+    - { dir: "etc/pihole", group: "1000" }
     - { dir: "etc/dnsmasq.d" }
     - { dir: "etc/unbound" }
   tags: docker
 
-- name: template dns overrides if pihole_custom_list
+- name: template custom.list
   template:
     src: custom.list.j2
     dest: "{{ pihole_root }}/etc/pihole/custom.list"
@@ -65,10 +74,11 @@
     group: root
     mode: 0644
   tags:
+    - pihole-custom-list
     - pihole-config
     - pihole-overrides
   notify: pihole restartdns
-  when: pihole_custom_list|default(false)
+  when: pihole_static_a_records|length > 0
 
 - name: cron file
   template:
@@ -113,7 +123,9 @@
     mode: 0644
   tags:
     - pihole-config
+    - pihole-dnsmasq-config
   with_items:
+    - "00-domain.conf"
     - "99-edns.conf"
     - "02-zone-forward.conf"
   notify: restart pihole
@@ -128,6 +140,7 @@
   tags:
     - unbound
     - a-records
+    - pihole-unbound-config
   with_items:
     - unbound.conf
     - a-records.conf
@@ -143,15 +156,17 @@
   tags:
     - unbound
 
-- name: disable systemd-resolved or named if they are active
-  service:
-    name: "{{ item }}"
-    state: stopped
-    enabled: false
-  ignore_errors: true
-  with_items:
-    - systemd-resolved
-    - named
+
+#- name: disable systemd-resolved or named if they are active
+#  service:
+#    name: "{{ item }}"
+#    state: stopped
+#    enabled: false
+#  ignore_errors: true
+#  when: false
+#  with_items:
+#    - systemd-resolved
+#    - named
 
 # NOTE: For a DNS server with lots of short-lived connections, you may
 # wish to consider adding --net=host to the run command for
@@ -200,6 +215,17 @@
 
 # docker exec pihole pihole -a -p
 # docker exec pihole sudo pihole -a -p
+
+#IPv6: "false"
+
+# notes on environent vars:
+# * docs: https://github.com/pi-hole/docker-pi-hole/#environment-variables
+# * FTLCONF_LOCAL_IPV4 is a workaround for pihole rewriting LOCAL_IPV4 in pihole-FTL.conf
+#   see: https://github.com/pi-hole/docker-pi-hole/issues/1017
+# * underscore in PIHOLE_DNS_ is intentional
+#   see: 
+# * DNSMASQ_LISTENING is set to 'all' because the container runs on a bridged network, which
+#   works as a NAT, and since we selectively forward the ports, it works as a firewall
 - name: start docker container
   docker_container:
     name: "pihole"
@@ -216,14 +242,17 @@
       - NET_BIND_SERVICE
     env:
       WEB_PORT: "{{ pihole_http_port|string }}"
-      DNSMASQ_LISTENING: "all" # the docker nat port forward is a firewall
+      DNSMASQ_LISTENING: "all" 
       VIRTUAL_HOST: "{{ pihole_url }}"
       TZ: "Europe/Berlin"
       PIHOLE_DNS_: "{{ bridgewithdns.unbound0 }};{{ bridgewithdns.unbound1 }}"
-      CONDITIONAL_FORWARDING: "{{ pihole_cond|string }}"
-      CONDITIONAL_FORWARDING_IP: "{{ pihole_cond_ip }}"
-      CONDITIONAL_FORWARDING_DOMAIN: "{{ pihole_cond_domain }}"
-      IPv6: "false"
+      DNSSEC: "{{ pihole_dnssec|default(false)|string|lower|trim }}"
+      REV_SERVER: "{{ pihole_rev_server|default(false)|string|lower|trim }}"
+      REV_SERVER_TARGET: "{{ pihole_rev_server_target|default('') }}"
+      REV_SERVER_DOMAIN: "{{ pihole_rev_server_domain|default('') }}"
+      REV_SERVER_CIDR: "{{ pihole_rev_server_cidr|default('') }}"
+      FTLCONF_LOCAL_IPV4: "{{ wg_clients[inventory_hostname]['ip'] | default(ansible_default_ipv4.address) }}"
+      WEBLOGS_STDOUT: "0"
     dns_servers:
       - "{{ bridgewithdns.unbound0 }}"
       - "{{ bridgewithdns.unbound1 }}"
@@ -231,10 +260,9 @@
       - 127.0.0.1:53:53/udp
       - 127.0.0.1:53:53/tcp
       #- "{{ pihole_nginx_interface }}:53:53/udp"
-      - "{{ wg_clients[inventory_hostname]['ip'] }}:53:53/udp"
+      - "{{ wg_clients[inventory_hostname]['ip'] | default(ansible_default_ipv4.address) }}:53:53/udp"
       - 127.0.0.1:{{pihole_http_port}}:{{pihole_http_port}}
-    # setting the hostname to {{pihole_url}} makes pihole mess with resolving that record.
-    #hostname: "{{ pihole_url }}"
+    hostname: "{{ inventory_hostname }}"
     network_mode: bridge
     purge_networks: yes
     networks_cli_compatible: yes

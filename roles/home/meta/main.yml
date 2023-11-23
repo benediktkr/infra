@@ -1,10 +1,25 @@
 ---
 
 dependencies:
-  - unifi
-  - nfs
-  - samba
-  - sudoisbot
-  - hass
-  - hass-appdaemon
-  - homeaudio
+  #- role: hass-ser2net
+  #  tags:
+  #    - hass-ser2net
+  #    - ser2net
+  #- role: unifi
+  #  tags: 
+  #    - unifi
+  #- role: nfs
+  #  tags: 
+  #    - nfs
+  #- role: samba
+  #  tags: 
+  #    - samba
+  #- role: sudoisbot
+  #  tags:
+  #    - sudoisbot
+  #- role: hass
+  #  tags: 
+  #    - hass
+  #- role: homeaudio
+  #  tags:
+  #    - homeaudio

@@ -1,5 +1,15 @@
 ---
 
+- name: template failover script
+  template:
+    src: "{{ item }}.j2"
+    dest: "/usr/local/bin/{{ item }}"
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - failover.py
+
 # - name: sshd AllowedUsers config
 #   template:
 #     src: 10-lb.conf.j2

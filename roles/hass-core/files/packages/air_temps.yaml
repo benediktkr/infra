@@ -1,0 +1,222 @@
+---
+
+homeassistant:
+  customize:
+    package.node_anchors:
+      common_attrs: &common_attrs
+        package: "air_temps"
+      common_attrs_templated: &common_attrs_templated
+        templated: true
+        <<: *common_attrs
+      common_attr_air_temp_group: &common_attrs_air_temp_group
+        type: median
+        group: true
+        <<: *common_attrs   
+
+    sensor.difference_air_temperature_indoor_outdoor:
+      friendly_name: "Temperature indoor/outdoor difference"
+      <<: *common_attrs_templated
+
+    sensor.difference_air_temperature_indoor_outdoor_abs:
+      friendly_name: "Temperature indoor/outdoor difference (abosulute value)"
+      <<: *common_attrs_templated
+
+    binary_sensor.air_temperature_warmer_inside:
+      friendly_name: Warmer air temp inside
+      <<: *common_attrs_templated
+
+    binary_sensor.air_temperature_colder_inside:
+      friendly_name: Warmer air temp inside
+      <<: *common_attrs_templated
+
+    sensor.air_temperature_bathroom:
+      friendly_name: Bathroom air temp
+      <<: *common_attrs_air_temp_group
+
+    sensor.air_temperature_bedroom:
+      friendly_name: Bedroom air temps
+      <<: *common_attrs_air_temp_group
+
+    sensor.air_temperature_hallway:
+      friendly_name: Hallway air temps
+      <<: *common_attrs_air_temp_group
+
+    sensor.air_temperature_kitchen:
+      friendly_name: Kitchen air temps
+      <<: *common_attrs_air_temp_group
+
+    sensor.air_temperature_livingroom:
+      friendly_name: Livingroom air temps
+      <<: *common_attrs_air_temp_group
+
+    sensor.air_temperature_study:
+      friendly_name: Study air temps
+      <<: *common_attrs_air_temp_group
+
+    sensor.air_temperature_indoor:
+      friendly_name: Indoor air temps
+      <<: *common_attrs_air_temp_group
+
+    sensor.air_temperature_outdoor:
+      friendly_name: Outdoor air temps
+      <<: *common_attrs_air_temp_group
+
+
+template:
+  - sensor:
+      - name: "difference_air_temperature_indoor_outdoor"
+        unit_of_measurement: '°C'
+        icon: "mdi:thermometer"
+        device_class: temperature
+        state_class: measurement
+        availability: >-
+          {{ 
+            has_value("sensor.air_temperature_outdoor") 
+            and has_value("sensor.air_temperature_indoor")
+            and is_number(states("sensor.air_temperature_outdoor"))
+            and is_number(states("sensor.air_temperature_indoor"))
+          }}
+        state: >-
+          {% set outdoor = states("sensor.air_temperature_outdoor")  %}
+          {% set indoor = states("sensor.air_temperature_indoor") %}
+          {% set diff = indoor|round(2) - outdoor|round(2) %}
+          {{ diff | float(0.0) | round(2) }}
+
+      - name: "difference_air_temperature_indoor_outdoor_abs"
+        unit_of_measurement: '°C'
+        icon: "mdi:thermometer"
+        device_class: temperature
+        state_class: measurement
+        availability: >-
+          {{ 
+            has_value("sensor.difference_air_temperature_indoor_outdoor") 
+            and is_number(states("sensor.difference_air_temperature_indoor_outdoor"))
+          }}
+        state: >-
+          {% set t = states("sensor.difference_air_temperature_indoor_outdoor") %}
+          {{ t | float(0.0) | round(2) | abs }}
+
+  - binary_sensor:
+       - name: air_temperature_warmer_inside
+         device_class: heat
+         availability: >-
+           {{
+             has_value("sensor.air_temperature_indoor")
+             and has_value("sensor.air_temperature_outdoor")
+             and is_number(states("sensor.air_temperature_indoor"))
+             and is_number(states("sensor.air_temperature_outdoor"))
+           }}
+         state: >-
+           {% set indoor = states("sensor.air_temperature_indoor") %}
+           {% set outdoor = states("sensor.air_temperature_outdoor") %}
+           {{ indoor|float(0.0) > outdoor|float(0.0) }}
+
+       - name: air_temperature_colder_inside
+         device_class: cold
+         availability: >-
+           {{ has_value("binary_sensor.air_temperature_warmer_inside") }}
+         state: >-
+           {{ is_state("binary_sensor.air_temperature_warmer_inside", "off") }}
+
+
+sensor:
+  - platform: group
+    name: air_temperature_bathroom
+    type: median
+    device_class: temperature
+    entities: 
+     - sensor.air_temperature_bathroom_motion
+     - sensor.air_temperature_bathroom_door
+     - sensor.air_temperature_bathroom_window
+     # these are wildly off, so they are not included in the group
+     # when air_temperature_bathroom_washingmachine reported 38C, air_temperature_bathroom_radiator reported 25C at the same time
+     #- sensor.air_temperature_bathroom_washingmachine
+     #- sensor.air_temperature_bathroom_radiator
+
+  - platform: group
+    name: air_temperature_bedroom
+    type: median
+    device_class: temperature
+    entities: 
+     - sensor.air_temperature_bedroom_motion_south
+     - sensor.air_temperature_bedroom_motion_east
+     - sensor.air_temperature_bedroom_door
+     - sensor.air_temperature_bedroom_air_quality_sensor
+     #- sensor.air_temperature_bedroom_smokealarm
+
+  - platform: group
+    name: air_temperature_hallway
+    type: median
+    device_class: temperature
+    entities: 
+     - sensor.air_temperature_hallway_motion_north
+     - sensor.air_temperature_hallway_motion_west
+     - sensor.air_temperature_hallway_motion_east
+
+  - platform: group
+    name: air_temperature_kitchen
+    type: median
+    device_class: temperature
+    entities: 
+     - sensor.air_temperature_kitchen_motion
+
+  - platform: group
+    name: air_temperature_livingroom
+    type: median
+    device_class: temperature
+    entities:
+     - sensor.air_temperature_livingroom_motion_east
+     - sensor.air_temperature_livingroom_door_balcony
+     #- sensor.air_temperature_livingroom_mold
+     - sensor.air_temperature_livingroom_illuminance_balcony
+     # the TRV doesnt seem to update the temperature sensor
+     #- sensor.air_temperature_livingroom_radiator
+
+  - platform: group
+    name: air_temperature_study
+    type: median
+    device_class: temperature
+    entities: 
+     - sensor.air_temperature_study_north_motion
+     - sensor.air_temperature_study_air_quality_sensor
+     - sensor.air_temperature_study_radiator
+
+  - platform: group
+    name: air_temperature_indoor
+    type: median
+    device_class: temperature
+    entities: 
+      - sensor.air_temperature_bathroom
+      - sensor.air_temperature_bedroom
+      - sensor.air_temperature_hallway
+      - sensor.air_temperature_kitchen
+      - sensor.air_temperature_livingroom
+      - sensor.air_temperature_study
+
+  - platform: group
+    name: air_temperature_outdoor
+    type: median
+    device_class: temperature
+    entities:
+     - sensor.owm_home_temperature
+     
+
+# renames:
+# air quality temp: sensor.air_temperature_study_air_quality_sensor
+# sensor.air_temperature_door_bedroom            -> sensor.air_temperature_bedroom_door
+# sensor.air_temperature_window_bathroom         -> sensor.air_temperature_bathroom_window
+# sensor.air_temperature_bathroom_washingmachine -> sensor.air_temperature_bathroom_washingmachine
+# sensor.air_temperature_bedroom_east_motion     -> sensor.air_temperature_bedroom_motion_east
+# sensor.air_tepmerature_bedroom_south_motion    -> sensor.air_temperature_bedroom_motion_south
+# sensor.hallway_north_air_temperature_motion    -> sensor.air_temperature_hallway_motion_north
+# sensor.air_temperature_hallway_west_motion     -> sensor.air_temperature_hallway_motion_west
+# sensor.air_temperature_hallway_east_motion     -> sensor.air_temperature_hallway_motion_east
+# sensor.motion_livingroom_air_temperature       -> sensor.air_temperature_livingroom_motion_east 
+# sensor.air_temperature_balcony_door            -> sensor.air_temperature_livingroom_door_balcony
+# sensor.mold_livingroom_air_temperature         -> sensor.air_temperature_livingroom_mold
+# sensor.illuminance_balcony_air_temperature     -> sensor.air_temperature_livingroom_illuminance_balcony
+# sensor.radiator_study_air_temperature          -> sensor.air_temperature_study_radiator
+
+# battery devices should have
+# temp report threshold: 1 C
+# temp report interval: 3600 secs

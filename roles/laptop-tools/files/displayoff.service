@@ -1,0 +1,11 @@
+# https://www.digitalocean.com/community/tutorials/understanding-systemd-units-and-unit-files
+[Unit]
+After=multi-user.target
+[Service]
+Type=oneshot
+# Keeps the process running, if you stop the service and it it exits, then whatever
+# it changed on the system should revert
+RemainAfterExit=no
+ExecStart=/usr/local/bin/display_off.sh
+[Install]
+WantedBy=multi-user.target

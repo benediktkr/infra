@@ -34,7 +34,7 @@
     detach: true
     auto_remove: false
     pull: true
-    restart_policy: "no"
+    restart_policy: "unless-stopped"
     state: "{{ hass_mqtt_container_state | default('stopped') }}"
     container_default_behavior: compatibility
     user: "{{ systemuserlist.hass.uid }}:{{ systemuserlist.hass.gid }}"

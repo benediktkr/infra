@@ -5,3 +5,4 @@ nginx_vhosts: []
 nginx_subdirs: {}
 
 nginx_cleanup: true
+

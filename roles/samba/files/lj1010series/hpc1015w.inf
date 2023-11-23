@@ -1,0 +1,533 @@
+;Hewlett-Packard LaserJet combined printer driver INF file for Windows 2000 and XP
+;Copyright Hewlett-Packard 2001
+
+[Version]
+Signature="$Windows NT$"
+Provider=%HP% 
+ClassGUID={4D36E979-E325-11CE-BFC1-08002BE10318} 
+Class=Printer 
+CatalogFile=hpc1015o.cat
+DriverPackageType=PlugAndPlay
+DriverPackageDisplayName=%HP_Mombi_Driver_Name% 
+DriverVer=09/24/2008,61.063.461.42
+
+; Manufacturer section.
+;
+; This section lists all of the manufacturers
+; that we will display in the Dialog box
+;The format of TargetOSVersion, the version decoration, is as follows:
+;NT[Architecture][.[OSMajorVersion][.[OSMinorVersion][.[ProductType][.SuiteMask]]]]
+
+;NT 
+;Operating system version recognition is supported for Windows XP and later NT-based operating systems. 
+;
+;Architecture 
+;Identifies the hardware platform. This must be x86 or ia64. 
+;
+;OSMajorVersion 
+;A number representing the operating system's major version number. For Windows XP, this number is 5. 
+;
+;OSMinorVersion 
+;A number representing the operating system's minor version number. For Windows XP, this number is 1. 
+;
+;ProductType 
+;0x0000003 (VER_NT_SERVER)
+
+[MANUFACTURER]
+%HP%=HP,NTAMD64,NTAMD64.6.0
+
+
+; Model sections
+;
+; Each section here corresponds with an entry listed in the
+; [Manufacturer] section, above. The models will be displayed in the order 
+; that they appear in the INF file.
+
+;******************************
+;XP Machine 
+;******************************
+[HP.NTAMD64]
+"hp LaserJet 1010 HB"= HPC1010h.GPD.NTAMD64,DOT4PRT\VID_03F0&PID_0C17
+"hp LaserJet 1012 HB"= HPC1015h.GPD.NTAMD64,DOT4PRT\VID_03F0&PID_0D17
+"hp LaserJet 1015 HB"= HPC1015h.GPD.NTAMD64,DOT4PRT\Vid_03f0&Pid_0e17
+
+;******************************
+;VISTA 
+;******************************
+[HP.NTAMD64.6.0]
+"hp LaserJet 1010 HB"= HPC1010h.GPD.NTAMD64.6.0,DOT4PRT\VID_03F0&PID_0C17
+"hp LaserJet 1012 HB"= HPC1015h.GPD.NTAMD64.6.0,DOT4PRT\VID_03F0&PID_0D17
+"hp LaserJet 1015 HB"= HPC1015h.GPD.NTAMD64.6.0,DOT4PRT\Vid_03f0&Pid_0e17
+
+; OEM URLS
+;
+; This sections gives the URL for manufacturers found in the Manufacturers section
+[OEM URLS]
+%HP% = "http://go.microsoft.com/fwlink/?LinkID=37&prd=10798&sbp=Printers"
+
+;
+; MS Driver Core installs
+;
+; These sections are used by Printer OEMs to install MS provided drivers
+
+; Installer Sections
+;
+; These sections control file installation, and reference all files that
+; need to be copied. The section name will be assumed to be the driver
+; file, unless there is an explicit DriverFile section listed.
+;
+
+
+[HPC1015h.GPD.NTAMD64]
+CopyFiles=DATA_FILES,HPPRPROC,UI,JR06RENDER,DMC_X64,GPD_JR06_COMMON,HELP,HP_PCLXL,MANUAL_DUPLEX,STRING_DLL,CP_SIMULATOR,SERVICES
+Include=NTPRINT.INF
+Needs=UNIDRV_BIDI.OEM,UNIDRV_DATA  
+DataSection=UNIDRV_DATA 
+DataFile=HPC1015h.GPD
+PrintProcessor=%PRINT_PROCESSOR% 
+AddReg=EACDirect.AddReg  
+DelFiles=DEL9xFILE 
+
+[HPC1015h.GPD.NTAMD64.6.0]
+CopyFiles=DATA_FILES,HPPRPROC,UI,JR06RENDER,DMC_X64,GPD_JR06_COMMON,HELP,HP_PCLXL,MANUAL_DUPLEX,STRING_DLL,CP_SIMULATOR,SERVICES
+Include=NTPRINT.INF
+Needs=UNIDRV_BIDI.OEM,UNIDRV_DATA  
+DataSection=UNIDRV_DATA 
+DataFile=HPC1015h.GPD
+PrintProcessor=%PRINT_PROCESSOR% 
+AddReg=EACDirect.AddReg  
+DelFiles=DEL9xFILE 
+
+
+[HPC1010h.GPD.NTAMD64]
+CopyFiles=DATA_FILES_1010,HPPRPROC,UI,JR06RENDER,DMC_X64,GPD_JR06_COMMON,HELP,HP_PCLXL,MANUAL_DUPLEX,STRING_DLL,CP_SIMULATOR,SERVICES
+Include=NTPRINT.INF
+Needs=UNIDRV_BIDI.OEM,UNIDRV_DATA  
+DataSection=UNIDRV_DATA 
+DataFile=HPC1010h.GPD
+PrintProcessor=%PRINT_PROCESSOR% 
+AddReg=EACDirect.AddReg  
+DelFiles=DEL9xFILE 
+
+[HPC1010h.GPD.NTAMD64.6.0]
+CopyFiles=DATA_FILES_1010,HPPRPROC,UI,JR06RENDER,DMC_X64,GPD_JR06_COMMON,HELP,HP_PCLXL,MANUAL_DUPLEX,STRING_DLL,CP_SIMULATOR,SERVICES
+Include=NTPRINT.INF
+Needs=UNIDRV_BIDI.OEM,UNIDRV_DATA  
+DataSection=UNIDRV_DATA 
+DataFile=HPC1010h.GPD
+PrintProcessor=%PRINT_PROCESSOR% 
+AddReg=EACDirect.AddReg  
+DelFiles=DEL9xFILE 
+
+AddReg=EACDirect.AddReg                            
+[EACDirect.AddReg]
+
+HKLM,"SOFTWARE\Hewlett-Packard\San Diego Shared IO", DirectConnectBidiSupported, 0x00010001, 1
+
+; Copy Sections
+;
+; Lists of files that are actually copied. These sections are referenced
+; from the installer sections, above. Only create a section if it contains
+; two or more files (if we only copy a single file, identify it in the
+; installer section, using the @filename notation) or if it's a color
+; profile (since the DestinationDirs can only handle sections, and not
+; individual files).
+
+;Name of the File to be deleted
+[DEL9xFILE]
+hpzimn12.DLL 
+
+[HPPRPROC]
+hpzpp4wm.DLL,hpzpp4wm.DLL,,0x00000020
+
+[UI]
+hpzui4wm.DLL,hpzui4wm.DLL,,0x00000020
+hpzpe4wm.DLL,hpzpe4wm.DLL,,0x00000020
+
+[JR06RENDER]
+hpz3r4wm.DLL,hpz3r4wm.DLL,,0x00000020
+
+[GPD_JR06_COMMON]
+hpzhm4wm.GPD,hpzhm4wm.GPD,,0x00000020
+hpzsm4wm.GPD,hpzsm4wm.GPD,,0x00000020
+
+[STRING_DLL]
+hpzst4wm.DLL,hpzst4wm.DLL,,0x00000020
+hpz3c4wm.DLL,hpz3c4wm.DLL,,0x00000020
+hpzur4wm.DLL,hpzur4wm.DLL,,0x00000020
+
+[DATA_FILES]
+hpc1015h.xml,hpc1015h.xml,,0x00000020
+hpzsc4wm.dtd,hpzsc4wm.DTD,,0x00000020
+hpc1015h.gpd,hpc1015h.gpd,,0x00000020
+HPC1xxxh.gpd,HPC1xxxh.gpd,,0x00000020
+hpc1015w.ini,hpc1015w.ini,,0x00000020
+
+[DATA_FILES_1010]
+hpc1010h.xml,hpc1010h.xml,,0x00000020
+hpzsc4wm.dtd,hpzsc4wm.DTD,,0x00000020
+hpc1010h.gpd,hpc1010h.gpd,,0x00000020
+HPC1xxxh.gpd,HPC1xxxh.gpd,,0x00000020
+hpc1010w.ini,hpc1010w.ini,,0x00000020
+
+[MANUAL_DUPLEX]
+hpzev4wm.DLL,hpzev4wm.DLL,,0x00000020
+
+[SERVICES]
+hpzls4wm.DLL,hpzls4wm.DLL,,0x00000020
+hpzss4wm.DLL,hpzss4wm.DLL,,0x00000020
+
+[HELP]
+hpzhl4wm.CAB,hpzhl4wm.CAB,,0x00000020
+
+[HP_PCLXL]
+pclxl.dll,,,0x00000020
+pjl.gpd,,,0x00000020
+hpz6m4wm.GPD,hpz6m4wm.GPD,,,0x00000020
+
+
+;DMC Section
+[DMC_X64]
+hpcdmc64.dll,,,0x00000020
+hpbcfgre.dll,,,0x00000020
+hplj1xxx.exp,,,0x00000020
+
+
+[CP_SIMULATOR]
+hpc1320w.htm,,,0x00000020
+hpc1320w.swf,,,0x00000020
+hpc1320w.xml,,,0x00000020
+
+[Previous Names]
+%HP_Mombi_Driver_Name%=%HP_Wizard_Driver_Name%
+
+[SourceDisksNames]
+98="hp LaserJet 1015 CD",HPC1015W.CAB,,
+97="hp LaserJet 1015 CD",%LocaleCABFile%,,
+96=%DiskId1%,,,""
+
+[SourceDisksFiles]
+HPC1015h.GPD=98
+HPC1010h.GPD=98
+HPC1xxxh.GPD=98
+hpc1015w.ini=98
+hpc1010w.ini=98 
+hpzpp4wm.DLL=98
+hpzpe4wm.DLL=98
+hpzhm4wm.GPD=98
+hpzsm4wm.GPD=98
+hpzui4wm.DLL=98
+hpz3r4wm.DLL=98
+hpzst4wm.dll=98
+hpz3c4wm.dll=98
+hpzur4wm.dll=98
+
+;ManualDuplex dll
+hpzev4wm.DLL=98
+
+;SERVICES
+hpzls4wm.DLL=98
+hpzss4wm.DLL=98
+
+;Automation Files
+hpc1015h.xml=98
+hpc1010h.xml=98
+hpzsc4wm.DTD=98
+
+;HELP
+hpzhl4wm.CAB=98
+
+;DMC files
+hplj1xxx.exp=98
+hpcdmc64.dll=98
+hpbcfgre.dll=98
+
+;PCLXL files
+pclxl.dll=98
+pjl.gpd=98
+hpz6m4wm.GPD=98
+
+;CP_Simulator files
+hpc1320w.htm=98
+hpc1320w.swf=98
+hpc1320w.xml=98
+
+[DestinationDirs]
+DefaultDestDir=66000
+HPPRPROC=66001 
+
+[Strings]
+;PrinterClassName="Printers" 
+;DiskId1="hp LaserJet 1015 CD"
+;PRINT_PROCESSOR="hpzpp4wm,hpzpp4wm.dll"  
+;HP="HP" 
+;HP_Mombi_Driver_Name="hp LaserJet 1015 HB"
+;HP_Wizard_Driver_Name="HP LaserJet 1015 PCL3"
+
+PrinterClassName="Printers" 
+DiskId1="hp LaserJet 1015 CD"
+PRINT_PROCESSOR="HPZPP4wm,hpzpp4wm.DLL" 
+HP="HP" 
+HP_Mombi_Driver_Name="HP LaserJet 1015 HB"
+HP_Wizard_Driver_Name="HP LaserJet 1015 PCL3"
+LocaleCABFile ="p6a4enww.cab"
+
+[Strings.0401]      ; Arabic
+PrinterClassName="Printers" 
+DiskId1="HP LaserJet 1015 CD"
+PRINT_PROCESSOR="HPZPP4wm,hpzpp4wm.DLL" 
+HP="HP" 
+HP_Mombi_Driver_Name="HP LaserJet 1015 HB"
+HP_Wizard_Driver_Name="HP LaserJet 1015 PCL3"
+LocaleCABFile ="p6a4arww.cab"
+
+[Strings.0403]      ; Catalan
+PrinterClassName="Printers" 
+DiskId1="HP LaserJet 1015 CD"
+PRINT_PROCESSOR="HPZPP4wm,hpzpp4wm.DLL" 
+HP="HP" 
+HP_Mombi_Driver_Name="HP LaserJet 1015 HB"
+HP_Wizard_Driver_Name="HP LaserJet 1015 PCL3"
+LocaleCABFile ="p6a4caww.cab"
+
+[Strings.0404]      ; Chinese (Traditional)
+PrinterClassName="Printers" 
+DiskId1="HP LaserJet 1015 CD"
+PRINT_PROCESSOR="HPZPP4wm,hpzpp4wm.DLL" 
+HP="HP" 
+HP_Mombi_Driver_Name="HP LaserJet 1015 HB"
+HP_Wizard_Driver_Name="HP LaserJet 1015 PCL3"
+LocaleCABFile ="p6a4zhtw.cab"
+
+[Strings.0804]      ; Chinese (Simplified)
+PrinterClassName="Printers" 
+DiskId1="HP LaserJet 1015 CD"
+PRINT_PROCESSOR="HPZPP4wm,hpzpp4wm.DLL" 
+HP="HP" 
+HP_Mombi_Driver_Name="HP LaserJet 1015 HB"
+HP_Wizard_Driver_Name="HP LaserJet 1015 PCL3"
+LocaleCABFile ="p6a4zhcn.cab"
+
+
+[Strings.0405]       ; Czech
+PrinterClassName="Printers" 
+DiskId1="HP LaserJet 1015 CD"
+PRINT_PROCESSOR="HPZPP4wm,hpzpp4wm.DLL" 
+HP="HP" 
+HP_Mombi_Driver_Name="HP LaserJet 1015 HB"
+HP_Wizard_Driver_Name="HP LaserJet 1015 PCL3"
+LocaleCABFile ="p6a4csww.cab"
+
+[Strings.0406]      ; Danish
+PrinterClassName="Printers" 
+DiskId1="HP LaserJet 1015 CD"
+PRINT_PROCESSOR="HPZPP4wm,hpzpp4wm.DLL" 
+HP="HP" 
+HP_Mombi_Driver_Name="HP LaserJet 1015 HB"
+HP_Wizard_Driver_Name="HP LaserJet 1015 PCL3"
+LocaleCABFile ="p6a4daww.cab"
+
+
+[Strings.0413]        ;Dutch
+PrinterClassName="Printers" 
+DiskId1="HP LaserJet 1015 CD"
+PRINT_PROCESSOR="HPZPP4wm,hpzpp4wm.DLL" 
+HP="HP" 
+HP_Mombi_Driver_Name="HP LaserJet 1015 HB"
+HP_Wizard_Driver_Name="HP LaserJet 1015 PCL3"
+LocaleCABFile ="p6a4nlww.cab"
+
+
+[Strings.0409]      ; English
+PrinterClassName="Printers" 
+DiskId1="HP LaserJet 1015 CD"
+PRINT_PROCESSOR="HPZPP4wm,hpzpp4wm.DLL" 
+HP="HP" 
+HP_Mombi_Driver_Name="HP LaserJet 1015 HB"
+HP_Wizard_Driver_Name="HP LaserJet 1015 PCL3"
+LocaleCABFile ="p6a4enww.cab"
+
+
+[Strings.040B]        ;Finnish
+PrinterClassName="Printers" 
+DiskId1="HP LaserJet 1015 CD"
+PRINT_PROCESSOR="HPZPP4wm,hpzpp4wm.DLL" 
+HP="HP" 
+HP_Mombi_Driver_Name="HP LaserJet 1015 HB"
+HP_Wizard_Driver_Name="HP LaserJet 1015 PCL3"
+LocaleCABFile ="p6a4fiww.cab"
+
+
+[Strings.040C]      ;French
+PrinterClassName="Printers" 
+DiskId1="HP LaserJet 1015 CD"
+PRINT_PROCESSOR="HPZPP4wms,hpzpp4wm.DLL" 
+HP="HP" 
+HP_Mombi_Driver_Name="HP LaserJet 1015 HB"
+HP_Wizard_Driver_Name="HP LaserJet 1015 PCL3"
+LocaleCABFile ="p6a4frww.cab"
+
+
+[Strings.0407]      ;German
+PrinterClassName="Printers" 
+DiskId1="HP LaserJet 1015 CD"
+PRINT_PROCESSOR="HPZPP4wm,hpzpp4wm.DLL" 
+HP="HP" 
+HP_Mombi_Driver_Name="HP LaserJet 1015 HB"
+HP_Wizard_Driver_Name="HP LaserJet 1015 PCL3"
+LocaleCABFile ="p6a4deww.cab"
+
+
+[Strings.0408]       ;Greek
+PrinterClassName="Printers" 
+DiskId1="HP LaserJet 1015 CD"
+PRINT_PROCESSOR="HPZPP4wm,hpzpp4wm.DLL" 
+HP="HP" 
+HP_Mombi_Driver_Name="HP LaserJet 1015 HB"
+HP_Wizard_Driver_Name="HP LaserJet 1015 PCL3"
+LocaleCABFile ="p6a4elww.cab" 
+
+
+[Strings.040D]        ;Hebrew
+PrinterClassName="Printers" 
+DiskId1="HP LaserJet 1015 CD"
+PRINT_PROCESSOR="HPZPP4wm,hpzpp4wm.DLL" 
+HP="HP" 
+HP_Mombi_Driver_Name="HP LaserJet 1015 HB"
+HP_Wizard_Driver_Name="HP LaserJet 1015 PCL3"
+LocaleCABFile ="p6a4heww.cab"
+
+
+[Strings.040E]       ;Hungerian 
+PrinterClassName="Printers" 
+DiskId1="HP LaserJet 1015 CD"
+PRINT_PROCESSOR="HPZPP4wm,hpzpp4wm.DLL" 
+HP="HP" 
+HP_Mombi_Driver_Name="HP LaserJet 1015 HB"
+HP_Wizard_Driver_Name="HP LaserJet 1015 PCL3"
+LocaleCABFile ="p6a4huww.cab"
+
+
+
+[Strings.0410]       ;Italian
+PrinterClassName="Printers" 
+DiskId1="HP LaserJet 1015 CD"
+PRINT_PROCESSOR="HPZPP4wm,hpzpp4wm.DLL" 
+HP="HP" 
+HP_Mombi_Driver_Name="HP LaserJet 1015 HB"
+HP_Wizard_Driver_Name="HP LaserJet 1015 PCL3"
+LocaleCABFile ="p6a4itww.cab"
+
+
+[Strings.0411]       ;Japanese
+PrinterClassName="Printers" 
+DiskId1="HP LaserJet 1015 CD"
+PRINT_PROCESSOR="HPZPP4wm,hpzpp4wm.DLL" 
+HP="HP" 
+HP_Mombi_Driver_Name="HP LaserJet 1015 HB"
+HP_Wizard_Driver_Name="HP LaserJet 1015 PCL3"
+LocaleCABFile ="p6a4jaww.cab"
+
+
+
+[Strings.0412]        ;Korean
+PrinterClassName="Printers" 
+DiskId1="HP LaserJet 1015 CD"
+PRINT_PROCESSOR="HPZPP4wm,hpzpp4wm.DLL" 
+HP="HP" 
+HP_Mombi_Driver_Name="HP LaserJet 1015 HB"
+HP_Wizard_Driver_Name="HP LaserJet 1015 PCL3"
+LocaleCABFile ="p6a4koww.cab"
+
+
+[Strings.0814]        ;Norwegian
+PrinterClassName="Printers" 
+DiskId1="HP LaserJet 1015 CD"
+PRINT_PROCESSOR="HPZPP4wm,hpzpp4wm.DLL" 
+HP="HP" 
+HP_Mombi_Driver_Name="HP LaserJet 1015 HB"
+HP_Wizard_Driver_Name="HP LaserJet 1015 PCL3"
+LocaleCABFile ="p6a4noww.cab"
+
+
+[Strings.0415]        ;Polish
+PrinterClassName="Printers" 
+DiskId1="HP LaserJet 1015 CD"
+PRINT_PROCESSOR="HPZPP4wm,hpzpp4wm.DLL" 
+HP="HP" 
+HP_Mombi_Driver_Name="HP LaserJet 1015 HB"
+HP_Wizard_Driver_Name="HP LaserJet 1015 PCL3"
+LocaleCABFile ="p6a4plww.cab"
+
+
+[Strings.0416]        ;Portugese
+PrinterClassName="Printers" 
+DiskId1="HP LaserJet 1015 CD"
+PRINT_PROCESSOR="HPZPP4wm,hpzpp4wm.DLL" 
+HP="HP" 
+HP_Mombi_Driver_Name="HP LaserJet 1015 HB"
+HP_Wizard_Driver_Name="HP LaserJet 1015 PCL3"
+LocaleCABFile ="p6a4ptww.cab"
+
+
+[Strings.0419]        ;Russian
+PrinterClassName="Printers" 
+DiskId1="HP LaserJet 1015 CD"
+PRINT_PROCESSOR="HPZPP4wm,hpzpp4wm.DLL" 
+HP="HP" 
+HP_Mombi_Driver_Name="HP LaserJet 1015 HB"
+HP_Wizard_Driver_Name="HP LaserJet 1015 PCL3"
+LocaleCABFile ="p6a4ruww.cab"
+
+
+
+[Strings.041B]        ;Slovak 
+PrinterClassName="Printers" 
+DiskId1="HP LaserJet 1015 CD"
+PRINT_PROCESSOR="HPZPP4wm,hpzpp4wm.DLL" 
+HP="HP" 
+HP_Mombi_Driver_Name="HP LaserJet 1015 HB"
+HP_Wizard_Driver_Name="HP LaserJet 1015 PCL3"
+LocaleCABFile ="p6a4skww.cab"
+
+
+
+[Strings.040A]       ;Spanish
+PrinterClassName="Printers" 
+DiskId1="HP LaserJet 1015 CD"
+PRINT_PROCESSOR="HPZPP4wm,hpzpp4wm.DLL" 
+HP="HP" 
+HP_Mombi_Driver_Name="HP LaserJet 1015 HB"
+HP_Wizard_Driver_Name="HP LaserJet 1015 PCL3"
+LocaleCABFile ="p6a4esww.cab"
+
+
+[Strings.041D]        ;Swedish
+PrinterClassName="Printers" 
+DiskId1="HP LaserJet 1015 CD"
+PRINT_PROCESSOR="HPZPP4wm,hpzpp4wm.DLL" 
+HP="HP" 
+HP_Mombi_Driver_Name="HP LaserJet 1015 HB"
+HP_Wizard_Driver_Name="HP LaserJet 1015 PCL3"
+LocaleCABFile ="p6a4svww.cab"
+
+
+[Strings.041E]        ;Thai
+PrinterClassName="Printers" 
+DiskId1="HP LaserJet 1015 CD"
+PRINT_PROCESSOR="HPZPP4wm,hpzpp4wm.DLL" 
+HP="HP" 
+HP_Mombi_Driver_Name="HP LaserJet 1015 HB"
+HP_Wizard_Driver_Name="HP LaserJet 1015 PCL3"
+LocaleCABFile ="p6a4thww.cab"
+
+
+[Strings.041F]        ;Turkish (Turkce)
+PrinterClassName="Printers" 
+DiskId1="HP LaserJet 1015 CD"
+PRINT_PROCESSOR="HPZPP4wm,hpzpp4wm.DLL" 
+HP="HP" 
+HP_Mombi_Driver_Name="HP LaserJet 1015 HB"
+HP_Wizard_Driver_Name="HP LaserJet 1015 PCL3"
+LocaleCABFile ="p6a4trww.cab"
+

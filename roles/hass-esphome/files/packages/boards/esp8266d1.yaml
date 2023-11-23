@@ -1,0 +1,15 @@
+---
+
+esp8266:
+  board: d1_mini
+
+light:
+  - platform: status_led
+    name: "${hostname} Status LED"
+    id: esp_status_led
+    icon: "mdi:alarm-light"
+    #restore_mode: ALWAYS_OFF
+    pin:
+      number: D4
+      inverted: true
+

@@ -1,0 +1,14 @@
+---
+
+packages:
+  board: !include ../packages/boards/esp32s2mini.yaml 
+  esphome: !include ../packages/common/esphome.yaml
+  network: !include ../packages/common/network.yaml
+  http_server: !include ../packages/common/http_server.yaml
+  sensors_esp32: !include ../packages/sensors/esp32.yaml
+  sensors_esphome: !include ../packages/sensors/esphome.yaml
+  sensors_wifi: !include ../packages/sensors/wifi.yaml
+  sensor_pressure_mat: !include 
+    file: ../packages/sensors/pressure_mat.yaml
+    vars:
+      pin_pressure_mat: GPIO09

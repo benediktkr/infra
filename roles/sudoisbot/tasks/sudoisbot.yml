@@ -7,9 +7,11 @@
     collation: utf8mb4_general_ci
     login_unix_socket: /run/mysqld/mysqld.sock
   tags:
+    - sudoisbot-db
     - mariadb-users
 
 - name: mariadb user without password
+  when: false
   mysql_user:
     state: present
     name: "{{ systemuserlist.sudoisbot.username }}"
@@ -17,6 +19,7 @@
     priv: "{{ mariadb_db }}.*:ALL"
     login_unix_socket: /run/mysqld/mysqld.sock
   tags:
+    - sudoisbot-db
     - mariadb-users
 
 - name: mariadb user with password
@@ -29,12 +32,13 @@
     login_unix_socket: /run/mysqld/mysqld.sock
   loop_control:
     label: "'{{ systemuserlist.sudoisbot.username }}'@'{{ item }}'"
-  when:
-    - "item | ansible.utils.ipaddr('private') or item.endswith('%')"
+  #when:
+  #  - "item | ansible.utils.ipaddr('private') or item.endswith('%')"
   with_items:
     - "{{ ansible_default_ipv4.address }}"
     - "{{ bridgewithdns_mariadb }}"
   tags:
+    - sudoisbot-db
     - mariadb-users
 
 - name: make config dirs

@@ -61,5 +61,6 @@ group_vars/
 host_vars/
 playbooks/
 
+/*.yaml
 /*.yml
 /cups.yml

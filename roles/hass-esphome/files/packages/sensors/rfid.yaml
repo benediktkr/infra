@@ -1,0 +1,88 @@
+---
+
+
+# https://github.com/esphome/issues/issues/4717
+# https://community.home-assistant.io/t/component-took-a-long-time-for-an-operation/609817
+# ignores this:
+# [W][component:214]: Component pn532 took a long time for an operation (0.11 s).
+logger:
+  logs:
+    component: ERROR
+
+# Mifare ultralight: NFC
+# https://www.mifare.net/en/products/chip-card-ics/mifare-ultralight/
+
+
+i2c:
+  sda: 21
+  scl: 22
+  scan: true
+
+pn532_i2c:
+  id: pn532_board
+  #i2c_id: bus_pn532
+  update_interval: 200ms
+  on_tag:
+    then:
+      - binary_sensor.template.publish:
+          id: tag_scanned
+          state: ON
+      - text_sensor.template.publish:
+          id: tag_uid
+          state: !lambda 'return x;'
+      
+      - homeassistant.tag_scanned: !lambda 'return x;'
+
+      - if:
+          condition:
+            lambda: !lambda |-
+              return tag.has_ndef_message();
+          then:
+            - homeassistant.tag_scanned: !lambda |
+                auto message = tag.get_ndef_message();
+                auto records = message->get_records();
+                for (auto &record : records) {
+                  std::string payload = record->get_payload();
+                  size_t pos = payload.find("https://www.home-assistant.io/tag/");
+                  if (pos != std::string::npos) {
+                    return payload.substr(pos + 34);
+                  }
+                }
+                return {};
+      #      - text_sensor.template.publish: 
+      #          id: tag_ndef_payload
+      #          state: !lambda |-
+      #            auto message = tag.get_ndef_message();
+      #            std::string payload = ""; 
+      #            for (auto &record : message->get_records()) {
+      #              std::string msg_payload = record->get_payload();
+      #              payload += msg_payload;
+      #            }
+      #            return payload;
+  
+  on_tag_removed:
+    then:
+      - binary_sensor.template.publish:
+          id: tag_scanned
+          state: OFF
+
+text_sensor:
+  - platform: template
+    id: tag_uid
+    name: "${hostname} Tag UID"
+  #- platform: template
+  #  id: tag_ndef_payload
+  #  name: "${hostname} Tag NDEF payload"
+
+binary_sensor:
+  - platform: template
+    name: "${hostname} Tag scanned"
+    id: tag_scanned
+    publish_initial_state: true
+    lambda: |-
+      return {};
+    filters:
+      - delayed_off: "10s"
+
+
+

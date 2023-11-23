@@ -7,7 +7,7 @@
     name:
       - linux-tools-common
       - linux-tools-generic
-    state: latest
+    state: present
   tags:
     - packages
     - hass-packages

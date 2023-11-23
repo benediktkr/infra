@@ -1,0 +1,14 @@
+---
+
+- name: restart tlp
+  service:
+    name: tlp
+    state: restarted
+
+- name: displayoff
+  service:
+    name: displayoff
+    state: started
+
+- name: systemctl daemon-reload
+  command: systemctl daemon-reload

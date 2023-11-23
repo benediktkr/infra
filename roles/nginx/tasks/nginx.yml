@@ -109,17 +109,27 @@
   template:
     src: index.html.j2
     dest: /var/www/html/index.html
+  notify: reload nginx
 
 - name: template default vhosts
   template:
     src: 00-default.j2
     dest: /etc/nginx/sites-enabled/00-default
   notify: reload nginx
+  when: nginx_default_vhost|default(true)
   tags:
     - nginx-config
     - nginx-default-vhost
     - nginx-default-cert
     - nginx-cert
+
+- name: remove default vhosts on systems that dont use it
+  file:
+    path: /etc/nginx/sites-enabled/00-default
+    state: absent
+  when: nginx_default_vhost|default(true) == false
+  tags:
+    - nginx-default-vhost
 
 - name: cleanup
   file:

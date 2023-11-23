@@ -1,5 +1,82 @@
 ---
 
+- name: copy mount script
+  copy: 
+    src: mount-if-exists.sh
+    dest: /usr/local/bin/mount-if-exists.sh
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - deadspace-mounts
+
+- name: copy LUKS keyfile
+  copy: 
+    src: private/keyfile-deadspace
+    dest: /root/keyfile-deadspace
+    owner: root
+    group: root
+    mode: 0700
+  tags:
+    - keyfile-deadspace
+    - deadspace-keyfile
+    - deadspace-mounts
+
+- name: template crypttab
+  template:
+    src: crypttab.j2
+    dest: /etc/crypttab
+    owner: root
+    group: root 
+    mode: 0644 
+  when: '"name" in deadspace_crypttab.root.keys()'
+  tags:
+    - crypttab
+    - deadspace-mounts
+
+- name: add luks volumes to fstab without mounting
+  mount: 
+    path: "{{ item.mountpoint }}"
+    src: /dev/mapper/{{ item.name }}
+    fstype: "{{ item.fstype }}" 
+    # present: add to fstab, mounted: mount and add to fstab
+    state: present
+  with_items: "{{ deadspace_crypttab.disks }}"
+  when: '"mountpoint" in item '
+  loop_control:
+    label: "{{ item.name }}"
+  tags:
+    - crypttab
+    - deadspace-mounts
+
+#- name: mount luks volumes
+#  mount: 
+#    path: "{{ item.mountpoint }}"
+#    src: /dev/mapper/{{ item.name }}
+#    fstype: "{{ item.fstype }}" 
+#    # present: add to fstab, mounted: mount and add to fstab
+#    #state: present
+#    state: mounted
+#  with_items: "{{ deadspace_crypttab.disks }}"
+#  when: '"mountpoint" in item '
+#  ignore_errors: true
+#  loop_control:
+#    label: "{{ item.name }}"
+#  tags:
+#    - crypttab
+#    - deadspace-mounts
+
+- name: mount luks volumes if they are unlocked
+  command: mount-if-exists.sh {{ item.name }} {{ item.mountpoint }}
+  with_items: "{{ deadspace_crypttab.disks }}"
+  loop_control:
+    label: "{{ item.name }}" 
+  when: '"mountpoint" in item'
+  register: mount_if_exists
+  changed_when: '"mounted "~item.name in mount_if_exists.stdout'
+  tags:
+    - deadspace-mounts
+
 - name: install packages
   apt:
     update_cache: true
@@ -7,6 +84,7 @@
       - mergerfs
       - btrfs-progs
       - rclone
+      #- udisksctl
     state: latest
   when: not skip_apt|default(false)
   tags:
@@ -62,7 +140,7 @@
     path: "{{ deadspace_root }}/{{ item }}"
     owner: root
     group: root
-    mode: 0755
+    mode: 0775
     recurse: false
   loop_control:
     label: "{{ deadspace_root }}/{{ item }}"

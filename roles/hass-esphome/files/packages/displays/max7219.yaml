@@ -1,0 +1,54 @@
+substitutions:
+  pin_max7219_spi_clk: GPIO09
+  pin_max7219_spi_cs: GPIO11
+  pin_max7219_spi_din: GPIO12
+
+switch:
+  - platform: template
+    name: "${hostname} LED matrix"
+    icon: "mdi:power"
+    optimistic: true
+    # Makes homes assistant showw buttons for both on/off instad of hiding one
+    # (as often seen on zigbee lights)
+    assumed_state: true
+    on_turn_on:
+      - lambda: |-
+          id(led_matrix).turn_on_off(true);
+          id(led_matrix).intensity(5);
+    turn_on_action:
+      - lambda: |-
+          id(led_matrix).turn_on_off(true);
+          id(led_matrix).intensity(5);
+    on_turn_off:
+      - lambda: |-  
+          id(led_matrix).turn_on_off(false);
+    turn_off_action:
+      - lambda: |-  
+          id(led_matrix).turn_on_off(false);
+
+spi:
+  clk_pin: ${pin_max7219_spi_clk}
+  mosi_pin: ${pin_max7219_spi_din}
+
+
+
+display:
+  - platform: max7219digit
+    id: led_matrix
+    cs_pin: ${pin_max7219_spi_cs}
+    intensity: 15
+    scroll_mode: STOP
+    scroll_delay: 2s
+    scroll_dwell: 5s
+    rotate_chip: 180
+    scroll_speed: 250ms
+    num_chips: 1
+    lambda: |-
+      it.print(0, 1, id(digit_font), "WELCOME");
+      // it.invert_on_off(); 
+
+
+font:
+  - file: "../fonts/pixelmix.ttf"
+    id: digit_font
+    size: 6

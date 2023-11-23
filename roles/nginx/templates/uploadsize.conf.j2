@@ -4,6 +4,6 @@
 # This has no effects in a server-block, but seems to work
 # somewhat in /etc/nginx/conf.d
 
-client_max_body_size 2G;
-proxy_max_temp_file_size 2048m;
+client_max_body_size {{ nginx_max_body_size | default('2G') }};
+proxy_max_temp_file_size {{ nginx_max_temp_file_size|default('2048m') }};
 {% endif %}

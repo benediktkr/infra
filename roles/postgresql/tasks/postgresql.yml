@@ -6,7 +6,7 @@
       - postgresql
       - libpq-dev
       - python3-psycopg2
-    state: latest
+    state: present
   tags:
     - packages
 

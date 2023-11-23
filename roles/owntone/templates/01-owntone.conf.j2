@@ -1,13 +1,22 @@
+server {
+   listen 80;
+
+   return 301 https://$host$request_uri;
+}
 
 server {
-    listen 444 ssl;
+    #listen 444 ssl;
 
-    {# {% if owntone_nginx_ip is defined -%}
-     # listen {{ owntone_nginx_ip }}:443 ssl;
+    {# {% if ansible_default_ipv4.address is defined -%}
+     # listen {{ ansible_default_ipv4.address }}:443 ssl;
      # {% endif %} #}
 
+
+    add_header Server "";
+    add_header Connection "";
+
     #listen {{ ansible_default_ipv4.address }}:443 ssl;
-    listen 443 ssl http2;
+    listen 443 ssl;
     # listen 443 ssl http2;
     # listen {{ owntone_port_tcp }};
 
@@ -69,24 +78,23 @@ server {
         proxy_pass http://{{ bridgewithdns.navidrome }}:4533;
     }
 
-    # root /var/www/owntone/htdocs;
-    # location /ws {
-    #      proxy_pass http://127.0.0.1:{{ owntone_port_ws }}/;
-    #      proxy_set_header Host $host;
-    #      proxy_set_header X-Real-IP $remote_addr;
-    #      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    #      proxy_set_header X-Forwarded-Proto $scheme;
-    #      proxy_http_version 1.1;
-    #      proxy_set_header Upgrade $http_upgrade;
-    #      proxy_set_header Connection "upgrade";
-    # }
+    root /var/www/owntone/htdocs;
+    location /ws {
+         proxy_pass http://127.0.0.1:{{ owntone_port_ws }}/;
+         proxy_set_header Host $host;
+         proxy_set_header X-Real-IP $remote_addr;
+         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+         proxy_set_header X-Forwarded-Proto $scheme;
+         proxy_http_version 1.1;
+         proxy_set_header Upgrade $http_upgrade;
+         proxy_set_header Connection "upgrade";
+    }
     location / {
         {# sub_filter 'owntone.local:3689' '{{ owntone_url }}';
          # sub_filter 'http%3A%2F%2Fowntone.local%3A3689' 'https%3A%2F%2F{{ owntone_url }}';
          # sub_filter 'http://owntone.local:3689' 'https://{{ owntone_url }}';
          # sub_filter_types '*';
          # sub_filter_once off; #}
-
 
         proxy_pass http://127.0.0.1:{{ owntone_port_tcp }}$request_uri;
         proxy_http_version 1.1;
@@ -103,8 +111,18 @@ server {
     }
 }
 server {
-     {% if owntone_nginx_ip is defined -%}
-     listen {{ owntone_nginx_ip }}:{{ owntone_port_ws }} ssl;
+     #if ($scheme = "http") {
+     #    return 301 https://{{ owntone_url }}:{{ owntone_port_ws }}$request_uri;
+     #}
+
+     #if ($scheme = "ws") {
+     #    return 301 wss://{{ owntone_url }}:{{ owntone_port_ws }}$request_uri;
+     #}
+
+     {% if ansible_default_ipv4.address is defined -%}
+     listen {{ ansible_default_ipv4.address }}:{{ owntone_port_ws }} ssl;
+     # When turning ssl back on, also remember to uncomment proxy_set_header
+     #listen {{ ansible_default_ipv4.address }}:{{ owntone_port_ws }};
      {% endif %}
 
      #listen {{ ansible_default_ipv4.address }}:{{ owntone_port_ws }} ssl;

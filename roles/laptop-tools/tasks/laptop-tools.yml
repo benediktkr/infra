@@ -1,0 +1,115 @@
+---
+
+- name: install packages
+  apt:
+    name:
+      - tlp
+      #- tlp-rdw     # install network-manager, conflicts with proxmox
+      #- linux-tools-common   # cpupower
+      #- linux-tools-generic
+      - linux-cpupower
+      - vbetool
+      - x11-xserver-utils
+      - upower
+      - powertop
+      - rfkill
+    state: present
+  tags:
+    - packages
+
+- name: remove packages
+  apt:
+    name:
+      - tlp-rdw
+    state: absent
+  tags:
+    - packages
+
+- name: install scripts
+  copy:
+    src: "{{ item }}"
+    dest: /usr/local/bin/{{ item }}
+    owner: root
+    group: root
+    mode: "0755"
+  tags:
+    - scripts
+  notify: displayoff
+  with_items:
+    - display_off.sh
+    - battery.sh
+
+- name: template configs
+  template:
+    src: "{{ item }}.j2"
+    dest: "/etc/{{ item }}"
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - tlp
+  notify: restart tlp
+  with_items:
+    - tlp.conf
+
+- name: install systemd unit files
+  copy:
+    src: "{{ item }}"
+    dest: /etc/systemd/system/{{ item }}
+    owner: root
+    group: root
+    mode: "0755"
+  tags:
+    - systemd
+  notify: systemctl daemon-reload
+  with_items:
+    - displayoff.service
+    - powersave.service
+
+- meta: flush_handlers
+
+- name: enable and start services
+  service:
+    name: "{{ item }}"
+    enabled: true
+  notify:
+    - displayoff
+  with_items:
+    - displayoff
+    - powersave
+
+- name: mask sleep targets in systemd
+  systemd:
+    name: "{{ item }}"
+    masked: true
+  with_items:
+    - sleep.target
+    - suspend.target
+    - hibernate.target
+    - hybrid-sleep.target
+  tags:
+    - sleep
+
+- name: disable logind handling lid switch if sleep is disabled
+  replace:
+    path: /etc/systemd/logind.conf
+    regexp: '^#?HandleLidSwitch=suspend$'
+    replace: 'HandleLidSwitch=ignore'
+  tags:
+    - sleep
+  notify:
+    - systemctl daemon-reload
+
+- name: disable sleep systemd config
+  replace:
+    path: /etc/systemd/sleep.conf
+    regexp: '^#AllowSuspend=yes$'
+    replace: 'AllowSuspend=no'
+  tags:
+    - sleep
+  notify:
+    - systemctl daemon-reload
+
+- meta: flush_handlers
+
+

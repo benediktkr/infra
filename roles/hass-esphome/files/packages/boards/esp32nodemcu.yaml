@@ -1,0 +1,14 @@
+---
+
+esp32:
+  board: nodemcu-32s
+  framework: 
+    type: arduino 
+
+light:
+  - platform: status_led
+    name: "${hostname} Status LED"
+    id: ${lower_underscored_node_name}_status_led
+    icon: "mdi:alarm-light"
+    restore_mode: ALWAYS_OFF
+    pin: GPIO02

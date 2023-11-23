@@ -6,25 +6,8 @@
     dest: /usr/local/etc/instance-id
     mode: '0755'
   ignore_errors: true
+  check_mode: false 
 
-- name: template failover script
-  template:
-    src: "{{ item }}.j2"
-    dest: "/usr/local/bin/{{ item }}"
-    owner: root
-    group: root
-    mode: 0755
-  with_items:
-    - failover.py
-
-- name: template floating ip config
-  template:
-    src: 60-floating-ip.yaml.j2
-    dest: /etc/netplan/60-floating-ip.yaml
-    owner: root
-    group: root
-    mode: 0644
-  notify: netplan apply
 
 - name: make sure log dir exists
   file:
@@ -50,7 +33,7 @@
       - haproxy
       - keepalived
       - heartbeat
-    state: latest
+    state: present
     update_cache: true
   when: not skip_apt|default(false)
   tags:

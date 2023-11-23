@@ -1,0 +1,11 @@
+---
+
+- name: template floating ip config
+  template:
+    src: 60-floating-ip.yaml.j2
+    dest: /etc/netplan/60-floating-ip.yaml
+    owner: root
+    group: root
+    mode: 0644
+  notify: netplan apply
+

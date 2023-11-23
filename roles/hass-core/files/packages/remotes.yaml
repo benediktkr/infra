@@ -1,0 +1,365 @@
+---
+
+homeassistant:
+
+
+# command_class: 91
+# wallmote:
+#  device_id: e6b5c5c6502ba5310d69f644f2e70a62
+#  label: 'Scene 004'
+#  property_key: '004'
+#  property_key_name: '004'
+#  property: scene
+#  property_name: scene
+#  value: KeyPressed
+#  value_raw: 0
+#  node_id: 31
+#
+# yellow_button:
+#  device_id: 56efe9abc87c0518758229a3137086f1
+#  label: 'Scene 001'
+#  property_key: '001'
+#  property_key_name: '001'
+#  property: scene
+#  property_name: scene
+#  value: KeyPressed
+#  value_raw: 0
+#  node_id: 58
+#
+#
+# automation
+# this:
+#   context:
+#     id: 01H6MEMV6GWK64MQ7GBDK8ZWD8
+#     parent_id: 01H6MEMV6DKAADNNTMQ3X6TXB4
+# trigger:
+#   event:
+#     context:
+#       id: 01H6MEPW2VZ044G6HWPK9SNJA3
+#       parent_id: null
+#       user_id: null
+#
+#
+# script
+# this:
+#   context:
+#     # matches this.context.id for automation
+#     id: 01H6MEMV6GWK64MQ7GBDK8ZWD8
+#     # matches this.context.parent_id for automation
+#     parent_id: 01H6MEMV6DKAADNNTMQ3X6TXB4
+#     user_id: null
+# # sent with data dict in automation
+# trigger:
+#   # name of automation
+#   id: wallmote
+#   # automation platform trigger
+#   platform: event
+# # sent automatically
+# context:
+#   # unique to the context of executing the script
+#   id: 01H6MEPW3143VNRQYVJEPNQFH6
+#   # matches trigger.event.context.id in automation -- pass this in the data dict
+#   parent_id: 01H6MEPW2VZ044G6HWPK9SNJA3
+#   user_id: null
+
+  customize:
+    package.node_anchors:
+      common_attrs: &common_attrs
+        package: "remotes"
+      common_attrs_templated: &common_attrs_templated
+        templated: true
+        <<: *common_attrs
+
+      # remote_attrs: &remote_attrs
+      #   value_raw: >-
+      #     {% if trigger.platform == "event" and is_state(this.entity_id, "on") %}
+      #     {{ trigger.event.data.value_raw }}
+      #     {% else %}
+      #     {{ state_attr(this.entity_id, "value_raw") }}
+      #     {% endif %}
+      #   this_entity_id: >-
+      #     {{ this.entity_id }}
+      #   event_context_id: >-
+      #     {% if trigger.platform == "event" and is_state(this.entity_id, "on") %}
+      #     {{ trigger.event.context.id }}
+      #     {% else %}
+      #     {{ state_attr(this.entity_id, "event_context_id") }}
+      #     {% endif %}
+
+    # Yellow button (ignoring KeyPressed2x, etc)
+    binary_sensor.remote_bathroom_yellow:
+      friendly_name: "Yellow button pressed"
+      <<: *common_attrs_templated
+
+    # Wallmote 001
+    binary_sensor.remote_hallway_wallmote_001:
+      friendly_name: "Wallmote button 1 pressed"
+      <<: *common_attrs_templated
+    binary_sensor.remote_hallway_wallmote_001_held:
+      friendly_name: "Wallmote button 1 held"
+      <<: *common_attrs_templated
+    binary_sensor.remote_hallway_wallmote_001_released:
+      friendly_name: "Wallmote button 1 released"
+      <<: *common_attrs_templated
+
+    # Wallmote 002
+    binary_sensor.remote_hallway_wallmote_002:
+      friendly_name: "Wallmote button 2 pressed"
+      <<: *common_attrs_templated
+    binary_sensor.remote_hallway_wallmote_002_held:
+      friendly_name: "Wallmote button 2 held"
+      <<: *common_attrs_templated
+    binary_sensor.remote_hallway_wallmote_002_released:
+      friendly_name: "Wallmote button 2 released"
+      <<: *common_attrs_templated
+
+    # Wallmote 003
+    binary_sensor.remote_hallway_wallmote_003:
+      friendly_name: "Wallmote button 3 pressed"
+      <<: *common_attrs_templated
+    binary_sensor.remote_hallway_wallmote_003_held:
+      friendly_name: "Wallmote button 2 held"
+      <<: *common_attrs_templated
+    binary_sensor.remote_hallway_wallmote_003_released:
+      friendly_name: "Wallmote button 3 released"
+      <<: *common_attrs_templated
+
+    # Wallmote 004
+    binary_sensor.remote_hallway_wallmote_004:
+      friendly_name: "Wallmote button 4 pressed"
+      <<: *common_attrs_templated
+    binary_sensor.remote_hallway_wallmote_004_held:
+      friendly_name: "Wallmote button 4 held"
+      <<: *common_attrs_templated
+    binary_sensor.remote_hallway_wallmote_004_released:
+      friendly_name: "Wallmote button 4 released"
+      <<: *common_attrs_templated
+    
+    # Wallmote
+    binary_sensor.remote_hallway_wallmote:
+      friendly_name: "Wallmote (any button pressed)"
+      <<: *common_attrs_templated
+
+    # IKEA Symfonisk
+    binary_sensor.remote_study_symfonisk:
+      friendly_name: "Study remote (any button pressed)"
+      <<: *common_attrs_templated
+    binary_sensor.remote_study_symfonisk_dots1:
+      friendly_name: "Study remote dots1 pressed"
+      <<: *common_attrs_templated
+    binary_sensor.remote_study_symfonisk_dots2:
+      friendly_name: "Study remote dots2 pressed"
+      <<: *common_attrs_templated
+    binary_sensor.remote_study_symfonisk_volume_up:
+      friendly_name: "Study remote volume_up pressed"
+      <<: *common_attrs_templated
+    binary_sensor.remote_study_symfonisk_volume_down:
+      friendly_name: "Study remote volume_down pressed"
+      <<: *common_attrs_templated
+    binary_sensor.remote_study_symfonisk_play_pause:
+      friendly_name: "Study remote play_pause pressed"
+      <<: *common_attrs_templated
+    binary_sensor.remote_study_symfonisk_track_next:
+      friendly_name: "Study remote track_next pressed"
+      <<: *common_attrs_templated
+    binary_sensor.remote_study_symfonisk_track_previous:
+      friendly_name: "Study remote track_previous pressed"
+      <<: *common_attrs_templated
+
+    # IKEA KNYCKLAN
+    binary_sensor.remote_hallway_knycklan:
+      friendly_name: "Hallway remote pressed"
+      <<: *common_attrs_templated
+    binary_sensor.remote_hallway_knycklan_on:
+      friendly_name: "Hallway remote pressed: on"
+      <<: *common_attrs_templated
+    binary_sensor.remote_hallway_knycklan_off:
+      friendly_name: "Hallway remote pressed: off"
+      <<: *common_attrs_templated
+
+template:
+  - trigger:
+      - platform: time_pattern
+        minutes: "*"
+      - platform: event
+        event_type: zwave_js_value_notification
+        event_data:
+          command_class: 91
+
+
+    sensor:
+      - name: remote_pressed_event_context_id
+        state: >-
+          {% if trigger.platform == "event" and trigger.event.event_type == "zwave_js_value_notification" %}
+          {{ trigger.event.context.id }}
+          {% elif this.entity_id is defined %}
+          {{ states(this.entity_id) }}
+          {% else %}
+          DEADBEEF
+          {% endif %}
+        attributes:
+          device_name: "remote_hallway_wallmote"
+
+    binary_sensor:
+      # Yellow button (ignoring KeyPressed2x, etc)
+      - name: remote_bathroom_yellow
+        state: >-
+          {% from 'remotes_zwave.jinja' import is_remote_event with context %}
+          {{ is_remote_event('remote_bathroom_yellow', '001') }}
+        # attributes:
+        #   event_context_id: >-
+        #     {% from 'remotes_zwave.jinja' import is_remote_event with context %}
+        #     {% if is_remote_event('remote_bathroom_yellow', '001') and trigger.event is defined and trigger.platform == "event" %}
+        #     {{ trigger.event.context.id }}
+        #     {% else %}
+        #     {{ state_attr(this.entity_id, "event_context_id") }}
+        #     {% endif %}
+
+
+      # Wallmote 001
+      - name: remote_hallway_wallmote_001
+        state: >-
+          {% from 'remotes_zwave.jinja' import is_remote_event with context %}
+          {{ is_remote_event('remote_hallway_wallmote', '001') }}
+      - name: remote_hallway_wallmote_001_held
+        state: >-
+          {% from 'remotes_zwave.jinja' import is_remote_event with context %}
+          {{ is_remote_event('remote_hallway_wallmote', '001', 'KeyHeldDown') }}
+      - name: remote_hallway_wallmote_001_released
+        state: >-
+          {% from 'remotes_zwave.jinja' import is_remote_event with context %}
+          {{ is_remote_event('remote_hallway_wallmote', '001', 'KeyReleased') }}
+
+      # Wallmote 002
+      - name: remote_hallway_wallmote_002
+        state: >-
+          {% from 'remotes_zwave.jinja' import is_remote_event with context %}
+          {{ is_remote_event('remote_hallway_wallmote', '002') }}
+      - name: remote_hallway_wallmote_002_held
+        state: >-
+          {% from 'remotes_zwave.jinja' import is_remote_event with context %}
+          {{ is_remote_event('remote_hallway_wallmote', '002', 'KeyHeldDown') }}
+      - name: remote_hallway_wallmote_002_released
+        state: >-
+          {% from 'remotes_zwave.jinja' import is_remote_event with context %}
+          {{ is_remote_event('remote_hallway_wallmote', '002', 'KeyReleased') }}
+
+      # Wallmote 003
+      - name: remote_hallway_wallmote_003
+        state: >-
+          {% from 'remotes_zwave.jinja' import is_remote_event with context %}
+          {{ is_remote_event('remote_hallway_wallmote', '003') }}
+      - name: remote_hallway_wallmote_003_held
+        state: >-
+          {% from 'remotes_zwave.jinja' import is_remote_event with context %}
+          {{ is_remote_event('remote_hallway_wallmote', '003', 'KeyHeldDown') }}
+      - name: remote_hallway_wallmote_003_released
+        state: >-
+          {% from 'remotes_zwave.jinja' import is_remote_event with context %}
+          {{ is_remote_event('remote_hallway_wallmote', '003', 'KeyReleased') }}
+
+      # Wallmote 004
+      - name: remote_hallway_wallmote_004
+        state: >-
+          {% from 'remotes_zwave.jinja' import is_remote_event with context %}
+          {{ is_remote_event('remote_hallway_wallmote', '004') }}
+        # attributes:
+        #   event_context_id: >-
+        #     {% from 'remotes_zwave.jinja' import is_remote_event with context %}
+        #     {% if is_remote_event('remote_hallway_wallmote', '004') and trigger.event is defined and trigger.platform == "event" %}
+        #     {{ trigger.event.context.id }}
+        #     {% else %}
+        #     {{ state_attr(this.entity_id, "event_context_id") }}
+        #     {% endif %}
+
+      - name: remote_hallway_wallmote_004_held
+        state: >-
+          {% from 'remotes_zwave.jinja' import is_remote_event with context %}
+          {{ is_remote_event('remote_hallway_wallmote', '004', 'KeyHeldDown') }}
+      - name: remote_hallway_wallmote_004_released
+        state: >-
+          {% from 'remotes_zwave.jinja' import is_remote_event with context %}
+          {{ is_remote_event('remote_hallway_wallmote', '004', 'KeyReleased') }}
+
+  - binary_sensor:
+      - name: remote_hallway_wallmote
+        state: >-
+          {{
+            states.binary_sensor
+              | selectattr("entity_id", "match", "binary_sensor.remote_hallway_wallmote")
+              | rejectattr("entity_id", "eq", "binary_sensor.remote_hallway_wallmote")
+              | map(attribute="entity_id")
+              | select("is_state", "on")
+              | list
+              | length > 0
+          }}
+
+  - binary_sensor:
+      # IKEA KNYCKLAN remote
+      - name: remote_hallway_knycklan
+        delay_off: "00:00:10"
+        state: >-
+          {{ 
+            not is_state("sensor.remote_hallway_knycklan", none) 
+            and not is_state("sensor.remote_hallway_knycklan", "None") 
+            and not is_state("sensor.remote_hallway_knycklan", "") 
+          }}
+
+      - name: remote_hallway_knycklan_on
+        delay_off: "00:00:10"
+        state: >-
+          {{ is_state("sensor.remote_hallway_knycklan", "on") }}
+      
+      - name: remote_hallway_knycklan_off
+        delay_off: "00:00:10"
+        state: >-
+          {{ is_state("sensor.remote_hallway_knycklan", "off") }}
+
+      # IKEA SYMFONISK remote 
+      - name: remote_study_symfonisk
+        delay_off: "00:00:10"
+        state: >-
+          {{ 
+            not is_state("sensor.remote_study_symfonisk", none) 
+            and not is_state("sensor.remote_study_symfonisk", "None") 
+            and not is_state("sensor.remote_study_symfonisk", "") 
+          }}
+
+      - name: remote_study_symfonisk_dots1
+        delay_off: "00:00:10"
+        state: >-
+          {{ is_state("sensor.remote_study_symfonisk", "dots_1_initial_press") }}
+
+      - name: remote_study_symfonisk_dots2
+        delay_off: "00:00:10"
+        state: >-
+          {{ is_state("sensor.remote_study_symfonisk", "dots_2_initial_press") }}
+      
+
+      - name: remote_study_symfonisk_volume_up
+        delay_off: "00:00:10"
+        state: >-
+          {{ is_state("sensor.remote_study_symfonisk", "volume_up") }}
+
+      - name: remote_study_symfonisk_volume_down
+        delay_off: "00:00:10"
+        state: >-
+          {{ is_state("sensor.remote_study_symfonisk", "volume_down") }}
+
+      - name: remote_study_symfonisk_play_pause
+        delay_off: "00:00:10"
+        state: >-
+          {{ is_state("sensor.remote_study_symfonisk", "play_pause") }}
+
+      - name: remote_study_symfonisk_track_next
+        delay_off: "00:00:10"
+        state: >-
+          {{ is_state("sensor.remote_study_symfonisk", "track_next") }}
+
+      - name: remote_study_symfonisk_track_previous
+        delay_off: "00:00:10"
+        state: >-
+          {{ is_state("sensor.remote_study_symfonisk", "track_previous") }}
+
+
+

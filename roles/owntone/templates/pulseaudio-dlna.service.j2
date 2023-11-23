@@ -1,0 +1,16 @@
+# ansible managed
+
+# https://gist.github.com/HarlemSquirrel/a3e838f76ac1becb95591897c460a968
+
+[Unit]
+Description=Pulseaudio DNLA service
+After=pulseadio.service
+
+[Service]
+User=pulse
+Group=pulse
+ExecStart=/usr/bin/pulseaudio-dlna --disable-device-stop
+
+[Install]
+WantedBy=default.target
+

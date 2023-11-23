@@ -1,13 +1,22 @@
 {%- set human_users = default_users + extra_users|default([]) %}
 {% for item in human_users -%}
 {% if 'sudo' in userlist[item].groups -%}
+user:{{ userlist[item].username }}@authelia:1:0::::::
 user:{{ userlist[item].username }}@pam:1:0::::::
 {% endif %}
 {% endfor %}
+{% for item in proxmox_tokens -%}
+token:{{ item.user }}@pam!{{ item.name }}:0:0::
+{% endfor %}
 user:root@pam:1:0::::::
+
+
+pool:default::100,10222,111,112,113,131,140,211:local:
+
 
 {% for item in human_users -%}
 {% if 'sudo' in userlist[item].groups -%}
+acl:1:/:{{ userlist[item].username }}@authelia:Administrator:
 acl:1:/:{{ userlist[item].username }}@pam:PVEAdmin:
 {% endif %}
 {% endfor %}

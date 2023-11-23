@@ -1,0 +1,11 @@
+---
+
+dependencies:
+  - role: floating-ip
+    tags: floating-ip
+  - role: sshd
+    tags: sshd
+  - role: haproxy
+    tags: haproxy
+
+

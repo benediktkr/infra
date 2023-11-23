@@ -1,0 +1,8 @@
+---
+
+proxmox_storage:
+  dir: []
+  nfs: []
+  rbd: []
+
+proxmox_tokens: []

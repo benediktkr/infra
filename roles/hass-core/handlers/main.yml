@@ -1,0 +1,19 @@
+---
+
+- name: restart hass container
+  docker_container:
+    name: hass
+    state: started
+    restart: true
+  when:
+    - hass_container is not defined or not hass_container.changed
+    - hass_container_state|default("stopped") == "started"
+    - hass_restart_handler|default(true)
+
+- name: udevadm reload rules
+  command: udevadm control --reload-rules
+
+- name: git-hass-config.sh
+  command: /usr/local/bin/git-hass-config.sh
+  become_user: "{{ systemuserlist.hass.username }}"
+  when: false

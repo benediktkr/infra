@@ -1,0 +1,18 @@
+--- 
+
+light:
+  - platform: monochromatic
+    name: "${ledc_name}"
+    icon: mdi:led-outline
+    restore_mode: RESTORE_DEFAULT_OFF
+    output: OUTPUT_${ledc_gpio}
+    default_transition_length: 1s
+    effects: !include effects.yaml
+
+
+output:
+  - platform: ledc
+    id: OUTPUT_${ledc_gpio}
+    pin: ${ledc_gpio}
+
+

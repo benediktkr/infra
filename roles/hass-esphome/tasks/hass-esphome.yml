@@ -2,23 +2,220 @@
 
 - name: create dir structure
   file:
-    path: "{{ systemuserlist.hass.home }}/{{ item.path }}"
+    path: "{{ systemuserlist.hass.home }}/esphome/{{ item.path }}"
     state: directory
     mode: '0755'
     owner: "{{ item.owner|default('hass') }}"
     group: "{{ item.group|default('hass') }}"
   with_items:
-    - path: esphome
-    - path: esphome/config
-    - path: esphome/builds
-    - path: esphome/cache
+    - path: 
+    - path: config
+      # devices _should_ replace config
+    - path: devices
+    - path: .secrets
+      # this is where builds are writen to
+    - path: target
+    - path: fonts
+    - path: data
+    - path: packages
+    - path: packages/boards
+    - path: packages/common
+    - path: packages/sensors
+    - path: packages/lights
+    - path: packages/displays
+    - path: bootstrap
+      # which of these are still needed?
+    - path: platformio
+      # used by docker
+    - path: builds
+      # used by virtualenv
+    - path: output
+    - path: cache
       owner: root
       group: root
-    - path: esphome/local
+    - path: local
       owner: root
       group: root
   loop_control:
     label: "{{ item.path }}"
+  tags:
+    - hass-dirs
+    - hass-esphome-dirs
+
+- name: install esphome virtualenv
+  pip:
+    name:
+      - pip
+      - wheel
+      - esphome
+      - pillow==10.0.1    # for packages/displays/max7219.yaml
+    # lets just use the ansible task to update esphome when needed
+    state: latest
+    virtualenv: "{{ systemuserlist.hass.home }}/.cache/virtualenvs/esphome"
+    virtualenv_command: python3 -m venv
+    virtualenv_site_packages: false
+  become_user: hass
+  when: not ansible_check_mode
+  tags:
+    - hass-esphome-virtualenv
+    - esphome-virtualenv
+
+- name: copy scripts 
+  copy:
+    src: "{{ item }}"
+    dest: /usr/local/bin/{{ item }}
+    owner: root 
+    group: root
+    mode: '07555'
+  tags:
+    - hass-esphome-scripts
+    - esphome-scripts
+  with_items:
+    - esph.py
+
+- name: esph.py config
+  copy:
+    dest: "{{ systemuserlist.hass.home }}/esphome/config/esph.json"
+    owner: hass
+    group: hass
+    mode: "0644"
+    content: "{{ hass_esphome_esph_config | to_json(indent=2) }}"
+  tags:
+    - hass-esphome-config
+    - hass-esphome-secrets
+    - hass-esphome-data
+
+
+- name: template secrets file
+  template:
+    src: "secrets.yaml.j2"
+    dest: "{{ systemuserlist.hass.home }}/esphome/{{ item }}/secrets.yaml"
+    mode: "0750"
+    owner: hass
+    group: sudo
+  with_items:
+    - .secrets
+    - packages/common
+  tags:
+    - hass-esphome-config
+    - hass-esphome-secrets
+    - hass-esphome-data
+
+- name: copy packages
+  copy:
+    src: packages/{{ item }}
+    dest: "{{ systemuserlist.hass.home }}/esphome/packages/{{ item }}"
+    mode: "0755"
+    owner: hass
+    group: hass
+  with_items:
+    - boards/esp32s2mini.yaml
+    - boards/esp32c3supermini.yaml
+    - boards/esp32nodemcu.yaml
+    - boards/esp32wrover.yaml
+    - boards/esp8266d1.yaml
+    - common/esphome.yaml
+    - common/network.yaml
+    - common/http_server.yaml
+    - sensors/esphome.yaml
+    - sensors/esp32.yaml
+    - sensors/generic_motion.yaml
+    - sensors/potentiometer.yaml
+    - sensors/VINDRIKTNING.yaml
+    - sensors/ld2410.yaml
+    - sensors/rfid.yaml
+    - sensors/wifi.yaml
+    - displays/max7219.yaml
+    - lights/ledc.yaml
+    - lights/rgb_ledc.yaml  
+    - lights/effects.yaml
+  tags:
+   - hass-esphome-config
+   - hass-esphome-packages
+
+- name: copy fonts for display component and mx7219
+  copy: 
+    src: fonts/{{ item }}
+    dest: "{{ systemuserlist.hass.home }}/esphome/fonts/{{ item }}"
+    mode: "0755"
+    owner: hass
+    group: hass
+  with_items:
+    - pixelmix.ttf
+  tags: 
+    - esphome-fonts
+    - esphome-packages
+    - hass-esphome-fonts
+    - hass-esphome-packages
+
+- name: copy device (types?)
+  copy:
+    src: devices/{{ item }}
+    dest: "{{ systemuserlist.hass.home }}/esphome/devices/{{ item }}"
+    mode: "0755"
+    owner: hass
+    group: hass
+  tags:
+   - hass-esphome-config
+   - hass-esphome-devices
+  with_items:
+    - akustomat.yaml
+    - camera.yaml
+    - cats.yaml
+    - cats-led.yaml
+    - VINDRIKTNING.yaml
+    - VINDRUTA.yaml
+    - irrigation-esotec.yaml
+    - tespmini32.yaml
+    - tespmini32c3.yaml
+    - tespmini8266.yaml
+    - tesp32.yaml
+    - testboard.yaml
+    - screek-1u.yaml
+    - radar.yaml
+    - rfid-reader.yaml
+    - RG9-S2.yaml
+    - RG9-C3.yaml
+    - SOVGOTT.yaml
+
+- name: template data files
+  template:
+    src: data/{{ item }}.j2
+    dest: "{{ systemuserlist.hass.home }}/esphome/data/{{ item }}"
+    mode: "0755"
+    owner: hass
+    group: hass
+  tags:
+    - hass-esphome-config
+    - hass-esphome-data
+    - hass-esphome-devices
+    - hass-esphome-packages
+  with_items:
+    - rfid_tags.yaml
+
+# This breaks stuff
+#  > Multiple ways to build the same target were specified for
+#- name: symlink stuff 
+#  when: false
+#  file:
+#    src: "{{ systemuserlist.hass.home }}/esphome/target/{{ item.split('/')[-1] }}"
+#    dest: "{{ systemuserlist.hass.home }}/{{ item }}"
+#    state: link
+#  with_items:
+#    - .platformio
+#    - esphome/devices/.esphome
+#  tags:
+#    - hass-dirs
+#    - hass-esphome-dirs
+
+  ## OLD STUFF BELOW THIS LINE
+
+- name: symlink the default output dir 
+  when: false
+  file:
+    src: "{{ systemuserlist.hass.home }}/esphome/output"
+    dest: "{{ systemuserlist.hass.home }}/esphome/config/.esphome"
+    state: link
   tags:
     - hass-dirs
     - hass-esphome-dirs
@@ -30,30 +227,38 @@
     owner: hass
     group: hass
     mode: 0755
+  tags:
+    - hass-esphome-scripts
+    - esphome-scripts
   with_items:
     - docker-esphome.sh
+    - esphome.sh
     - esphome-ota-all.sh
 
-- name: copy esp config files
-  copy:
-    src: "{{ item }}"
-    dest: "{{ systemuserlist.hass.home }}/esphome/config/{{ item }}"
-    mode: '0755'
+
+- name: template secerts
+  template:
+    src: "secrets.yaml.j2"
+    dest: "{{ systemuserlist.hass.home }}/esphome/{{ item.dest_dir }}/secrets.yaml"
+    mode: "0750"
     owner: hass
-    group: hass
-  tags:
-    - esphome-configs
-    - hass-esphome-configs
-  loop_control:
-    label: "{{ item }}"
+    group: sudo
+  loop_control: 
+    label: "{{ item.dest_dir }} -- {{ item.comment }}"
   with_items:
-    # copied from https://github.com/screek-workshop/screek-human-sensor/tree/main/1u/yaml/disbale_uart_output
-    - screek-humen-dectet-1u.yaml
+    - dest_dir: config
+      comment: wrong location
+  tags:
+   - esphome-secrets
+   - esphome-config
+   - esphome-configs
+   - hass-esphome-config
+   - hass-esphome-configs
 
 - name: template esp config files
   template:
     src: "config/{{ item.config }}.j2"
-    dest: "{{ systemuserlist.hass.home }}/esphome/config/{{ item.config }}"
+    dest: "{{ systemuserlist.hass.home }}/esphome/config/{{ item.templated_filename|default(item.config) }}"
     mode: '0755'
     owner: hass
     group: hass
@@ -61,33 +266,61 @@
     - esphome-configs
     - hass-esphome-configs
   loop_control:
-    label: "{{ item.config }}"
+    label: "{{ item.templated_filename|default(item.config) }}"
   # see roles/hass-esphome/defaults
   with_items: "{{ hass_esphome_configs }}"
   when: item.enabled|default(false) == true
   # notify:
   #   - esphome ota
 
+- name: esp bootstrap config files
+  template:
+    src: "bootstrap/{{ item }}.yaml.j2"
+    dest: "{{ systemuserlist.hass.home }}/esphome/bootstrap/{{ item }}.yaml" 
+    mode: '0755'
+    owner: hass
+  tags:
+    - esphome-bootstrap
+    - esphome-configs-bootstrap
+    - hass-esphome-bootstrap
+    - hass-esphome-configs-bootstrap
+  with_items:
+    - esp32-s2-mini
+    - vindriktning
+
+- name: remove old files
+  file:
+    dest: "{{ systemuserlist.hass.home }}/esphome/{{ item }}"
+    state: absent
+  tags:
+    - esphome-configs
+    - hass-esphome-configs
+  with_items:
+    - packages/boards/esp32s2.yaml
+    - packages/devices/RG9.yaml
+
 - name: remove disabled configs
   file:
-    dest: "{{ systemuserlist.hass.home }}/esphome/config/{{ item.config }}"
+    dest: "{{ systemuserlist.hass.home }}/esphome/config/{{ item.templated_filename|default(item.config) }}"
     state: absent
   tags:
     - esphome-configs
     - hass-esphome-configs
   loop_control:
-    label: "{{ item.config }}"
+    label: "{{ item.templated_filename|default(item.config)}}"
   with_items: "{{ hass_esphome_configs }}"
   when: item.enabled|default(false) == false
 
-- name: start hass-esphome-dash container
+- name: hass-esphome-dash container (in 'stopped' state) 
+  when: false
   docker_container:
     name: hass-esphome-dash
     image: ghcr.io/esphome/esphome
     detach: true
     pull: true
     restart_policy: "no"
-    state: "{{ hass_container_state | default('stopped') }}"
+    #state: "{{ hass_container_state | default('stopped') }}"
+    state: stopped
     container_default_behavior: compatibility
     user: "{{ systemuserlist.hass.uid }}:{{ systemuserlist.hass.gid }}"
     networks_cli_compatible: false

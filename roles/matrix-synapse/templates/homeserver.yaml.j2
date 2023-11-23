@@ -1105,10 +1105,14 @@ url_preview_accept_language:
 # The public URIs of the TURN server to give to clients
 #
 #turn_uris: ["turn:{{ coturn_url }}:3478?transport=udp", "turn:{{ coturn_url }}:3478?transport=tcp"]
+turn_uris:
+  {{ turn.uris | to_nice_yaml(indent=2, sort_keys=false) | indent(2) }}
+
 
 # The shared secret used to compute passwords for the TURN server
 #
 #turn_shared_secret: "{{ coturn_static_auth_secret }}"
+turn_shared_secret: "{{ turn.shared_secret }}"
 
 # The Username and password if the TURN server needs them and
 # does not use a token
@@ -1119,6 +1123,7 @@ url_preview_accept_language:
 # How long generated TURN credentials last
 #
 #turn_user_lifetime: 24h
+turn_user_lifetime: "{{ turn.user_lifetime }}"
 
 # Whether guests should be allowed to use the TURN server.
 # This defaults to True, otherwise VoIP will be unreliable for guests.
@@ -1128,6 +1133,7 @@ url_preview_accept_language:
 #
 # check on https://test.voip.librepush.net/
 #turn_allow_guests: true
+turn_allow_guests: {{ turn.allow_guests | string | trim | lower }}
 
 
 ## Registration ##

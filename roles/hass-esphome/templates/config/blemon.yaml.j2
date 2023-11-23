@@ -39,8 +39,19 @@ captive_portal:
 
 web_server:
   port: 80
+  version: 2
+  include_internal: true
+  js_url: "https://www.{{ domain }}/esphome/webserver-v2.min.js"
 
 esp32_ble_tracker:
+
+ble_client:
+{% for item in hass_esphome_ble_client %}
+{% set item_id = item.name.lower().replace(' ', '_').replace('-', '_').replace("'","").replace('.', '_') %}
+  - mac_address: {{ item.mac }}
+    id: "ble_client_{{ item_id }}"
+{% endfor %}
+
 
 binary_sensor:
 {% for ble_device in hass_esphome_ble_presence %}
@@ -59,11 +70,25 @@ binary_sensor:
 {% endfor %}
 
   - platform: status
-    name: "ESHome status"
+    name: "{{ item.name }} ESHome status"
     entity_category: "diagnostic"
     id: ${id_prefix}_status
 
 sensor:
+
+{% for item in hass_esphome_ble_client %}
+{% set item_id = item.name.lower().replace(' ', '_').replace('-', '_').replace("'","").replace('.', '_') %}
+  - platform: ble_client
+    type: characteristic
+    ble_client_id: "ble_client_{{ item_id }}"
+    name: "Battery level BLE client {{ item.name }}"
+    service_uuid: '180f'
+    characteristic_uuid: '2a19'
+    icon: 'mdi:battery'
+    unit_of_measurement: '%'
+
+{% endfor %}
+
 {% for ble_device in hass_esphome_ble_presence %}
 {% if ble_device.track_rssi|default(false) %}
 {% set ble_device_id = ble_device.name.lower().replace(' ', '_').replace('-', '_').replace("'", "").replace('.', '_') %}
@@ -92,11 +117,11 @@ sensor:
 
   # ESPHome
   - platform: internal_temperature
-    name: "ESP Temperature"
+    name: "{{ item.name }} ESP Temperature"
 
   - platform: wifi_signal
     internal: true
-    name: "WiFi signal strength"
+    name: "{{ item.name }} WiFi signal strength"
     id: ${id_prefix}_wifi_signal_strength
     update_interval: 60s
     entity_category: "diagnostic"
@@ -106,7 +131,7 @@ sensor:
 
   - platform: copy
     source_id: ${id_prefix}_wifi_signal_strength
-    name: "WiFi signal"
+    name: "{{ item.name }} WiFi signal"
     unit_of_measurement: "%"
     device_class: power_factor
     entity_category: "diagnostic"
@@ -115,33 +140,54 @@ sensor:
 
 switch:
   - platform: restart
-    name: "Reboot"
+    name: "{{ item.name }} reboot"
     icon: mdi:power-cycle
     id: ${id_prefix}_reboot
 
+  - platform: gpio
+    name: "{{ item.name }} BLE exposure notification seen"
+    pin: GPIO22
+    id: exp_notif
+
+script:
+  - id: exp_notif_on
+    then:
+      - switch.turn_on: exp_notif
+      - delay: 15min
+      - switch.turn_off: exp_notif
+
+exposure_notifications:
+  on_exposure_notification:
+    then:
+      #- lambda: |
+      #    ESP_LOGD("main", "Got notification:");
+      #    ESP_LOGD("main", "  RPI: %s", format_hex_pretty(x.rolling_proximity_identifier).c_str());
+      #    ESP_LOGD("main", "  RSSI: %d", x.rssi);
+      - script.stop: exp_notif_on
+      - script.execute: exp_notif_on
 button:
   - platform: wake_on_lan
-    name: "Wake-on-LAN TV Livingroom"
+    name: "{{ item.name }} Wake-on-LAN TV Livingroom"
     target_mac_address: {{ s21_mac_samsung_tv }}
 
 text_sensor:
   - platform: wifi_info
     ip_address:
-      name: "IP address"
+      name: "{{ item.name }} IP address"
       entity_category: "diagnostic"
     ssid:
-      name: "SSID"
+      name: "{{ item.name }} SSID"
       entity_category: "diagnostic"
     mac_address:
-      name: "WiFi mac address"
+      name: "{{ item.name }} WiFi mac address"
       entity_category: "diagnostic"
     dns_address:
-      name: "DNS address"
+      name: "{{ item.name }} DNS address"
       entity_category: "diagnostic"
   - platform: version
     id: ${id_prefix}_version
     entity_category: "diagnostic"
-    name: "ESPHome version"
+    name: "{{ item.name }} ESPHome version"
 
 
 

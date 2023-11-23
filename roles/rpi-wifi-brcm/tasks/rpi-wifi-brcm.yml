@@ -1,0 +1,27 @@
+- name: install iw to for the service to stop powersave on brcmfmac
+  apt:
+    name: 
+      - wavemon
+      - wireless-tools
+      - iw
+    state: present
+
+- name: create a systemd service to disable powersave for brcmfmac wifi kernel module
+  template:
+    src: disable-brcmfmac-wifi-powersave.service.j2
+    dest: /etc/systemd/system/disable-brcmfmac-wifi-powersave.service
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - systemctl daemon reload
+
+- meta: flush_handlers
+
+- name: enable the systemd service to disable power save for brmfmac
+  service:
+    name: disable-brcmfmac-wifi-powersave
+    state: started
+    enabled: true
+
+

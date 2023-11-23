@@ -1,35 +1,39 @@
 ---
 
-# - name: create dirs
-#   file:
-#     state: directory
-#     path: /srv/samba/{{ item.path }}
-#     owner: "{{ item.owner }}"
-#     group: "{{ item.group }}"
-#     mode: "{{ item.mode }}"
-#   loop_control:
-#     label: "{{ item.path }}"
-#   with_items:
-#     - path: ""
-#       owner: root
-#       group: root
-#       mode: '0775'
-#     - path: printers
-#       owner: nobody
-#       group: nogroup
-#       mode: '0775'
-#     - path: drivers
-#       owner: nobody
-#       group: nogroup
-#       mode: '0775'
-#     - path: drivers/hp1010
-#       owner: nobody
-#       group: nogroup
-#       mode: '0775'
+- name: create dirs for drivers
+  file:
+    state: directory
+    path: /srv/samba/{{ item.path }}
+    owner: root
+    group: root
+    mode: 0775
+  loop_control:
+    label: "{{ item.path }}"
+  when:
+    - samba_cups == true
+  with_items:
+    - path: ""
+    - path: drivers
+    - path: drivers/hp1010
+
+- name: copy windows driver for hp1010
+  copy:
+    src: "{{ item }}"
+    dest: /srv/samba/drivers/hp1010/{{ item }}
+    owner: root
+    group: root
+    mode: 0755
+  loop_control:
+    label: "{{ item }}"
+  when:
+    - samba_cups == true
+  with_items: 
+    - lj1010serieshb-vista64.zip
+    - lj1010series/
 
 - name: install samba
   apt:
-    state: latest
+    state: present
     name:
       - samba
       - smbclient
@@ -47,3 +51,33 @@
   notify: restart samba
   tags:
     - smb.conf
+
+- name: disable nmbd
+  service:
+    name: nmbd
+    state: stopped
+    enabled: false
+  tags:
+    - samba-nmbd
+    - samba smbd
+  when:
+    - samba_nmbd == false
+
+- name: smbd service
+  service:
+    name: smbd
+    state: >-
+      {%- if samba_smbd -%}
+      started
+      {%- else -%}
+      stopped
+      {%- endif -%}
+    enabled: >-
+      {%- if samba_smbd -%}
+      true
+      {%- else -%}
+      false 
+      {%- endif -%}
+  tags:
+    - sambda-smbd
+    - samba-nmbd

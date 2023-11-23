@@ -1,0 +1,67 @@
+---
+
+substitutions:
+  pin_vindriktning_uart_rx: GPIO18
+  pin_vindriktning_fan: GPIO17
+
+uart:
+  rx_pin: ${pin_vindriktning_uart_rx}
+  baud_rate: 9600
+
+sensor:
+  - platform: pm1006
+    id: vindriktning_pm_2_5
+    pm_2_5:
+      name: "VINDRIKTNING ${room_name} PM 2.5µm"    
+      filters:
+        - sliding_window_moving_average:
+            window_size: 5
+            send_every: 1
+            send_first_at: 1
+        - or: 
+          - delta: 1.0
+          - throttle: 1h
+
+fan:
+  - platform: binary
+    name: "${hostname} VINDRIKTNING internal fan"
+    id: internal_fan
+    restore_mode: RESTORE_DEFAULT_ON
+    output: output_internal_fan
+
+output:
+  - platform: gpio
+    id: output_internal_fan
+    pin: ${pin_vindriktning_fan}
+    
+#text_sensor:
+#  - platform: template
+#    name: "VINDRIKTNING LED Color"
+#    update_interval: 20sv
+#    # the pm_2_5_sensor_ is a protected class attributes, so we cant read it here
+#    # https://esphome.io/api/pm1006_8cpp_source
+#    # https://esphome.io/api/pm1006_8cpp_source
+#    # Hooking into it as an automation might work, but am not sure about the syntax
+#    # https://esphome.io/components/text_sensor/#text-sensor-state-condition
+#    # https://esphome.io/components/text_sensor/template#text-sensor-template-publish-action
+#    # https://esphome.io/components/sensor/template
+#    lambda: !lambda |-
+#      auto val = id(vindriktning_pm_2_5)->pm_2_5_sensor_->state;
+#      if (val < 30) {
+#        return {"Green"};
+#      } 
+#      else {
+#        if (val < 100) {
+#          return {"Yellow"};
+#        }
+#        else {
+#          return {"Red"}; 
+#        }
+#      }
+
+
+
+#output:
+#  - platform: template
+#    id: vikriktning_led
+#    type: float

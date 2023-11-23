@@ -5,5 +5,17 @@
     name: nginx
     state: reloaded
 
-- name: restart owntone container
+- name: restart dbus
+  service:
+    name: dbus
+    state: restarted 
+
+- name: restart owntone
   include_tasks: restart_owntone.yml
+
+- name: systemctl daemon-reload
+  command: systemctl daemon-reload
+  become: true
+
+
+

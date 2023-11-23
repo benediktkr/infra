@@ -5,8 +5,15 @@ pipeline {
         ansiColor("xterm")
         disableConcurrentBuilds()
     }
-
     stages {
+        stage('version') {
+            steps {
+                script {
+                    env.VERSION = sh(script: "date -I", returnStdout: true).trim().replace("-",".")
+                    currentBuild.description = env.VERSION
+                }
+            }
+        }
         stage('build') {
             steps {
                 sh 'docker build -t infra:lint .'

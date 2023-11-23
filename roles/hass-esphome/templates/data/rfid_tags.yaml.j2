@@ -1,0 +1,15 @@
+---
+
+
+# Mifare ultralight: NFC
+# https://www.mifare.net/en/products/chip-card-ics/mifare-ultralight/
+
+
+binary_sensor:
+{% for item in hass_esphome_rfid_tags %}
+  - platform: pn532
+    uid: "{{ item.uid | trim }}"
+    name: "NFC {{ item.name | trim }}"
+    filters:
+      - delayed_off: 10s
+{% endfor %}

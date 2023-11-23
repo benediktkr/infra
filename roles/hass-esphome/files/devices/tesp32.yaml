@@ -1,0 +1,165 @@
+---
+
+
+packages:
+  board: !include ../packages/boards/esp32nodemcu.yaml
+  esphome: !include ../packages/common/esphome.yaml
+  network: !include ../packages/common/network.yaml
+  http_server: !include ../packages/common/http_server.yaml
+  sensors_esp32: !include ../packages/sensors/esp32.yaml
+  sensors_esphome: !include ../packages/sensors/esphome.yaml
+  sensors_wifi: !include ../packages/sensors/wifi.yaml
+  sensors_generic_motion: !include
+    file: ../packages/sensors/generic_motion.yaml
+    vars:
+      pin_generic_motion: 19
+      name_generic_motion: "${hostname} generic motion sensor"
+  #sensors_rfid: !include 
+  #  file: ../packages/sensors/rfid.yaml
+  #  vars:
+  #    pin_pn532_sda: 21
+  #    pin_pn532_scl: 22
+  # binary_sensors for known tag uids 
+  #data_rfid_tags: !include ../data/rfid_tags.yaml
+  
+  # max7219: !include ../packages/lights/max7219.yaml
+  # light_lcd_backlight: !include 
+  #   file: ../packages/lights/ledc.yaml
+  #   vars:
+  #     ledc_name: "${hostname} LCD Backlight"
+  #     ledc_gpio: 18
+
+i2c:
+  sda: 21
+  scl: 22
+  scan: true
+#  #sda: GPIO16
+#  #scl: GPIO18
+#  frequency: 100kHz
+#  # on esp32 s2, increasing the frequency to 400kHz sometimes seems to help
+#  # https://community.home-assistant.io/t/bh1750-with-nodemcuv3-found-no-i2c-devices/247982/13
+#
+#
+#display:
+#  - platform: lcd_pcf8574
+#    dimensions: 20x4
+#    id: lcd_display
+#    #address: 0x27
+#    lambda: |-
+#       it.print("Hello World!");
+
+#display:
+#  - platform: lcd_gpio
+#    dimensions: 20x4
+#    data_pins:
+#      - GPIO32
+#      - GPIO33
+#      - GPIO05
+#      - GPIO17
+#    # WTF
+#    enable_pin: D4
+#    rs_pin: D5  
+#    rw_pin: ..
+#    lambda: |-
+#        it.print("Hello world");
+
+
+#wifi:
+#  use_address: esphome-tesp32.s21.sudo.is
+
+#binary_sensor:
+#  - platform: gpio
+#    name: Cat motion
+#    device_class: motion
+#    pin: GPIO21
+#display:
+#  - platform: lcd_pcf8574
+#    id: lcd_display
+#    dimensions: 20x4
+#    address: 0x27
+#    lambda: |-
+#      it.print("Hello World!");
+
+#switch:
+#  - platform: template
+#    id: lcd_i2c_backlight
+#    name: "${hostname} i2c LCD backlight"
+#    restore_mode: RESTORE_DEFAULT_ON
+#    turn_on_action:
+#      - lambda: |-
+#          id(lcd_display).backlight();
+#    turn_off_action:
+#      - lambda: |-
+#          id(lcd_display).no_backlight();
+
+
+ #spi:
+ #  miso_pin: GPIO9
+ #  mosi_pin: GPIO7
+ #  # SCK = Serial ClocK
+ #  clk_pin: GPIO10  
+
+#rc522_spi:
+#  # CS is sometimes called SS. On my board it says SS on the silkscreen
+#  cs_pin: GPIO12
+#  #reset_pin: GPIO11
+#  update_interval: 1s
+#  on_tag:
+#    then:
+#      - lambda: |-
+#          ESP_LOGD("custom", x);
+
+#on_tag:
+#  then:
+#    - text_sensor.template.publish:
+#        id: rfid_reader
+#        state: !lambda 'return x;'
+
+#text_sensor:
+#  - platform: template
+#    name: "RFID Reader"
+#    id: rfid_reader
+#    update_interval: never
+
+#i2c:
+#  sda: GPIO16
+#  scl: GPIO18
+#  scan: true
+#  #id: bus_a
+
+#sensor:
+#  - platform: vl53l0x
+#    name: "VL53L0x cat distance"  
+#    address: 0x29
+#    #long_range: false
+#    #enable_pin: GPIO33
+#    # default: 0.25. lower = more sensitive. signal amplitude
+#    signal_rate_limit: 0.1
+#    timeout: 200us
+#    update_interval: 500ms
+#    unit_of_measurement: "m"
+  
+
+#i2c:
+#  id: rfid_bus
+#  sda: GPIO16
+#  scl: GPIO18
+#  scan: true
+
+
+#pn532_i2c: 
+#  id: pn532_board
+#  update_interval: 1s
+#  i2c_id: rfid_bus
+#  on_tag:
+#    then:
+#    - text_sensor.template.publish:
+#        id: rfid_tag
+#        state: !lambda |
+#          return x;
+#    - delay: 0.2s 
+
+#text_sensor:
+#  - platform: template
+#    name: "RFID Tag"
+#    id: rfid_tag

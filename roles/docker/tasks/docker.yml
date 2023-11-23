@@ -84,8 +84,11 @@
 - name: set docker gid
   group:
     name: docker
-    gid: "{{ docker_gid | default(998) }}"
+    # was 998
+    gid: "{{ docker_gid | default(134) }}"
     state: present
+  tags:
+    - docker-gid
 
 - name: template daemon.json
   template:

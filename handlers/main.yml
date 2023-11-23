@@ -1,0 +1,19 @@
+---
+
+- name: udevadm reload rules
+  command: udevadm control --reload-rules
+  become: true
+
+- name: systemctl daemon-reload
+  command: systemctl daemon-reload
+  become: true
+
+- name: reload nginx
+  service:
+    name: nginx
+    state: reloaded
+
+- name: restart nginx
+  service:
+    name: nginx
+    state: restarted

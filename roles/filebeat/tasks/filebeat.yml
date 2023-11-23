@@ -1,9 +1,16 @@
 ---
 
+# there are no builds provied for armhf/armv7l (32 bit arm, e.g. raspberry pi 3), so we dont install filebeat then
+
+- debug:
+    var: ansible_architecture 
+
 - name: add apt key for elastic.co
   apt_key:
     url: https://artifacts.elastic.co/GPG-KEY-elasticsearch
     state: present
+  when: 
+    - ansible_architecture != "armv7l"
   tags:
     - packages
 
@@ -13,6 +20,8 @@
     state: present
     filename: elastic.co
     update_cache: true
+  when: 
+    - ansible_architecture != "armv7l"
   tags:
     - packages
 
@@ -21,6 +30,8 @@
     name:
       - filebeat
     state: latest
+  when: 
+    - ansible_architecture != "armv7l"
   tags:
     - packages
 
@@ -39,6 +50,8 @@
     owner: root
     group: root
     mode: 0600
+  when: 
+    - ansible_architecture != "armv7l"
   tags:
     - filebeat
     - filebeat-config
@@ -49,6 +62,8 @@
     name: filebeat
     state: started
     enabled: true
+  when: 
+    - ansible_architecture != "armv7l"
   tags:
     - packages
 

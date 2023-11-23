@@ -47,8 +47,16 @@ captive_portal:
 
 web_server:
   port: 80
+  version: 2
+  include_internal: true
+  js_url: "https://www.{{ domain }}/esphome/webserver-v2.min.js"
 
 sensor:
+  # if nothing else is connected to A0, esp8266 can reportthe voltage that the chip is getting
+  #- platform: adc
+  #  pin: VCC
+  #  name: "VCC Voltage"
+
   # esp32 espressif: 0-3.3V
   # esp8266 nodemcu: 0-1.0V
   - platform: adc
@@ -75,17 +83,7 @@ sensor:
     source_id: ${id_prefix}_volume
     name: "Volume level"
     id: ${id_prefix}_volume_level
-    device_class: "power_factor"
-    accuracy_decimals: 2
-    filters:
-      - lambda: |-
-          return float(x) / 100.0;
-      - delta: 0.01
-
-  - platform: copy
-    source_id: ${id_prefix}_volume
-    name: "Volume level"
-    id: ${id_prefix}_horny_volume_level
+    #device_class: "power_factor"
     accuracy_decimals: 2
     filters:
       - lambda: |-

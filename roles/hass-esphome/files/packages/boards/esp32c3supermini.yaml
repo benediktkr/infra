@@ -1,0 +1,58 @@
+---
+
+esphome:
+  platformio_options:
+    board_build.f_flash: 40000000L
+    board_build.flash_mode: dio
+    board_build.flash_size: 4MB
+
+esp32:
+  board: esp32-c3-devkitm-1
+  variant: esp32c3
+  framework:
+    type: esp-idf
+
+
+light:
+  # only works with arduino framework
+  #- platform: neopixelbus
+  #  name: "${hostname} LED GPIO7"
+  #  id: esp_rgb_led
+  #  type: GRB
+  # variant: WS2812
+  #  method: ESP32_RMT_1
+  #  num_leds: 1
+  #  pin: GPIO7
+  #  effects:
+  #    - addressable_rainbow:
+  #        name: Rainbow Effect With Custom Values
+  #        speed: 10
+  #        width: 50 
+
+  # doesnt need arduino framework, but i dont think gpio7 is an internal/builtin led
+  #- platform: status_led 
+  #  name: "${hostname} LED GPIO7"
+  #  id: esp_status_led_gpio7
+  #  icon: "mdi:alarm-light"
+  #  pin:
+  #    number: GPIO7
+  #    inverted: false
+  #  restore_mode: ALWAYS_OFF
+
+  - platform: status_led 
+    name: "${hostname} Status LED"
+    id: esp_status_led_gpio8
+    icon: "mdi:alarm-light"
+    pin:
+      number: GPIO8
+      inverted: true
+    restore_mode: ALWAYS_OFF
+
+
+# https://www.reddit.com/r/esp32/comments/wn9dzx/update_esphome_on_c3/
+#wifi:
+#  output_power: "8.5"
+
+
+
+

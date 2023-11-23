@@ -1,10 +1,12 @@
 # infra
 
-[![Build Status](https://jenkins.sudo.is/buildStatus/icon?job=ben%2Finfra%2Fmain&style=flat-square)](https://jenkins.sudo.is/job/ben/job/infra/)
-[![git](docs/img/shields/git.sudo.is-ben-infra.svg)](https://git.sudo.is/ben/infra)
-[![github](docs/img/shields/github-benediktkr.svg)](https://github.com/benediktkr/infra)
-[![matrix](docs/img/shields/matrix-ben-sudo.is.svg)](https://matrix.to/#/@ben:sudo.is)
+[![Build Status](https://jenkins.sudo.is/buildStatus/icon?job=infra%2Fb&style=flat-square)](https://jenkins.sudo.is/job/infra/)
+[![Version](https://jenkins.sudo.is/buildStatus/icon?job=infra%2Fb&style=flat-square&status=${description}&subject=version&build=lastStable&color=blue)](https://git.sudo.is/ben/infra/packages)
 [![BSD-3-Clause-No-Military-License](docs/img/shields/license-BSD-blue.svg)](LICENSE)
+[![git](https://www.sudo.is/readmes/git.sudo.is-ben-infra.svg)](https://git.sudo.is/ben/infra)
+[![github](https://www.sudo.is/readmes/github-benediktkr.svg)](https://github.com/benediktkr/infra)
+[![Matrix](https://www.sudo.is/readmes/matrix-ben-sudo.is.svg)](https://matrix.to/#/@ben:sudo.is)
+
 
 the ansible repo for the [sudo.is](https://www.sudo.is) infrastructure.
 
@@ -33,6 +35,9 @@ this repo also deploys/orchestrates a bunch of "projects":
 
 and various `.deb` builds and docker images that needed some customizing:
 
+
+ * [`build-owntone`](https://git.sudo.is/ben/build-owntone): building
+   [OwnTone](https://owntone.github.io/owntone-server/).
  * [`build-nginx`](https://git.sudo.is/ben/build-nginx): building
    nginx from source with all modules (the useful ones anyway) and
    packaging as `.deb`

@@ -51,6 +51,8 @@
       GITEA_RUNNER_LABELS: "{{ item.level }}"
     networks_cli_compatible: false
   with_items: "{{ gitea_runners }}"
+  loop_control:
+    label: "{{ item.name }}"
   tags:
     - gitea-runner-container
     - gitea-runners-container

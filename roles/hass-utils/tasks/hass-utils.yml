@@ -14,15 +14,45 @@
     label: "{{ item.name }}"
   with_items:
     - name: utils
-    - name: utils/bin
-    - name: utils/etc
-    - name: utils/log
+    - name: utils/config
 
+- name: install virtualenv for scripts
+  pip:
+    name: 
+      - pip
+      - pyyaml
+      - loguru
+      - requests
+    # lets just use the ansible task to update the virtualenv
+    state: latest
+    virtualenv: "{{ systemuserlist.hass.home }}/.cache/virtualenvs/scripts"
+    virtualenv_site_packages: false
+    virtualenv_command: python3 -m venv
+  become_user: hass
+  when: not ansible_check_mode
+  tags:
+    - hass-esphome-virtualenv
+    - esphome-virtualenv
+
+- name: copy scripts
+  copy:
+    src: "{{ item }}"
+    dest: "{{ systemuserlist.hass.home }}/.cache/virtualenvs/scripts/bin/{{ item }}"
+    mode: "0755"
+    owner: hass
+    group: hass
+  tags:
+    - scripts
+  loop_control:
+    label: "{{ item }}"
+  with_items:
+    - valetudoctl.py
+    - clean_known_devices.py
 
 - name: template configs
   template:
     src: "{{ item }}.j2"
-    dest: "{{ systemuserlist.hass.home }}/utils/etc/{{ item }}"
+    dest: "{{ systemuserlist.hass.home }}/utils/config/{{ item }}"
     owner: "{{ systemuserlist.hass.uid }}"
     group: "{{ systemuserlist.hass.gid }}"
     mode: 0644

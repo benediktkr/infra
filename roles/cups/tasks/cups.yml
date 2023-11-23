@@ -1,10 +1,50 @@
 ---
 
+- name: disable ufw
+  service:
+    name: ufw
+    state: stopped
+    enabled: false
+
+
 - name: install cups
   apt:
     name: cups
     state: present
   tags: packages
+
+# there is also the hplip pacakge, but it does nto seem to be needed
+# hplip - HP Linux Printing and Imaging System (HPLIP)
+- name: install hp cups printer drivers
+  apt:
+    name: printer-driver-hpcups
+    state: present
+  tags: packages
+
+- name: copy ppd file for hp1010
+  copy:
+    src: "{{ item }}"
+    dest: /etc/cups/ppd/{{ item }}
+    owner: root
+    group: lp
+    mode: 0640
+  loop_control:
+    label: "{{ item }}"
+  with_items:
+    - hp-laserjet_1010_3.21.12.ppd
+    - hp-laserjet_1010.ppd
+    - pdf.ppd
+  notify: restart cups
+
+# document runnign these commands, and adapt the templates (they change the templates, should not be run in ansible like this)
+# need to change Server name to go through nginx instead of port 631
+# https://www.cups.org/doc/sharing.html
+- name: enable share printers
+  command: cupsctl --share-printers --remote-any
+
+- name: share printers
+  command: lpadmin -p {{ item }} -o printer-is-shared=true
+  with_items: "{{ cups_printers | default([]) }}"
 
 - name: cups config files
   template:
@@ -13,6 +53,9 @@
     owner: root
     group: root
     mode: 0644
+  tags:
+   - cupsd.conf
+   - printers.conf
   with_items:
     - cupsd.conf
 
@@ -25,8 +68,21 @@
     mode: 0755
   tags:
     - letsencrypt-certs
+    - cups-nginx
   notify: reload nginx
   vars:
     prediff_cmd: echo
   with_items:
     - "{{ inventory_hostname.split('.')[1:] | join('.')  }}"
+
+- name: nginx config
+  template:
+    src: 01-cups.conf.j2
+    dest: /etc/nginx/sites-enabled/01-cups.conf
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+   - cups-nginx
+   - nginx 
+  notify: reload nginx

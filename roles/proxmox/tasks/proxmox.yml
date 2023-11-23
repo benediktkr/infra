@@ -2,12 +2,26 @@
 
 # https://pve.proxmox.com/wiki/Install_Proxmox_VE_on_Debian_12_Bookworm
 
+- name: copy ssh keys for proxmox cluster '{{ proxmox_cluster_name }}'
+  template:
+    src: "private/sshkeys/{{ proxmox_cluster_name }}-proxmox{{ item }}"
+    dest: "/root/.ssh/id_ed25519{{ item }}"
+    owner: "root"
+    group: "root"
+    mode: 0600
+  no_log: true
+  with_items:
+    -
+    - .pub
+  tags:
+    - proxmox-ssh
+
 - name: ensure hostname in /etc/hosts
   lineinfile:
     dest: /etc/hosts
-    line: "{{ etc_hosts_ip }} {{ inventory_hostname }} {{ inventory_hostname.split('.')[0] }}"
+    line: "{{ ansible_default_ipv4.address }} {{ inventory_hostname }} {{ inventory_hostname.split('.')[0] }}"
     state: present
-  #when: etc_hosts_ip is defined
+  #when: ansible_default_ipv4.address is defined
   tags:
     - etc-hosts
 
@@ -77,12 +91,12 @@
 - name: reboot prompt, lets do it manually for now
   pause:
     prompt: "pve-kernel installed, please reboot, unlock and return here (or restart playbook"
-  when: proxmox_kernel.changed
+  when: proxmox_kernel.changed and not ansible_check_mode|bool
 
 - name: check if it worked
   pause:
     prompt: "did it work?"
-  when: proxmox_kernel.changed
+  when: proxmox_kernel.changed and not ansible_check_mode|bool
 
 - name: install VE and etc
   apt:
@@ -124,6 +138,54 @@
 #     - packages
 #     - proxmox-post-reboot
 
+- name: check if cert files exist
+  stat:
+    path: "/etc/pve/nodes/{{ inventory_hostname.split('.')[0] }}/pveproxy-ssl.pem"
+  tags:
+    - proxmox-certs
+  become: true
+  become_user: root
+  register: stat_certs
+
+- name: touch cert files first if they dont exist
+  file:
+    state: touch
+    path: "/etc/pve/nodes/{{ inventory_hostname.split('.')[0] }}/{{ item }}"
+    owner: root
+    group: www-data
+    mode: "0640"
+  when: not stat_certs.stat.exists
+  tags:
+    - proxmox-certs
+  become: true
+  become_user: root
+  with_items:
+    - pveproxy-ssl.pem
+    - pveproxy-ssl.key
+
+# https://pve.proxmox.com/wiki/Certificate_Management#sysadmin_certs_api_gui
+# - /etc/pve/local/pveproxy-ssl.pem
+# - /etc/pve/local/pveproxy-ssl.key
+# firewall also does not seem to be enabled
+- name: install letsencrypt certs to proxmox
+  copy:
+    src: "/usr/local/etc/letsencrypt/live/{{ inventory_hostname.split('.')[1:]|join('.') }}/{{ item }}"
+    dest: "/etc/pve/nodes/{{ inventory_hostname.split('.')[0] }}/pveproxy-ssl.{% if item == 'privkey.pem' %}key{% else %}pem{% endif %}"
+    owner: root
+    group: www-data
+    mode: "0640"
+  tags:
+    - letsencrypt-certs
+    - proxmox-certs
+  notify: restart pve all
+  become: true
+  #become_user: root
+  vars:
+    prediff_cmd: echo
+  with_items:
+    - privkey.pem
+    - fullchain.pem
+
 - name: install certs
   copy:
     src: "/usr/local/etc/letsencrypt/live/{{ item }}"
@@ -133,6 +195,8 @@
     mode: 0755
   tags:
     - letsencrypt-certs
+    - nginx
+    - proxmox-nginx
   notify: reload nginx
   vars:
     prediff_cmd: echo
@@ -149,6 +213,8 @@
   notify: reload nginx
   tags:
     - proxmox-nginx
+    - nginx
+
 
 - name: template file to stop the web interface to listen on all ports, we have reverse proxies for that
   template:
@@ -159,12 +225,63 @@
     mode: 0644
   notify: restart pveproxy
 
-- name: configure users
+- name: ensure proxmox_storage dirs exist
+  file:
+    state: directory
+    owner: "{{ item.owner | default('root') }}"
+    group: "{{ item.group | default('root') }}"
+    mode: "{{ item.mode | default('0775') }}"
+    path: "{{ item.path }}"
+  loop_control:
+    label: "{{ item.path | default(item.name) }}"
+  with_items: "{{ proxmox_storage.dir + proxmox_storage.nfs }}"
+  when:
+    - "'path' in item"
+  tags:
+    - proxmox-config
+
+- name: config files
   template:
-    src: user.cfg.j2
-    dest: /etc/pve/user.cfg
+    src: "{{ item }}.j2"
+    dest: /etc/pve/{{ item }}
     owner: root
     group: www-data #???
     mode: 0640
+  loop_control:
+    label: "{{ item }}"
+  with_items:
+    - user.cfg
+    - storage.cfg
   tags:
-    - proxmox-users
+    - proxmox-config
+
+- name: configure vmbr0 bridge interface
+  template:
+    src: interfaces.j2
+    dest: /etc/network/interfaces
+    owner: root
+    group: root
+    mode: 0644
+  register: vmbr0
+  tags:
+    - vmbr0
+
+- name: prompt to reboot or reload network
+  pause:
+    prompt: "vmbr0 interface changed, reboot or reload network"
+  when: vmbr0.changed|default(false) and not ansible_check_mode
+  tags:
+    - vmbr
+
+
+- name: install ceph
+  apt:
+    name:
+      - ceph
+      - nvme-cli
+      - gdisk
+      - python3-ceph
+    state: present
+  tags:
+    - package
+    - proxmox-ceph

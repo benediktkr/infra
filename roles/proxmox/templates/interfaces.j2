@@ -1,0 +1,17 @@
+
+# ansible managed
+
+source /etc/network/interfaces.d/*
+
+auto lo
+iface lo inet loopback
+
+iface {{ main_iface }} inet manual
+
+auto vmbr0
+iface vmbr0 inet static
+        address  {{ ansible_default_ipv4.address }}/{{ ansible_default_ipv4.prefix }}
+        gateway  {{ ansible_default_ipv4.gateway }}
+        bridge-ports {{ main_iface }}
+        bridge-stp off
+        bridge-fd 0

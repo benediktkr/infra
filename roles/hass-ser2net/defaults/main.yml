@@ -1,0 +1,7 @@
+---
+
+hass_ser2net_zwave: true
+hass_ser2net_zigbee: true
+hass_ser2net_port_zwave: 30802
+hass_ser2net_port_zigbee: 30803
+

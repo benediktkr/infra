@@ -1,0 +1,24 @@
+blueprint:
+  name: Low battery level detection & notification for all battery sensors
+  description: Regularly test all sensors with 'battery' device-class for crossing
+    a certain battery level threshold and if so execute an action.
+  domain: automation
+  input:
+    threshold:
+      name: Battery warning level threshold
+      description: Battery sensors below threshold are assumed to be low-battery (as
+        well as binary battery sensors with value 'on').
+      default: 20
+      selector:
+        number:
+          min: 5.0
+          max: 100.0
+          unit_of_measurement: '%'
+          mode: slider
+          step: 5.0
+    time:
+      name: Time to test on
+      description: Test is run at configured time
+      default: '10:00:00'
+      selector:
+        time: {}

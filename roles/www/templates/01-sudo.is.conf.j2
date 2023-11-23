@@ -71,6 +71,10 @@ server {
 
     }
 
+    location /docs {
+        error_page 404 /docs/404.html;
+    }
+
     location /cal/ {
         include /etc/nginx/require_auth.conf;
         include /etc/nginx/require_auth_proxy.conf;
@@ -80,12 +84,13 @@ server {
         {% set radicale_port = hostvars[radicale_hostname]['radicale_port'] -%}
         proxy_pass http://{{ radicale_upstream }}:{{ radicale_port }}/;
 
+        proxy_set_header X-Script-Name /cal;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Remote-User $authelia_user;
         proxy_set_header Authorization "Basic dXNlcjo=";
         proxy_set_header Host $http_host;
 
-         add_header X-Remote-User $authelia_user always;
+        add_header X-Remote-User $authelia_user always;
    }
 
     location /_media {
@@ -94,6 +99,10 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Remote-User $authelia_user;
         proxy_pass https://{{ hass_url }};
+    }
+
+    location /esphome {
+        add_header "content-security-policy" "*";
     }
 
     location /api {
@@ -126,10 +135,10 @@ server {
 
     }
 
-    location /{{ www_stream }} {
-        include /etc/nginx/require_auth.conf;
-        proxy_pass https://{{ owntone_url }}/{{ www_stream_owntone }};
-    }
+    #location /{{ www_stream }} {
+    #    include /etc/nginx/require_auth.conf;
+    #    proxy_pass https://{{ owntone_url }}/{{ www_stream_owntone }};
+    #}
     location ~* ^.+\.json$ {
         add_header Content-Type application/json;
     }

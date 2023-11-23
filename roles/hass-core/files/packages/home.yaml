@@ -1,0 +1,215 @@
+---
+
+input_boolean:
+  guest_mode:
+    name: guest_mode
+    icon: mdi:account
+  guest_mode_bedroom:
+    name: guest_mode_bedroom
+    icon: mdi:account
+
+sensor:
+  - name: esphome_ble_tracker_rasi_max
+    platform: statistics
+    entity_id: sensor.esphome_ble_tracker_rasi
+    state_characteristic: value_max
+    max_age:
+      minutes: 5
+
+template:
+  - binary_sensor:
+    - name: door_entrance
+      device_class: door
+      icon: |
+        {% if is_state(this.entity_id, "on") %}
+        mdi:door-open
+        {% else %}
+        mdi:door-closed
+        {% endif %}
+      availability: >-
+        {{
+          has_value("binary_sensor.door_hallway_entrance_1")
+          or has_value("binary_sensor.door_hallway_entrance_2")
+        }}
+      state: >-
+        {# off == closed #}
+        {% set open1 = is_state("binary_sensor.door_hallway_entrance_1", "on") %}
+        {% set open2 = is_state("binary_sensor.door_hallway_entrance_2", "on") %}
+        {{
+          open1 or open2
+        }}
+      attributes:
+        door_hallway_entrance_1: ABUS, left side.
+        door_hallway_entrance_2: Eurotronic, on top of door, same corner.
+
+  - sensor:
+      - name: esphome_ble_tracker_rasi
+        unit_of_measurement: dBm
+        device_class: signal_strength
+        state_class: measurement
+        availability: >-
+          {{ 
+          has_value("sensor.esphome_bleproxy_json_ble_scanner") 
+          and not is_state("sensor.esphome_bleproxy_json_ble_scanner", "unknown")
+          }}
+        state: >-
+          {% set s = states("sensor.esphome_bleproxy_json_ble_scanner") %}
+          {% if s.startswith("{") and s.endswith("}") and '":"' in s %}
+          {% set j = s | from_json %}
+          {% if is_number(j.rssi) %}
+          {{ j.rssi|int }}
+          {% else %}
+          {{ states("sensor.esphome_ble_tracker_rasi") or -100 }}
+          {% endif %} 
+          {% else %}
+          {{ states("sensor.esphome_ble_tracker_rasi") or -100 }}
+          {% endif %} 
+        # attributes:
+        #  {{ states("sensor.esphome_bleproxy_json_ble_scanner") }} 
+
+      - name: esphome_ble_tracker_rasi_signal
+        unit_of_measurement: "%"
+        state_class: measurement
+        device_class: "power_factor"
+        availability: >-
+          {{ 
+          has_value("sensor.esphome_ble_tracker_rasi_max") 
+          and is_number(states("sensor.esphome_ble_tracker_rasi_max"))
+          }}
+        state: >-
+          {% set rssi_max = states("sensor.esphome_ble_tracker_rasi_max") | round(0) %}
+          {{ min(max(2 * (rssi_max + 100.0), 0.0) | round(1), 100.0) | round(0) }}
+
+      - name: esphome_ble_tracker_namei
+        unique_id: esphome_ble_tracker_namei
+        state: >-
+          {% set s = states("sensor.esphome_bleproxy_json_ble_scanner") %}
+          {% set last = states("sensor.esphome_ble_tracker_namei") or "" %}
+          {% if s.startswith("{") and s.endswith("}") and '":"' in s %}
+          {% set j = s|from_json %}
+          {{ j.name|default(last) }}
+          {% else %}
+          {{ last }}
+          {% endif %}
+
+      #- name: battery_level_phone_ben
+      #  availability: >-
+      #    {{
+      #    states('sensor.companion_battery_level_phone_ben') is defined
+      #    and is_number(states('sensor.companion_battery_level_phone_ben'))
+      #    }}
+      #  device_class: "battery"
+      #  unit_of_measurement: "%"
+      #  state_class: measurement
+      #  state: >-
+      #    {{ states('sensor.companion_battery_level_phone_ben') | round(0) | int }}
+
+
+  - binary_sensor:
+      #- name: esphome_ble_headset
+      #  device_class: connectivity
+      #  delay_off: "00:30:00"
+      #  icon: |
+      #    {% if is_state(this.entity_id, "on") %}
+      #    mdi:headset
+      #    {% else %}
+      #    mdi:headset-off
+      #    {% endif %}
+      #  state: >-
+      #    {% set s = states("sensor.esphome_bleproxy_json_ble_scanner") %}
+      #    {% if s.startswith("{") and s.endswith("}") and '":"' in s %}
+      #    {% set j = s | from_json %}
+      #    {% set n = j.name | default("") | string %}
+      #    {% set a = j.address | default("") | string %}
+      #    {{ 
+      #      "OpenComm2" in n 
+      #      or "OpenComm2" in s
+      #      or j.address == "C0:86:B3:90:82:3E"
+      #      or j.address == "5B:C6:F0:EC:32:8B"
+      #    }}
+      #    {% else %}
+      #    false
+      #    {% endif %} 
+      #  attributes:
+      #    delay_off: 30m
+      
+      - name: zwave_traffic_high
+        device_class: problem
+        availability: >-
+          {{ is_number(states("sensor.ok_rx_per_min_controller")) }}
+        state: >-
+          {% set rx_rate = states("sensor.ok_rx_per_min_controller") %}
+          {{ rx_rate|float > 4 }}
+
+      - name: home_problems_need_attention
+        device_class: problem
+        availability: >-
+          {{ state_attr(this.entity_id, "problems") is defined }}
+        state: >-
+          {% set p = state_attr(this.entity_id, "problems") or [] %}
+          {{ p | length > 0 }}
+        attributes:
+          # "binary_sensor.mold_livingroom" 
+          problems: >-
+            {% set entity_ids = [
+              "binary_sensor.smoke_hallway",
+              "binary_sensor.smoke_bedroom",
+              "binary_sensor.door_left_open",
+              "binary_sensor.dead_smoke_detectors",
+            ] %}
+            {% set private_entity_ids = state_attr("private_problems", "entity_ids") or [] %}
+            {% set l = entity_ids + private_entity_ids|list %}
+            {{ l | reject("is_state", "off") | list }}
+
+      - name: home_guest_mode
+        icon: >-
+          {% if is_state(this.entity_id, 'off') or false %}
+          mdi:account-circle-outline
+          {% else %}
+          mdi:account-circle
+          {% endif %}
+        availability: >-
+          {{ state_attr("sensor.home", "guests_home") is defined }}
+        state: >-
+          {{ is_state_attr("sensor.home", "guests_home", true) }}
+        attributes:
+          source_entity_id: "sensor.home"
+
+
+homeassistant:
+  customize:
+
+    binary_sensor.door_entrance:
+      friendly_name: "Entrance door"
+      templated: true
+      package: "home"
+
+    #sensor.battery_level_phone_ben:
+    #  friendly_name: "Battery level"
+    #  templated: true
+    #  package: "home"
+    binary_sensor.zwave_traffic_high:
+      friendly_name: "Z-Wave traffic"
+      templated: true
+      package: "home"
+
+    binary_sensor.home_problems_need_attention:
+      friendly_name: "Problems need attention"
+      comment: work in progress
+      templated: true
+      package: "home"
+
+    binary_sensor.home_guest_mode:
+      friendly_name: "Guest mode"
+      templated: true
+      package: "home"
+
+    # input bools for guest_mode
+    input_boolean.guest_mode:
+      friendly_name: "Guest mode (manual set)"
+      templated: true
+      package: "home"
+    input_boolean.guest_mode_bedroom:
+      friendly_name: "Bedroom occupied by a guest"
+      templated: true
+      package: "home"

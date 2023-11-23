@@ -1,0 +1,273 @@
+---
+
+# https://github.com/esphome/feature-requests/issues/996
+# https://github.com/esphome/esphome/pull/3264
+# https://github.com/platformio/platform-espressif32/pull/736
+
+# https://github.com/esphome/issues/issues/4090
+# > press both buttons and release programming button, s2 mini set for programming
+
+# https://www.wemos.cc/en/latest/tutorials/s2/get_started_with_arduino_s2.html
+# hold 0, press reset, release 0
+
+# https://www.wemos.cc/en/latest/s2/s2_mini.html
+# https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf
+# see s2-mini-adc-pins.png for adc pins
+#  gpio1 to gpio14, gpio19+gpio20
+#  adc1: gpio110
+#  adc2: gpio11 to gpio14, gpio19+gpio20
+#  adc2: dac_2 dac_2 pins
+substitutions:
+  id_prefix: "{{ item.name.replace('-', '_') }}"
+  name: "{{ item.name }}"
+
+esphome:
+  name: "{{ item.name }}"
+  name_add_mac_suffix: false
+  # https://github.com/esphome/issues/issues/4090#issuecomment-1481944606
+  platformio_options:
+    upload_speed: 115200
+esp32:
+  # board: wemos_d1_mini32
+  # from: https://community.home-assistant.io/t/solved-sorta-how-can-i-create-a-uart-on-a-wemos-esp32-s2-mini/590797
+  # board: lolin_s2_mini  #esp32-s2-saola-1
+  # framework:
+  #  type: arduino
+  # https://github.com/vidplace7/esphome-wemos/blob/main/esp32-wemos-s2-mini.yaml
+  board: lolin_s2_mini
+  variant: esp32s2
+  framework:
+    # from screek's esphome config files
+    #type: arduino
+    #version: 2.0.9
+    #platform_version: 6.3.2
+    type: esp-idf
+    #platform_version: 5.3.0
+    #version: 4.4.3
+
+logger:
+  hardware_uart: uart0
+
+api:
+  # amount of time before rebooting when there are no api connections
+  reboot_timeout: "15min"
+  password: "{{ hass_esphome_api_password }}"
+  # encryption:
+  #   key: "{{ hass_esphome_api_encryption_key }}"
+
+ota:
+  password: "{{ hass_esphome_ota_password }}"
+
+wifi:
+  ssid: "{{ hass_esphome_wifi_ssid }}"
+  password: "{{ hass_esphome_wifi_password }}"
+  domain: .{{ inventory_hostname.split('.')[1:] | join('.') }}
+  #use_address:
+
+  ap:
+    password: "{{ hass_esphome_fallback_wifi_password }}"
+
+mdns:
+  disabled: true
+
+captive_portal:
+
+web_server:
+  port: 80
+  version: 2
+  include_internal: true
+  js_url: "https://www.{{ domain }}/esphome/webserver-v2.min.js"
+
+debug:
+  update_interval: 5s
+
+binary_sensor:
+  # ESPHome
+  - platform: status
+    name: "{{ item.name }} ESHome status"
+    entity_category: "diagnostic"
+    id: ${id_prefix}_status
+
+
+switch:
+  # ESPHome
+  - platform: restart
+    name: "{{ item.name }} Reboot"
+    icon: "mdi:power-cycle"
+  #- platform: gpio
+  #  pin: GPIO16
+  #  name: "{{ item.name }} GPIO 16"
+  #- platform: gpio
+  #  pin: GPIO18
+  #  name: "{{ item.name }} GPIO 18"
+  #- platform: gpio
+  #  pin: GPIO33
+  #  name: "{{ item.name }} GPIO 33"
+  - platform: gpio
+    pin: GPIO35
+    name: "{{ item.name }} GPIO 35"
+
+  - platform: factory_reset
+    name: "{{ item.name }} Factory Default Settings"
+
+.adc_2_63V: &adc_2_63V
+  platform: adc
+  update_interval: 0.05s
+  attenuation: "auto"
+  device_class: "power_factor"
+  unit_of_measurement: "%"
+  accuracy_decimals: 0
+  filters:
+    - delta: 0.01
+    - lambda: !lambda |-
+        return x-0.03;
+    - lambda: !lambda |-
+        return (x*100)/2.60;
+    - lambda: !lambda |-
+        if (x < 1) return 0;
+        if (x > 100) return 100;
+        return int(x);
+    - delta: 1.0
+
+sensor:
+  #- platform: adc
+  #  id: ${id_prefix}_pot
+  #  pin: GPIO02
+  #  name: "{{ item.name }} pot"
+  #  unit_of_measurement: "V"
+  #  update_interval: 0.05s
+  #  accuracy_decimals: 2
+  #  attenuation: "auto"
+  #  filters:
+  #    - delta: 0.01
+  
+  #- platform: copy
+  #  source_id: ${id_prefix}_pot
+  #  name: "{{ item.name }} pot position"
+  #  <<: *adc_2_63V
+  - pin: GPIO02
+    name: "{{ item.name }} pot position"
+    <<: *adc_2_63V
+
+  - pin: GPIO03
+    name: "{{ item.name }} pot 2 position"
+    <<: *adc_2_63V
+
+  # ESPHome
+  #- platform: debug
+  #  free:
+  #    name: "{{ item.name }} Heap Free"
+  #  block:
+  #    name: "{{ item.name }} Heap Max Block"
+  #  loop_time:
+  #    name: "{{ item.name }} Loop Time"
+  #  # esp8266 only
+  #  #fragmentation:
+  #  #  name: "{{ item.name }} Heap Fragmentation"
+
+  - platform: internal_temperature
+    name: "{{ item.name }} ESP Temperature"
+
+  - platform: wifi_signal
+    internal: true
+    name: "{{ item.name }} WiFi signal strength"
+    id: ${id_prefix}_wifi_signal_strength
+    update_interval: 60s
+    entity_category: "diagnostic"
+    unit_of_measurement: "dBm"
+    filters:
+      - throttle: 900s
+    # Reports the WiFi signal strength in %
+
+  - platform: copy
+    source_id: ${id_prefix}_wifi_signal_strength
+    name: "{{ item.name }} WiFi signal"
+    unit_of_measurement: "%"
+    device_class: power_factor
+    entity_category: "diagnostic"
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+
+button:
+  # ESPHome
+  #- platform: wake_on_lan
+  #  name: "{{ item.name }} Wake-on-LAN TV Livingroom"
+  #  target_mac_address: {{ s21_mac_samsung_tv }}
+
+
+text_sensor:
+  # ESPHome
+  - platform: debug
+    #device: 
+    #  name: "{{ item.name }} device info"
+    reset_reason:
+      name: "{{ item.name }} reset reason"
+  - platform: wifi_info
+    ip_address:
+      name: "{{ item.name }} IP address"
+      entity_category: "diagnostic"
+    ssid:
+      name: "{{ item.name }} SSID"
+      entity_category: "diagnostic"
+    mac_address:
+      name: "{{ item.name }} WiFi mac address"
+      entity_category: "diagnostic"
+    dns_address:
+      name: "{{ item.name }} DNS address"
+      entity_category: "diagnostic"
+  - platform: version
+    id: ${id_prefix}_version
+    entity_category: "diagnostic"
+    name: "{{ item.name }} ESPHome version"
+
+light:
+  - platform: monochromatic
+    name: "{{ item.name }} GPIO16 LED"
+    id: ${id_prefix}_light_gpio16_led
+    icon: mdi:led-outline
+    restore_mode: RESTORE_DEFAULT_OFF
+    output: ${id_prefix}_gpio16_led
+    default_transition_length: 1s
+
+  - platform: monochromatic
+    name: "{{ item.name }} GPIO18 LED"
+    id: ${id_prefix}_light_gpio18_led
+    icon: mdi:led-outline
+    restore_mode: RESTORE_DEFAULT_OFF
+    output: ${id_prefix}_gpio18_led
+    default_transition_length: 1s
+
+  - platform: monochromatic
+    name: "{{ item.name }} GPIO33 LED"
+    id: ${id_prefix}_light_gpio33_led
+    icon: mdi:led-outline
+    restore_mode: RESTORE_DEFAULT_OFF
+    output: ${id_prefix}_gpio33_led
+    default_transition_length: 1s
+
+  #- platform: monochromatic
+  #  name: "{{ item.name }} GPIO35 LED"
+  #  id: ${id_prefix}_light_gpio35_led
+  #  icon: mdi:led-outline
+  #  restore_mode: RESTORE_DEFAULT_OFF
+  #  output: ${id_prefix}_gpio35_led
+  #  default_transition_length: 1s
+
+output:
+  - platform: ledc
+    id: ${id_prefix}_gpio16_led
+    pin: GPIO16
+  - platform: ledc
+    id: ${id_prefix}_gpio18_led
+    pin: GPIO18
+  - platform: ledc
+    id: ${id_prefix}_gpio33_led
+    pin: GPIO33
+  #- platform: gpio
+  #  id: ${id_prefix}_gpio35_led
+  #  pin: GPIO35
+
+
+status_led:
+  pin:
+    number: GPIO15

@@ -1,0 +1,4 @@
+---
+
+- import_tasks: pve-guest.yml
+  tags: pve-guest

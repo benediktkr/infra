@@ -1,0 +1,21 @@
+---
+
+# https://devices.esphome.io/devices/Generic-PIR
+
+substitutions: 
+  pin_generic_motion: "19"
+  name_generic_motion: "Motion ${lower_node_name}"
+  generic_motion_delayed_on: "0s"
+  generic_motion_delayed_off: "0s"
+
+binary_sensor:
+  - platform: gpio
+    id: "motion_gpio_${pin_generic_motion}"
+    pin: "${pin_generic_motion}" 
+    name: "${name_generic_motion}"
+    device_class: motion
+    publish_initial_state: true
+    filters:
+      - delayed_on: "${generic_motion_delayed_on}"
+      - delayed_off: "${generic_motion_delayed_off}"
+

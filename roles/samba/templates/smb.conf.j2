@@ -2,18 +2,27 @@
 #
 {% if inventory_hostname in wg_clients %}
 {# wireguard_cidr #}
-{% set interfaces = samba_interfaces + [wg_clients[inventory_hostname].ip + "/24"] %}
+{% set wg_interfaces = [wg_clients[inventory_hostname].ip + "/24"] %}
 {% else %}
-{% set interfaces = samba_interfaces %}
+{% set wg_interfaces = [] %}
 {% endif %}
+
+{% set interfaces = samba_interfaces + wg_interfaces + [ansible_default_ipv4.address] %}
 
 #======================= Global Settings =======================
 
 [global]
 
+   {% set hostname = inventory_hostname.split(".")[0] -%}
+   {% set hostname_parts = hostname.split("-") -%}
+   {% if hostname_parts|length == 3 and hostname_parts[0]|length == 3 -%}
+   #netbios name = {{ hostname_parts[1] }}
+   {% else -%}
+   netbios name = {{ hostname | replace("-", "") }}
+   {% endif -%}
 
-   netbios name = {{ inventory_hostname | replace("-", "") }}
-   interfaces = 127.0.0.0/8 {{ interfaces | join(" ") }}
+   interfaces = 127.0.0.0/8 {{ interfaces | ansible.utils.ipaddr('private') | join(" ")}}
+
    #hosts allow = 192.168.21. 10.102.47.
    server string = {{ inventory_hostname.split('.')[0] }}
    unix charset = UTF-8
@@ -52,7 +61,9 @@
    printcap name = /dev/usb/lp0
    disable spoolss = yes
    # printing = cups
-   # printing = CUPS
+   {% if samba_cups %}
+   printing = CUPS
+   {% endif %}
    # printcap name = sambacap
    # printcap = cups
 
@@ -189,64 +200,32 @@
 ;   browseable = no
 ;   create mask = 0600
 ;   directory mask = 0700
-# [music]
-#     comment = music files
-#     path = /deadspace/music
-#     guest ok = yes
-#     browseable = yes
-#     read only = yes
+{% if samba_cups %}
 
-# [drivers]
-#     comment = printer files
-#     path = /srv/samba/drivers
-#     guest ok = yes
-#     browsable = yes
-#     read only = no
-#     writable = yes
+[drivers]
+    comment = printer files
+    path = /srv/samba/drivers
+    guest ok = yes
+    browsable = yes
+    read only = yes
+    writable = no
 
-# [printers]
-#    comment = All Printers
-#    path = /var/spool/samba
-#    guest ok = yes
-#    printable = yes
-
-
-# [sambaprint]
-#    comment = "raw printer for samba"
-#    path = /var/spool/samba
-#    guest ok = yes
-#    #guest only = yes
-#    writable = no
-#    printable = yes
-#    printer name = samba
-#    #force user = nobody
-
-# [shredder]
-#    comment = "in the study"
-#    path = /var/spool/samba
-#    guest ok = yes
-#    writable = no
-#    printable = yes
-#    printer name = hp-LaserJet-1010
-
-   #guest only = yes
-   #force user = nobody
-
-# [sambajet]
-#    path = /var/spool/samba
-#    guest ok = yes
-#    guest only = yes
-#    force user = nobody
-#    printable = yes
-#    browseable = yes
-
+[printers]
+    comment = All Printers
+    path = /var/spool/samba
+    browseable = yes
+    # to allow user 'guest account' to print.
+    guest ok = yes
+    writable = no
+    printable = yes
+    create mode = 0700
 
 # Uncomment to allow remote administration of Windows print drivers.
 # You may need to replace 'lpadmin' with the name of the group your
 # admin users are members of.
 # Please note that you also need to set appropriate Unix permissions
 # to the drivers directory for these users to have write rights in it
-;   write list = root, @lpadmin
+   write list = root, @lpadmin
 
 
 # Windows clients look for this share name as a source of downloadable
@@ -258,17 +237,18 @@
    browseable = yes
    read only = no
    writable = yes
+{% endif %}
 
 # Enables the default home directory shares. This will share each
 # user's home directory as \\server\username
-# [homes]
-#    comment = Home Directories
-#    browseable = no
-#    create mask = 0700
-#    directory mask = 0700
-#    valid users = %S
-#    guest ok = no
-#    inherit owner = yes
+[homes]
+   comment = Home Directories
+   browseable = no
+   create mask = 0700
+   directory mask = 0700
+   valid users = %S
+   guest ok = no
+   inherit owner = yes
 {% for item in samba_shares %}
 
 [{{ item.name }}]

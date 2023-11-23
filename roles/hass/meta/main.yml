@@ -1,12 +1,13 @@
 ---
 
 dependencies:
-  - hass-nginx
-  - hass-utils
-  - hass-zwave
-  - hass-esphome
-  - hass-mqtt
-  - hass-zigbee
-
-  - hass-usbip
-  - hass-rtl433
+    - hass-zwave
+    - hass-zigbee
+    - hass-rtl433
+    - hass-mqtt
+    - hass-utils
+    - hass-esphome
+    - hass-core
+    - hass-appdaemon
+    - hass-nginx
+    #- hass-usbip

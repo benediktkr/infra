@@ -33,12 +33,17 @@
   notify: restart telegraf
   tags: users
 
-- name: install humanize
+- name: install humanize in virtualenv
   pip:
     name: humanize
     state: present
-    executable: pip3
+    virtualenv: /var/lib/virtualens/telegraf-scripts
+    virtualenv_site_packages: false 
+    virtualenv_command: python3 -m venv
+  when: not ansible_check_mode
   tags:
+    - venvs
+    - virtualenvs
     - pip
     - packages
     - pip-latest
@@ -114,18 +119,21 @@
     - influx-repo
     - packages
 
-- name: get influxdb key
-  get_url:
-    url:  https://repos.influxdata.com/influxdb.key
-    dest: /etc/apt/trusted.gpg.d/influxdb.asc
-  tags:
-    - influx-repo
-    - packages
+#- name: get influxdb key
+#  get_url:
+#    url:  https://repos.influxdata.com/influxdb.key
+#    dest: /etc/apt/trusted.gpg.d/influxdb.asc
+#  tags:
+#    - influx-repo
+#    - packages
 
-- name: get dearmored influxdb key (the key downloaded in the other task doesnt work)
-  command:
-    cmd: gpg --no-default-keyring --keyring /usr/share/keyrings/influxdb-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys D8FF8E1F7DF8B07E
-    creates: /usr/share/keyrings/influxdb-archive-keyring.gpg
+- name: install dearmored influxdb key
+  copy:
+    src: influxdb-archive-keyring.gpg
+    dest: /usr/share/keyrings/influxdb-archive-keyring.gpg
+    owner: root
+    group: root
+    mode: '0644'
   tags:
     - influx-repo
     - packages

@@ -1,0 +1,233 @@
+---
+
+homeassistant:
+  customize:
+    package.node_anchors:
+      common_attrs: &common_attrs
+        package: adaptiv_lightning
+      common_attrs_templated: &common_attrs_templated
+        templated: true
+        <<: *common_attrs
+
+    sensor.usual_lights_brightness:
+      friendly_name: The Usual Lights brightness
+      <<: *common_attrs_templated
+    sensor.illuminance_balcony:
+      friendly_name: Balcony illuminance
+      icon: mdi:sun-wireless
+      <<: *common_attrs
+    sensor.illuminance_balcony_pct:
+      friendly_name: Balcony illuminance percent
+      <<: *common_attrs_templated
+    sensor.sun_zenith_pct:
+      friendly_name: Sun zenith percent (daylight)
+      <<: *common_attrs_templated
+    sensor.sun_pct:
+      friendly_name: Sun elevation
+      <<: *common_attrs_templated
+    sensor.sun_zenith:
+      friendly_name: Sun zenith angle (elevation)
+      <<: *common_attrs_templated
+    sensor.lights_adaptive_brightness:
+      friendly_name: Adaptive brightness
+
+sensor:
+  - name: illuminance_balcony_highest
+    platform: statistics
+    entity_id: sensor.illuminance_balcony
+    state_characteristic: value_max
+    max_age:
+      hours: 24
+
+  - name: sun_zenith_highest
+    platform: statistics
+    entity_id: sensor.sun_zenith
+    state_characteristic: value_max
+    max_age:
+      hours: 24
+
+  - name: sun_zenith_lowest
+    platform: statistics
+    entity_id: sensor.sun_zenith
+    state_characteristic: value_min
+    max_age:
+      hours: 24
+
+template:
+  - sensor:
+      - name: usual_lights_brightness
+        unit_of_measurement: "%"
+        state_class: measurement
+        availability: >-
+          {% set st = states("light.the_usual_lights") %}
+          {{ st == "on" or st == "off" }}
+        icon: >-
+          {% if is_state("light.the_usual_lights", "on") %}
+          mdi:lightbulb-group
+          {% else %}
+          mdi:lightbulb-group-off
+          {% endif %}
+        state: >-
+          {% set brightness = state_attr("light.the_usual_lights", "brightness")  %}
+          {% if brightness == none %}
+          0
+          {% else %}
+          {% set pct = brightness|int / 255 * 100 %}
+          {{ pct | default(0) | round(0) | int }}
+          {% endif %}
+
+      - name: sun_zenith
+        unit_of_measurement: "°"
+        state_class: measurement
+        availability: >-
+          {{ is_number(state_attr("sun.sun", "elevation")) }}
+        icon: >-
+          {% if states("sun.sun") == "above_horizon" %}
+            {% if state_attr("sun.sun", "rising") %}
+            mdi:weather-sunset-up
+            {% else %}
+            mdi:white-balance-sunny
+            {% endif %}
+          {% else %}
+          mdi:moon-waning-crescent
+          {% endif%}
+        state: >-
+          {{ state_attr("sun.sun", "elevation") | float(0.0) }}
+        attributes:
+          below_horizon: >-
+            {{ states("sun.sun") == "below_horizon" }}
+          setting: >-
+            {{ state_attr("sun.sun", "rising") == false }}
+
+      # - name: sun_position
+      #   state_class: measurement
+      #   icon: mdi:white-balance-sunny
+      #   state: >-
+      #     {{ state_attr("switch.adaptive_lighting_adapt_brightness_home", "sun_position") }}
+
+      - name: sun_pct
+        unit_of_measurement: "%"
+        state_class: measurement
+        availability: >-
+          {{ is_number(states("sensor.sun_zenith")) and is_number(states("sensor.sun_zenith_highest")) }}
+        icon: >-
+          {{ state_attr("sensor.sun_zenith", "icon") }}
+        state: >-
+          {% set sun_highest = states("sensor.sun_zenith_highest") | float(1.0) %}
+          {% set sun_zenith = states("sensor.sun_zenith") | float(0.0) %}
+          {% set pct = max(sun_zenith, 0) / sun_highest * 100.0 %}
+          {{ pct|round(1) }}
+
+      - name: sun_zenith_pct
+        unit_of_measurement: "%"
+        state_class: measurement
+        availability: >-
+          {{ is_number(states("sensor.sun_pct")) }}
+        icon: >-
+          {{ state_attr("sensor.sun_pct", "icon") }}
+        state: >-
+          {% set daylight_pct = states("sensor.sun_pct") | round(1) %}
+          {{ max(0, daylight_pct) | abs | round(1) }}
+
+      - name: illuminance_balcony_pct
+        unit_of_measurement: "%"
+        state_class: measurement
+        availability: >-
+          {{ is_number(states("sensor.illuminance_balcony")) and is_number(states("sensor.illuminance_balcony_highest")) }}
+        icon: >-
+          {{ state_attr("sensor.illuminance_balcony", "icon") }}
+        state: >-
+          {% set illum_highest = states("sensor.illuminance_balcony_highest") | float(1.0) %}
+          {% set illum_current = states("sensor.illuminance_balcony") | float(0.0) %}
+          {% set illum_pct = max(illum_current, 0) / illum_highest * 100.0 %}
+          {{ max(0, illum_pct) | abs | round(1) }}
+
+
+      - name: lights_adaptive_brightness
+        unit_of_measurement: "%"
+        state_class: measurement
+        icon: >-
+          {% if is_number(states(this.entity_id)) == false %}
+          mdi:lightbulb-question-outline
+          {% elif states(this.entity_id) | round(0) > 0 %} 
+          mdi:lightbulb-auto
+          {% else %}
+          mdi:lightbulb-auto-outline
+          {% endif %}  
+        availability: >-
+          {{ is_number(states("sensor.sun_pct")) }}
+        state: >-
+          {% set sun = states("sensor.sun_zenith_pct")|round(0) %}
+          {# set balcony = states("sensor.illuminance_balcony_pct") #}
+          {% set sun_abs = sun|abs %}
+          {% if sun_abs < 50.0 %}
+          {{ (sun_abs * 2.0) | round(1) }}
+          {% else %}
+          {{ (sun_abs / 2.0) | round(1) }}
+          {% endif %}
+
+      # - name: sun_time_until_dawn
+      #   unit_of_measurement: minutes
+      #   device_class: timestamp
+      #   state_class: measurement
+      #   state: >-
+      #     {% set sun_dawn = state_attr("sun.sun", "next_dawn") | as_datetime %}
+      #     {% set dt = sun_dawn - now() %}
+      #     {{ dt.isoformat() }}
+      #   attributes:
+      #     friendly_name: "Time until dawn"
+
+      # - name: sun_time_until_dusk
+      #   unit_of_measurement: minutes
+      #   device_class: timestamp
+      #   state_class: measurement
+      #   state: >-
+      #     {% set sun_dusk = state_attr("sun.sun", "next_dusk") | as_datetime %}
+      #     {% set dt = sun_dusk - now() %}
+      #     {{ dt.isoformat() }}
+      #   attributes:
+      #     friendly_name: "Time until dusk"
+
+      # - name: sun_time_until_midnight
+      #   state_class: measurement
+      #   device_class: timestamp
+      #   unit_of_measurement: minutes
+      #   state: >-
+      #     {% set sun_midnight = state_attr("sun.sun", "next_midnight") | as_datetime %}
+      #     {% set dt = sun_midnight - now() %}
+      #     {{ dt.isoformat() }}
+      #   attributes:
+      #     friendly_name: "Time until midnight"
+
+      # - name: sun_time_until_noon
+      #   unit_of_measurement: minutes
+      #   state_class: measurement
+      #   device_class: timestamp
+      #   state: >-
+      #     {% set sun_noon = state_attr("sun.sun", "next_noon") | as_datetime %}
+      #     {% set dt = now() - sun_noon - now() %}
+      #     {{ dt.isoformat() }}
+      #   attributes:
+      #     friendly_name: "Time until noon"
+
+      # - name: sun_time_until_rising
+      #   unit_of_measurement: minutes
+      #   device_class: timestamp
+      #   state_class: measurement
+      #   state: >-
+      #     {% set sun_rising = state_attr("sun.sun", "next_rising") | as_datetime %}
+      #     {% set dt = sun_rising - now() %}
+      #     {{ dt.isoformat() }}
+      #   attributes:
+      #     friendly_name: "Time until rising"
+
+      # - name: sun_time_until_setting
+      #   unit_of_measurement: minutes
+      #   device_class: timestamp
+      #   state_class: measurement
+      #   state: >-
+      #     {% set sun_setting = state_attr("sun.sun", "next_setting") | as_datetime %}
+      #     {% sun_setting - now() %}
+      #     {{ dt.isoformat() }}
+      #   attributes:
+      #     friendly_name: "Time until setting"

@@ -1,0 +1,4 @@
+---
+ - import_tasks: rpi-wifi-brcm.yml
+   tags:
+     - rpi-wifi-brcm.yml

@@ -1,0 +1,71 @@
+---
+
+automation:
+  - alias: buzzer_normally_closed
+    id: buzzer_normally_closed
+    description: "keep the buzzer switch closed"
+    mode: single
+    trigger:
+      - platform: state
+        entity_id:
+          - switch.doorbell_buzzer
+        to: "on"
+        for:
+          hours: 0
+          minutes: 0
+          seconds: 1
+    condition: []
+    action:
+      - service: switch.turn_off
+        data: {}
+        target:
+          entity_id: switch.doorbell_buzzer
+
+script:
+  momentary_switch:
+    icon: mdi:button-pointer
+    mode: parallel
+    sequence:
+      - service: switch.toggle
+        target:
+          entity_id: "{{ target_switch }}"
+      - delay:
+          milliseconds: "{{ press_for_ms | int }}"
+      - service: switch.toggle
+        target:
+          entity_id: "{{ target_switch }}"
+    fields:
+      target_switch:
+        description: >-
+          entity_id of the switch to toggle like a button (a list of
+          entity_id's also works)
+        example: switch.smart_implant_out1
+      press_for_ms:
+        description: how long to press the button, in milliseconds
+        default: 200
+
+template:
+  - binary_sensor:
+      - name: doorbell_buzzer
+        state: >-
+          {{ is_state("switch.doorbell_buzzer", "on") }}
+        icon: >-
+          {% if is_state("switch.doorbell_buzzer", "on") %}
+          mdi:electric-switch-closed
+          {% else %}
+          mdi:electric-switch
+          {% endif %}
+
+  - button:
+      name: doorbell_buzzer
+      icon: >-
+        {% if is_state("switch.doorbell_buzzer", "on") %}
+        mdi:electric-switch-closed
+        {% else %}
+        mdi:electric-switch
+        {% endif %}
+      press:
+        - service: script.momentary_switch
+          data:
+            target_switch: switch.doorbell_buzzer
+            press_for_ms: 200

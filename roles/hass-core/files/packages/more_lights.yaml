@@ -1,0 +1,346 @@
+---
+homeassistant:
+  customize:
+    package.node_anchors:
+      common_attrs: &common_attrs
+        package: "more_lights"
+      zwave_attrs: &zwave_attrs
+        proto: "Z-Wave"
+        <<: *common_attrs
+      zigbee_attrs: &zigbee_attrs
+        proto: "Zigbee"
+        <<: *common_attrs
+
+      binary_sensor_manual_light: &binary_sensor_manual_light
+        state: >-
+          {{
+          trigger.platform == "state"
+          and states(this.entity_id) is not none
+          and (
+            trigger.entity_id is defined
+            and trigger.entity_id is string
+            and trigger.entity_id.split('.')[0] == "light"
+          )
+          and (
+            trigger.from_state is defined
+            and trigger.from_state.state is defined
+            and trigger.from_state.state in ['on', 'off']
+          )
+          and (
+            trigger.to_state is defined
+            and trigger.to_state.state is defined
+            and trigger.to_state.state in ['on', 'off']
+          )
+          and (
+            trigger.to_state.context is defined
+            and trigger.to_state.context.id is not none
+            and trigger.to_state.context.parent_id is none
+            and trigger.to_state.context.user_id is none
+            )
+          }}
+        icon: >-
+          {% if this.state is true %}
+          mdi:head-lightbulb
+          {% else %}
+          mdi:lightbulb-auto
+          {% endif %}
+        attributes:
+          # trigger: >-
+          #   {{ trigger }}
+          # this: >-
+          #   {{ this }}
+          this_context_id: >-
+            {{ this.context.id is not none }}
+          this_context_parent_id: >-
+            {{ this.context.parent_id is not none }}
+          this_context_user_id: >-
+            {{ this.context.user_id is not none }}
+          trigger_to_state_context_id: >-
+            {{ trigger.to_state.context.id is not none }}
+          trigger_to_state_context_parent_id: >-
+            {{ trigger.to_state.context.parent_id is not none }}
+          trigger_to_state_context_user_id: >-
+            {{ trigger.to_state.context.user_id is not none }}
+          trigger_to_state: >-
+            {{ trigger.to_state.state }}
+          trigger_entity_id: >-
+            {{ trigger.entity_id }}
+          last: >-
+            {{ now() }}
+
+    # binary_sensor.light_${room}_manual_lightswitch
+    binary_sensor.manual_light_bathroom:
+      friendly_name: Bathroom lights are set manually
+      templated: true
+      <<: *common_attrs
+    binary_sensor.manual_light_bedroom:
+      friendly_name: Bedroom lights are set manually
+      templated: true
+      <<: *common_attrs
+    binary_sensor.manual_light_livingroom:
+      friendly_name: Livingroom lights are set manually
+      templated: true
+      <<: *common_attrs
+    binary_sensor.manual_light_study:
+      friendly_name: Study lights are set manually
+      templated: true
+      <<: *common_attrs
+
+    # lights
+    light.bathroom_ceiling:
+      friendly_name: "Bathroom ceiling light"
+      icon: "mdi:wall-sconce-flat"
+      <<: *zwave_attrs
+
+    light.bedroom_ben_belid:
+      friendly_name: "Ben's Belid lamp"
+      icon: "mdi:lamp"
+      comment: >-
+        Original Belid! But with new electrical
+      group_notes: >-
+        Removed the "multilevel" group association
+        And then added it back, as well as group for i2 notifications.
+      <<: *zwave_attrs
+
+    light.bedroom_ceiling:
+      friendly_name: "Bedroom ceiling light"
+      icon: "mdi:ceiling-light"
+      <<: *zwave_attrs
+
+    light.livingroom_ceiling:
+      friendly_name: "Livingroom ceiling light"
+      icon: "mdi:ceiling-light"
+      <<: *zwave_attrs
+    sensor.electric_kWh_light_livingroom_ceiling:
+      friendly_name: "Livingroom Ceiling light Electric [kWh]"
+      <<: *zwave_attrs
+    sensor.electric_w_light_livingroom_ceiling:
+      friendly_name: "Livingroom Ceiling light Electric [W]"
+      <<: *zwave_attrs
+    sensor.ok_rx_per_min_light_livingroom_ceiling:
+      friendly_name: "Livingroom Ceiling light Successful commands/min (RX)"
+      <<: *zwave_attrs
+
+    light.study_ceiling:
+      friendly_name: "Study ceiling light"
+      icon: "mdi:ceiling-light"
+      <<: *zwave_attrs
+
+    light.study_desk_lamp:
+      friendly_name: "Study desk lamp"
+      icon: "mdi:desk-lamp"
+      <<: *zigbee_attrs
+
+    light.livingroom_lamps:
+      friendly_name: "Livingroom lamps"
+      icon: "mdi:floor-lamp"
+      <<: *zwave_attrs
+    light.lamps_livingroom:
+      friendly_name: "Legacy name for livingroom lamps"
+      icon: "mdi:floor-lamp"
+      <<: *common_attrs
+
+    light.hallway_fairy:
+      friendly_name: "Hallway fairy lights"
+      icon: "mdi:ceiling-light"
+      <<: *zwave_attrs
+
+    light.hallway_lamps:
+      friendly_name: "Hallway lamps"
+      icon: "mdi:lamp"
+      <<: *zwave_attrs
+
+    light.kitchen:
+      friendly_name: "Kitchen lights"
+      icon: "mdi:fridge-outline"
+      <<: *common_attrs
+
+    light.bens_bedside_lamp:
+      icon: "mdi:lamp"
+      <<: *zwave_attrs
+
+    # binary_sensor
+    binary_sendor.light_bedroom_ceiling:
+      friendly_name: "Bedroom ceiling lights enabled"
+      <<: *zwave_attrs
+    binary_sendor.light_bedroom_ceiling_disabled:
+      friendly_name: "Bedroom ceiling lights have been disabled"
+      <<: *zwave_attrs
+
+
+    # groups
+    light.the_usual_lights:
+      friendly_name: The usual lights
+      icon: "mdi:lightbulb-group"
+      <<: *common_attrs
+
+    # automations
+    automation.bedroom_ceiling_light_turns_on_belid:
+      icon: "mdi:ceiling-light-multiple-outline"
+      <<: *common_attrs
+
+light:
+  # legacy name, no time to go through and change right now
+  - platform: group
+    name: lamps_livingroom
+    entities:
+      - light.livingroom_lamps
+
+  - platform: group
+    name: the_usual_lights
+    unique_id: the usual_lights
+    entities:
+      - light.livingroom_lamps
+      - light.study_desk_lamp
+      - light.hallway_lamps
+      - light.livingroom_ceiling
+      - light.hallway_ceiling
+      - light.hallway_fairy
+      - light.study_ceiling
+      - light.study_shelves
+      - light.usb_led_string_1
+
+script:
+  blackout_disable_light_bedroom_ceiling:
+    # regular values:
+    # min_dim = 13
+    # max_dim = 99
+    # dim_time_soft = 80
+    # normal_dimming_duration = 0
+    alias: blackout_disable_light_bedroom_ceiling
+    icon: mdi:lightbulb-off-outline
+    mode: single
+    sequence:
+      - if:
+          - condition: state
+            entity_id: light.bedroom_ceiling
+            state: "on"
+        then:
+          - service: light.turn_off
+            data: {}
+            target:
+              entity_id: light.bedroom_ceiling
+      - service: number.set_value
+        data:
+          value: "0"
+        target:
+          entity_id:
+            - number.min_dimming_value_light_bedroom_ceiling
+      - service: number.set_value
+        data:
+          value: "0"
+        target:
+          entity_id:
+            - number.max_dimming_value_light_bedroom_ceiling
+      #- service: number.set_value
+      #  data:
+      #    value: "127"
+      #  target:
+      #    entity_id: number.dimming_rate_light_bedroom_ceiling
+
+
+automation:
+  - alias: bedroom_ceiling_light_turns_on_belid
+    # id enables traces
+    id: bedroom_ceiling_light_turns_on_belid
+    description: >-
+      turn on the belid lamp when the ceiling lights are turned on
+    trigger:
+      - platform: state
+        entity_id:
+          - light.bedroom_ceiling
+        from: "off"
+        to: "on"
+    condition:
+      - condition: state
+        entity_id: binary_sensor.morning_alarm_running
+        state: "off"
+      #- condition: time
+      #  after: input_datetime.alarm_morning_workday
+      - condition: state
+        entity_id: light.bedroom_ben_belid
+        state: "off"
+      - condition: state
+        entity_id: binary_sensor.light_bedroom_ceiling_disabled
+        state: "off"
+    action:
+      - service: light.turn_on
+        data: {}
+        target:
+          entity_id: light.bedroom_ben_belid
+
+template:
+  - trigger:
+      - platform: state
+        entity_id: light.bathroom_ceiling
+      # - platform: homeassistant
+      #   event: start
+    binary_sensor:
+      - unique_id: manual_light_bathroom
+        name: manual_light_bathroom
+        <<: *binary_sensor_manual_light
+
+  - trigger:
+      - platform: state
+        entity_id: light.bedroom_ceiling
+    binary_sensor:
+      - unique_id: manual_light_bedroom
+        name: manual_light_bedroom
+        <<: *binary_sensor_manual_light
+
+  - trigger:
+      - platform: state
+        entity_id: light.livingroom_ceiling
+    binary_sensor:
+      - unique_id: manual_light_livingroom
+        name: manual_light_livingroom
+        <<: *binary_sensor_manual_light
+
+  - trigger:
+      - platform: state
+        entity_id: light.study_ceiling
+    binary_sensor:
+      - unique_id: manual_light_study
+        name: manual_light_study
+        <<: *binary_sensor_manual_light
+
+  - binary_sensor:
+      # max value for "dimming duration": 127
+      # min value for "min dimming value": 1
+      # min value for "max dimming value": 2
+      - name: light_bedroom_ceiling_disabled
+        icon: >-
+          {% if is_state(this.entity_id, "on") %}
+          mdi:lightbulb-off-outline
+          {% else %}
+          mdi:lightbulb-auto
+          {% endif %}
+        state: >-
+          {% set max_dim = states("number.max_dimming_value_light_bedroom_ceiling") | int(None) %}
+          {% set min_dim = states("number.min_dimming_value_light_bedroom_ceiling") | int(None) %}
+          {{
+          is_number(max_dim)
+          and is_number(min_dim)
+          and (
+            max_dim == 0
+            and min_dim == 0
+          )
+          }}
+  
+  - binary_sensor:
+      # max value for "dimming duration": 127
+      # min value for "min dimming value": 1
+      # min value for "max dimming value": 2
+      - name: light_bedroom_ceiling
+        icon: >-
+          {% if is_state(this.entity_id, "on") %}
+          mdi:lightbulb-auto
+          {% else %}
+          mdi:lightbulb-off-outline
+          {% endif %}
+        state: >-
+          {{ is_state("binary_sensor.light_bedroom_ceiling_disabled", "off") }}
+
+
+# https://www.home-assistant.io/integrations/device_sun_light_trigger/
+# device_sun_light_trigger:

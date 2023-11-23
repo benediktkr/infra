@@ -1,0 +1,11 @@
+---
+
+
+homeassistant:
+  customize:
+    package.node_anchors:
+      common_attrs: &common_attrs
+        package: "heating"
+      common_attrs_templated: &common_attrs_templated
+        templated: true
+        <<: *common_attrs

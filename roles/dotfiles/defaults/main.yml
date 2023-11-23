@@ -1,9 +1,9 @@
 dotfiles_path: "/srv/dotfiles"
 dotfiles_repo: "https://git.sudo.is/ben/dotfiles.git"
 dotfiles:
-  - { src: 'zsh/.zshrc', dest: '.zshrc', root: false }
-  - { src: 'ssh/config', dest: '.ssh/config', root: false }
-  - { src: 'tmux/.tmux.simple.conf', dest: '.tmux.conf', root: true}
+  - { src: '.zshrc', dest: '.zshrc', root: false }
+  - { src: '.ssh/config', dest: '.ssh/config', root: false }
+  - { src: '.tmux.conf', dest: '.tmux.conf', root: true}
   # - { src: 'zsh/jreese2.zsh-theme', dest: '.zsh.d/', root: false }
   # - { src: '.emacs.d', dest: '.emacs.d', root: false }
   # - { src: 'tmux/.tmux.remote.conf', dest: '.tmux.remote.conf', root: true}
@@ -13,7 +13,6 @@ dotfiles_rm:
   - .emacs
   - .tmux.remote.conf
   - .emacs.d
-  - .zsh.d
 
 github_hostkey: "|1|UkAzHpv3U4bZhaeBPmtZZi80Dos=|UEE2HqFXOa7wHG34fg6S2qC6n4g= ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXy28G3skua2SmVi/w4yCE6gbODqnTWlg7+wC604ydGXA8VJiS5ap43JXiUFFAaQ=="
 sudo_hostkey: "|1|JmGLvQJOAO/V8IIDJZgluT1CY84=|Isb+G3aPnbW0wdLidEphxiOppdM= ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDBqctfVYBZfEuZj2JWrMjzh3y5QZsdrh40yv29gHaE3Yx4mOkB2eCUVm898r9Qm1e/5bYey/NHp6ZSEy1y7ZA6jJ8lbzFXxbYPXDysw5rvIyGKbe/A0WeFF88ZgZejcxvMZQVNDY/oOKw2lr6LDiCEne7wkaVKHxnztyw47nq963aSATrysCc45TNG93bGbNEGGqp47MUdL/ZAy2+zQnDtSq2JrQD9mgIiBOOdWMnAA87QgcHH536Zq7X3/JX309cDJjUfkedBMcrwcCy9juQEaQdKb6RdKICcI3vXvPZs877mskjptYcacWEMnTBRdutaYcBCF9DlehaqOY2ERdcR"

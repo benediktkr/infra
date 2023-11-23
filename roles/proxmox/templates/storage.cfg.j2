@@ -1,0 +1,33 @@
+{% for item in proxmox_storage.dir %}
+dir: {{ item.name | default(item.path.split("/")[-1]) }}
+	path {{ item.path }}
+	content {{ item.content | default('images') }}
+{%  if 'preallocation' in item %}
+	preallocation {% if item.preallocation|default(false) %}on{% else %}off{% endif +%}
+{%  endif %}
+	prune-backups {{ item.prune_backups|default('keep-all=1') }}
+{%  if 'shared' in item %}
+	shared {{ item.shared | default(false) | int }}
+{%  endif %}
+
+{% endfor -%}
+
+{% for item in proxmox_storage.nfs %}
+nfs: {{ item.name }}
+	export {{ item.export }}
+	path {{ item.path }}
+	server {{ item.server }}
+	content {{ item.content | default('images') }}
+	options {{ item.options }}
+	prune-backups {{ item.prune_backups|default('keep-all=1') }}
+
+{% endfor -%}
+
+{% for item in proxmox_storage.rbd %}
+rbd: {{ item.name }}
+	content {{ item.content | default('images') }}
+	krbd {{ item.krbd | default(false) | int }}
+	pool {{ item.pool }}
+
+{% endfor -%}
+

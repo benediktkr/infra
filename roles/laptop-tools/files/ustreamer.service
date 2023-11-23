@@ -1,0 +1,17 @@
+[Unit]
+After=network-online.target
+Description: stream video with ustreamer from v4l devices
+
+[Service]
+User=camera
+Group=video
+ExecStart=/usr/bin/ustreamer --host %H --port 8040 -d /dev/video0 -r 1920x1080 -w 1 -I USERPTR --format mjpeg 
+Restart=on-failure
+Restart=on-failure
+RestartSec=5
+StartLimitBurst=10
+StartLimitInterval=600
+
+[Install]
+#WantedBy=multi-user.target
+WantedBy=default.target

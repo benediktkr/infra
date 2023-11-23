@@ -1,3 +1,14 @@
+# server {
+#     listen 443 ssl http2;
+#     server_name {{ proxmox_url }};
+#
+#     {% set cert_name = inventory_hostname.split('.')[1:] | join('.') -%}
+#     ssl_certificate /usr/local/etc/certs/{{ cert_name }}/fullchain.pem;
+#     ssl_certificate_key /usr/local/etc/certs/{{ cert_name }}/privkey.pem;
+#
+#     return 307 https://{{ inventory_hostname }}$request_uri;
+# }
+
 server {
     listen 443 ssl http2;
     {% if inventory_hostname in wg_clients -%}
@@ -8,13 +19,14 @@ server {
     include /etc/nginx/authelia_internal.conf;
     include /etc/nginx/sudo-known.conf;
 
-    server_name {{ proxmox_url }};
-    # server_name {{ proxmox_url }} default_server;
+    server_name {{ proxmox_url }} {{ inventory_hostname }};
 
     location / {
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
+
+        proxy_set_header "Host" "{{ inventory_hostname }}";
 
         proxy_buffering off;
         client_max_body_size 0;
@@ -24,9 +36,12 @@ server {
         proxy_send_timeout  3600s;
         send_timeout  3600s;
 
+        proxy_ssl_verify off;
+
         proxy_redirect off;
 
         proxy_pass https://127.0.0.1:8006;
+        #proxy_pass https://{{ ansible_default_ipv4.address }}:8006;
 
     }
 

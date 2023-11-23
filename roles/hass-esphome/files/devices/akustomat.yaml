@@ -1,0 +1,150 @@
+---
+
+substitutions:
+  uher_name: "UHER Akustomat F411"
+
+packages:
+  board: !include ../packages/boards/esp32s2mini.yaml 
+  esphome: !include ../packages/common/esphome.yaml
+  network: !include ../packages/common/network.yaml
+  http_server: !include ../packages/common/http_server.yaml
+  sensors_esp32: !include ../packages/sensors/esp32.yaml
+  sensors_esphome: !include ../packages/sensors/esphome.yaml
+  sensors_wifi: !include ../packages/sensors/wifi.yaml
+  light_rgb: !include
+    file: ../packages/lights/rgb_ledc.yaml
+    vars:
+      rgb_id: "indicator_s"
+      rgb_name: "UHER Akustomat Indicator S"
+      rgb_red_gpio: GPIO11
+      rgb_green_gpio: GPIO12
+      rgb_blue_gpio: GPIO17
+
+esphome:
+  comment: "${uher_name}"
+
+sensor:
+  - platform: adc
+    id: akustomat_adc
+    pin: GPIO09
+    name: "${hostname} ADC Voltage"
+    update_interval: 0.05s
+    attenuation: "auto"
+    internal: true
+    #disabled_by_default: true
+    device_class: voltage
+    unit_of_measurement: V
+    accuracy_decimals: 3
+    filters: 
+      - delta: 0.003
+
+  - platform: copy 
+    id: akustomat_volume
+    source_id: akustomat_adc
+    name: "${uher_name} Volume" 
+    device_class: "power_factor"
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    filters:
+      - delta: 0.001
+      - lambda: !lambda |-
+          return (x-0.033)/(2.55536-0.033)*100;
+      - lambda: !lambda |-
+          if (x < 1) return 0;
+          else if (x > 100) return 100;
+          return int(x);
+      - lambda: !lambda |-
+          int max_vol = id(max_volume).state;
+          return int(x/100*max_vol);
+      - delta: 1.0
+      #- debounce: 1s
+      #- throttle: 5s
+      #- heartbeat: 3600s
+  
+  - platform: copy
+    source_id: akustomat_volume
+    name: "${uher_name} Volume level"
+    device_class: ""
+    unit_of_measurement: ""
+    accuracy_decimals: 2
+    filters:
+      - lambda: !lambda |-
+          return x/100.0;
+      - delta: 0.01
+    
+  - platform: homeassistant
+    internal: false
+    name: "${hostname} OwnTone volume"
+    id: owntone_volume
+    entity_id: media_player.owntone_server
+    attribute: volume_level
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    device_class: "power_factor"
+    filters:
+      - lambda: |-
+          return float(x) * 100.0;
+      - lambda: |
+          return int(x);
+      - delta: 1.0
+
+binary_sensor:
+  - platform: homeassistant
+    internal: false
+    id: owntone_volume_synced
+    name: "${hostname} OwnTone volume synced"
+    entity_id: binary_sensor.owntone_uher_akustomat_f411_volume_synced
+    publish_initial_state: true
+    on_state:
+      then:
+        - if:
+            condition:
+              binary_sensor.is_on: owntone_volume_synced
+            then:
+              - light.turn_on: indicator_s
+            else:
+              - light.turn_off: indicator_s
+
+  - platform: homeassistant
+    internal: false
+    id: owntone_playing
+    name: "${hostname} OwnTone"
+    device_class: "running"
+    entity_id: binary_sensor.owntone_playing
+    publish_initial_state: true
+
+  - platform: homeassistant
+    internal: false
+    id: owntone_playing_podcast
+    name: "${hostname} OwnTone playing a podcast"
+    device_class: "running"
+    entity_id: binary_sensor.owntone_playing_podcast
+    publish_initial_state: true
+
+text_sensor:
+  - platform: homeassistant
+    name: "${hostname} BLE MAC ben-phone"
+    id: "ble_mac_ben_phone"
+    entity_category: ""
+    internal: false
+    disabled_by_default: true
+    entity_id: "device_tracker.private_ble_ben_phone"
+    attribute: "current_address"
+
+number:
+  - platform: template
+    id: "max_volume"
+    name: "${hostname} Max Volume"
+    min_value: 1
+    max_value: 100
+    initial_value: 100
+    step: 1
+    unit_of_measurement: "%"
+    device_class: power_factor
+    update_interval: never
+    optimistic: true
+    restore_value: true
+    mode: slider
+    disabled_by_default: false
+
+

@@ -1,6 +1,12 @@
 ---
 
 dependencies:
-  - sshd
-  - gitea-proxy
-  - haproxy
+  - role: floating-ip
+    tags: floating-ip
+  - role: sshd
+    tags: sshd
+  - role: gitea-proxy
+    tags: gitea-proxy
+  - role: haproxy
+    tags: haproxy
+

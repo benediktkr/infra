@@ -11,7 +11,6 @@ server {
   # listen   [::]:443 ssl; # listen for ipv6
 
   root /var/www/html;
-  server_name {{ inventory_hostname }};
 
   include /etc/nginx/well-known.conf;
   include /etc/nginx/sudo-known.conf;

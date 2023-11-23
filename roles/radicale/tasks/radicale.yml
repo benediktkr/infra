@@ -26,5 +26,5 @@
 - name: enable and start service
   service:
     name: radicale
-    enabled: false
+    enabled: true
     state: started

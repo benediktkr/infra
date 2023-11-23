@@ -3,6 +3,17 @@
 - name: update grub
   command: update-grub
 
+- name: restart pve all
+  service:
+    name: "{{ item }}"
+    state: restarted
+  with_items:
+    - pve-cluster 
+    - pvedaemon
+    - pveproxy
+    - pvestatd
+    - corosync
+
 - name: restart pveproxy
   service:
     name: "{{ item }}"

@@ -15,6 +15,7 @@
     prediff_cmd: echo
   with_items:
     - "{{ domain }}"
+    - "{{ inventory_hostname.split('.')[1:] | join('.') }}"
 
 - name: template nginx vhost
   template:
@@ -79,7 +80,7 @@
     auto_remove: false
     detach: true
     restart_policy: "unless-stopped"
-    state: started
+    state: "{{ unifi_container_state|default('started') }}"
     init: true
     pull: true
     user: "{{ systemuserlist['unifi']['uid'] }}:{{ systemuserlist['unifi']['gid'] }}"
@@ -116,8 +117,10 @@
 
 - name: wait for controller to be responsive
   wait_for:
-    port: 8443
+    port: 8080
     host: localhost
     sleep: 2
+  when: 
+    - unifi_container_state|default('started') == "started"
   tags:
     - docker

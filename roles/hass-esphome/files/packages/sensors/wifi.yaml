@@ -1,0 +1,42 @@
+---
+
+# using hostname since that starts with esphome-, so this will yield
+# entity ids like 'sensor.esphome_'
+
+sensor:
+  - platform: wifi_signal
+    internal: true
+    name: "${hostname} WiFi signal strength"
+    id: "${lower_underscored_node_name}_wifi_signal_strength"
+    update_interval: 60s
+    entity_category: "diagnostic"
+    unit_of_measurement: "dBm"
+    filters:
+      - throttle: 900s
+
+  # Report the WiFi signal strength in %
+  - platform: copy
+    source_id: ${lower_underscored_node_name}_wifi_signal_strength
+    name: "${hostname} WiFi signal"
+    unit_of_measurement: "%"
+    device_class: power_factor
+    entity_category: "diagnostic"
+    filters:
+      - lambda: !lambda |-
+          return min(max(2 * (x + 100.0), 0.0), 100.0);
+
+
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: "${hostname} WiFi IP"
+      entity_category: "diagnostic"
+    ssid:
+      name: "${hostname} WiFi SSID"
+      entity_category: "diagnostic"
+    mac_address:
+      name: "${hostname} WiFi MAC"
+      entity_category: "diagnostic"
+    dns_address:
+      name: "${hostname} WiFi DNS"
+      entity_category: "diagnostic"

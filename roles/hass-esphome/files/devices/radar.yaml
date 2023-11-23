@@ -1,0 +1,25 @@
+---
+
+packages:
+  board: !include ../packages/boards/esp32s2mini.yaml
+  esphome: !include ../packages/common/esphome.yaml
+  network: !include ../packages/common/network.yaml
+  http_server: !include ../packages/common/http_server.yaml
+  sensors_esp32: !include ../packages/sensors/esp32.yaml
+  sensors_esphome: !include ../packages/sensors/esphome.yaml
+  sensors_wifi: !include ../packages/sensors/wifi.yaml
+  sensors_ld2410: !include ../packages/sensors/ld2410.yaml
+
+logger:
+  level: WARN
+
+#esphome:
+#  platformio_options:
+#    board_build.flash_mode: dio
+#    # CPU Speed downclocked (from Screek)
+#    board_build.f_cpu: 80000000L
+#    upload_speed: 115200
+#    board_build.extra_flags:
+#      - "-DARDUINO_USB_CDC_ON_BOOT=0"
+
+

@@ -1,4 +1,5 @@
 ---
+
 - name: set hostname
   hostname:
     name: "{{ inventory_hostname }}"
@@ -45,40 +46,6 @@
     - install-hostkeys
 
 
-- name: mask sleep targets in systemd
-  systemd:
-    name: "{{ item }}"
-    masked: true
-  with_items:
-    - sleep.target
-    - suspend.target
-    - hibernate.target
-    - hybrid-sleep.target
-  when: disable_sleep
-  tags:
-    - sleep
-
-- name: disable logind handling lid switch if sleep is disabled
-  replace:
-    path: /etc/systemd/logind.conf
-    regexp: '^#?HandleLidSwitch=suspend$'
-    replace: 'HandleLidSwitch=ignore'
-  when: disable_sleep
-  tags:
-    - sleep
-  notify:
-    - systemctl daemon reload
-
-- name: disable sleep systemd config
-  replace:
-    path: /etc/systemd/sleep.conf
-    regexp: '^#AllowSuspend=yes$'
-    replace: 'AllowSuspend=no'
-  when: disable_sleep
-  tags:
-    - sleep
-  notify:
-    - systemctl daemon reload
 
 - meta: flush_handlers
 
@@ -93,42 +60,6 @@
     - never
     - image
     - hostkeys
-
-
-- name: install iw to for the service to stop powersave on brcmfmac
-  apt:
-    name: iw
-    state: present
-  when: brcmfmac_disable_wifi_pm|default(false)
-  tags:
-    - brcmfmac
-
-- name: create a systemd service to disable powersave for brcmfmac wifi kernel module
-  template:
-    src: disable-brcmfmac-wifi-powersave.service.j2
-    dest: /etc/systemd/system/disable-brcmfmac-wifi-powersave.service
-    owner: root
-    group: root
-    mode: 0644
-  when: brcmfmac_disable_wifi_pm|default(false)
-  tags:
-    - brcmfmac
-  notify:
-    - systemctl daemon reload
-
-- meta: flush_handlers
-  tags:
-    - brcmfmac
-
-- name: enable the systemd service to disable power save for brmfmac
-  service:
-    name: disable-brcmfmac-wifi-powersave
-    state: started
-    enabled: true
-  when: brcmfmac_disable_wifi_pm|default(false)
-  tags:
-    - brcmfmac
-
 
 - name: make dir for host keys
   file:
@@ -180,6 +111,15 @@
   tags:
     - timezone
 
+- name: install vim
+  apt:
+    name:
+      - vim
+    update_cache: true
+    state: latest
+  tags:
+    - packages
+    - vim
 - name: install python3
   apt:
     name:
@@ -190,6 +130,7 @@
       - python3-venv
       - python3-dev
       - python3-setuptools
+      - python3-requests
     update_cache: true
     state: latest
   tags:
@@ -327,44 +268,53 @@
   environment:
     PATH: "{{ ansible_env.PATH }}:/sbin:/usr/sbin"
   tags:
+    - host-extra-packages
     - packages
     - common-packages
     - common-host-packages
 
-
-#- python-dateutil
-# - name: install common pip packages
-#   pip:
-#     name:
-#       - poetry
-#       - influxdb
-#       - loguru
-#       - requests
-#       - psutil
-#       - humanize # added because of telegraf/vnstat.py
-#     state: present
-#     executable: pip3
-#   when: install_common_pip_packges|default(true)
-#   tags:
-#     - pip
-#     - common-pip
-#     - common-pip-packages
-#     - packages
-#     - pip-latest
-
-# - name: remove pip packages that are only needed on mainframe
-#   pip:
-#     name:
-#       - ansible
-#       - certbot
-#       - netaddr
-#     state: absent
-#     executable: pip3
-#   when: 'inventory_hostname != "mainframe.sudo.is"'
-#   tags:
-#     - remove-packages
-#     - pip
-#     - packages
+- name: install common pip packages to the common-scripts venv
+  pip:
+    name:
+      - influxdb
+      - loguru
+      - requests
+      - psutil
+      - python-dateutil
+      #- humanize # added because of telegraf/vnstat.py
+    state: present
+    virtualenv: /var/lib/virtualenvs/common-scripts
+    virtualenv_site_packages: false
+    virtualenv_command: python3 -m venv
+  when:
+    - not ansible_check_mode
+  tags:
+    - pip
+    - common-pip
+    - common-pip-packages
+    - packages
+    - pip-latest
+    - venvs
+    - virtulenv
+- name: install poetry  o the common-scripts venv
+  pip:
+    name:
+      - poetry
+    state: present
+    virtualenv: /var/lib/virtualenvs/common-scripts
+    virtualenv_site_packages: false
+    virtualenv_command: python3 -m venv
+  when:
+    - not ansible_check_mode
+    - common_scripts_poetry|default(true)
+  tags:
+    - pip
+    - common-pip
+    - common-pip-packages
+    - packages
+    - pip-latest
+    - venvs
+    - virtulenv
 
 # - name: set python minor version
 #   set_fact:
@@ -422,13 +372,14 @@
   tags:
     - packages
 
-- name: remove ntp package (systemd...)
-  apt:
-    name: ntp
-    state: absent
-    purge: true
-  tags:
-    - ntp
+#- name: ensure ntp package is not installed
+#  apt:
+#    name: ntp
+#    state: absent
+#    purge: true
+#  when: false
+#  tags:
+#    - ntp
 
 # - name: set ntp servers
 #   lineinfile:
@@ -452,24 +403,24 @@
 #   changed_when: false
 #   tags: ntp
 
-- name: check if hosts file needs fixing
-  command: grep {{ inventory_hostname }} /etc/hosts
-  register: grephosts
-  failed_when: grephosts.rc >= 2
-  changed_when: grephosts.rc != 0
-  tags:
-    - image
-    - etchosts
+#- name: check if hosts file needs fixing
+#  command: grep {{ inventory_hostname }} /etc/hosts
+#  register: grephosts
+#  failed_when: grephosts.rc >= 2
+#  changed_when: grephosts.rc != 0
+#  tags:
+#    - image
+#    - etchosts
 
-- name: fix hosts file
-  lineinfile:
-    path: /etc/hosts
-    line: "127.0.0.1 {{ inventory_hostname }}"
-    create: no
-  when: not grephosts.skipped|default(false) and grephosts.rc != 0
-  tags:
-    - etchosts
-    - image
+#- name: fix hosts file
+#  lineinfile:
+#    path: /etc/hosts
+#    line: "127.0.0.1 {{ inventory_hostname }}"
+#    create: no
+#  when: not grephosts.skipped|default(false) and grephosts.rc != 0
+#  tags:
+#    - etchosts
+#    - image
 
 - name: enable en_US.UTF-8 (is usually enabled)
   lineinfile:
@@ -573,7 +524,6 @@
     - update_omzsh.sh
     - matrixmsg.py
     - authelia-auth.py
-  when: install_common_pip_packages|default(true)
   tags:
     - common-scripts
     - update_omzsh

@@ -1,0 +1,10 @@
+# distributed from ansible
+
+# m h dom mon dow
+
+# sync hass config to {{ hass_config_repo }}
+#*/15 * * * * {{ systemuserlist.hass.username }} /usr/local/bin/git-hass-config.sh
+#* * * * * root /usr/sbin/arp-scan --localnet > /tmp/arp-scan.txt
+
+#14 * * * *  root /usr/sbin/service bluetooth restart >/dev/null
+#

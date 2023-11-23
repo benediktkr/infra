@@ -3,23 +3,41 @@
 
 weird_omzsh_epoch=$(( $(date +%s)/ 60 / 60 / 24 ))
 
-if [ -d "/home/{{ myusername }}/.oh-my-zsh" ]; then
-    (
-        echo "updating oh-my-zsh for {{ myusername }}"
-        cd /home/{{ myusername }}/.oh-my-zsh/
-
-        /usr/bin/sudo -u {{ myusername }} /usr/bin/git pull -q
-        echo $weird_omzsh_epoch > /home/{{ myusername }}/.oh-my-zsh/cache/.zsh-update
-    )
+UPDATE="false"
+if [[ "$1" == "-v" ]]; then
+    STDOUT_ECHO="true"
+    shift
+else
+    STDOUT_ECHO="false"
 fi
 
-if [ -d "/root/.oh-my-zsh" ] && [[ $EUID -eq 0 ]]; then
-    (
-        echo "updating oh-my-zsh for root"
+ech () {
+    if [[ "$STDOUT_ECHO" == "true" ]]; then
+        echo "$1"
+    fi
+}
 
-        cd /root/.oh-my-zsh/
-        /usr/bin/mkdir -p /root/.oh-my-zsh/cache
-        /usr/bin/git pull -q
-        echo $weird_omzsh_epoch > /root/.oh-my-zsh/cache/.zsh-update
+if [[ -d "/home/{{ myusername }}/.local/share/ohmyzsh" ]]; then
+    if [[ "${UPDATE}" == "true" ]]; then
+        ech "updating oh-my-zsh for '{{ myusername }}'"
+        /usr/bin/sudo -u {{ myusername }} /usr/bin/git -C /home/{{ myusername }}/.local/share/ohmyzsh pull -q
+    else
+        ech "resetting oh-my-zsh update timestamp for '{{ myusername }}', without updating"
+    fi
+    /usr/bin/mkdir -p /home/{{ myusername }}/.local/share/ohmyzsh/cache
+    echo "LAST_EPOCH=$weird_omzsh_epoch" > /home/{{ myusername }}/.local/share/ohmyzsh/cache/.zsh-update
+fi
+
+if [ -d "/root/.local/share/ohmyzsh" ] && [[ $EUID -eq 0 ]]; then
+    (
+        if [[ "${UPDATE}" == "true" ]]; then
+            ech "updating oh-my-zsh for root"
+            /usr/bin/git pull -q
+        else
+            ech "resetting oh-my-zsh update timestamp for 'root', without updating"
+        fi
+        /usr/bin/mkdir -p /root/.local/share/ohmyzsh/cache
+        echo "LAST_EPOCH=$weird_omzsh_epoch" > /root/.local/share/ohmyzsh/cache/.zsh-update
+
     )
 fi

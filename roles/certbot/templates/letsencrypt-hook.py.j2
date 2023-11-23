@@ -34,6 +34,8 @@ def renewed_cert(name):
 def main():
     try:
         for name in os.environ['RENEWED_DOMAINS'].split(" "):
+            if name.startswith("*."):
+                name = ".".join(name.split(".")[1:])
             renewed_cert(name)
     except KeyError:
         print("error: no 'RENEWED_DOMAINS' env var present!")

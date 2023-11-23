@@ -23,6 +23,7 @@
   service:
     name: mariadb
     state: started
+  #ignore_errors: ansible_check_mode == true
 
 - name: create dump destination
   file:

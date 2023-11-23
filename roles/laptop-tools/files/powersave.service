@@ -1,0 +1,8 @@
+[Unit]
+After=multi-user.target
+[Service]
+Type=oneshot
+RemainAfterExit=no
+ExecStart=/usr/bin/cpupower frequency-set -g powersave
+[Install]
+WantedBy=multi-user.target

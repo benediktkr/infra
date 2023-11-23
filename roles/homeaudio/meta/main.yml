@@ -1,9 +1,29 @@
 ---
 
 dependencies:
-  - podgrab
-  - airconnect
-  #- shairplay
-  - owntone
-  - navidrome
-  - bonob
+  - role: nfs
+    tags: 
+      - nfs
+  - role: samba
+    tags: 
+      - samba
+  - role: airconnect
+    tags:
+      - airconnect
+  - role: owntone
+    tags: 
+      - owntone
+
+
+#  - role: podgrab
+#    tags:
+#      - podgrab
+#  - role: shairplay
+#    tags:
+#      - shairplay
+#  - role: navidrome
+#    tags: 
+#      - navidrome
+#  - role: bonob
+#    tags: 
+#      - bonob

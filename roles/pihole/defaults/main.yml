@@ -1,13 +1,15 @@
 ---
 
+pihole_ssl: "{{ pihole_url }}"
+
+pihole_unifi_dns_discovery_enabled: false
 pihole_root: "/srv/pihole"
-pihole_cond: "False"
-pihole_cond_ip: ""
-pihole_cond_domain: ""
-pihole_dns_overrides: []
-pihole_http_iniet: 127.0.0.1
+pihole_static_a_records: []
+pihole_http_inet: 127.0.0.1
 pihole_http_port: 8081
 pihole_dhcp: false
 
 pihole_uid: '999'
 pihole_gid: '999'
+
+

@@ -1,4 +1,6 @@
 ---
 
 samba_interfaces: []
-samba_nmbd: true
+samba_cups: false
+samba_smbd: true
+samba_nmbd: false

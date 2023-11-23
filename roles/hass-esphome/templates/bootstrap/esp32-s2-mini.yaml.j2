@@ -1,0 +1,107 @@
+---
+
+substitutions:
+    id_prefix: esp32_s2_mini
+    mac_suffix: "false"
+
+status_led:
+    pin:
+        number: GPIO15
+
+esphome:
+    name: "esphome-${lower_node_name}"
+    name_add_mac_suffix: "${mac_suffix}"
+    #ESP32 S2 Mini specific
+    #platformio_options:
+    #    #upload_speed: 115200
+    #    #board_build.flash_mode: dio
+    #    #board_build.f_cpu: 80000000L
+    #    #board_build.extra_flags:
+    #    # - "-DARDUINO_USB_CDC_ON_BOOT=0" 
+# ESP32 S2 Mini specific
+esp32:
+    board: lolin_s2_mini
+    variant: ESP32S2
+    framework:
+        type: esp-idf
+        version: 4.4.3
+        platform_version: 5.3.0
+
+# Common bootstrap
+logger:
+api:
+    reboot_timeout: "15min"
+    password: "{{ hass_esphome_api_password }}"
+ota:
+    password: "{{ hass_esphome_ota_password }}"
+wifi:
+    ssid: "{{ hass_esphome_wifi_ssid }}"
+    password: "{{ hass_esphome_wifi_password }}"
+    domain: ".{{ inventory_hostname.split('.')[1:] | join('.') }}"
+    ap:
+        # no ssid, uses the device name
+        password: "{{ hass_esphome_fallback_wifi_password }}" 
+    # ESP32 S2 Mini specific, the default power saving mode causes it disconnect somewhat frequntly
+    # the default for esp32 is 'light'
+    power_save_mode: none
+    output_power: 15dB
+    
+captive_portal:
+mdns:
+    disabled: true
+web_server:
+    port: 80
+    version: 2
+    include_internal: true
+    js_url: "https://www.{{ domain }}/esphome/webserver-v2.min.js"
+
+binary_sensor:
+    - platform: status
+      name: "${node_name} ESHome status"
+      entity_category: "diagnostic"
+      id: ${id_prefix}_status    
+
+sensor:
+    - platform: wifi_signal
+      internal: true
+      name: "${node_name} WiFi signal strength"
+      id: "${id_prefix}_wifi_signal_strength"
+      update_interval: 60s
+      entity_category: "diagnostic"
+      unit_of_measurement: "dBm"
+      filters:
+        - throttle: 900s
+
+    # Report the WiFi signal strength in %
+    - platform: copy
+      source_id: ${id_prefix}_wifi_signal_strength
+      name: "${node_name} WiFi signal"
+      unit_of_measurement: "%"
+      device_class: power_factor
+      entity_category: "diagnostic"
+      filters:
+        - lambda: !lambda |- 
+            return min(max(2 * (x + 100.0), 0.0), 100.0); 
+
+text_sensor:
+    - platform: wifi_info
+      ip_address:
+        name: "${node_name} IP address"
+        entity_category: "diagnostic"
+      ssid:
+        name: "${node_name} SSID"
+        entity_category: "diagnostic"
+      mac_address:
+        name: "${node_name} WiFi mac address"
+        entity_category: "diagnostic"
+      dns_address:
+        name: "${node_name} DNS address"
+        entity_category: "diagnostic"
+    - platform: version
+      id: ${id_prefix}_version
+      entity_category: "diagnostic"
+      name: "${node_name} ESPHome version"
+
+switch:
+    - platform: restart
+      name: "${node_name} reboot"

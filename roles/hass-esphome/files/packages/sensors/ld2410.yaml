@@ -1,0 +1,417 @@
+--- 
+
+substitutions:
+  ld2410_tx_pin: GPIO18
+  ld2410_rx_pin: GPIO33
+  ld2410_light_gpio_pin: GPIO16
+
+.ld2410_sensor: &ld2410_sensor
+  #entity_category: ""
+  disabled_by_default: true
+  filters:
+    #- debounce: 2s
+    - median:
+        window_size: 5
+        send_every: 1
+        send_first_at: 1
+    # - sliding_window_moving_average:
+    #    window_size: 5
+    #    send_every: 5
+    #    send_first_at: 1
+    - skip_initial: 4
+    - or:
+      - throttle: 1h
+      - delta: 5.0
+
+.ld2410_gate_sensor: &ld2410_gate_sensor
+  disabled_by_default: true
+  internal: true
+
+.config_number: &config_number
+  entity_category: config
+  disabled_by_default: true
+  mode: slider
+
+.config_gate_threshold: &config_gate_threshold
+  unit_of_measurement: "%"
+  device_class: power_factor
+  disabled_by_default: true
+  <<: *config_number
+
+.config_template_threshold: &config_template_threshold
+  min_value: 0
+  max_value: 100
+  step: 1
+  entity_category: "config"
+  unit_of_measurement: "%"
+  device_class: power_factor
+  disabled_by_default: false
+  restore_value: true
+  update_interval: never
+  optimistic: true
+  mode: box
+
+.config_template_delay: &config_template_delay
+  min_value: 0
+  max_value: 3600
+  step: 1
+  entity_category: "config"
+  unit_of_measurement: "seconds"
+  device_class: duration
+  disabled_by_default: false
+  restore_value: true
+  update_interval: never
+  optimistic: true
+  mode: box
+
+uart:
+  id: uart_ld2410
+  tx_pin: "${ld2410_tx_pin}"
+  rx_pin: "${ld2410_rx_pin}"
+  baud_rate: 256000
+  parity: NONE
+  stop_bits: 1
+
+ld2410:
+  id: ld2410_radar
+
+api:
+  services:
+    - service: "set_ld2410_ble_password"
+      variables: 
+        password: string
+      then:
+        - bluetooth_password.set:
+            id: ld2410_radar
+            password: !lambda 'return password;'
+ 
+
+binary_sensor:
+  - platform: ld2410
+    has_target:
+      id: has_target
+      disabled_by_default: true
+      name: "${hostname} Has target"
+    has_moving_target:
+      id: has_moving_target
+      name: "${hostname} Moving target"
+      disabled_by_default: true
+    has_still_target:
+      id: has_still_target
+      name: "${hostname} Still Target"
+      disabled_by_default: true
+
+  - platform: gpio
+    pin: "${ld2410_light_gpio_pin}"
+    name: "${hostname} Light target (GPIO out pin)"
+    device_class: occupancy
+    id: gpio_light_target
+    disabled_by_default: true
+  
+  - platform: template
+    id: occupancy
+    name: "${friendly_node_name}"
+    device_class: occupancy
+    disabled_by_default: false
+    lambda: |-
+      bool target = id(has_target).state || id(has_still_target).state;
+      int energy = id(still_energy).state;
+      int energy_on = id(still_threshold_on).state;
+      int energy_off = id(still_threshold_off).state;
+      if (energy >= energy_on && target) {
+        return true;
+      }
+      else if (energy <= energy_off && target == false) {
+        return false; 
+      }
+      else {
+        // no change, use last value
+        return {};
+      }
+    filters:
+      - delayed_off: !lambda |-
+          return id(still_delay_off).state;
+  
+  # to_string((float)(id(still_delay_off).state));
+
+  - platform: template
+    name: "${hostname} Any target"
+    device_class: occupancy
+    disabled_by_default: true
+    lambda: |-
+      bool light = id(gpio_light_target).state;
+      bool occ = id(occupancy).state;
+      bool target = id(has_target).state;
+      bool moving = id(has_moving_target).state;
+      bool still = id(has_still_target).state;
+      return light || target || moving || still || occ;
+
+sensor:
+  - platform: ld2410
+    moving_distance:
+      name : "${hostname} Moving distance"
+      id: moving_distance
+      <<: *ld2410_sensor
+    still_distance:
+      name: "${hostname} Still distance"
+      id: still_distance
+      <<: *ld2410_sensor
+    moving_energy:
+      name: "${hostname} Move energy"
+      id: move_nergy
+      <<: *ld2410_sensor
+    still_energy:
+      id: still_energy
+      name: "${hostname} Still energy"
+      <<: *ld2410_sensor
+      # filters:
+      #  - debounce: 2s
+      #  - median:
+      #      window_size: 5
+      #      send_every: 5
+      #      send_first_at: 1
+      #  #- sliding_window_moving_average:
+      #  #    window_size: 5
+      #  #    send_every: 5
+      #  #    send_first_at: 1
+      #  - skip_initial: 4
+      #  - or:
+      #    - throttle: 1h
+      #    - delta: 5.0
+    detection_distance:
+      name: "${hostname} Detection distance"
+      disabled_by_default: true
+      <<: *ld2410_sensor  
+    light:
+      # "light" or "light sensitivity"
+      id: ld2410_light
+      name: "${hostname} Light"
+      internal: true
+      disabled_by_default: true
+      <<: *ld2410_sensor
+    g0:
+      move_energy:
+        id: move_g0
+        name: "${hostname} Move energy g0"
+        <<: *ld2410_gate_sensor
+      still_energy:
+        id: still_g0
+        name: "${hostname} Still energy g0"
+        <<: *ld2410_gate_sensor
+    g1:
+      move_energy: 
+        id: move_g1
+        name: "${hostname} Move energy g1"
+        <<: *ld2410_gate_sensor
+      still_energy:
+        id: still_g1
+        name: "${hostname} Still energy g1"
+        <<: *ld2410_gate_sensor
+    g2:
+      move_energy:
+        id: move_g2
+        name: "${hostname} Move energy g2"
+        <<: *ld2410_gate_sensor
+      still_energy:
+        id: still_g2
+        name: "${hostname} Still energy g2"
+        <<: *ld2410_gate_sensor
+    g3:
+      move_energy:
+        id: move_g3
+        name: "${hostname} Move energy g3"
+        <<: *ld2410_gate_sensor
+      still_energy:
+        id: still_g3
+        name: "${hostname} Still energy g3"
+        <<: *ld2410_gate_sensor
+    g4:
+      move_energy:
+        id: move_g4
+        name: "${hostname} Move energy g4"
+        <<: *ld2410_gate_sensor
+      still_energy:
+        id: still_g4
+        name: "${hostname} Still energy g4"
+        <<: *ld2410_gate_sensor
+    g5:
+      move_energy:
+        id: move_g5
+        name: "${hostname} Move energy g5"
+        <<: *ld2410_gate_sensor
+      still_energy:
+        id: still_g5
+        name: "${hostname} Still energy g5"
+        <<: *ld2410_gate_sensor
+    g6:
+      move_energy:
+        id: move_g6
+        name: "${hostname} Move energy g6"
+        <<: *ld2410_gate_sensor
+      still_energy:
+        id: still_g6
+        name: "${hostname} Still energy g6"
+        <<: *ld2410_gate_sensor
+    g7:
+      move_energy:
+        id: move_g7
+        name: "${hostname} Move energy g7"
+        <<: *ld2410_gate_sensor
+      still_energy:
+        id: still_g7
+        name: "${hostname} Still energy g7"
+        <<: *ld2410_gate_sensor
+    g8:
+      move_energy:
+        id: move_g8
+        name: "${hostname} Move energy g8"
+        <<: *ld2410_gate_sensor
+      still_energy:
+        id: still_g8
+        name: "${hostname} Still energy g8"
+        <<: *ld2410_gate_sensor
+ 
+number:
+  - platform: template
+    id: "still_threshold_on"
+    name: "${hostname} On threshold"
+    initial_value: 90
+    <<: *config_template_threshold
+
+  - platform: template
+    id: "still_threshold_off"
+    name: "${hostname} Off threshold"
+    initial_value: 15
+    <<: *config_template_threshold
+
+  - platform: template
+    id: still_delay_off
+    name: "${hostname} Delay off"
+    initial_value: 1
+    <<: *config_template_delay
+
+  - platform: ld2410
+    timeout: 
+      name: "${hostname} LD2410 Delay off"
+      id: ld2410_delay_off
+      unit_of_measurement: seconds
+      device_class: duration
+      <<: *config_number
+    light_threshold:
+      name: "${hostname} LD2410 Light threshold"
+      disabled_by_default: true
+      <<: *config_number
+    max_move_distance_gate:
+      name: "${hostname} max move distance gate"
+      <<: *config_number
+    max_still_distance_gate:
+      name: "${hostname} max still distance gate"
+      <<: *config_number
+    g0:
+      move_threshold:
+        name: "${hostname} Move g0 threshold"
+        <<: *config_gate_threshold
+      still_threshold:
+        name: "${hostname} Still g0 threshold"
+        <<: *config_gate_threshold
+    g1:
+      move_threshold:
+        name: "${hostname} Move g1 threshold"
+        <<: *config_gate_threshold
+      still_threshold:
+        name: "${hostname} Still g1 threshold"
+        <<: *config_gate_threshold
+    g2:
+      move_threshold:
+        name: "${hostname} Move g2 threshold"
+        <<: *config_gate_threshold
+      still_threshold:
+        name: "${hostname} Still g2 threshold"
+        <<: *config_gate_threshold
+    g3:
+      move_threshold:
+        name: "${hostname} Move g3 threshold"
+        <<: *config_gate_threshold
+      still_threshold:
+        name: "${hostname} Still g3 threshold"
+        <<: *config_gate_threshold
+    g4:
+      move_threshold:
+        name: "${hostname} Move g4 threshold"
+        <<: *config_gate_threshold
+      still_threshold:
+        name: "${hostname} Still g4 threshold"
+        <<: *config_gate_threshold
+    g5:
+      move_threshold:
+        name: "${hostname} Move g5 threshold"
+        <<: *config_gate_threshold
+      still_threshold:
+        name: "${hostname} Still g5 threshold"
+        <<: *config_gate_threshold
+    g6:
+      move_threshold:
+        name: "${hostname} Move g6 threshold"
+        <<: *config_gate_threshold
+      still_threshold:
+        name: "${hostname} Still g6 threshold"
+        <<: *config_gate_threshold
+    g7:
+      move_threshold:
+        name: "${hostname} Move g7 threshold"
+        <<: *config_gate_threshold
+      still_threshold:
+        name: "${hostname} Still g7 threshold"
+        <<: *config_gate_threshold
+    g8:
+      move_threshold:
+        name: "${hostname} Move g8 threshold"
+        <<: *config_gate_threshold
+      still_threshold:
+        name: "${hostname} Still g8 threshold"
+        <<: *config_gate_threshold
+
+
+switch: 
+  - platform: ld2410
+    engineering_mode:
+      name: "${hostname} LD2410 Engineering mode"
+      restore_mode: "RESTORE_DEFAULT_ON"
+    bluetooth:
+      name: "${hostname} LD2410 BLE"
+      restore_mode: "ALWAYS_OFF"
+
+select:
+  - platform: ld2410
+    distance_resolution:
+      name: "${hostname} LD2410 distance resolution"
+      disabled_by_default: true
+    baud_rate:
+      name: "${hostname} LD2410 baud rate"
+      disabled_by_default: true
+    light_function:
+      name: "${hostname} LD2410 light function"
+      disabled_by_default: true
+    out_pin_level:
+      name: "${hostname} LD2410 OUT pin level"
+      disabled_by_default: true
+
+
+button:
+  - platform: ld2410
+    factory_reset:
+      name: "${hostname} LD2410 Factory reset"
+      disabled_by_default: true
+    restart: 
+      name: "${hostname} LD2410 Restart" 
+      entity_category: "diagnostic"
+    query_params:
+      name: "${hostname} LD2410 Refresh values"
+      entity_category: "diagnostic"
+
+text_sensor:
+  - platform: ld2410
+    version:
+      name: "${hostname} LD2410 Firmware version"
+    mac_address:
+      name: "${hostname} LD2410 BLE MAC address"

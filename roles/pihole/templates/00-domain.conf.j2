@@ -1,0 +1,3 @@
+# ansible managed
+
+domain={{ inventory_hostname.split('.')[1:] | join('.') }}

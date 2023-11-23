@@ -1,3 +1,5 @@
+---
+
 substitutions:
   id_prefix: "{{ item.name.replace("-", "_") }}"
 
@@ -34,38 +36,37 @@ captive_portal:
 
 web_server:
   port: 80
+  version: 2
+  include_internal: true
+  js_url: "https://www.{{ domain }}/esphome/webserver-v2.min.js"
 
 sensor:
-
   - platform: adc
-    id: ${id_prefix}_adc_a0
-    pin: A0
-    name: "ADC A0"
-    update_interval: 0.05s
-    accuracy_decimals: 2
+    pin: VCC
+    name: "VCC Voltage"
 
-  - id: ${id_prefix}_percent
-    #platform: adc
-    #pin: A0
-    #update_interval: 0.05s
-    platform: copy
-    source_id: ${id_prefix}_adc_a0
-    name: "Percent"
-    accuracy_decimals: 0
-    device_class: "power_factor"
-    unit_of_measurement: "%"
-    filters:
-      # esp32 espressif
-      # - lambda: !lambda |-
-      #     return 100-(x/3.13*100);
-      # nodemcu
-      - lambda: !lambda |-
-          return 100-(x*100);
-      - delta: 1.0
-      - lambda: !lambda |-
-          if (x < 0) return 0;
-          return int(x);
-      - throttle: 0.1s
+  #- platform: adc
+  #  id: ${id_prefix}_adc_a0
+  #  pin: A0
+  #  name: "ADC A0"
+  #  update_interval: 0.05s
+  #  accuracy_decimals: 2
+
+  #- id: ${id_prefix}_percent
+  #  platform: copy
+  #  source_id: ${id_prefix}_adc_a0
+  #  name: "Percent"
+  #  accuracy_decimals: 0
+  #  device_class: "power_factor"
+  #  unit_of_measurement: "%"
+  #  filters:
+  #    - lambda: !lambda |-
+  #        return 100-(x*100);
+  #    - delta: 1.0
+  #    - lambda: !lambda |-
+  #        if (x < 0) return 0;
+  #        return int(x);
+  #    - throttle: 0.1s
 
   # ESPHome
   - platform: wifi_signal

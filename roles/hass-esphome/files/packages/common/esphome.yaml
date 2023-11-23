@@ -1,0 +1,68 @@
+---
+
+substitutions:
+  foo: bar
+
+esphome:
+  # used by Home Assistant as the integration name, device name, and is automatically prefixed to entities  
+  #friendly_name: 
+ 
+  # provided by esph.py
+  build_path: "${build_path}"
+
+  on_boot:
+    - text_sensor.template.publish:
+        id: esphome_config_name
+        state: "${config_name}"
+    - text_sensor.template.publish:
+        id: esphome_config_date
+        state: "${config_date}"
+
+time:
+  - platform: sntp
+    id: time_sntp
+
+logger:
+
+switch:
+  - platform: restart
+    name: "ESPHome Reboot ${lower_node_name}"
+    icon: "mdi:power-cycle"
+
+text_sensor:
+  - platform: version
+    name: "ESPHome version ${lower_node_name}"
+    entity_category: "diagnostic"
+    hide_timestamp: true
+    id: ${lower_underscored_node_name}_version
+
+  - platform: template
+    id: esphome_config_name
+    icon: "mdi:car-esp"
+    entity_category: "diagnostic"
+    name: "${hostname} config name"
+    update_interval: never
+    # config_name is provided by esph.py 
+    #lambda: !lambda 'return {"${config_name}"};'
+
+  - platform: template
+    id: esphome_config_date
+    icon: "mdi:car-esp"
+    entity_category: "diagnostic"
+    name: "${hostname} config date"
+    update_interval: never
+    # config_date is provided by esph.py
+    #lambda: !lambda 'return {"${config_date}"};'
+
+#sensor:
+#  - platform: uptime
+#    name: "ESPHome Uptime ${lower_node_name}"
+#    update_interval: 3600s
+#    internal: true
+
+binary_sensor:
+  - platform: status
+    name: "ESPHome status ${lower_node_name}"
+    entity_category: "diagnostic"
+    id: ${lower_underscored_node_name}_status
+

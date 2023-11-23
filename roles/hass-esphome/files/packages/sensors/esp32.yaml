@@ -1,0 +1,14 @@
+---
+
+sensor:
+  - platform: internal_temperature
+    name: "ESP32 Internal temperature ${lower_node_name}"
+  - platform: template
+    icon: mdi:memory
+    name: "${hostname} Free Memory"
+    lambda: |-
+      return heap_caps_get_free_size(MALLOC_CAP_INTERNAL) / 1024;
+    unit_of_measurement: 'kB'
+    state_class: measurement
+    update_interval: 600s
+    entity_category: "diagnostic"

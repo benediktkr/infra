@@ -1,0 +1,66 @@
+---
+
+substitutions:
+  name_add_mac_suffix: "false"
+
+esphome:
+  # this is the hostname, which is provided by esph.py 
+  name: ${hostname}
+  name_add_mac_suffix: ${name_add_mac_suffix} 
+
+wifi:
+  enable_on_boot: true
+  passive_scan: false
+  
+  # Useful to renaming nodes
+  # use_address:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  
+  ap:
+    # Not configuring the ssid means that the hostname is used
+    #ssid: 
+    password: !secret ap_password
+  
+  # Almost all nodes will have the same domain, but it should still be configurable
+  # the esph.py script automatically inserts a substitution for it
+  domain: ${domain}
+
+  # amount of time to wait before rebooting if no wifi (default: 15min)
+  reboot_timeout: 15min 
+  
+  # ESP32 default: LIGHT
+  # ESP8266 default: NONE
+  #power_save_mode: 
+  # BSS transition management. Only on ESP32 with esp-idf.
+  #enable_btm: false
+  # 802.11k Radio Resource Management. Only on ESP32 with esp-idf.
+  #enable_rrm: false
+
+api:
+  # default port: 
+  port: 6053
+
+  # amount of time before rebooting when there are no api connections
+  reboot_timeout: "15min"
+  password: !secret api_password
+  # encryption:
+  #   key: !secret api_encryption_key
+
+ota:
+  password: !secret ota_password
+  # amount of time to wait before rebooting when in safe mode (default: 5min)
+  reboot_timeout: "5min"
+  # number of attempts to wait before entering safe mode (default: 10)
+  num_attempts: 10
+
+mdns:
+  disabled: true
+
+# This enables the captive portal that is confifured under wifi.ap
+captive_portal:
+
+# Enabling this to check what its about
+# There is also esp32_improv (BLE), probably wifi+captive_portal suits best
+#improv_serial:
+#  next_url: https://www.sudo.is/api/esphome/improv_serial?device_name={{device_name}}&ip_address={{ip_address}}&esphome_version={{esphome_version}}

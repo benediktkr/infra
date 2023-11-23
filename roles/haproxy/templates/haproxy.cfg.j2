@@ -56,6 +56,9 @@ listen health
     mode http
 
     acl health_allowed src {{ wg_clients[ansible_control_host].ip }}/32
+    {% for item in my_local_cidrs %}
+    acl health_allowed src {{ item }}
+    {% endfor %}
     acl health_allowed src 127.0.0.1/32
     http-request deny unless health_allowed
 
@@ -76,7 +79,7 @@ frontend https-redirect
     http-request redirect scheme https
 
 
-frontend {{ lb_url }}
+frontend {{ haproxy_url }}
     bind *:443
     mode tcp
     log /dev/log local0
@@ -128,7 +131,7 @@ backend {{ item.fqdn }}
 {% for item in lb_forward_ports|default([]) %}
 
 frontend {{ item.frontend_name }}
-    bind *:{{ item.src_port }}
+    bind {{ item.src_ip|default('*') }}:{{ item.src_port }}
     mode {{ item.mode }}
     default_backend {{ item.backend_name }}
 

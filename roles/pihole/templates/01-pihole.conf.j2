@@ -1,3 +1,6 @@
+{% set pihole_domain = inventory_hostname.split(".")[1:] | join(".") %}
+{% set pihole_url_main =  pihole_url.split(".")[0] ~ "." ~ pihole_domain %}
+
 server {
     listen 443 ssl http2;
     {% if inventory_hostname in wg_clients -%}
@@ -10,14 +13,15 @@ server {
     include listen-proxy-protocol.conf;
     include /etc/nginx/sudo-known.conf;
 
-    server_name {{ pihole_url }} {{ inventory_hostname }};
+    server_name {{ pihole_url }} {{ inventory_hostname }} ;
 
     location / {
         return 302 https://$host/admin/;
     }
 
     location /admin {
-       add_before_body /.sudo-known/info.html;
+       # wtf..why is there? breaks json responses (and changes conent-type)
+       #add_before_body /.sudo-known/info.html;
 
        proxy_pass         http://{{pihole_http_inet}}:{{ pihole_http_port }};
 
@@ -37,9 +41,8 @@ server {
    error_log /var/log/nginx/error_{{ pihole_url }}.log warn;
 
    ssl_session_timeout 5m;
-
-   ssl_certificate /usr/local/etc/certs/{{ pihole_url }}/fullchain.pem;
-   ssl_certificate_key /usr/local/etc/certs/{{ pihole_url }}/privkey.pem;
+   ssl_certificate /usr/local/etc/certs/{{ pihole_ssl }}/fullchain.pem;
+   ssl_certificate_key /usr/local/etc/certs/{{ pihole_ssl }}/privkey.pem;
 
    add_header Referrer-Policy "no-referrer" always;
    add_header X-Content-Type-Options "nosniff" always;

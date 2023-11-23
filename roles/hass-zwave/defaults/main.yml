@@ -1,0 +1,8 @@
+---
+
+hass_zwavejs_ws_port: 3000
+
+hass_ser2net_zwave: false
+hass_ser2net_host: 'localhost'
+hass_ser2net_port_zwave: 30802
+

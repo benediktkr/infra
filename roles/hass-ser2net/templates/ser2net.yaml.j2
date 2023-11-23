@@ -1,0 +1,50 @@
+# {{ ansible_managed }}
+#
+# Find detailed documentation in ser2net.yaml(5)
+# A fully featured configuration file is in
+# /usr/share/doc/ser2net/examples/ser2net.yaml.gz
+
+define: &banner \r\nser2net port \p device \d [\B] (Debian GNU/Linux)\r\n\r\n
+
+# Default example from default /etc/ser2net.yaml on ubuntu:
+#
+# connection: &con0096
+#     accepter: tcp,2000
+#     enable: on
+#     options:
+#       banner: *banner
+#       kickolduser: true
+#       telnet-brk-on-sync: true
+#     connector: serialdev,
+#               /dev/ttyS0,
+#               9600n81,local
+
+
+{% if hass_ser2net_zwave %}
+# https://zwave-js.github.io/node-zwave-js/#/usage/tcp-connection?id=configuring-ser2net
+connection: &zwave0
+    accepter: tcp,{{ hass_ser2net_port_zwave }}
+    enable: on
+    options:
+        kickolduser: true
+    connector: serialdev,
+              /dev/zwave0,
+              115200N81,
+              nobreak,local
+{% endif %}
+
+{% if hass_ser2net_zigbee %}
+# https://www.zigbee2mqtt.io/advanced/remote-adapter/connect_to_a_remote_adapter.html#_2-a-configure-ser2net-4-0
+connection: &zigbee0
+    accepter: tcp,{{ hass_ser2net_port_zigbee }}
+    enable: on
+    options:
+        kickolduser: true
+    connector: serialdev,
+              /dev/zigbee0,
+              115200N81,
+              nobreak,local
+{% endif %}
+
+
+

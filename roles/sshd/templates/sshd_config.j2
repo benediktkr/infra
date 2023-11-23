@@ -9,7 +9,12 @@
 
 Port {{ sshd_port | default('22') }}
 #AddressFamily any
-ListenAddress {{ sshd_listen_addr4 | default('0.0.0.0') }}
+{% if sshd_listen is not defined %}
+{% set sshd_listen = [ sshd_listen_addr4|default('0.0.0.0') ] %}
+{% endif %}
+{% for item in sshd_listen %}
+ListenAddress {{ item }}
+{% endfor %}
 #ListenAddress {{ sshd_listen_addr6 | default('::') }}
 
 #HostKey /etc/ssh/ssh_host_rsa_key
@@ -26,7 +31,7 @@ ListenAddress {{ sshd_listen_addr4 | default('0.0.0.0') }}
 # Authentication:
 
 #LoginGraceTime 2m
-PermitRootLogin {{ sshd_permit_root_login | default('yes') }}
+PermitRootLogin {{ sshd_permit_root_login | default('no') }}
 #StrictModes yes
 #MaxAuthTries 6
 #MaxSessions 10

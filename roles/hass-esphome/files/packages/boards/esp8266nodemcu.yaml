@@ -1,0 +1,16 @@
+---
+
+esp8266:
+  board: nodemcuv2
+
+
+light:
+  - platform: status_led
+    name: "Status LED"
+    id: esp_status_led
+    icon: "mdi:alarm-light"
+    entity_category: "config"
+    restore_mode: ALWAYS_OFF
+    pin:
+      number: D0
+      inverted: true

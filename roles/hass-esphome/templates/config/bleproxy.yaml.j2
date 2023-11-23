@@ -10,6 +10,8 @@ esphome:
   #project:
   #  name: esphome.bluetooth-proxy
   #  version: "1.0"
+  # provided by esph.py
+  build_path: "${build_path}"
 
 esp32:
   # board: esp32dev
@@ -41,8 +43,27 @@ mdns:
   disabled: true
 
 esp32_ble_tracker:
+  on_ble_advertise:
+    - then:
+        - lambda: |-
+            ESP_LOGD("ble_adv", "New BLE device");
+            ESP_LOGD("ble_adv", "  address: %s", x.address_str().c_str());
+            ESP_LOGD("ble_adv", "  name: %s", x.get_name().c_str());
+            ESP_LOGD("ble_adv", "  Advertised service UUIDs:");
+            for (auto uuid : x.get_service_uuids()) {
+                ESP_LOGD("ble_adv", "    - %s", uuid.to_string().c_str());
+            }
+            ESP_LOGD("ble_adv", "  Advertised service data:");
+            for (auto data : x.get_service_datas()) {
+                ESP_LOGD("ble_adv", "    - %s: (length %i)", data.uuid.to_string().c_str(), data.data.size());
+            }
+            ESP_LOGD("ble_adv", "  Advertised manufacturer data:");
+            for (auto data : x.get_manufacturer_datas()) {
+                ESP_LOGD("ble_adv", "    - %s: (length %i)", data.uuid.to_string().c_str(), data.data.size());
+            }
   scan_parameters:
     active: true
+
 #    # defaults
 #    # interval: 320ms
 #    # window: 30ms
@@ -53,7 +74,7 @@ esp32_ble_tracker:
 #    interval: 1100ms
 #    window: 550ms
 
-bluetooth_proxy:
+#bluetooth_proxy:
   active: true
   cache_services: true  # defaults to true
 
@@ -63,6 +84,11 @@ text_sensor:
   - platform: ble_scanner
     name: "json ble scanner"
     #id: esphome_bleproxy_ble_scanner
+
+  - platform: wifi_info
+    mac_address:
+      name: "WiFi MAC"
+      entity_category: "diagnostic"
 
 binary_sensor:
   - platform: status
@@ -75,6 +101,37 @@ switch:
     name: "Reboot"
     icon: mdi:power-cycle
     id: esphome_bleproxy_reboot
+
+#esp32_camera:
+#  name: My Camera
+#  external_clock:
+#    pin: GPIO27
+#    frequency: 20MHz
+#  i2c_pins:
+#    sda: GPIO25
+#    scl: GPIO23
+#  data_pins: [GPIO17, GPIO35, GPIO34, GPIO5, GPIO39, GPIO18, GPIO36, GPIO19]
+#  vsync_pin: GPIO22
+#  href_pin: GPIO26
+#  pixel_clock_pin: GPIO21
+#  reset_pin: GPIO15
+#  resolution: 640x480
+#  jpeg_quality: 10
+
+esp32_camera:
+  external_clock:
+    pin: GPIO21
+    frequency: 20MHz
+  i2c_pins:
+    sda: GPIO26
+    scl: GPIO27
+  data_pins: [GPIO4, GPIO5, GPIO18, GPIO19, GPIO36, GPIO39, GPIO34, GPIO35]
+  vsync_pin: GPIO25
+  href_pin: GPIO23
+  pixel_clock_pin: GPIO22
+
+  # Image settings
+  name: ESP32 Camera
 
 # ------------------------------------------------
 

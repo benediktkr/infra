@@ -1,5 +1,0 @@
----
- - import_tasks: hass.yml
-   tags:
-     - hass
-     - hass-core

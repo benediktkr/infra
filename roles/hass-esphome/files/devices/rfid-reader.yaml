@@ -1,0 +1,33 @@
+
+packages:
+  board: !include ../packages/boards/esp8266d1.yaml
+  esphome: !include ../packages/common/esphome.yaml
+  network: !include ../packages/common/network.yaml
+  http_server: !include ../packages/common/http_server.yaml
+  sensors_esphome: !include ../packages/sensors/esphome.yaml
+  sensors_wifi: !include ../packages/sensors/wifi.yaml
+  sensors_rfid: !include ../packages/sensors/rfid.yaml
+  # binary_sensors for known tag uids 
+  data_rfid_tags: !include ../data/rfid_tags.yaml  
+
+
+i2c:
+  # Same pins, D2==4, D1==5
+  #sda: 4
+  #scl: 5
+  sda: D2
+  scl: D1
+  #frequency: ${pn532_i2c_frequency}
+  #id: bus_pn532
+
+
+
+
+
+
+
+
+
+
+
+

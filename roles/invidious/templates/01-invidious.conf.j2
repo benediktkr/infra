@@ -14,6 +14,10 @@ server {
     ssl_certificate /usr/local/etc/certs/{{ invidious_url }}/fullchain.pem;
     ssl_certificate_key /usr/local/etc/certs/{{ invidious_url }}/privkey.pem;
 
+    #add_header "Content-Security-Policy" "default-src data: 'self' 'unsafe-inline' 'unsafe-eval'; media-src 'self'; base-uri 'none' https://*.googlevideo.com; frame-ancestors 'none'; form-action 'self'; block-all-mixed-content" always;
+    #add_header "Referrer-Policy" "no-referrer" always;
+    add_header "Content-Security-Policy" "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' blob: https://*.googlevideo.com:443 https://*.youtube.com:443 data:; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; manifest-src 'self'; media-src 'self' blob: https://*.googlevideo.com:443 https://*.youtube.com:443; child-src 'self' blob:; frame-src 'self'; frame-ancestors 'none'" always;
+
     location ~ ^/api/health {
       allow 127.0.0.1;
       allow {{ my_public_ips[inventory_hostname] }}/32;

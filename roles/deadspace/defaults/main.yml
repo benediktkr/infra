@@ -1,3 +1,6 @@
 ---
 
-deadspace: []
+deadspace: [] 
+deadspace_crypttab: 
+    root: {}
+    disks: []

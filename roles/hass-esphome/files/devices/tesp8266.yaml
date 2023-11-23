@@ -1,0 +1,19 @@
+
+packages:
+  board: !include ../packages/boards/esp8266nodemcu.yaml
+  esphome: !include ../packages/common/esphome.yaml
+  network: !include ../packages/common/network.yaml
+  http_server: !include ../packages/common/http_server.yaml
+  sensors_esphome: !include ../packages/sensors/esphome.yaml
+  sensors_wifi: !include ../packages/sensors/wifi.yaml
+
+#i2c:
+#  sda: 4
+#  scl: 5
+#
+#display:
+#  - platform: lcd_pcf8574
+#    dimensions: 20x4
+#    address: 0x27
+#    lambda: |-
+#      it.print("Hello World!");

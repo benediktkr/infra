@@ -1,0 +1,52 @@
+---
+
+
+packages:
+  board: !include ../packages/boards/esp32nodemcu.yaml
+  esphome: !include ../packages/common/esphome.yaml
+  network: !include ../packages/common/network.yaml
+  http_server: !include ../packages/common/http_server.yaml
+  sensors_esp32: !include ../packages/sensors/esp32.yaml
+  sensors_esphome: !include ../packages/sensors/esphome.yaml
+  sensors_wifi: !include ../packages/sensors/wifi.yaml
+  sensors_generic_motion: !include
+    file: ../packages/sensors/generic_motion.yaml
+    vars:
+      pin_generic_motion: 13
+      name_generic_motion: "${hostname} Motion"
+  light_catled: !include 
+    file: ../packages/lights/ledc.yaml
+    vars:
+      ledc_name: "${hostname} LED indicator"
+      ledc_gpio: 15
+
+wifi:
+  ssid: !secret alt_wifi_ssid
+  password: !secret alt_wifi_password
+
+ #spi:
+ #  miso_pin: GPIO9
+ #  mosi_pin: GPIO7
+ #  # SCK = Serial ClocK
+ #  clk_pin: GPIO10  
+
+
+#sensor:
+#  - platform: vl53l0x
+#    name: "VL53L0x cat distance"  
+#    address: 0x29
+#    #long_range: false
+#    #enable_pin: GPIO33
+#    # default: 0.25. lower = more sensitive. signal amplitude
+#    signal_rate_limit: 0.1
+#    timeout: 200us
+#    update_interval: 500ms
+#    unit_of_measurement: "m"
+  
+
+#i2c:
+#  id: rfid_bus
+#  sda: GPIO16
+#  scl: GPIO18
+#  scan: true
+

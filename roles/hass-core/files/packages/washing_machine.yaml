@@ -1,0 +1,142 @@
+template:
+  - binary_sensor:
+      - name: washing_machine
+        icon: >-
+          {% if is_state(this.entity_id, "on") %}
+          mdi:washing-machine
+          {% else %}
+          mdi:washing-machine-off
+          {% endif %}
+        device_class: running
+        delay_on: "00:00:10"
+        delay_off: "00:01:00"
+        availability: >-
+          {% set id_power = 'sensor.electric_w_switch_washing_machine' %}
+          {{
+          states(id_power) is defined
+          and is_number(states(id_power))
+          and states(id_power)|float is defined
+          }}
+        state: >-
+          {% set current = states('sensor.electric_a_switch_washing_machine')|float %}
+          {% set current_on = current > 0.2 %}
+          {% set power = states('sensor.electric_w_switch_washing_machine')|float %}
+          {{ power > 3.53 }}
+        attributes:
+          comment: >-
+            drops down to ca 2.8W after finishing and releasing the lock on the door, uses ~3.9-4.0W until door lock is released.
+
+
+binary_sensor:
+  - platform: group
+    name: washing_machine_on
+    device_class: running
+    entities:
+      - binary_sensor.washing_machine
+
+sensor:
+  # power / W
+  - name: electric_w_switch_washing_machine_max_24h
+    platform: statistics
+    entity_id: sensor.electric_w_switch_washing_machine
+    state_characteristic: value_max
+    max_age:
+      hours: 24
+
+  - name: electric_w_switch_washing_machine_max_30d
+    platform: statistics
+    entity_id: sensor.electric_w_switch_washing_machine
+    state_characteristic: value_max
+    max_age:
+      days: 30
+
+  # current / A
+  - name: electric_a_switch_washing_machine_max_24h
+    platform: statistics
+    entity_id: sensor.electric_a_switch_washing_machine
+    state_characteristic: value_max
+    max_age:
+      hours: 24
+
+  - name: electric_a_switch_washing_machine_max_30d
+    platform: statistics
+    entity_id: sensor.electric_a_switch_washing_machine
+    state_characteristic: value_max
+    max_age:
+      days: 30
+
+  # potential / V
+  - name: electric_v_switch_washing_machine_max_30d
+    platform: statistics
+    entity_id: sensor.electric_v_switch_washing_machine
+    state_characteristic: value_max
+    max_age:
+      days: 30
+  - name: electric_v_switch_washing_machine_min_30d
+    platform: statistics
+    entity_id: sensor.electric_v_switch_washing_machine
+    state_characteristic: value_min
+    max_age:
+      days: 30
+
+automation:
+  - alias: washing_machine_flood_sensor
+    description: ""
+    trigger:
+      - platform: state
+        entity_id:
+          - binary_sensor.flood_bathroom
+        to: "on"
+    action:
+      - service: switch.turn_off
+        data: {}
+        target:
+          entity_id: switch.washing_machine
+
+  - alias: home_alarm_washing_machine_flood_sensor
+    description: ""
+    trigger:
+      - platform: state
+        entity_id:
+          - binary_sensor.flood_bathroom
+        to: "on"
+    condition: []
+    action:
+      - service: notify.notify
+        data:
+          title: HOME ALARM
+          message: "WATER detected: {{ trigger.entity_id[14:] }}"
+        enabled: true
+      - service: notify.pagerduty
+        data:
+          title: "WATER detected: {{ trigger.entity_id[14:] }} @ {{ now().isoformat() }}"
+          message: "WATER detected: {{ trigger.entity_id }}"
+    mode: single
+
+homeassistant:
+  customize:
+    binary_sensor.washing_machine:
+      friendly_name: Washing Machine
+      package: "washing_machine"
+    binary_sensor.washing_machine_on:
+      friendly_name: Washing Machine (legacy entity_id)
+      icon: "mdi:washing-machine"
+      package: "washing_machine"
+    sensor.electric_a_switch_washing_machine_max_24h:
+      friendly_name: Washing Machine max current [A] over 24h
+      package: "washing_machine"
+    sensor.electric_a_switch_washing_machine_max_30d:
+      friendly_name: Washing Machine max current [A] over 30d
+      package: "washing_machine"
+    sensor.electric_w_switch_washing_machine_max_24h:
+      friendly_name: Washing Machine max power usage [W] over 24h
+      package: "washing_machine"
+    sensor.electric_w_switch_washing_machine_max_30d:
+      friendly_name: Washing Machine max power usage [W] over 30d
+      package: "washing_machine"
+    sensor.electric_v_switch_washing_machine_min_30d:
+      friendly_name: Washing Machine min voltage [V] over 30d
+      package: "washing_machine"
+    sensor.electric_v_switch_washing_machine_max_30d:
+      friendly_name: Washing Machine max voltage [V] over 30d
+      package: "washing_machine"

@@ -1,0 +1,82 @@
+---
+
+packages:
+  board: !include ../packages/boards/esp32wrover.yaml
+  esphome: !include ../packages/common/esphome.yaml
+  network: !include ../packages/common/network.yaml
+  http_server: !include ../packages/common/http_server.yaml
+  sensors_esp32: !include ../packages/sensors/esp32.yaml
+  sensors_esphome: !include ../packages/sensors/esphome.yaml
+  sensors_wifi: !include ../packages/sensors/wifi.yaml
+
+esp32:
+  #board: esp32cam
+  board: esp-wrover-kit
+  #board: esp32dev
+  framework:
+    type: arduino
+
+# https://gist.github.com/mbernson/4d7768b4fda6403b9220f38c069069b0
+# https://makeradvisor.com/freenove-esp32-wrover-cam-pinout/
+
+esp32_camera:
+  external_clock:
+    #pin: GPIO0
+    pin: GPIO21
+    #pin: 32
+    frequency: 20MHz
+  i2c_pins:
+    sda: GPIO26
+    scl: GPIO27
+    #sda: 13
+    #scl: 12
+  data_pins: 
+    #- GPIO5
+    #- GPIO18
+    #- GPIO19
+    #- GPIO21
+    #- GPIO36
+    #- GPIO39
+    #- GPIO34
+    #- GPIO35
+    - GPIO4
+    - GPIO5
+    - GPIO18
+    - GPIO19
+    - GPIO36
+    - GPIO39
+    - GPIO34
+    - GPIO35
+    #- 5
+    #- 14
+    #- 4
+    #- 15
+    #- 18
+    #- 23
+    #- 36
+    #- 39
+  vsync_pin: GPIO25
+  href_pin: GPIO23
+  pixel_clock_pin: GPIO22
+  #power_down_pin: GPIO32
+  #vsync_pin: 27
+  #href_pin: 25
+  #pixel_clock_pin: 10 
+
+  # Image settings
+  name: ESP32 Camera
+
+#esp32_camera_web_server:
+#  - port: 8080
+#    mode: stream
+#  - port: 8081
+#    mode: snapshot
+
+
+
+
+
+
+
+
+

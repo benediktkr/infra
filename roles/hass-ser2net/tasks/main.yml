@@ -1,0 +1,5 @@
+---
+ - import_tasks: hass-ser2net.yml
+   tags:
+     - ser2net
+     - hass-ser2net

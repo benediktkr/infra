@@ -47,7 +47,17 @@
   loop_control:
     label: "{{ item.dest }}"
   when:
-    - gitpull.changed
+    - not projects_dotfiles.stat.exists
+
+- name: clone ohmyzsh if not human-managed
+  git:
+    repo: "https://github.com/ohmyzsh/ohmyzsh"
+    dest: "~/.local/share/ohmyzsh"
+    clone: true
+    update: false
+    force: true
+  become_user: "{{ myusername }}"
+  when:
     - not projects_dotfiles.stat.exists
 
 - name: put dotfiles for root in place
@@ -65,16 +75,16 @@
     - gitpull.changed
     - item.root|bool
 
-- name: rm dotfiles that root should not have
-  file:
-    path: "/root/{{ item.dest }}"
-    state: absent
-  loop_control:
-    label: "{{ item.dest }}"
-  with_items:
-    - "{{ dotfiles }}"
-  when:
-    - not item.root|bool
+#- name: rm dotfiles that root should not have
+#  file:
+#    path: "/root/{{ item.dest }}"
+#    state: absent
+#  loop_control:
+#    label: "{{ item.dest }}"
+#  with_items:
+#   - "{{ dotfiles }}"
+# when:
+#    - not item.root|bool
 
 - name: rm outdate dotfile links
   file:

@@ -1,0 +1,79 @@
+---
+
+#substitutions:
+#  hostname: esphome-irrigation
+
+packages:
+  board: !include ../packages/boards/esp8266d1.yaml
+  esphome: !include ../packages/common/esphome.yaml
+  network: !include ../packages/common/network.yaml
+  http_server: !include ../packages/common/http_server.yaml
+  sensors_esphome: !include ../packages/sensors/esphome.yaml
+  sensors_wifi: !include ../packages/sensors/wifi.yaml
+
+switch:
+  - platform: gpio
+    name: "Irrigation pump"
+    id: "gpio_relay_irrigation_pump"
+    icon: "mdi:sprinkler-variant"
+    # attempt to restore state and default to false/off if not possible
+    restore_mode: RESTORE_DEFAULT_OFF
+    pin:
+      number: D7
+      inverted: true
+
+binary_sensor:
+  # GPIO
+  - platform: gpio
+    name: "Irrigation water tank"
+    id: gpio_float_switch_water_tank
+    device_class: "problem"
+    publish_initial_state: true
+    filters:
+      # enabling the pullup resistor on the board seems to be enough
+      # to stop it from flapping
+      - delayed_on: 10ms
+      - delayed_off: 10ms
+    pin:
+      # BUILTIN LED UGH
+      number: D2
+      # soaked in water in a bowl in my kitchen, it is reporting true/on
+      # closes the circuit when the magnet touches the base
+      # open circuit when the magnet is not touching the base (like when floating in water
+      #
+      # in water = open = false
+      # no water = closed = true
+      inverted: true
+      mode:
+        input: true
+        # it flaps on/off unless we enable the pull-up restor on the board
+        pullup: true
+    on_state:
+      then:
+        - if:
+            condition:
+              binary_sensor.is_on: gpio_float_switch_water_tank
+            then:
+              - switch.turn_off: gpio_relay_irrigation_pump
+              - light.turn_on: "esp_status_led"
+              - light.turn_on: gpio_indicator_led_water_tank
+            else:
+              - switch.turn_on: gpio_relay_irrigation_pump
+              - light.turn_off: "esp_status_led"
+              - light.turn_off: gpio_indicator_led_water_tank     
+
+light:
+  - name: "Water tank sensor indicator LED"
+    id: gpio_indicator_led_water_tank
+    icon: mdi:led-outline
+    #restore_mode: RESTORE_DEFAULT_OFF
+    restore_mode: ALWAYS_OFF
+    output: gpio_d6_pwm
+    platform: monochromatic
+    # default: 1s
+    default_transition_length: 1s
+
+output:
+  - platform: esp8266_pwm
+    id: gpio_d6_pwm
+    pin: D6

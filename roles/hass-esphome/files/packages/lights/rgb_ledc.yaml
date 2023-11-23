@@ -1,0 +1,27 @@
+--- 
+
+light:
+  - platform: rgb
+    id: "${rgb_id}"
+    name: "${rgb_name}"
+    icon: mdi:led-outline
+    restore_mode: RESTORE_DEFAULT_OFF
+    red: OUTPUT_${rgb_red_gpio}
+    green: OUTPUT_${rgb_green_gpio}
+    blue: OUTPUT_${rgb_blue_gpio}
+    default_transition_length: 1s
+    effects: !include effects.yaml
+
+
+output:
+  - platform: ledc
+    id: OUTPUT_${rgb_red_gpio}
+    pin: ${rgb_red_gpio}
+  - platform: ledc
+    id: OUTPUT_${rgb_green_gpio}
+    pin: ${rgb_green_gpio}
+  - platform: ledc
+    id: OUTPUT_${rgb_blue_gpio}
+    pin: ${rgb_blue_gpio}
+
+

@@ -1,0 +1,200 @@
+
+# https://markus-haack.com/the-world-of-wemos-d1-mini-boards/
+
+substitutions:
+  id_prefix: "{{ item.name.replace('-', '_') }}"
+  name: "{{ item.name }}"
+
+esphome:
+  name: "{{ item.name }}"
+  name_add_mac_suffix: false
+
+esp8266:
+  board: d1_mini
+
+logger:
+
+api:
+  # amount of time before rebooting when there are no api connections
+  reboot_timeout: "15min"
+  password: "{{ hass_esphome_api_password }}"
+  # encryption:
+  #   key: "{{ hass_esphome_api_encryption_key }}"
+
+ota:
+  password: "{{ hass_esphome_ota_password }}"
+
+wifi:
+  ssid: !secret wifi_ssid 
+  password: "{{ hass_esphome_wifi_password }}"
+  domain: .{{ inventory_hostname.split('.')[1:] | join('.') }}
+  # use_address:
+
+  ap:
+    password: "{{ hass_esphome_fallback_wifi_password }}"
+
+mdns:
+  disabled: true
+
+captive_portal:
+
+web_server:
+  port: 80
+  version: 2
+  include_internal: true
+  js_url: "https://www.{{ domain }}/esphome/webserver-v2.min.js"
+
+switch:
+  #- platform: factory_reset
+  #  name: "{{ item.name }} Factory Default Settings"
+
+  - platform: gpio
+    name: "{{ item.name }} Irrigation pump"
+    id: "gpio_relay_irrigation_pump"
+    icon: "mdi:sprinkler-variant"
+    # attempt to restore state and default to false/off if not possible
+    restore_mode: RESTORE_DEFAULT_OFF
+    pin:
+      number: D7
+      inverted: true
+
+  # ESPHome
+  - platform: restart
+    name: "{{ item.name }} Reboot"
+    icon: "mdi:power-cycle"
+
+binary_sensor:
+  # GPIO
+  - platform: gpio
+    name: "{{ item.name }} Water tank monitor"
+    id: gpio_float_switch_water_tank
+    device_class: "problem"
+    publish_initial_state: true
+    filters:
+      # enabling the pullup resistor on the board seems to be enough
+      # to stop it from flapping
+      - delayed_on: 10ms
+      - delayed_off: 10ms
+    pin:
+      # BUILTIN LED UGH
+      number: D2
+      # soaked in water in a bowl in my kitchen, it is reporting true/on
+      # closes the circuit when the magnet touches the base
+      # open circuit when the magnet is not touching the base (like when floating in water)
+      #
+      # in water = open = false
+      # no water = closed = true
+      inverted: true
+      mode:
+        input: true
+        # it flaps on/off unless we enable the pull-up restor on the board
+        pullup: true
+    on_state:
+      then:
+        - if:
+            condition:
+              binary_sensor.is_on: gpio_float_switch_water_tank
+            then:
+              - switch.turn_off: gpio_relay_irrigation_pump
+              - light.turn_on: ${id_prefix}_status_led
+              - light.turn_on: ${id_prefix}_indicator_led
+            else:
+              - switch.turn_on: gpio_relay_irrigation_pump
+              - light.turn_off: ${id_prefix}_status_led
+              - light.turn_off: ${id_prefix}_indicator_led
+
+  # ESPHome
+  - platform: status
+    name: "{{ item.name }} ESHome status"
+    entity_category: "diagnostic"
+    id: ${id_prefix}_status
+
+sensor:
+  # ESPHome
+
+  - platform: wifi_signal
+    internal: true
+    name: "{{ item.name }} WiFi signal strength"
+    id: ${id_prefix}_wifi_signal_strength
+    update_interval: 60s
+    entity_category: "diagnostic"
+    unit_of_measurement: "dBm"
+    filters:
+      - throttle: 900s
+    # Reports the WiFi signal strength in %
+
+  - platform: copy
+    source_id: ${id_prefix}_wifi_signal_strength
+    name: "{{ item.name }} WiFi signal"
+    unit_of_measurement: "%"
+    device_class: power_factor
+    entity_category: "diagnostic"
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+  
+text_sensor:
+  # ESPHome
+  - platform: wifi_info
+    ip_address:
+      name: "{{ item.name }} IP address"
+      entity_category: "diagnostic"
+    ssid:
+      name: "{{ item.name }} SSID"
+      entity_category: "diagnostic"
+    mac_address:
+      name: "{{ item.name }} WiFi mac address"
+      entity_category: "diagnostic"
+    dns_address:
+      name: "{{ item.name }} DNS address"
+      entity_category: "diagnostic"
+  - platform: version
+    id: ${id_prefix}_version
+    entity_category: "diagnostic"
+    name: "{{ item.name }} ESPHome version"
+
+light:
+  - platform: status_led
+    name: "{{ item.name }} Status LED"
+    id: ${id_prefix}_status_led
+    icon: "mdi:alarm-light"
+    #restore_mode: ALWAYS_OFF
+    pin: 
+      number: D4
+      inverted: true
+
+  #- platform: binary
+  #  name: "{{ item.name }} Indicator LED"
+  #  id: ${id_prefix}_indicator_led
+  #  icon: mdi:led-outline
+  #  restore_mode: RESTORE_DEFAULT_OFF
+  #  output: ${id_prefix}_d6_led
+
+  - name: "{{ item.name }} Indicator LED"
+    id: ${id_prefix}_indicator_led
+    icon: mdi:led-outline
+    #restore_mode: RESTORE_DEFAULT_OFF
+    restore_mode: ALWAYS_OFF
+    output: ${id_prefix}_d6_pwm
+    platform: monochromatic
+    # default: 1s
+    default_transition_length: 1s
+
+output:
+  #- platform: gpio
+  #  id: ${id_prefix}_d6_led
+  #  pin: D6
+  - platform: esp8266_pwm
+    id: ${id_prefix}_d6_pwm
+    pin: D6
+
+button:
+  # ESPHome
+  - platform: wake_on_lan
+    name: "{{ item.name }} Wake-on-LAN TV Livingroom"
+    target_mac_address: {{ s21_mac_samsung_tv }}
+
+
+
+
+# from esphome/bluetooth-proxies/esp32-generic.yaml, see https://esphome.io/components/improv_serial.html
+# improv_serial:

@@ -9,6 +9,9 @@
   service:
     name: filebeat
     state: restarted
+  when:
+    # filebeat isnt installed on 32-bit arm (armv7l, armhf -- rpi 3 for example) because there are no builds provided
+    - ansible_architecture != "armv7l"
 
 - name: restart telegraf
   service:

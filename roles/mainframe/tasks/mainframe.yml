@@ -96,6 +96,7 @@
     - archives-config
     - mainframe-scripts
     - mainframe-etc
+    - fsn-lb
   with_items:
     - podcast.json
     - archives.toml
@@ -120,6 +121,7 @@
     - mainframe-scripts
     - archive
     - archive-scripts
+    - fsn-lb
 
 - name: copy scripts
   copy:

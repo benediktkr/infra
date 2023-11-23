@@ -1,0 +1,155 @@
+
+# based on:
+# https://github.com/esphome/bluetooth-proxies/blob/main/esp32-generic.yaml
+
+esphome:
+  # name is hostname
+  name: esphome-bleproxy-livingroom
+  friendly_name: BLE Proxy livingroom
+  name_add_mac_suffix: false
+  #project:
+  #  name: esphome.bluetooth-proxy
+  #  version: "1.0"
+
+
+esp32:
+  board: nodemcu-32s
+  framework:
+    # esphome docs say to use esp-idf (instead of the default arduino)
+    # because it uses significantly less memory
+    # https://esphome.io/components/bluetooth_proxy
+    type: esp-idf
+
+
+logger:
+
+api:
+  password: "{{ hass_esphome_api_password }}"
+
+ota:
+  password: "{{ hass_esphome_ota_password }}"
+
+wifi:
+  ssid: "{{ hass_esphome_wifi_ssid }}"
+  password: "{{ hass_esphome_wifi_password }}"
+  domain: .{{ inventory_hostname.split('.')[1:] | join('.') }}
+
+  ap:
+    # use device_name
+    # ssid:
+    password: "{{ hass_esphome_fallback_wifi_password }}"
+
+mdns:
+  disabled: true
+
+esp32_ble_tracker:
+  #on_ble_advertise:
+  #  - then:
+  #      - lambda: |-
+  #          ESP_LOGD("ble_adv", "New BLE device");
+  #          ESP_LOGD("ble_adv", "  address: %s", x.address_str().c_str());
+  #          ESP_LOGD("ble_adv", "  name: %s", x.get_name().c_str());
+  #         ESP_LOGD("ble_adv", "  Advertised service UUIDs:");
+  #          for (auto uuid : x.get_service_uuids()) {
+  #              ESP_LOGD("ble_adv", "    - %s", uuid.to_string().c_str());
+  #          }
+  #          ESP_LOGD("ble_adv", "  Advertised service data:");
+  #          for (auto data : x.get_service_datas()) {
+  #              ESP_LOGD("ble_adv", "    - %s: (length %i)", data.uuid.to_string().c_str(), data.data.size());
+  #          }
+  #          ESP_LOGD("ble_adv", "  Advertised manufacturer data:");
+  #          for (auto data : x.get_manufacturer_datas()) {
+  #              ESP_LOGD("ble_adv", "    - %s: (length %i)", data.uuid.to_string().c_str(), data.data.size());
+  #          }
+  scan_parameters:
+    active: true
+#    # defaults
+#    # interval: 320ms
+#    # window: 30ms
+#    # max chances
+#    #interval: 1100ms
+#    #window: 1100ms
+#    # try next
+#    interval: 1100ms
+#    window: 550ms
+
+bluetooth_proxy:
+  active: true
+  cache_services: true  # defaults to true
+
+number:
+  - platform: template
+    name: "BLE distance threshold"
+    min_value: 0.0
+    max_value: 10.0
+    initial_value: 0.5
+    step: 0.05
+    optimistic: true
+    id: ble_threshold_distance
+    unit_of_measurement: "m"
+    device_class: distance
+
+sensor:
+{% for item in hass_private_ble %}
+  - platform: homeassistant
+    name: "BLE Estimated distance {{ item.name }}"
+    id: "ble_distance_{{ item.id }}"
+    entity_id: "sensor.private_ble_{{ item.id }}_estimated_distance"
+{% endfor %}
+
+
+text_sensor:
+{% for item in hass_private_ble %}
+  - platform: homeassistant
+    name: "BLE MAC {{ item.name}}"
+    id: "ble_mac_{{ item.id }}"
+    entity_id: "device_tracker.private_ble_{{ item.id }}"
+    attribute: "current_address"
+{% endfor %}
+
+  # for reading with appdaemon
+  # its excluded from the recorder in home assistant
+  - platform: ble_scanner
+    name: "json ble scanner"
+    disabled_by_default: true
+    #id: esphome_bleproxy_ble_scanner
+
+  - platform: wifi_info
+    mac_address:
+      name: "WiFi MAC"
+      entity_category: "diagnostic"
+
+binary_sensor:
+{% for item in hass_private_ble %}
+  - platform: template
+    name: "BLE Presence {{ item.name }}"
+    id: "ble_presence_{{ item.id }}"
+    device_class: occupancy
+    lambda: |-
+      float distance = id(ble_distance_{{ item.id }}).state;
+      float threshold = id(ble_threshold_distance).state;
+      return distance <= threshold;
+
+{% endfor %}
+
+  - platform: status
+    name: Status
+    entity_category: "diagnostic"
+    id: esphome_bleproxy_status
+
+switch:
+  - platform: restart
+    name: "Reboot"
+    icon: mdi:power-cycle
+    id: esphome_bleproxy_reboot
+
+# ------------------------------------------------
+
+
+# from esphome/bluetooth-proxies/esp32-generic.yaml, see https://esphome.io/components/improv_serial.html
+# improv_serial:
+
+
+# also from esphome/bluetooth-proxies
+#dashboard_import:
+#  package_import_url: github://esphome/bluetooth-proxies/esp32-generic.yaml@main

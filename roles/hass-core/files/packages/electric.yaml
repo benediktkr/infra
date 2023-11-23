@@ -1,0 +1,55 @@
+homeassistant:
+  customize:
+    package.node_anchors:
+      common_attrs: &common_attrs
+        package: "electric"
+      common_attrs_templated: &common_attrs_templated
+        templated: true
+        <<: *common_attrs
+    
+    sensor.electric_w_study:
+      friendly_name: "Study electric consumption [W]"
+      <<: *common_attrs_templated
+ 
+    sensor.electric_w_livingroom:
+      friendly_name: "Livingroom electric consumption [W]"
+      <<: *common_attrs_templated
+
+
+
+template:
+  - sensor:
+      - name: electric_w_study
+        device_class: power
+        state_class: measurement
+        unit_of_measurement: "W"
+        state: >-
+          {{
+            states("sensor.electric_w_switch_study_desk_monitor")|float(0.0)|round(1)
+            + states("sensor.electric_w_light_study_ceiling")|float(0.0)|round(1)
+            + states("sensor.electric_w_outlet_study_1")|float(0.0)|round(1)
+            + states("sensor.electric_w_outlet_study_2")|float(0.0)|round(1)
+            + states("sensor.electric_w_outlet_study_3")|float(0.0)|round(1)
+            + states("sensor.electric_w_switch_study_fornuftig")|float(0.0)|round(1)
+          }}
+
+      - name: electric_w_livingroom
+        device_class: power
+        state_class: measurement
+        unit_of_measurement: "W"
+        state: >-
+          {{
+            states("sensor.electric_w_outlet_livingroom_1")|float(0.0)|round(1)
+            + states("sensor.electric_w_switch_ber_nullspace0")|float(0.0)|round(1)
+            + states("sensor.electric_w_socket_livingroom_gfci")|float(0.0)|round(1)
+            + states("sensor.electric_w_switch_tv_livingroom")|float(0.0)|round(1)
+            + states("sensor.electric_w_switch_nad_c370")|float(0.0)|round(1)
+            + states("sensor.electric_w_light_livingroom_ceiling")|float(0.0)|round(1)
+          }}
+
+
+
+
+
+
+

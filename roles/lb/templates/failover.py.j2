@@ -1,0 +1,68 @@
+#!/usr/bin/env python3
+
+# check if /sys/class/net/wg0/carrier exists
+# check if wg0 is up in other ways
+# check if haproxy has a pid (returns 0 if a process exists)
+#    pgrep haproxy
+# maybe haproxy healthcheck
+
+import sys
+import requests
+
+"""small script to CLAIM the floating IP
+
+written in single file, tried to keep it simple
+"""
+
+def read_instance_id():
+    with open("/usr/local/etc/instance-id", "r") as f:
+        instance_id = str(f.read())
+    return instance_id
+
+{% if hcloud_api_url.endswith("/") -%}
+API_BASE = "{{ hcloud_api_url }}"
+{% else -%}
+API_BASE = "{{ hcloud_api_url }}/"
+{% endif %}
+URL = API_BASE + "floating_ips/{{ floating_ip_id }}/actions/assign"
+PAYLOAD = {
+    "server": read_instance_id()
+}
+HEADERS = {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer {{ hcloud_lb_token }}"
+}
+WH_URL = "https://{{ matrix_url }}/_webhook/incoming"
+WH_TOKEN = "{{ matrix_webhook_token }}"
+SHORT_HOST = "{{ inventory_hostname.split('.')[0] }}"
+SHORT_LB = "{{ lb_url.split('.')[0] }}"
+
+def failover():
+    r = requests.post(URL, headers=HEADERS,json=PAYLOAD)
+    r.raise_for_status()
+    # returns 201 usually
+    return r
+
+def notify_humans(success=False):
+    # this will go over the lb though
+    if success:
+        text = f"`[{SHORT_LB}]` failed over to `{SHORT_HOST}` (claimed)"
+    else:
+        text = f"`[{SHORT_LB}]` API **ERROR** on failover to `{SHORT_HOST}`"
+
+    payload = {'text': text, 'token': WH_TOKEN}
+    r = requests.post(WH_URL, json=payload)
+    r.raise_for_status()
+
+def main():
+    try:
+        failover()
+        success = True
+    except requests.HTTPError:
+        success = False
+
+    notify_humans(success)
+    return 0 if success else 1
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -40,6 +40,24 @@
         target: /data
     networks_cli_compatible: no
     networks:
-      - name: bridge
+      #- name: bridge
+      #  ipv4_address: 172.17.0.2
       - name: bridgewithdns
+        ipv4_address: "{{ bridgewithdns.zflux }}"
+    healthcheck:
+      test: ["echo"]
+      interval: "60m"
   tags: zflux-container
+
+- name: add container ips to /etc/hosts
+  lineinfile:
+    dest: /etc/hosts
+    line: "{{ item }} zflux"
+    state: present
+  with_items:
+    - "{{ bridgewithdns.zflux }}"
+    - "172.17.0.2"
+  tags:
+    - etc-hosts
+
+

@@ -1,37 +1,58 @@
-PIHOLE_PTR=HOSTNAME
+{#
+ # ansible managed
+ #}
 
+PIHOLE_PTR=HOSTNAMEFQDN
 BLOCKINGMODE=NULL
-RATE_LIMIT=0/0
-
-BLOCK_ESNI=true
-
-# reply with NXDOMAIN to queries of use-application-dns.net
-# default value: true
-MOZILLA_CANARY=true
-
-# reply with NXDOMAIN to mask.icloud.com and mask-h2.icloud.com to
-# disable apples icloud private relay to prevent apps devices from
-# bypassing pihole
-# default value: true
-BLOCK_ICLOUD_PR=true
-
-# when the gravity database is locked/busy, allow all queries
-REPLY_WHEN_BUSY=ALLOW
-
 LOGFILE=/var/log/pihole/pihole-FTL.log
+MACVENDORDB=/macvendor.db
 
 RESOLVE_IPV6=yes
 RESOLVE_IPV4=yes
-# disables pihole trying to override the PTR record
+
+RATE_LIMIT=0/0
+BLOCK_ESNI=true
+
+{#
+ # Firefox DNS-over-HTTPS
+ # reply with NXDOMAIN to queries of use-application-dns.net
+ # default value: true
+ #}
+MOZILLA_CANARY=true
+
+{#
+ # iCloud Private Relay
+ # reply with NXDOMAIN to mask.icloud.com and mask-h2.icloud.com
+ # default value: true
+ #}
+BLOCK_ICLOUD_PR=true
+
+{#
+ # when the gravity database is locked/busy, allow all queries
+ #}
+REPLY_WHEN_BUSY=ALLOW
+
+
+{#
+ # disables pihole trying to override the PTR record
+ #}
 PIHOLE_PTR=NONE
 
+{#
+ # pihole will overwrite LOCAL_IPV4 (when running in docker) to 0.0.0.0 by default
+ # the workaround is to set FTLCONF_LOCAL_IPV4 as an env var
+ # see: https://github.com/pi-hole/docker-pi-hole/issues/1017
+ #}
 {% if inventory_hostname in wg_clients %}
-#LOCAL_IPV4={{ wg_clients[inventory_hostname]['ip'] }}
-#REPLY_ADDR4={{ wg_clients[inventory_hostname]['ip'] }}
+LOCAL_IPV4={{ wg_clients[inventory_hostname]['ip'] }}
+BLOCK_ADDR4={{ wg_clients[inventory_hostname]['ip'] }}
 {% else %}
-#LOCAL_IPV4={{ ansible_default_ipv4.address }}
-#REPLY_ADDR4= {{ wg_clients[inventory_hostname]['ip'] }}
+LOCAL_IPV4={{ ansible_default_ipv4.address }}
+BLOCK_ADDR4={{ ansible_default_ipv4.address }}
 {% endif %}
 
-# the default is needed to pihole leaves the file alone
-LOCAL_IPV4=0.0.0.0
+
+
+
+
+
