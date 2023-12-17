@@ -1,0 +1,10 @@
+---
+
+dependencies:
+  - role: mariadb
+    tags:
+      - mariadb
+  - role: openldap
+    tags:
+      - openldap
+      - ldap-users

@@ -1,0 +1,19 @@
+---
+
+- name: restart firefly container
+  docker_container:
+    name: firefly
+    state: started
+    restart: true
+  when:
+    - firefly_container is not defined or not firefly_container.changed
+
+- name: reload nginx
+  service:
+    name: nginx
+    state: reloaded
+
+- name: restart nginx
+  service:
+    name: nginx
+    state: restarted

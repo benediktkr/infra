@@ -17,7 +17,9 @@
 # hplip - HP Linux Printing and Imaging System (HPLIP)
 - name: install hp cups printer drivers
   apt:
-    name: printer-driver-hpcups
+    name:
+      - printer-driver-hpcups
+      - hplip
     state: present
   tags: packages
 
@@ -84,5 +86,5 @@
     mode: 0644
   tags:
    - cups-nginx
-   - nginx 
+   - nginx
   notify: reload nginx

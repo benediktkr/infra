@@ -99,7 +99,7 @@ FILE_NAME = gitea.log
 LEVEL = {{ gitea_log_level }}
 REDIRECT_MACARON_LOG = true
 MACARON = file
-ROUTER = file
+logger.router.MODE = file
 ROOT_PATH = /data/gitea/log
 ENABLE_SSH_LOG = {{ gitea_ssh_enabled | string | lower }}
 
@@ -286,7 +286,7 @@ ACCOUNT_LINKING = login
 [mailer]
 {% if gitea_smtp_enabled -%}
 ENABLED = true
-MAILER_TYPE = smtp
+PROTOCOL = smtp
 FROM = git@{{ domain }}
 ENVELOPE_FROM = git@{{ domain }}
 HELO_HOSTNAME = {{ gitea_url }}

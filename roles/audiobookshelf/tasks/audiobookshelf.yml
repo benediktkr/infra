@@ -71,8 +71,8 @@
     pull: true
     restart_policy: "unless-stopped"
     state: started
-    container_default_behavior: compatibility
-    networks_cli_compatible: false
+    #container_default_behavior: compatibility
+    #networks_cli_compatible: false
     network_mode: bridgewithdns
     networks:
       - name: bridgewithdns

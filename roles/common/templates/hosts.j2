@@ -1,0 +1,31 @@
+# {{ ansible_managed }}
+
+{% if 'proxmox' not in group_names -%}
+127.0.1.1   {{ inventory_hostname.split('.')[0] }}
+{% endif %}
+127.0.0.1   localhost
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+
+{% if 'proxmox' in group_names or true -%}
+{{ ansible_default_ipv4.address }} {{ inventory_hostname }} {{ inventory_hostname.split('.')[0] }}
+{% endif %}
+
+# The following lines are desirable for IPv6 capable hosts
+::1     localhost ip6-localhost ip6-loopback
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+
+{% if 'docker' in group_names %}
+# Docker networks
+172.17.0.1 host-bridge
+
+# bridgewitdns: {{ bridgewithdns_cidr }}
+{% for name, docker_ip in bridgewithdns.items() -%}
+{{ docker_ip }} {{ name.replace("_", "-") }}
+{% endfor %}
+
+{% endif %}
+
+
+
+

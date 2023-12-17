@@ -56,9 +56,9 @@ listen health
     mode http
 
     acl health_allowed src {{ wg_clients[ansible_control_host].ip }}/32
-    {% for item in my_local_cidrs %}
+    {% for item in my_local_cidrs -%}
     acl health_allowed src {{ item }}
-    {% endfor %}
+    {% endfor -%}
     acl health_allowed src 127.0.0.1/32
     http-request deny unless health_allowed
 

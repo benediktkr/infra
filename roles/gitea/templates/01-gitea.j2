@@ -63,14 +63,16 @@ server {
        set $header_sudo_gitea "gitea, {{ item }}";
    }
    {% endfor %}
-
+   location = /{{ myusername }} {
+       return 302 https://{{ gitea_url }}/{{ myusername }}/;
+   }
    location /robots.txt {
        # gitea itself can also serve this file
-       alias {{ gitea_user.home }}/data/gitea/robots.txt;
+       alias {{ gitea_user.home }}/robots.txt;
    }
    location /sitemap.xml {
        # gitea itself can also serve this file
-       alias {{ gitea_user.home }}/data/gitea/sitemap.xml;
+       alias {{ gitea_user.home }}/sitemap.xml;
    }
    location /user/sso {
        return 302 /user/oauth2/{{ gitea_oidc_name }}?redirect_to=$arg_redirect_to;

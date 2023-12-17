@@ -71,8 +71,16 @@ server {
 
     }
 
+    location = /cv1.pdf {
+        # good side effect, removes X-Robots-Tag header
+        add_header "x-for-hire" "false";
+    }
+
     location /docs {
         error_page 404 /docs/404.html;
+        sub_filter_once off;
+        sub_filter '/index.html' '/';
+        rewrite ^/docs/projects/homeautomation/(.*)$ /docs/hass/$1 permanent;
     }
 
     location /cal/ {

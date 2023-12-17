@@ -1,43 +1,47 @@
 LogLevel warn
 PageLogFormat
-
 MaxLogSize 0
-
 ErrorPolicy retry-job
-#Port 631
-
-#Listen localhost:631
+# Allow remote access
+Port 631
 Listen /run/cups/cups.sock
-
+#Listen localhost:631
 DefaultPaperSize A4
+Browsing On
+DefaultAuthType None
+WebInterface Yes
+IdleExitTimeout 60
+
 #DefaultShared yes
+
+{% set domain = inventory_hostname.split('.')[1:] | join('.') %}
+DNSSDHostName printer.{{ domain }}
+# This is where to send the advertisement, not what to advertise
+#BrowseAddress printer.{{ domain }}
+#BrowseProtocol all
+BrowseProtocol dnssd
+BrowseLocalProtocols dnssd
+ServerAlias *
+ServerName printer.{{ domain }}
 
 {#
 Browsing No
 # BrowseAddress printer.{{ inventory_hostname.split('.')[1:] | join('.') }}
 BrowseLocalProtocols dnssd
-#}
 
-{#
 # we use nginx and authelia, dont need cups' auth system
 # https://anthe.studio/blog/en/cups-nginx-reverse-proxy
 #DefaultAuthType Basic
 #
  #}
-DefaultAuthType None
-
-WebInterface Yes
-
-IdleExitTimeout 60
 
 <Location />
   # Allow shared printing...
   Order allow,deny
-  #Allow all
+  Allow all
   #Order allow,deny
-  Allow @LOCAL
+  #Allow @LOCAL
 </Location>
-
 <Location /admin>
   Order allow,deny
   Allow @LOCAL
@@ -45,16 +49,16 @@ IdleExitTimeout 60
 
 <Location /admin/conf>
   AuthType Default
-  Allow @LOCAL
+  #Allow @LOCAL
   Require user @SYSTEM
-  Order allow,deny
+  #Order allow,deny
 </Location>
 
 <Location /admin/log>
   AuthType Default
-  Order allow,deny
   Require user @SYSTEM
-  Allow @LOCAL
+  #Order allow,deny
+  #Allow @LOCAL
 </Location>
 
 <Policy default>

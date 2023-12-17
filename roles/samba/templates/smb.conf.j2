@@ -16,6 +16,9 @@
    {% set hostname = inventory_hostname.split(".")[0] -%}
    {% set hostname_parts = hostname.split("-") -%}
    {% if hostname_parts|length == 3 and hostname_parts[0]|length == 3 -%}
+   {% if samba_netbios_name|default(false) -%}
+   netbios name = {{ hostname_parts[1] }}
+   {% endif -%}
    #netbios name = {{ hostname_parts[1] }}
    {% else -%}
    netbios name = {{ hostname | replace("-", "") }}

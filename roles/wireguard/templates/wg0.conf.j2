@@ -21,7 +21,11 @@ DNS = {{ pihole_dns }}
 [Peer]
 Endpoint = {{ wg.endpoint_addr|default(endpoint) }}:{{ wireguard_port }}
 PublicKey = {{ lookup('file', 'private/wireguard/' + endpoint + '.pub' ) }}
-AllowedIPs = {{ wireguard_cidr }}, {{ s21_cidr }}
+{% if 'endpoint_allowed' in wg -%}
+AllowedIPs = {{ wg.endpoint_allowed | join(", ") }}
+{% else -%}
+AllowedIPs = {{ wireguard_cidr }}, {{ s21_cidr }}, {{ ls54_cidr }}
+{% endif %}
 PersistentKeepalive = 25
 {% else %}
 

@@ -63,10 +63,10 @@
     - redis
 
 
-- name: redis container for nitter
+- name: nitter
   docker_container:
     name: nitter
-    image: zedeus/nitter:latest
+    image: zedeus/nitter
     restart_policy: "unless-stopped"
     auto_remove: false
     detach: true

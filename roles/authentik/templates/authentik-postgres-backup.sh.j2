@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# run as authentik user
+
+/usr/bin/pg_dump -U authentik > {{ systemuserlist.authentik.home }}/postgres-backup.sql

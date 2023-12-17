@@ -1,0 +1,7 @@
+---
+
+dependencies:
+  - role: postgresql
+    tags:
+      - postgres
+      - postgresql

@@ -16,14 +16,14 @@
   tags:
     - proxmox-ssh
 
-- name: ensure hostname in /etc/hosts
-  lineinfile:
-    dest: /etc/hosts
-    line: "{{ ansible_default_ipv4.address }} {{ inventory_hostname }} {{ inventory_hostname.split('.')[0] }}"
-    state: present
-  #when: ansible_default_ipv4.address is defined
-  tags:
-    - etc-hosts
+#- name: ensure hostname in /etc/hosts
+#  lineinfile:
+#    dest: /etc/hosts
+#    line: "{{ ansible_default_ipv4.address }} {{ inventory_hostname }} {{ inventory_hostname.split('.')[0] }}"
+#    state: present
+#  #when: ansible_default_ipv4.address is defined
+#  tags:
+#    - etc-hosts
 
 - name: ensure no 127.0.0.0/8 entries for hostname in /etc/hosts (when required)
   lineinfile:

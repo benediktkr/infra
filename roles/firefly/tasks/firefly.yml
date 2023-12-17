@@ -1,0 +1,163 @@
+---
+
+- name: create mariadb db
+  mysql_db:
+    name: "{{ systemuserlist.firefly.username }}"
+    encoding: utf8mb4
+    collation: utf8mb4_general_ci
+    login_unix_socket: /run/mysqld/mysqld.sock
+  tags:
+    - mariadb-users
+    - firefly-mariadb
+
+- name: mariadb user without password
+  mysql_user:
+    state: present
+    name: "{{ systemuserlist.firefly.username }}"
+    host: 'localhost'
+    priv: "{{ systemuserlist.firefly.username }}.*:ALL"
+    login_unix_socket: /run/mysqld/mysqld.sock
+    column_case_sensitive: false
+  tags:
+    - mariadb-users
+    - firefly-mariadb
+
+- name: mariadb user with password
+  mysql_user:
+    state: present
+    name: "{{ systemuserlist.firefly.username }}"
+    host: "{{ bridgewithdns.firefly }}"
+    priv: "{{ systemuserlist.firefly.username }}.*:ALL"
+    password: "{{ systemuserlist.firefly.mariadb_pass }}"
+    login_unix_socket: /run/mysqld/mysqld.sock
+    column_case_sensitive: false
+  tags:
+    - firefly-mariadb
+    - mariadb-users
+
+- name: install certs
+  copy:
+    src: "/usr/local/etc/letsencrypt/live/{{ item }}"
+    dest: "/usr/local/etc/certs/"
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - letsencrypt-certs
+  notify: reload nginx
+  vars:
+    prediff_cmd: echo
+  with_items:
+    - "{{ firefly_url }}"
+    - "{{ domain }}"
+
+- name: create dir structure
+  file:
+    path: "{{ systemuserlist.firefly.home }}/{{ item.name }}"
+    state: directory
+    mode: "{{ item.mode | default('0755') }}"
+    owner: "{{ item.owner | default('firefly') }}"
+    group: "{{ item.group | default('firefly') }}"
+  tags:
+    - firefly-dirs
+  loop_control:
+    label: "{{ item.name }}"
+  with_items:
+    - name: config/
+    - name: data
+    - name: data/upload
+      owner: 33
+      group: 33
+    - name: fints
+    - name: fints/config
+
+- name: template env file
+  template:
+    src: firefly.env.j2
+    dest: "{{ systemuserlist.firefly.home }}/config/firefly.env"
+    owner: firefly
+    group: firefly
+    mode: "0660"
+  tags:
+    - firefly-config
+  notify: restart firefly container
+
+- name: template nginx virtual host
+  template:
+    src: "01-firefly.conf.j2"
+    dest: /etc/nginx/sites-enabled/01-firefly.conf
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - nginx
+    - firefly-nginx
+  notify: reload nginx
+
+- name: start firefly container
+  docker_container:
+    name: firefly
+    image: fireflyiii/core:latest
+    detach: true
+    pull: true
+    auto_remove: false
+    restart_policy: "unless-stopped"
+    state: started
+    container_default_behavior: compatibility
+    #user: "{{ systemuserlist.firefly.uid }}:{{ systemuserlist.firefly.gid }}"
+    networks_cli_compatible: false
+    network_mode: bridgewithdns
+    networks:
+      - name: bridgewithdns
+        ipv4_address: "{{ bridgewithdns.firefly }}"
+    exposed_ports:
+      - "{{ firefly_port }}"
+    ports:
+      - "127.0.0.1:{{ firefly_port }}:{{ firefly_port }}"
+    env_file: "{{ systemuserlist.firefly.home }}/config/firefly.env"
+    env:
+      FOO: "BAR"
+    mounts:
+      - type: bind
+        source: "{{ systemuserlist.firefly.home }}/data/upload"
+        target: /var/www/html/storage/upload
+      - type: bind
+        read_only: false
+        source: /run/mysqld/mysqld.sock
+        target: /run/mysqld/mysqld.sock
+  register: firefly_container
+  tags:
+    - firefly-container
+    - docker-containers
+
+- name: start firefly-fints container
+  docker_container:
+    name: firefly-fints
+    image: benkl/firefly-iii-fints-importer
+    detach: true
+    pull: true
+    auto_remove: false
+    restart_policy: "unless-stopped"
+    state: started
+    container_default_behavior: compatibility
+    user: "{{ systemuserlist.firefly.uid }}:{{ systemuserlist.firefly.gid }}"
+    networks_cli_compatible: false
+    network_mode: bridgewithdns
+    networks:
+      - name: bridgewithdns
+        ipv4_address: "{{ bridgewithdns.firefly_fints }}"
+    exposed_ports:
+      - "{{ firefly_fints_port }}:8081"
+    ports:
+      - "127.0.0.1:{{ firefly_fints_port }}:{{ firefly_fints_port }}"
+    env:
+      FOO: "BAR"
+    mounts:
+      - type: bind
+        source: "{{ systemuserlist.firefly.home }}/fints/config"
+        target: /app/configurations
+  tags:
+    - firefly-container
+    - docker-containers
+
+

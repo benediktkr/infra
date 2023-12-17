@@ -9,14 +9,6 @@
   tags:
     - wg-keygen
 
-- name: enable ip_forward in proc
-  sysctl:
-    name: net.ipv4.ip_forward
-    value: "1"
-    sysctl_set:
-    state: present
-    reload: yes
-
   #shell: "bash -c 'echo 1 > /proc/sys/net/ipv4/ip_forward'"
 
 - name: enable ip_forward in sysctl.conf
@@ -30,9 +22,9 @@
   sysctl:
     name: net.ipv4.ip_forward
     value: "1"
-    sysctl_set: yes
+    sysctl_set: true
     state: present
-    reload: yes
+    reload: true
 
 - name: install wireguard
   apt:
@@ -72,5 +64,5 @@
 - name: enable wireguard server with wg-quick
   service:
     name: wg-quick@wg0
-    enabled: yes
+    enabled: true
     state: started

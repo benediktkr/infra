@@ -45,6 +45,8 @@
     - name: data/gitea/avatars
     - name: data/gitea/repo-avatars
     - name: data/gitea/log
+    - name: data/gitea/public
+    - name: data/gitea/public/assets
 
     - name: redis
       owner: '999'
@@ -54,6 +56,7 @@
       group: '999'
 
   tags:
+    - gitea-robots
     - gitea-mirror
 
 - name: template config
@@ -68,19 +71,38 @@
     - gitea-config
     - gitea-mirror
 
-- name: template robots.txt and sitemap.xml
+- name: template robots.txt
   template:
-    src: "{{ item }}.j2"
-    dest: "{{ gitea_user.home }}/data/gitea/{{ item }}"
+    src: "robots.txt.j2"
+    dest: "{{ gitea_user.home }}/{{ item }}"
     owner: www-data
     group: www-data
     mode: 0644
   with_items:
+    # where the gitea internal webserver wants it to be
+    - data/gitea/public/robots.txt
+    # where our actual web server serves the file from
     - robots.txt
+  tags:
+    - robots
+    - gitea-robots
+
+- name: template sitemap.xml
+  template:
+    src: "sitemap.xml.j2"
+    dest: "{{ gitea_user.home }}/{{ item }}"
+    owner: www-data
+    group: www-data
+    mode: 0644
+  with_items:
+    # where the gitea internal webserver wants it to be
+    - data/gitea/public/sitemap.xml
+    # where our actual web server serves the file from
     - sitemap.xml
   tags:
     - robots
     - gitea-robots
+    - gitea-sitemap
 
 - name: copy gitea templates
   copy:
@@ -93,7 +115,7 @@
     - home.tmpl
     - custom/extra_links.tmpl
     - custom/extra_tabs.tmpl
-    - base/head_navbar.tmpl
+    # - base/head_navbar.tmpl
     #- user/dashboard/feeds.tmpl
     #- user/dashboard/repolist.tmpl
   tags:

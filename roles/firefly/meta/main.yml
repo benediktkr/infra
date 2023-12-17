@@ -1,0 +1,9 @@
+---
+
+dependencies:
+  - role: mariadb
+    tags:
+      - mariadb
+  - role: nginx
+    tags:
+      - nginx

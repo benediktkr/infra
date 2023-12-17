@@ -19,7 +19,7 @@
 - name: template postgres config
   template:
     src: postgresql.conf.j2
-    dest: /etc/postgresql/12/main/postgresql.conf
+    dest: /etc/postgresql/{{ postgresql_version }}/main/postgresql.conf
     owner: postgres
     group: postgres
     mode: 0644
@@ -28,7 +28,7 @@
 - name: template pg_hba.conf
   template:
     src: pg_hba.conf.j2
-    dest: /etc/postgresql/12/main/pg_hba.conf
+    dest: /etc/postgresql/{{ postgresql_version }}/main/pg_hba.conf
     owner: postgres
     group: postgres
     mode: 0640

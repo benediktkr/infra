@@ -1,11 +1,27 @@
 ---
 
+- name: gather facts if needed
+  setup:
+  tags:
+    - always
+  when: ansible_facts == {}
+
 - name: set hostname
   hostname:
     name: "{{ inventory_hostname }}"
     use: systemd
   tags:
     - hostname
+
+- name: set /etc/hosts
+  template:
+    src: hosts.j2
+    dest: /etc/hosts
+    owner: root
+    group: root
+    mode: "0644"
+  tags:
+    - etc-hosts
 
 # - name: set image hostname
 #   hostname:

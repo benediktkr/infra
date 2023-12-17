@@ -1,0 +1,87 @@
+# This is the default configuration file
+postgresql:
+  host: "172.17.0.1"
+  name: authentik
+  user: authentik
+  port: "5432"
+  password: "{{ systemuserlist.authentik.postgres_passwd }}"
+  backup:
+    enabled: false
+  s3_backup:
+    access_key: ""
+    secret_key: ""
+    bucket: ""
+    region: eu-central-1
+    host: ""
+    location: ""
+    insecure_skip_verify: false
+
+web:
+  listen: 0.0.0.0:{{ authentik_port }}
+  listen_tls: 0.0.0.0:9443
+  listen_metrics: 0.0.0.0:{{ authentik_port_metrics }}
+  outpost_port_offset: 0
+
+redis:
+  host: authentik-redis
+  port: 6379
+  password: ''
+  tls: false
+  tls_reqs: "none"
+  cache_db: 0
+  message_queue_db: 1
+  ws_db: 2
+  outpost_session_db: 3
+  cache_timeout: 300
+  cache_timeout_flows: 300
+  cache_timeout_policies: 300
+  cache_timeout_reputation: 300
+
+debug: false
+log_level: info
+secret_key: "{{ authentik_secret_key }}"
+
+# Error reporting, would send stacktrace to sentry.beryju.org
+error_reporting:
+  enabled: false
+
+# Global email settings
+email:
+  host: {{ smtp_server }}
+  port: {{ smtp_port }}
+  username: "{{ smtp_username }}"
+  password: "{{ smtp_passwd }}"
+  use_tls: true
+  use_ssl: false
+  timeout: 10
+  from: "{{ authentik_email }}"
+
+outposts:
+  # Placeholders:
+  # %(type)s: Outpost type; proxy, ldap, etc
+  # %(version)s: Current version; 2021.4.1
+  # %(build_hash)s: Build hash if you're running a beta version
+  container_image_base: ghcr.io/goauthentik/%(type)s:%(version)s
+
+cookie_domain: "{{ domain }}"
+disable_update_check: true
+disable_startup_analytics: false
+avatars: env://AUTHENTIK_AUTHENTIK__AVATARS?gravatar
+#geoip: "/geoip/GeoLite2-City.mmdb"
+
+footer_links:
+  - name: sudo.is
+    href: https://www.sudo.is
+  - name: docs
+    href: https://www.sudo.is/docs
+  - name: git
+    href: https://git.sudo.is/
+  - name: system status
+    href: https://status.sudo.is
+
+default_user_change_name: true
+default_user_change_email: true
+default_user_change_username: true
+
+gdpr_compliance: true
+cert_discovery_dir: /certs

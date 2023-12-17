@@ -1,9 +1,0 @@
----
-
-packages:
-  board: !include ../packages/boards/esp32s2mini.yaml 
-  esphome: !include ../packages/common/esphome.yaml
-  network: !include ../packages/common/network.yaml
-  sensors_esp32_internal_temp: !include ../packages/sensors/esp32-internal-temp.yaml
-  sensors_esphome: !include ../packages/sensors/esphome.yaml
-  sensors_wifi: !include ../packages/sensors/wifi.yaml
