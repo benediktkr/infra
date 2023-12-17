@@ -1,0 +1,50 @@
+---
+
+substitutions:
+  hass_time_timezone: "Europe/Berlin"
+
+binary_sensor:
+  - platform: template
+    name: "${hostname} HASS time valid"
+    id: time_hass_valid
+    internal: false
+    disabled_by_default: false
+    publish_initial_state: true
+    lambda: |-
+      return id(time_hass).now().is_valid();
+    filters:
+      - delayed_off: "60s"
+
+
+sensor:
+  - platform: template
+    name: "${hostname} HASS hour"
+    id: time_hass_hour
+    icon: "mdi:clock"
+    internal: true
+    accuracy_decimals: 0
+    unit_of_measurement: hours
+    lambda: |-
+      auto time = id(time_hass).now();
+      return time.hour;
+
+
+text_sensor:
+  - platform: template
+    name: "${hostname} HASS time"
+    id: "hass_time_of_day"
+    icon: "mdi:clock"
+    internal: true
+    lambda: |-
+      auto time = id(time_hass).now();
+      return to_string(time.hour) + ":" + to_string(time.minute);
+    update_interval: "60s"
+
+time:
+  - platform: homeassistant
+    id: time_hass
+    timezone: ${hass_time_timezone}
+    on_time:
+      - hours: 14
+        minutes: 40
+        then: []

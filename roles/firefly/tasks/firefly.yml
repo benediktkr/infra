@@ -68,6 +68,7 @@
     - name: data/upload
       owner: 33
       group: 33
+      mode: '0775'
     - name: fints
     - name: fints/config
 
@@ -147,9 +148,9 @@
       - name: bridgewithdns
         ipv4_address: "{{ bridgewithdns.firefly_fints }}"
     exposed_ports:
-      - "{{ firefly_fints_port }}:8081"
+      - "{{ firefly_fints_port }}"
     ports:
-      - "127.0.0.1:{{ firefly_fints_port }}:{{ firefly_fints_port }}"
+      - "127.0.0.1:{{ firefly_fints_port }}:{{ firefly_fints_container_port }}"
     env:
       FOO: "BAR"
     mounts:

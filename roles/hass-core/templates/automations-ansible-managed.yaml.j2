@@ -1,5 +1,6 @@
 ---
 
+{% if hass_radiators | length > 0 -%}
 - alias: monitor_radiators_reporting
   id: monitor_radiators_reporting
   description: monitor that the battery-powered radiator knobs are working
@@ -13,6 +14,8 @@
       to: 'off'
     {% endif -%}
     {% endfor %}
+
+{% endif %}
 
   condition: []
   mode: single

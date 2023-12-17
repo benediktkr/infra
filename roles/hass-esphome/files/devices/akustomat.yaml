@@ -4,21 +4,30 @@ substitutions:
   uher_name: "UHER Akustomat F411"
 
 packages:
-  board: !include ../packages/boards/esp32s2mini.yaml 
+  board: !include ../packages/boards/esp32s2mini.yaml
   esphome: !include ../packages/common/esphome.yaml
   network: !include ../packages/common/network.yaml
   http_server: !include ../packages/common/http_server.yaml
   sensors_esp32: !include ../packages/sensors/esp32.yaml
   sensors_esphome: !include ../packages/sensors/esphome.yaml
   sensors_wifi: !include ../packages/sensors/wifi.yaml
-  light_rgb: !include
-    file: ../packages/lights/rgb_ledc.yaml
+  light_ledc_indicator_s: !include
+    file: ../packages/lights/ledc.yaml
     vars:
-      rgb_id: "indicator_s"
-      rgb_name: "UHER Akustomat Indicator S"
-      rgb_red_gpio: GPIO11
-      rgb_green_gpio: GPIO12
-      rgb_blue_gpio: GPIO17
+      ledc_name: "${uher_name} Indicator S"
+      ledc_id: indicator_s
+      ledc_gpio: GPIO21
+  binary_sensor_indicator_s: !include
+    file: ../packages/sensors/binary_gpio.yaml
+    vars:
+      binary_sensor_gpio_name: "${uher_name} Indicator S"
+      binary_sensor_gpio: GPIO17
+  switch_indicator_s: !include
+    file: ../packages/switch/binary_gpio.yaml
+    vars:
+      binary_switch_gpio_name: "${uher_name} Indicator S"
+      binary_switch_gpio: GPIO17
+
 
 esphome:
   comment: "${uher_name}"
@@ -35,13 +44,13 @@ sensor:
     device_class: voltage
     unit_of_measurement: V
     accuracy_decimals: 3
-    filters: 
+    filters:
       - delta: 0.003
 
-  - platform: copy 
+  - platform: copy
     id: akustomat_volume
     source_id: akustomat_adc
-    name: "${uher_name} Volume" 
+    name: "${uher_name} Volume"
     device_class: "power_factor"
     unit_of_measurement: "%"
     accuracy_decimals: 0
@@ -60,7 +69,7 @@ sensor:
       #- debounce: 1s
       #- throttle: 5s
       #- heartbeat: 3600s
-  
+
   - platform: copy
     source_id: akustomat_volume
     name: "${uher_name} Volume level"
@@ -71,7 +80,7 @@ sensor:
       - lambda: !lambda |-
           return x/100.0;
       - delta: 0.01
-    
+
   - platform: homeassistant
     internal: false
     name: "${hostname} OwnTone volume"

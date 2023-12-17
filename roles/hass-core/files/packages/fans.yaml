@@ -17,6 +17,10 @@ input_select:
     icon: mdi:fan
 
 script:
+  fan_noop:
+    mode: single
+    sequence: []
+
   standing_fan_1_power_toggle:
     mode: single
     sequence:
@@ -130,3 +134,37 @@ fan:
           - silent_night
           - turbo
           - normal
+
+      study:
+        unique_id: study
+        friendly_name: "Fan in study"
+        value_template: |
+          {{ false }}
+        preset_mode_template: |
+          {{ "normal" }}
+        turn_on:
+          service: script.fan_noop
+        turn_off:
+          service: script.fan_noop
+        set_preset_mode:
+          service: script.fan_noop
+        preset_modes:
+          - normal
+
+      bedroom:
+        unique_id: bedroom
+        friendly_name: "Fan in bedroom"
+        value_template: |
+          {{ false }}
+        preset_mode_template: |
+          {{ "normal" }}
+        turn_on:
+          service: script.fan_noop
+        turn_off:
+          service: script.fan_noop
+        set_preset_mode:
+          service: script.fan_noop
+        preset_modes:
+          - normal
+
+

@@ -72,6 +72,8 @@
       - docker-ce
       - docker-ce-cli
       - containerd.io
+      - docker-compose
+      - python3-docker
     update_cache: yes
     state: latest
   environment:
@@ -114,6 +116,8 @@
     - docker-compose
     - docker-pip
     - pip-latest
+  # installed with apt instead
+  when: false
 
 - name: set up bridged network with dns
   docker_network:

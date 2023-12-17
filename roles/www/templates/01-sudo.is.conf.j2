@@ -24,7 +24,56 @@
  # } #}
 
 server {
-    server_name {%- for d in server_names %} {{ d }} www.{{ d }}{% endfor %};
+    server_name docs.{{ domain }};
+    {% if inventory_hostname in wg_clients -%}
+    listen {{ wg_clients[inventory_hostname].ip }}:443 ssl http2;
+    {% endif -%}
+    listen 443 ssl http2;
+
+    include listen-proxy-protocol.conf;
+
+    ssl_certificate /usr/local/etc/certs/docs.{{ domain }}/fullchain.pem;
+    ssl_certificate_key /usr/local/etc/certs/docs.{{ domain }}/privkey.pem;
+
+    location / {
+        rewrite ^/(.*)$ https://www.{{ domain }}/docs/$1 permanent;
+    }
+
+    access_log /var/log/nginx/access_docs.{{ domain }}.log main;
+    error_log /var/log/nginx/error_docs.{{ domain }}.log warn;
+}
+
+server {
+    server_name {%- for d in server_names %} {{ d }}{% endfor %};
+    {% if inventory_hostname in wg_clients -%}
+    listen {{ wg_clients[inventory_hostname].ip }}:443 ssl http2;
+    {% endif -%}
+    listen 443 ssl http2;
+
+    include listen-proxy-protocol.conf;
+
+    # include /.well-known/ and /.sudo-known/ urls.
+    include /etc/nginx/well-known.conf;
+    include /etc/nginx/sudo-known.conf;
+
+    charset utf-8;
+
+    ssl_certificate /usr/local/etc/certs/www.{{ domain }}/fullchain.pem;
+    ssl_certificate_key /usr/local/etc/certs/www.{{ domain }}/privkey.pem;
+
+    include /etc/nginx/authelia_internal.conf;
+
+    root /var/www/www.{{ domain }};
+
+    location / {
+        rewrite ^/(.*)$ https://www.{{ domain }}/$1 redirect;
+    }
+
+    access_log /var/log/nginx/access_www.{{ domain }}.log main;
+    error_log /var/log/nginx/error_www.{{ domain }}.log warn;
+}
+server {
+    server_name {%- for d in server_names %} www.{{ d }}{% endfor %};
 
     {% if inventory_hostname in wg_clients -%}
     listen {{ wg_clients[inventory_hostname].ip }}:443 ssl http2;
@@ -76,11 +125,33 @@ server {
         add_header "x-for-hire" "false";
     }
 
+    {#
+    map $request_uri $noindex {
+        default                    $request_uri;
+        "~/docs/(.*)/index.html"    /docs/$1/;
+    }
+
+    # https://stackoverflow.com/questions/38228393/nginx-remove-html-extension
+
+    #}
+
     location /docs {
         error_page 404 /docs/404.html;
+
         sub_filter_once off;
         sub_filter '/index.html' '/';
+
+        sub_filter 'href="about"' 'href="about/"';
+        sub_filter '/docs/about' '/docs/about/';
+        sub_filter 'href="rain"' 'href="rain/"';
+        sub_filter 'href="/docs/hass/rain"' 'href="/docs/hass/rain/"';
+        sub_filter '/docs/hass/rain' '/docs/hass/rain/';
+
+        #rewrite ^/docs/(.*)/index\.html$ /docs/$1/ redirect;
+
         rewrite ^/docs/projects/homeautomation/(.*)$ /docs/hass/$1 permanent;
+        rewrite ^/docs/wwwsudois(.*)$ /docs/infra/ permanent;
+        rewrite ^/docs/hass/appletv$ /docs/hass/appletv.html permanent;
     }
 
     location /cal/ {

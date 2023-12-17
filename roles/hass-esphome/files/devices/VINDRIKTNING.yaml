@@ -1,7 +1,7 @@
 ---
 
 packages:
-  board: !include ../packages/boards/esp32s2mini.yaml 
+  board: !include ../packages/boards/esp32s2mini.yaml
   esphome: !include ../packages/common/esphome.yaml
   network: !include ../packages/common/network.yaml
   http_server: !include ../packages/common/http_server.yaml

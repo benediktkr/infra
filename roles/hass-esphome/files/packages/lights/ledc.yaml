@@ -1,13 +1,22 @@
---- 
+---
+
+substitutions:
+  ledc_disabled_by_default: "false"
+  ledc_restore_mode: RESTORE_DEFAULT_OFF
+  ledc_id: "ledc_${ledc_gpio}"
+  # gets rid of warning during build
+  ledc_gpio: GPIO21
 
 light:
   - platform: monochromatic
     name: "${ledc_name}"
+    id: "${ledc_id}"
     icon: mdi:led-outline
-    restore_mode: RESTORE_DEFAULT_OFF
+    restore_mode: "${ledc_restore_mode}"
     output: OUTPUT_${ledc_gpio}
     default_transition_length: 1s
     effects: !include effects.yaml
+    disabled_by_default: ${ledc_disabled_by_default}
 
 
 output:

@@ -1,0 +1,26 @@
+---
+
+substitutions:
+  binary_sensor_gpio_pullup: "true"
+
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: "${binary_sensor_gpio}"
+      mode:
+        input: true
+        pullup: ${binary_sensor_gpio_pullup}
+    name: "${binary_sensor_gpio_name}"
+    id: binary_${binary_sensor_gpio}
+    publish_initial_state: true
+    internal: false
+    disabled_by_default: false
+    on_multi_click:
+      - timing:
+        - ON for at most 1s
+        - OFF for at most 1s
+        - ON for 0.5s to 1s
+        - OFF for at least 0.2s
+        then:
+          - logger.log: "Double click: ${binary_sensor_gpio_name}"
+

@@ -21,8 +21,11 @@ template:
           {% set current = states('sensor.electric_a_switch_washing_machine')|float %}
           {% set current_on = current > 0.2 %}
           {% set power = states('sensor.electric_w_switch_washing_machine')|float %}
-          {{ power > 3.53 }}
+          {{ power > 4.12 }}
         attributes:
+          delay_on: 10s
+          delay_off: 1min
+          threshold: 4.12WW
           comment: >-
             drops down to ca 2.8W after finishing and releasing the lock on the door, uses ~3.9-4.0W until door lock is released.
 

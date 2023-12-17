@@ -1,0 +1,157 @@
+---
+
+substitutions:
+  time_timezone: "Europe/Berlin"
+
+binary_sensor:
+  - platform: template
+    name: "${hostname} NTP time valid"
+    id: time_ntp_valid
+    internal: false
+    disabled_by_default: false
+    publish_initial_state: true
+    lambda: |-
+      return id(time_ntp).now().is_valid();
+    filters:
+      - delayed_off: "60s"
+
+  - platform: template
+    name: "${hostname} HASS time valid"
+    id: time_hass_valid
+    internal: false
+    disabled_by_default: false
+    publish_initial_state: true
+    lambda: |-
+      return id(time_hass).now().is_valid();
+    filters:
+      - delayed_off: "60s"
+
+
+sensor:
+  - platform: template
+    name: "${hostname} NTP hour"
+    id: time_ntp_hour
+    icon: "mdi:clock"
+    internal: false
+    disabled_by_default: false
+    accuracy_decimals: 0
+    unit_of_measurement: hours
+    lambda: |-
+      auto time = id(time_ntp).now();
+      return time.hour;
+
+  - platform: template
+    name: "${hostname} HASS hour"
+    id: time_hass_hour
+    icon: "mdi:clock"
+    internal: false
+    disabled_by_default: false
+    accuracy_decimals: 0
+    unit_of_measurement: hours
+    lambda: |-
+      auto time = id(time_hass).now();
+      return time.hour;
+
+  - platform: template
+    name: "${hostname} Hour"
+    id: time_hour
+    icon: "mdi:clock"
+    internal: false
+    disabled_by_default: false
+    accuracy_decimals: 0
+    unit_of_measurement: hours
+    # default to NTP since these will mostly be used remotely
+    lambda: |-
+      auto ntp_time = id(time_hass).now();
+      if (ntp_time.is_valid()) {
+        return ntp_time.hour;
+      }
+      else {
+        auto hass_time = id(time_hass).now();
+        return hass_time.hour;
+      }
+
+
+text_sensor:
+  - platform: template
+    name: "${hostname} NTP time"
+    id: "ntp_time_of_day"
+    icon: "mdi:clock"
+    internal: false
+    disabled_by_default: false
+    lambda: |-
+      auto time = id(time_ntp).now();
+      return to_string(time.hour) + ":" + to_string(time.minute);
+    update_interval: "60s"
+
+  - platform: template
+    name: "${hostname} HASS time"
+    id: "hass_time_of_day"
+    icon: "mdi:clock"
+    internal: false
+    disabled_by_default: false
+    lambda: |-
+      auto time = id(time_hass).now();
+      return to_string(time.hour) + ":" + to_string(time.minute);
+    update_interval: "60s"
+
+  - platform: template
+    name: "${hostname} Time"
+    id: "time_of_day"
+    icon: "mdi:clock"
+    internal: false
+    disabled_by_default: false
+    # default to NTP since these will mostly be used remotely
+    lambda: |-
+      auto ntp_time = id(time_ntp).now();
+      if (ntp_time.is_valid()) {
+        return to_string(ntp_time.hour) + ":" + to_string(ntp_time.minute);
+      }
+      else {
+        auto hass_time = id(time_hass).now();
+        return to_string(hass_time.hour) + ":" + to_string(hass_time.minute);
+      }
+    update_interval: "60s"
+
+  - platform: template
+    name: "${hostname} Time source"
+    id: "time_source"
+    icon: "mdi:clock"
+    internal: false
+    disabled_by_default: false
+    lambda: |-
+      auto ntp_time = id(time_ntp).now();
+      if (ntp_time.is_valid()) {
+        return {"ntp"};
+      }
+      else {
+        return {"hass"};
+      }
+
+
+time:
+  - platform: sntp
+    id: time_ntp
+    timezone: ${time_timezone}
+    servers:
+     - 0.pool.ntp.org
+     - 1.pool.ntp.org
+     - 2.pool.ntp.org
+
+  - platform: homeassistant
+    id: time_hass
+    timezone: ${time_timezone}
+    on_time:
+      - hours: 14
+        minutes: 40
+        then:
+          # red
+          - light.turn_on: ledc_GPIO35
+          # orange
+          - light.turn_on: ledc_GPIO33
+          # yellow
+          - light.turn_on: ledc_GPIO18
+          # green
+          - light.turn_on: ledc_GPIO16
+          # fairy
+          - light.turn_on: ledc_GPIO21

@@ -31,10 +31,12 @@ server {
     proxy_set_header   X-Forwarded-Host $server_name;
     proxy_set_header   X-Forwarded-Proto "https";
 
+    proxy_set_header FIREFLY_EMAIL $authelia_email;
+
     proxy_set_header Connection "upgrade";
     proxy_set_header Upgrade $http_upgrade;
 
-
+    #add_header email "$authelia_email" always;
     # https://github.com/firefly-iii/firefly-iii/issues/1739
     proxy_http_version 1.1;
     proxy_buffering off;

@@ -43,11 +43,13 @@
     mode: 0755
   tags:
     - letsencrypt-certs
+    - audiobookshelf-certs
   notify: reload nginx
   vars:
     prediff_cmd: echo
   with_items:
     - "{{ audiobookshelf_url }}"
+    - "{{ audiobookshelf_url_short }}"
 
 - name: template nginx vhost
   template:

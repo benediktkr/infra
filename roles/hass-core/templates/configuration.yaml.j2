@@ -110,7 +110,7 @@ homeassistant:
   unit_system: metric
   time_zone: "Europe/Berlin"
   country: DE
-  external_url: https://{{ hass_url }}
+  #external_url: https://{{ hass_url }}
   internal_url: https://{{ hass_url }}
   allowlist_external_dirs:
     - "/usr/var/media"
@@ -275,7 +275,8 @@ recorder:
   db_url: mysql://{{ systemuserlist.hass.username }}:@localhost/{{ systemuserlist.hass.username }}?charset=utf8mb4&unix_socket=/run/mysqld/mysqld.sock
   auto_purge: true
   auto_repack: true
-  purge_keep_days: 30
+  # Removed as per 2023.12.0 release notes
+  #purge_keep_days: 30
   exclude:
     entities:
       - sensor.esphmoe_ble_names
@@ -307,6 +308,10 @@ recorder:
       #- sensor.unifi_tx_esphome_*
       #- sensor.unifi_uptime_*
       - sensor.esphome_uptime_*
+      - sensor.esphome_*_time
+      - sensor.esphome_*_hour
+      - sensor.esphome_*_minute
+      - sensor.esphome_*_adc_voltage
       - sensor.*_adc_a0
       - sensor.*_adc_*
       - sensor.rssi_*
@@ -316,6 +321,7 @@ recorder:
       - device_tracker.*_*_*_*_*_*
       - sensor.random_*
       - sensor.netdata_turris_*
+
 
 sql:
   - name: mariadb_database_size

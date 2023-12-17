@@ -9,3 +9,36 @@ packages:
   sensors_esp32: !include ../packages/sensors/esp32.yaml
   sensors_esphome: !include ../packages/sensors/esphome.yaml
   sensors_wifi: !include ../packages/sensors/wifi.yaml
+
+
+
+
+display:
+  - platform: lcd_gpio
+    dimensions: 20x4
+    rs_pin: GPIO4
+    rw_pin: GPIO3
+    enable_pin: GPIO1
+    data_pins:
+      - GPIO6
+      - GPIO7
+      - GPIO20
+      - GPIO10
+#i2c:
+#  sda: GPIO8
+#  scl: GPIO9
+#  id: i2c_lcd
+
+#display:
+#  - platform: lcd_pcf8574
+#    dimensions: 20x4
+#    address: 0x27
+#    i2c_id: i2c_lcd
+#    lambda: |-
+#      it.print("hello world!");
+
+
+
+
+
+

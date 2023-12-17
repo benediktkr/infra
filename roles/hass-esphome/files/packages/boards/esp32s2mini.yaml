@@ -1,10 +1,18 @@
 ---
 
+substitutions:
+  esp32s2mini_framework_type: esp-idf
+  esp32s2mini_framework_version: recommended
+
 esp32:
   board: lolin_s2_mini
   variant: ESP32S2
   framework:
-      type: esp-idf
+    type: ${esp32s2mini_framework_type}
+    version: ${esp32s2mini_framework_version}
+
+
+      #type: esp-idf
       #version: 4.4.3
       #platform_version: 5.3.0
 
@@ -13,11 +21,12 @@ light:
     name: "${hostname} Status LED"
     id: esp_status_led
     icon: "mdi:alarm-light"
-    #restore_mode: ALWAYS_OFF
-    pin: 
+    restore_mode: ALWAYS_OFF
+    entity_category: config
+    pin:
       number: GPIO15
       inverted: false
-    effects: 
+    effects:
       - strobe:
           name: Blink
       - strobe:

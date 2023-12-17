@@ -312,7 +312,8 @@
     - pip-latest
     - venvs
     - virtulenv
-- name: install poetry  o the common-scripts venv
+
+- name: install poetry  to the common-scripts venv
   pip:
     name:
       - poetry

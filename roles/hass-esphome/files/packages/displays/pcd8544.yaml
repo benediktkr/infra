@@ -1,0 +1,32 @@
+---
+
+packages:
+  light_lcd_backligt: !include
+    file: ../lights/ledc.yaml
+    vars:
+      ledc_name: "${hostname} LCD LED Backlight"
+      ledc_gpio: GPIO06
+
+
+spi:
+  clk_pin: 34
+  mosi_pin: 36
+
+# DC pin:
+# https://forums.adafruit.com/viewtopic.php?t=51949
+
+display:
+  - platform: pcd8544
+    reset_pin: 40
+    cs_pin: 33
+    dc_pin: 35
+    contrast: 0x7f
+    update_interval: 1s
+    lambda: |-
+      it.print(0, 0, id(digit_font), "Hello fuckers");
+
+
+font:
+  - file: "../fonts/pixelmix.ttf"
+    id: digit_font
+    size: 10

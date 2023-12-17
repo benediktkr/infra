@@ -1,0 +1,45 @@
+---
+
+substitutions:
+  pin_vl53l0x_i2c_sda: GPIO33
+  pin_vl53l0x_i2c_scl: GPIO35
+
+
+logger:
+  logs:
+    # ignore this
+    # [D][vl53l0x:304]: 'esphome-tespmini32 VL53L0x Distance' - Distance is out of range, please move the target closer
+    vl53l0x: WARN
+
+
+i2c:
+  - sda: ${pin_vl53l0x_i2c_sda}
+    scl: ${pin_vl53l0x_i2c_scl}
+    scan: true
+    id: i2c_vl53l0x
+
+
+sensor:
+  - platform: vl53l0x
+    name: "${hostname} VL53L0x Distance"
+    unit_of_measurement: m
+    id: distance1
+    address: 0x29
+    # default 'update_interval' is 60s
+    update_interval: 500ms
+    # if 'long_range' is set to 'true' then 'signal_rate_limit' is overruled to '0.1'
+    signal_rate_limit: 0.25
+    long_range: false
+    i2c_id: i2c_vl53l0x
+    filters:
+      - or:
+          - throttle: 1h
+          - delta: 0.01
+      - lambda: !lambda |-
+          if (x < 0.0) {
+            return {};
+          }
+          else {
+            return x*1.0;
+          }
+

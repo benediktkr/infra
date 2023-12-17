@@ -203,6 +203,25 @@
     - "{{ inventory_hostname }}"
     - "{{ xmr_url }}"
 
+- name: template static vhost(s)
+  template:
+    src: "{{ item }}.j2"
+    dest: /etc/nginx/sites-enabled/{{ item }}
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - 01-static.conf
+  tags:
+    - archives
+    - archivebox
+    - nginx
+    - mainframe-nginx
+    - static-sites
+    - www
+    - www-static
+  notify: reload nginx
+
 - name: template nginx vhost(s)
   template:
     src: "{{ item }}.j2"
@@ -213,7 +232,6 @@
   with_items:
     - 01-archives.conf
     - 02-tools.conf
-    - 01-static.conf
     - 01-xmr.conf
   tags:
     - archives

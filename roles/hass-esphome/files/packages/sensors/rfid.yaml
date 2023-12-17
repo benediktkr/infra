@@ -12,10 +12,13 @@ logger:
 # Mifare ultralight: NFC
 # https://www.mifare.net/en/products/chip-card-ics/mifare-ultralight/
 
+substitutions:
+  pin_pn532_i2c_sda: 21
+  pin_pn532_i2c_scl: 22
 
 i2c:
-  sda: 21
-  scl: 22
+  sda: ${pin_pn532_i2c_sda}
+  scl: ${pin_pn532_i2c_scl}
   scan: true
 
 pn532_i2c:
@@ -30,7 +33,7 @@ pn532_i2c:
       - text_sensor.template.publish:
           id: tag_uid
           state: !lambda 'return x;'
-      
+
       - homeassistant.tag_scanned: !lambda 'return x;'
 
       - if:
@@ -49,17 +52,17 @@ pn532_i2c:
                   }
                 }
                 return {};
-      #      - text_sensor.template.publish: 
+      #      - text_sensor.template.publish:
       #          id: tag_ndef_payload
       #          state: !lambda |-
       #            auto message = tag.get_ndef_message();
-      #            std::string payload = ""; 
+      #            std::string payload = "";
       #            for (auto &record : message->get_records()) {
       #              std::string msg_payload = record->get_payload();
       #              payload += msg_payload;
       #            }
       #            return payload;
-  
+
   on_tag_removed:
     then:
       - binary_sensor.template.publish:

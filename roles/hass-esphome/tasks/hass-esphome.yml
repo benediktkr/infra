@@ -8,7 +8,7 @@
     owner: "{{ item.owner|default('hass') }}"
     group: "{{ item.group|default('hass') }}"
   with_items:
-    - path: 
+    - path:
     - path: config
       # devices _should_ replace config
     - path: devices
@@ -20,15 +20,17 @@
     - path: packages
     - path: packages/boards
     - path: packages/common
+    - path: packages/hass
     - path: packages/sensors
+    - path: packages/switch
     - path: packages/lights
     - path: packages/displays
     - path: bootstrap
       # which of these are still needed?
     - path: platformio
-      # used by docker
-    - path: builds
-      # used by virtualenv
+    # used by docker
+    - path: .builds
+    # used by virtualenv
     - path: output
     - path: cache
       owner: root
@@ -60,11 +62,11 @@
     - hass-esphome-virtualenv
     - esphome-virtualenv
 
-- name: copy scripts 
+- name: copy scripts
   copy:
     src: "{{ item }}"
     dest: /usr/local/bin/{{ item }}
-    owner: root 
+    owner: root
     group: root
     mode: '07555'
   tags:
@@ -114,27 +116,38 @@
     - boards/esp32nodemcu.yaml
     - boards/esp32wrover.yaml
     - boards/esp8266d1.yaml
+    - boards/esp8266nodemcu.yaml
     - common/esphome.yaml
     - common/network.yaml
+    - common/alt_wifi.yaml
     - common/http_server.yaml
+    - common/ntp.yaml
+    - common/time.yaml
+    - hass/time.yaml
+    - displays/ssd1306.yaml
+    - displays/max7219.yaml
+    - displays/pcd8544.yaml
     - sensors/esphome.yaml
     - sensors/esp32.yaml
+    - sensors/binary_gpio.yaml
     - sensors/generic_motion.yaml
-    - sensors/potentiometer.yaml
-    - sensors/VINDRIKTNING.yaml
     - sensors/ld2410.yaml
+    - sensors/potentiometer.yaml
     - sensors/rfid.yaml
+    - sensors/VINDRIKTNING.yaml
+    - sensors/vl53l0x.yaml
     - sensors/wifi.yaml
-    - displays/max7219.yaml
+    - switch/binary_gpio.yaml
     - lights/ledc.yaml
-    - lights/rgb_ledc.yaml  
+    - lights/rgb_ledc.yaml
     - lights/effects.yaml
+    - fonts.yaml
   tags:
    - hass-esphome-config
    - hass-esphome-packages
 
-- name: copy fonts for display component and mx7219
-  copy: 
+- name: copy fonts for display components
+  copy:
     src: fonts/{{ item }}
     dest: "{{ systemuserlist.hass.home }}/esphome/fonts/{{ item }}"
     mode: "0755"
@@ -142,7 +155,9 @@
     group: hass
   with_items:
     - pixelmix.ttf
-  tags: 
+    - pixelmix_bold.ttf
+    - NotoSansMono-Regular.ttf
+  tags:
     - esphome-fonts
     - esphome-packages
     - hass-esphome-fonts
@@ -159,19 +174,19 @@
    - hass-esphome-config
    - hass-esphome-devices
   with_items:
+    - tesp8266.yaml
+    - tespmini8266.yaml
+    - tespmini32.yaml
+    - tespmini32c3.yaml
+    - tesp32.yaml
     - akustomat.yaml
     - camera.yaml
     - cats.yaml
     - cats-led.yaml
+    - fairylights.yaml
     - VINDRIKTNING.yaml
     - VINDRUTA.yaml
     - irrigation-esotec.yaml
-    - tespmini32.yaml
-    - tespmini32c3.yaml
-    - tespmini8266.yaml
-    - tesp32.yaml
-    - testboard.yaml
-    - screek-1u.yaml
     - radar.yaml
     - rfid-reader.yaml
     - RG9-S2.yaml
@@ -195,7 +210,7 @@
 
 # This breaks stuff
 #  > Multiple ways to build the same target were specified for
-#- name: symlink stuff 
+#- name: symlink stuff
 #  when: false
 #  file:
 #    src: "{{ systemuserlist.hass.home }}/esphome/target/{{ item.split('/')[-1] }}"
@@ -210,7 +225,7 @@
 
   ## OLD STUFF BELOW THIS LINE
 
-- name: symlink the default output dir 
+- name: symlink the default output dir
   when: false
   file:
     src: "{{ systemuserlist.hass.home }}/esphome/output"
@@ -243,7 +258,7 @@
     mode: "0750"
     owner: hass
     group: sudo
-  loop_control: 
+  loop_control:
     label: "{{ item.dest_dir }} -- {{ item.comment }}"
   with_items:
     - dest_dir: config
@@ -276,7 +291,7 @@
 - name: esp bootstrap config files
   template:
     src: "bootstrap/{{ item }}.yaml.j2"
-    dest: "{{ systemuserlist.hass.home }}/esphome/bootstrap/{{ item }}.yaml" 
+    dest: "{{ systemuserlist.hass.home }}/esphome/bootstrap/{{ item }}.yaml"
     mode: '0755'
     owner: hass
   tags:
@@ -298,6 +313,8 @@
   with_items:
     - packages/boards/esp32s2.yaml
     - packages/devices/RG9.yaml
+    - devices/tesboard.yaml
+    - devices/screek-1u.yaml
 
 - name: remove disabled configs
   file:
@@ -311,7 +328,7 @@
   with_items: "{{ hass_esphome_configs }}"
   when: item.enabled|default(false) == false
 
-- name: hass-esphome-dash container (in 'stopped' state) 
+- name: hass-esphome-dash container (in 'stopped' state)
   when: false
   docker_container:
     name: hass-esphome-dash
@@ -337,7 +354,7 @@
         source: "{{ systemuserlist.hass.home }}/esphome/config"
         target: "/config"
       - type: bind
-        source: "{{ systemuserlist.hass.home }}/esphome/builds"
+        source: "{{ systemuserlist.hass.home }}/esphome/.builds"
         target: "/config/.esphome"
   tags:
     - hass-esphome-container

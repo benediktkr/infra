@@ -23,12 +23,14 @@
     group: root
     mode: 0755
   tags:
+    - www-certs
     - letsencrypt-certs
   notify: reload nginx
   vars:
     prediff_cmd: echo
   with_items:
     - www.{{ domain }}
+    - docs.{{ domain }}
 
 - name: template {{ domain }} vhost
   template:

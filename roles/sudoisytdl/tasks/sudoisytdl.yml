@@ -9,6 +9,7 @@
     group: sudoisytdl
 
 - name: sudoisytdl container
+  ignore_errors: true
   docker_container:
     name: sudoisytdl
     image: benediktkr/sudoisytdl:latest

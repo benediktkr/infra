@@ -14,21 +14,24 @@ packages:
     vars:
       pin_generic_motion: 19
       name_generic_motion: "${hostname} generic motion sensor"
-  #sensors_rfid: !include 
+  #sensors_rfid: !include
   #  file: ../packages/sensors/rfid.yaml
   #  vars:
   #    pin_pn532_sda: 21
   #    pin_pn532_scl: 22
-  # binary_sensors for known tag uids 
+  # binary_sensors for known tag uids
   #data_rfid_tags: !include ../data/rfid_tags.yaml
-  
+
   # max7219: !include ../packages/lights/max7219.yaml
-  # light_lcd_backlight: !include 
+  # light_lcd_backlight: !include
   #   file: ../packages/lights/ledc.yaml
   #   vars:
   #     ledc_name: "${hostname} LCD Backlight"
   #     ledc_gpio: 18
 
+esp32:
+  framework:
+    type: arduino
 i2c:
   sda: 21
   scl: 22
@@ -58,7 +61,7 @@ i2c:
 #      - GPIO17
 #    # WTF
 #    enable_pin: D4
-#    rs_pin: D5  
+#    rs_pin: D5
 #    rw_pin: ..
 #    lambda: |-
 #        it.print("Hello world");
@@ -72,13 +75,13 @@ i2c:
 #    name: Cat motion
 #    device_class: motion
 #    pin: GPIO21
-#display:
-#  - platform: lcd_pcf8574
-#    id: lcd_display
-#    dimensions: 20x4
-#    address: 0x27
-#    lambda: |-
-#      it.print("Hello World!");
+display:
+  - platform: lcd_pcf8574
+    id: lcd_display
+    dimensions: 20x4
+    address: 0x27
+    lambda: |-
+      it.print("Hello World!");
 
 #switch:
 #  - platform: template
@@ -97,7 +100,7 @@ i2c:
  #  miso_pin: GPIO9
  #  mosi_pin: GPIO7
  #  # SCK = Serial ClocK
- #  clk_pin: GPIO10  
+ #  clk_pin: GPIO10
 
 #rc522_spi:
 #  # CS is sometimes called SS. On my board it says SS on the silkscreen
@@ -129,7 +132,7 @@ i2c:
 
 #sensor:
 #  - platform: vl53l0x
-#    name: "VL53L0x cat distance"  
+#    name: "VL53L0x cat distance"
 #    address: 0x29
 #    #long_range: false
 #    #enable_pin: GPIO33
@@ -138,7 +141,7 @@ i2c:
 #    timeout: 200us
 #    update_interval: 500ms
 #    unit_of_measurement: "m"
-  
+
 
 #i2c:
 #  id: rfid_bus
@@ -147,7 +150,7 @@ i2c:
 #  scan: true
 
 
-#pn532_i2c: 
+#pn532_i2c:
 #  id: pn532_board
 #  update_interval: 1s
 #  i2c_id: rfid_bus
@@ -157,7 +160,7 @@ i2c:
 #        id: rfid_tag
 #        state: !lambda |
 #          return x;
-#    - delay: 0.2s 
+#    - delay: 0.2s
 
 #text_sensor:
 #  - platform: template

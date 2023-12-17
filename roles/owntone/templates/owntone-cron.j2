@@ -2,7 +2,7 @@
 
 # m h dom mon dow
 
-12 */6 * * * {{ owntone_user.username }} /usr/local/bin/owntone-trigger-rescan.sh init
+12 13,20 * * * {{ owntone_user.username }} /usr/local/bin/owntone-trigger-rescan.sh init
 #54 */3 * * * {{ owntone_user.username }} /usr/bin/curl -sfX PUT "https://{{ owntone_url }}/api/update?kind=files&path=/deadspace/podcasts"
 
 #08 08 * * * {{ owntone_user.username }} /usr/local/bin/owntone-trigger-rescan.sh meta

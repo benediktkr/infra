@@ -12,5 +12,16 @@ light:
     entity_category: "config"
     restore_mode: ALWAYS_OFF
     pin:
+      number: D4
+      inverted: true
+
+  # aux led is present on all mine
+  - platform: status_led
+    name: "AUX LED"
+    id: esp_aux_led
+    icon: "mdi:alarm-light"
+    entity_category: "config"
+    restore_mode: ALWAYS_OFF
+    pin:
       number: D0
       inverted: true

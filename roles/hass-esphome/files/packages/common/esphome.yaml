@@ -4,9 +4,9 @@ substitutions:
   foo: bar
 
 esphome:
-  # used by Home Assistant as the integration name, device name, and is automatically prefixed to entities  
-  #friendly_name: 
- 
+  # used by Home Assistant as the integration name, device name, and is automatically prefixed to entities
+  #friendly_name:
+
   # provided by esph.py
   build_path: "${build_path}"
 
@@ -34,7 +34,7 @@ text_sensor:
     name: "ESPHome version ${lower_node_name}"
     entity_category: "diagnostic"
     hide_timestamp: true
-    id: ${lower_underscored_node_name}_version
+    id: esphome_version
 
   - platform: template
     id: esphome_config_name
@@ -42,7 +42,7 @@ text_sensor:
     entity_category: "diagnostic"
     name: "${hostname} config name"
     update_interval: never
-    # config_name is provided by esph.py 
+    # config_name is provided by esph.py
     #lambda: !lambda 'return {"${config_name}"};'
 
   - platform: template
@@ -54,7 +54,14 @@ text_sensor:
     # config_date is provided by esph.py
     #lambda: !lambda 'return {"${config_date}"};'
 
-#sensor:
+sensor:
+  - platform: homeassistant
+    id: github_esphome_version
+    name: "${hostname} ESPHome version Github"
+    entity_id: sensor.github_esphome_esphome_latest_release
+    internal: true
+    disabled_by_default: true
+
 #  - platform: uptime
 #    name: "ESPHome Uptime ${lower_node_name}"
 #    update_interval: 3600s
@@ -65,4 +72,19 @@ binary_sensor:
     name: "ESPHome status ${lower_node_name}"
     entity_category: "diagnostic"
     id: ${lower_underscored_node_name}_status
+
+  #- platform: template
+  #  name: "${hostname} ESPHome update available"
+  #  id: update_available
+  #  entity_category: diagnostic
+  #  internal: false
+  #  disabled_by_default: false
+  #  publish_initial_state: true
+  #  device_class: update
+  #  lambda: |-
+  #    # this is a string/text_sensor
+  #    auto current = id(esphome_version).state;
+  #    # bu this is a float
+  #    auto github = id(github_esphome_version).state;
+  #    return current != github;
 

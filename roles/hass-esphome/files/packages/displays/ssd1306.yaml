@@ -1,0 +1,95 @@
+---
+
+substitutions:
+  pin_ssd1306_i2c_sda: GPIO33
+  pin_ssd1306_i2c_scl: GPIO35
+  frequency_ssd1306_i2c: 50000Hz
+
+#packages:
+#  fonts: !include ../fonts.yaml
+
+logger:
+  logs:
+    # ignore this:
+    # [W][component:214]: Component ssd1306_base took a long time for an operation (0.27 s).
+    # [W][component:215]: Components should block for at most 20-30ms.
+    component: ERROR
+
+binary_sensor:
+  - platform: homeassistant
+    id: hass_radar_study_desk
+    name: "${hostname} Radar Study desk"
+    entity_id: binary_sensor.radar_study_desk
+    publish_initial_state: true
+    internal: false
+
+switch:
+  - platform: template
+    name: "${hostname} SSD1306"
+    id: ssd1306_show_output
+    optimistic: true
+    restore_mode: ALWAYS_ON
+    internal: false
+    disabled_by_default: false
+    entity_category: "config"
+
+sensor:
+  - platform: homeassistant
+    id: hass_electric_w_study
+    name: "${hostname} Study electric"
+    entity_id: sensor.electric_w_study
+    state_class: measurement
+    device_class: power
+    unit_of_measurement: "W"
+    internal: false
+
+i2c:
+  - sda: ${pin_ssd1306_i2c_sda}
+    scl: ${pin_ssd1306_i2c_scl}
+    frequency: ${frequency_ssd1306_i2c}
+    id: i2c_ssd1306
+
+font:
+  - file: "../fonts/pixelmix.ttf"
+    id: pixelmix6
+    size: 6
+  - file: "../fonts/pixelmix.ttf"
+    id: pixelmix24
+    size: 24
+
+  - file: "../fonts/NotoSansMono-Regular.ttf"
+    id: notomono8
+    size: 8
+
+  - file: "../fonts/NotoSansMono-Regular.ttf"
+    id: notomono16
+    size: 16
+
+  - file: "../fonts/NotoSansMono-Regular.ttf"
+    id: notomono24
+    size: 24
+
+
+# 0, 60
+# it.printf(0, 60, id(notomono16), TextAlign::BASELINE_LEFT, "DESK");
+# it.printf(127, 60, id(notomono16), TextAlign::BASELINE_RIGHT, "%.0f W", id(hass_electric_w_study).state);
+
+display:
+  - platform: ssd1306_i2c
+    model: "SSD1306 128x64"
+    address: 0x3C
+    i2c_id: i2c_ssd1306
+    update_interval: 1s
+    lambda: |-
+      if (id(ssd1306_show_output).state) {
+        it.printf(64, 0, id(notomono8), TextAlign::TOP_CENTER, "hass.sudo.is");
+        it.printf(0, 25, id(notomono16), TextAlign::BASELINE_LEFT, "P ");
+        if (id(hass_radar_study_desk).has_state() and id(hass_radar_study_desk).state) {
+          it.printf(127, 30, id(notomono24), TextAlign::BASELINE_RIGHT, "DESK");
+        }
+        it.printf(0, 55, id(notomono16), TextAlign::BASELINE_LEFT, "W ");
+        if (id(hass_electric_w_study).has_state()) {
+          it.printf(127, 60, id(notomono24), TextAlign::BASELINE_RIGHT, "%3.0f W", id(hass_electric_w_study).state);
+        }
+      }
+

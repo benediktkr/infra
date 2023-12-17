@@ -42,9 +42,9 @@
       device_class: heat
       state: >-
          {% raw -%}
-         {% set all_radiators = states.climate | selectattr("attributes", "defined") | map(attribute="attributes") | selectattr("temperature", "defined") | map(attribute="temperature") | default([]) | list  %}
-         {% set max_radiator_temp = all_radiators | max | default(0.0) | float %}
-         {% set target_temp = states('input_number.target_temp_heat') | default(0.0) | float %}
+         {% set all_radiators = states.climate | selectattr("attributes", "defined") | map(attribute="attributes") | selectattr("temperature", "defined") | map(attribute="temperature") | default([]) | map("float", 0.0) |list  %}
+         {% set max_radiator_temp = all_radiators | map("float", 0.0) |  max | default(0.0) | float(0.0) %}
+         {% set target_temp = states('input_number.target_temp_heat') | default(0.0) | float(0.0) %}
          {{ max_radiator_temp >= target_temp }}
          {% endraw %}
 

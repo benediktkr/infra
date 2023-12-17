@@ -1,0 +1,19 @@
+---
+
+substitutions:
+  binary_switch_gpio_inverted: "false"
+  binary_switch_gpio_restore_mode: "RESTORE_DEFAULT_OFF"
+  binary_switch_gpio_entity_category: ""
+
+switch:
+  - platform: gpio
+    pin:
+      number: "${binary_switch_gpio}"
+      inverted: ${binary_switch_gpio_inverted}
+    name: "${binary_switch_gpio_name}"
+    id: switch_${binary_switch_gpio}
+    internal: false
+    disabled_by_default: false
+    restore_mode: "${binary_switch_gpio_restore_mode}"
+    entity_category: "${binary_switch_gpio_entity_category}"
+

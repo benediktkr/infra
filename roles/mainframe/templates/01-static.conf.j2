@@ -27,6 +27,19 @@ server {
     location = /cv1.pdf {
         # good side effect, removes X-Robots-Tag header
         add_header "x-for-hire" "false";
+        add_header X-Robots-Tag "all" always;
+        rewrite ^/cv1.pdf$ https://www.{{ domain }}/cv1.pdf permanent;
+    }
+
+    {% for item in ["ardrand.pdf", "tsense.pdf", "Found_Reykjavik.pdf", "Found_Reykjavik_144dpi.pdf"] %}
+    location = /{{ item }} {
+        rewrite ^/{{ item }}$ https://www.{{ domain }}/{{ item }} permanent;
+        add_header X-Robots-Tag "all" always;
+    }
+    {% endfor %}
+
+    location = /sitemap.xml {
+        alias /var/www/www.sudo.is/sitemap.xml;
     }
 
     access_log /var/log/nginx/access_static.{{ domain }}.log main;
@@ -34,6 +47,14 @@ server {
 
     ssl_session_timeout 5m;
 
+    location = /robots.txt {
+        if_modified_since off;
+        expires off;
+        add_header Last-Modified $date_gmt always;
+        add_header Clear-Site-Data "cache" always;
+        add_header Cache-Control 'no-store' always;
+        add_header X-Robots-Tag "all" always;
+    }
     add_header X-Robots-Tag "none" always;
 
     # for /assets

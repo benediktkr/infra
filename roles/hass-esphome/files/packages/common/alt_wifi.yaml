@@ -1,0 +1,6 @@
+---
+
+wifi:
+  ssid: !secret alt_wifi_ssid
+  password: !secret alt_wifi_password
+

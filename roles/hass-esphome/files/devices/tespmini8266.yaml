@@ -6,14 +6,21 @@ packages:
   http_server: !include ../packages/common/http_server.yaml
   sensors_esphome: !include ../packages/sensors/esphome.yaml
   sensors_wifi: !include ../packages/sensors/wifi.yaml
+  display: !include
+    file: ../packages/displays/ssd1306.yaml
+    vars:
+      pin_ssd1306_i2c_sda: D2
+      pin_ssd1306_i2c_scl: D1
+      #pin_ssd1306_i2c_sda: D4
+      #pin_ssd1306_i2c_scl: D3
 
-i2c:
-  sda: D2
-  scl: D1
+#i2c:
+#  sda: D2
+#  scl: D1
 
-display:
-  - platform: lcd_pcf8574
-    dimensions: 20x4
-    address: 0x27
-    lambda: |-
-      it.print("Hello World!");
+#display:
+#  - platform: lcd_pcf8574
+#    dimensions: 20x4
+#    address: 0x27
+#    lambda: |-
+#      it.print("Hello World!");

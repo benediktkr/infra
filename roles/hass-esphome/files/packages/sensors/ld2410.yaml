@@ -1,4 +1,4 @@
---- 
+---
 
 substitutions:
   ld2410_tx_pin: GPIO18
@@ -24,8 +24,11 @@ substitutions:
       - delta: 5.0
 
 .ld2410_gate_sensor: &ld2410_gate_sensor
+  unit_of_measurement: "%"
+  device_class: power_factor
   disabled_by_default: true
-  internal: true
+  internal: false
+  entity_category: ""
 
 .config_number: &config_number
   entity_category: config
@@ -36,6 +39,7 @@ substitutions:
   unit_of_measurement: "%"
   device_class: power_factor
   disabled_by_default: true
+  internal: false
   <<: *config_number
 
 .config_template_threshold: &config_template_threshold
@@ -78,13 +82,13 @@ ld2410:
 api:
   services:
     - service: "set_ld2410_ble_password"
-      variables: 
+      variables:
         password: string
       then:
         - bluetooth_password.set:
             id: ld2410_radar
             password: !lambda 'return password;'
- 
+
 
 binary_sensor:
   - platform: ld2410
@@ -107,7 +111,7 @@ binary_sensor:
     device_class: occupancy
     id: gpio_light_target
     disabled_by_default: true
-  
+
   - platform: template
     id: occupancy
     name: "${friendly_node_name}"
@@ -122,7 +126,7 @@ binary_sensor:
         return true;
       }
       else if (energy <= energy_off && target == false) {
-        return false; 
+        return false;
       }
       else {
         // no change, use last value
@@ -131,7 +135,7 @@ binary_sensor:
     filters:
       - delayed_off: !lambda |-
           return id(still_delay_off).state;
-  
+
   # to_string((float)(id(still_delay_off).state));
 
   - platform: template
@@ -181,7 +185,7 @@ sensor:
     detection_distance:
       name: "${hostname} Detection distance"
       disabled_by_default: true
-      <<: *ld2410_sensor  
+      <<: *ld2410_sensor
     light:
       # "light" or "light sensitivity"
       id: ld2410_light
@@ -192,85 +196,85 @@ sensor:
     g0:
       move_energy:
         id: move_g0
-        name: "${hostname} Move energy g0"
+        name: "${hostname} Move g0 energy"
         <<: *ld2410_gate_sensor
       still_energy:
         id: still_g0
-        name: "${hostname} Still energy g0"
+        name: "${hostname} Still g0 energy"
         <<: *ld2410_gate_sensor
     g1:
-      move_energy: 
+      move_energy:
         id: move_g1
-        name: "${hostname} Move energy g1"
+        name: "${hostname} Move g1 energy"
         <<: *ld2410_gate_sensor
       still_energy:
         id: still_g1
-        name: "${hostname} Still energy g1"
+        name: "${hostname} Still g1 energy"
         <<: *ld2410_gate_sensor
     g2:
       move_energy:
         id: move_g2
-        name: "${hostname} Move energy g2"
+        name: "${hostname} Move g2 energy"
         <<: *ld2410_gate_sensor
       still_energy:
         id: still_g2
-        name: "${hostname} Still energy g2"
+        name: "${hostname} Still g2 energy"
         <<: *ld2410_gate_sensor
     g3:
       move_energy:
         id: move_g3
-        name: "${hostname} Move energy g3"
+        name: "${hostname} Move g3 energy"
         <<: *ld2410_gate_sensor
       still_energy:
         id: still_g3
-        name: "${hostname} Still energy g3"
+        name: "${hostname} Still g3 energy"
         <<: *ld2410_gate_sensor
     g4:
       move_energy:
         id: move_g4
-        name: "${hostname} Move energy g4"
+        name: "${hostname} Move g4 energy"
         <<: *ld2410_gate_sensor
       still_energy:
         id: still_g4
-        name: "${hostname} Still energy g4"
+        name: "${hostname} Still g4 energy"
         <<: *ld2410_gate_sensor
     g5:
       move_energy:
         id: move_g5
-        name: "${hostname} Move energy g5"
+        name: "${hostname} Move g5 energy"
         <<: *ld2410_gate_sensor
       still_energy:
         id: still_g5
-        name: "${hostname} Still energy g5"
+        name: "${hostname} Still g5 energy"
         <<: *ld2410_gate_sensor
     g6:
       move_energy:
         id: move_g6
-        name: "${hostname} Move energy g6"
+        name: "${hostname} Move g6 energy"
         <<: *ld2410_gate_sensor
       still_energy:
         id: still_g6
-        name: "${hostname} Still energy g6"
+        name: "${hostname} Still g6 energy"
         <<: *ld2410_gate_sensor
     g7:
       move_energy:
         id: move_g7
-        name: "${hostname} Move energy g7"
+        name: "${hostname} Move g7 energy"
         <<: *ld2410_gate_sensor
       still_energy:
         id: still_g7
-        name: "${hostname} Still energy g7"
+        name: "${hostname} Still g7 energy"
         <<: *ld2410_gate_sensor
     g8:
       move_energy:
         id: move_g8
-        name: "${hostname} Move energy g8"
+        name: "${hostname} Move g8 energy"
         <<: *ld2410_gate_sensor
       still_energy:
         id: still_g8
-        name: "${hostname} Still energy g8"
+        name: "${hostname} Still g8 energy"
         <<: *ld2410_gate_sensor
- 
+
 number:
   - platform: template
     id: "still_threshold_on"
@@ -291,7 +295,7 @@ number:
     <<: *config_template_delay
 
   - platform: ld2410
-    timeout: 
+    timeout:
       name: "${hostname} LD2410 Delay off"
       id: ld2410_delay_off
       unit_of_measurement: seconds
@@ -372,7 +376,7 @@ number:
         <<: *config_gate_threshold
 
 
-switch: 
+switch:
   - platform: ld2410
     engineering_mode:
       name: "${hostname} LD2410 Engineering mode"
@@ -402,8 +406,8 @@ button:
     factory_reset:
       name: "${hostname} LD2410 Factory reset"
       disabled_by_default: true
-    restart: 
-      name: "${hostname} LD2410 Restart" 
+    restart:
+      name: "${hostname} LD2410 Restart"
       entity_category: "diagnostic"
     query_params:
       name: "${hostname} LD2410 Refresh values"

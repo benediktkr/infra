@@ -17,6 +17,7 @@
     host: 'localhost'
     priv: "{{ systemuserlist.hass.username }}.*:ALL"
     login_unix_socket: /run/mysqld/mysqld.sock
+    column_case_sensitive: false
   tags:
     - mariadb-users
     - hass-mariadb
@@ -185,13 +186,16 @@
     - adaptive_lighting.yaml
     - air_temps.yaml
     - audio.yaml
+    #- battery.yaml
     - broadlink.yaml
+    - camera.yaml
     - doorbell.yaml
     - electric.yaml
     - fans.yaml
     - glados_tts.yaml
     - grow_lights.yaml
     - home.yaml
+    - heating.yaml
     - moosetv.yaml
     - more_lights.yaml
     - motion_sensor_hacks.yaml
@@ -266,7 +270,7 @@
     - hass-packages
     - hass-core-config
 
-- name: copy dashboard config file (disabled, removed in another task)s
+- name: copy dashboard config file (disabled, removed in another task)
   copy:
     src: "private/hass/{{ item }}"
     dest: "{{ systemuserlist.hass.home }}/home-assistant/config/{{ item }}"
@@ -397,7 +401,9 @@
   tags:
     - packages
     - hass-bluetooth
-    - hass-packages
+    - hass-core-packages
+    - hass-core-apt-packages
+    - hass-packaiges
     - hass-sip
     - sip
 
@@ -479,6 +485,9 @@
       - type: bind
         source: "{{ systemuserlist.hass.home }}/home-assistant/media"
         target: /usr/var/media
+      - type: bind
+        source: "{{ systemuserlist.hass.home }}/.ssh"
+        target: /usr/local/etc/ssh/
       - type: bind
         read_only: true
         source: /run/dbus

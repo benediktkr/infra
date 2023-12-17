@@ -1,0 +1,29 @@
+---
+
+
+packages:
+  board: !include
+    file: ../packages/boards/esp32s2mini.yaml
+    vars:
+      esp32s2mini_framework_type: esp-idf
+  esphome: !include ../packages/common/esphome.yaml
+  network: !include ../packages/common/network.yaml
+  http_server: !include ../packages/common/http_server.yaml
+  sensors_esp32: !include ../packages/sensors/esp32.yaml
+  sensors_esphome: !include ../packages/sensors/esphome.yaml
+  sensors_wifi: !include ../packages/sensors/wifi.yaml
+  light_fairy_1: !include
+    file: ../packages/lights/ledc.yaml
+    vars:
+      ledc_name: Fairy 1
+      ledc_gpio: GPIO17
+  light_fairy_2: !include
+    file: ../packages/lights/ledc.yaml
+    vars:
+      ledc_name: Fairy 2
+      ledc_gpio: GPIO21
+  light_fairy_3: !include
+    file: ../packages/lights/ledc.yaml
+    vars:
+      ledc_name: Fairy 3
+      ledc_gpio: GPIO34

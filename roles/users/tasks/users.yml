@@ -218,6 +218,7 @@
     content: "#!/bin/zsh"
   with_items: "{{ human_users }}"
   when: ephemeral_homes
+  #when: false
   tags: human
 
 - name: allow 'sudo' group to have passwordless sudo

@@ -4,3 +4,4 @@
   service:
     state: reloaded
     name: nginx
+  when: "'nginx' in group_names"

@@ -188,6 +188,7 @@
   tags:
     - jenkins-container
     - docker-containers
+  ignore_errors: true
   when: jenkins_docker
 
 - name: add apt key for pkg.jenkins.io

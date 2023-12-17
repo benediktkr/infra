@@ -48,7 +48,7 @@ automation:
           - sensor.uher_akustomat_f411_volume_level
         from: null
         to: null
-    
+
     condition:
       - condition: template
         alias: "volue states and attrs are valid and available"
@@ -234,8 +234,8 @@ media_player:
       volume_level: media_player.sonos_kitchen|volume_level
       is_volume_muted: media_player.sonos_kitchen|is_volume_muted
       #source_list: media_player.owntone_server|source_list
-      source_list: None, OwnTon
-      
+      source_list: None, OwnTone
+
   - platform: universal
     name: study
     children:
@@ -493,7 +493,7 @@ homeassistant:
     #  icon: "mdi:apple"
 
     media_player.bedroom:
-      friendly_name: Bedroom 
+      friendly_name: Bedroom
       templated: true
       package: "audio"
       media_players:
@@ -515,7 +515,7 @@ homeassistant:
         - media_player.owntone_output_study
         - media_player.sonos_study
     media_player.hallway:
-      friendly_name: Hallway 
+      friendly_name: Hallway
       templated: true
       media_players:
         - media_player.owntone_server

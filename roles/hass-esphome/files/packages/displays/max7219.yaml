@@ -1,3 +1,5 @@
+---
+
 substitutions:
   pin_max7219_spi_clk: GPIO09
   pin_max7219_spi_cs: GPIO11
@@ -20,10 +22,10 @@ switch:
           id(led_matrix).turn_on_off(true);
           id(led_matrix).intensity(5);
     on_turn_off:
-      - lambda: |-  
+      - lambda: |-
           id(led_matrix).turn_on_off(false);
     turn_off_action:
-      - lambda: |-  
+      - lambda: |-
           id(led_matrix).turn_on_off(false);
 
 spi:
@@ -45,7 +47,7 @@ display:
     num_chips: 1
     lambda: |-
       it.print(0, 1, id(digit_font), "WELCOME");
-      // it.invert_on_off(); 
+      // it.invert_on_off();
 
 
 font:

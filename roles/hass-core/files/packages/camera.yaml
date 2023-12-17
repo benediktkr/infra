@@ -1,0 +1,21 @@
+---
+
+#switch:
+#  - platform: template
+#    switches:
+#      camera_study:
+
+
+#command_line:
+#  - switch:
+#      name: camera_study
+#      command_timeout: 90
+#      scan_interval: 120
+#      command_state: >
+#        nc -w 3 -vz camera-study 8040
+#      command_on: >
+#        ssh -i /usr/local/etc/ssh/hass camera@camera-study "sudo systemctl start ustreamer"
+#      command_off: >
+#        ssh -i /usr/local/etc/ssh/hass camera@camera-study "sudo systemctl stop ustreamer"
+
+

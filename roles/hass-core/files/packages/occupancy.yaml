@@ -63,9 +63,9 @@ homeassistant:
       templated: true
       <<: *common_attrs
 
-    # due to not being able to decide what to name things, esphome was providing  
-    # a 'copy' sensor with entity id binary_sensor.presence_radar_${room}_${placement} 
-    # which has now been removed. 
+    # due to not being able to decide what to name things, esphome was providing
+    # a 'copy' sensor with entity id binary_sensor.presence_radar_${room}_${placement}
+    # which has now been removed.
     #
     # the binary_sensor.radar_${room}_${placement} sensors are the templated
     # esphome sensor with separate on/off thresholds for ld2410 still energy
@@ -82,7 +82,7 @@ homeassistant:
     # the binary_sensor.radar_${room}_${placement} service this purpose now
     # without needing hundreds of lines of yaml/jinja/soup
     binary_sensor.occupancy_bedroom_bed:
-      friendly_name: Bed occupancy (legacy name)
+      friendly_name: Bed occupancy
       comment: directly returns the same value as 'binary_sensor.radar_bedroom_bed', will be removed.
       proto: esphome
       legacy: true
@@ -90,12 +90,12 @@ homeassistant:
       <<: *common_attrs
     # occupancy (study desk)
     binary_sensor.occupancy_study_desk:
-      friendly_name: Desk occupancy (legacy name)
+      friendly_name: Desk occupancy
       proto: esphome
       legacy: true
       templated: true
       <<: *common_attrs
-    
+
     sensor.hours_since_bedroom_bed_occupied:
       friendly_name: Hours since bed was occupied
       templated: true
@@ -303,6 +303,38 @@ template:
         device_class: occupancy
         state: >-
           {{ states("binary_sensor.radar_study_desk") }}
+
+      - name: occupancy_bedroom
+        icon: |
+          {% if is_state(this.entity_id, 'on') %}
+          mdi:bed
+          {% else %}
+          mdi:bed-empty
+          {% endif %}
+        device_class: occupancy
+        state: |
+          {{
+            is_state("binary_sensor.motion_bedroom", "on")
+            or is_state("binary_sensor.occupancy_bedroom_bed", "on")
+          }}
+
+      - name: screens
+        icon: |
+          {% if is_state(this.entity_id, 'on') %}
+          mdi:television
+          {% else %}
+          mdi:television-off
+          {% endif %}
+        device_class: occupancy
+        state: |
+          {{
+            is_state("binary_sensor.tv_livingroom", "on")
+            or is_state("binary_sensor.study_desk_monitor", "on")
+            or is_state("binary_sensor.occupancy_study_desk", "on")
+            or is_state("binary_sensor.apple_tv", "on")
+            or is_state("binary_sensor.apple_tv_is_playing", "on")
+          }}
+
 
   - sensor:
       # {% set ble_scanner = states("sensor.esphome_ble_scanner") %}

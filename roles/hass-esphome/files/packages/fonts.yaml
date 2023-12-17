@@ -1,0 +1,9 @@
+---
+
+font:
+  - file: "../fonts/pixelmix.ttf"
+    id: digit_font
+    size: 10
+
+
+

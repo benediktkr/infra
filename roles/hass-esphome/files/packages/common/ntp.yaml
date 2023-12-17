@@ -1,0 +1,55 @@
+---
+
+substitutions:
+  ntp_timezone: "Europe/Berlin"
+
+binary_sensor:
+  - platform: template
+    name: "${hostname} NTP time valid"
+    id: ntp_valid
+    internal: false
+    disabled_by_default: false
+    publish_initial_state: true
+    lambda: |-
+      return id(time_ntp).now().is_valid();
+    filters:
+      - delayed_off: "60s"
+
+sensor:
+  - platform: template
+    name: "${hostname} NTP hour"
+    id: ntp_hour
+    icon: "mdi:clock"
+    internal: true
+    accuracy_decimals: 0
+    unit_of_measurement: hours
+    lambda: |-
+      auto time = id(time_ntp).now();
+      return time.hour;
+
+text_sensor:
+  - platform: template
+    name: "${hostname} NTP time"
+    id: "ntp_time_of_day"
+    icon: "mdi:clock"
+    internal: true
+    lambda: |-
+      auto time = id(time_ntp).now();
+      return to_string(time.hour) + ":" + to_string(time.minute);
+    update_interval: "60s"
+
+
+time:
+  # This also seems to work without being a list.
+  - platform: sntp
+    id: time_ntp
+    timezone: ${ntp_timezone}
+    servers:
+     - 0.pool.ntp.org
+     - 1.pool.ntp.org
+     - 2.pool.ntp.org
+
+    on_time:
+      - hours: 14
+        minutes: 40
+        then: []

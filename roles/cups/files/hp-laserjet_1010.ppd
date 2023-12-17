@@ -14,7 +14,7 @@
 *NickName: "HP LaserJet 1010, hpcups 3.16.11"
 *PSVersion: "(3010.000) 0"
 *LanguageLevel: "3"
-*ColorDevice: True
+*ColorDevice: False
 *DefaultColorSpace: RGB
 *FileSystem: False
 *Throughput: "1"
@@ -22,7 +22,7 @@
 *TTRasterizer: Type42
 *% Driver-defined attributes...
 *RequiresPageRegion All: True
-*cupsEvenDuplex: True
+*cupsEvenDuplex: False
 *hpPrinterLanguage: "ljfastraster"
 *cupsModelName: "hp LaserJet 1010"
 *1284DeviceID: "MFG:Hewlett-Packard;MDL:hp laserjet 1010;DES:hp laserjet 1010;"

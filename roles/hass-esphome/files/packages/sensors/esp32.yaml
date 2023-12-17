@@ -2,7 +2,7 @@
 
 sensor:
   - platform: internal_temperature
-    name: "ESP32 Internal temperature ${lower_node_name}"
+    name: "${hostname} Chip temperature"
   - platform: template
     icon: mdi:memory
     name: "${hostname} Free Memory"

@@ -1,14 +1,135 @@
 ---
 
 packages:
-  board: !include ../packages/boards/esp32s2mini.yaml 
+  board: !include ../packages/boards/esp32s2mini.yaml
   esphome: !include ../packages/common/esphome.yaml
   network: !include ../packages/common/network.yaml
   http_server: !include ../packages/common/http_server.yaml
   sensors_esp32: !include ../packages/sensors/esp32.yaml
   sensors_esphome: !include ../packages/sensors/esphome.yaml
   sensors_wifi: !include ../packages/sensors/wifi.yaml
-  sensor_pressure_mat: !include 
-    file: ../packages/sensors/pressure_mat.yaml
-    vars:
-      pin_pressure_mat: GPIO09
+  #sensor_potentiometer: !include
+  #  file: ../packages/sensors/potentiometer.yaml
+  #  vars:
+  #    pin_pressure_mat: GPIO09
+
+.config_template_threshold: &config_template_threshold
+  min_value: 0
+  max_value: 100
+  step: 1
+  entity_category: "config"
+  unit_of_measurement: "%"
+  device_class: power_factor
+  disabled_by_default: false
+  restore_value: true
+  update_interval: never
+  optimistic: true
+  mode: box
+
+.config_template_delay: &config_template_delay
+  min_value: 0
+  max_value: 3600
+  step: 1
+  entity_category: "config"
+  unit_of_measurement: "seconds"
+  device_class: duration
+  disabled_by_default: false
+  restore_value: true
+  update_interval: never
+  optimistic: true
+  mode: box
+
+
+number:
+  - platform: template
+    id: "sovgott_threshold_on"
+    name: "${hostname} On threshold"
+    initial_value: 90
+    <<: *config_template_threshold
+
+  - platform: template
+    id: "sovgott_threshold_off"
+    name: "${hostname} Off threshold"
+    initial_value: 40
+    <<: *config_template_threshold
+
+  - platform: template
+    id: sovgott_delay_off
+    name: "${hostname} Delay off"
+    initial_value: 1
+    <<: *config_template_delay
+
+sensor:
+  - platform: adc
+    id: sovgott_adc
+    pin: GPIO9
+    name: "${hostname} ADC voltage"
+    update_interval: 0.05s
+    attenuation: "auto"
+    internal: true
+    disabled_by_default: true
+    device_class: voltage
+    unit_of_measurement: V
+    accuracy_decimals: 3
+    filters:
+      - delta: 0.5
+
+  - platform: copy
+    id: sovgott_energy
+    source_id: sovgott_adc
+    name: "${hostname} SOVGOTT Energy"
+    internal: false
+    disabled_by_default: true
+    device_class: "power_factor"
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    filters:
+      #- lambda: !lambda |-
+      #    return x-0.033;
+      - lambda: !lambda |-
+          return (x*100)/2.60;
+      - delta: 0.01
+      - lambda: !lambda |-
+          if (x < 1) return 0;
+          if (x > 100) return 100;
+          return int(x);
+      - heartbeat: 100ms
+      #- sliding_window_moving_average:
+      #- max:
+      - min:
+          window_size: 10
+          send_every: 1
+          send_first_at: 1
+      - delta: 1.0
+      - throttle: 5s
+
+      #- debounce: 1s
+      #- throttle: 5s
+      #- heartbeat: 3600s
+
+binary_sensor:
+
+  - platform: template
+    id: occupancy
+    name: "SOVGOTT"
+    device_class: occupancy
+    disabled_by_default: false
+    lambda: |-
+      int energy = id(sovgott_energy).state;
+      int threshold_on = id(sovgott_threshold_on).state;
+      int threshold_off = id(sovgott_threshold_off).state;
+      if (energy >= threshold_on) {
+        return true;
+      }
+      else if (energy < threshold_off) {
+        return false;
+      }
+      else {
+        // no change, use last value
+        return {};
+      }
+    filters:
+      - delayed_off: !lambda |-
+          return id(sovgott_delay_off).state;
+
+
