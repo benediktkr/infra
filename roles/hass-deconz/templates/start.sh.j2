@@ -1,0 +1,49 @@
+#!/bin/sh
+#
+# {{ ansible_managed }}
+#
+# bypass the entrypoint script that uses 'gosu' (whats wrong with sudo?) so we dont
+# need to run the container as root
+# https://github.com/deconz-community/deconz-docker/blob/main/docker/root/start.sh
+
+{% if hass_zigbee == "deconz" -%}
+ZIGBEE_DEVICE="tcp://{{ hass_ser2net_host }}:{{ hass_ser2net_port_zigbee }}"
+{% else -%}
+ZIGBEE_DEVICE="tcp://{{ hass_ser2net_host }}:{{ hass_ser2net_port_zigbee|int + 13 }}"
+{% endif %}
+
+echo
+echo "----------------"
+echo "Version: $DECONZ_VERSION"
+echo "Web UI port: $DECONZ_WEB_PORT"
+echo "Websocket port: $DECONZ_WS_PORT"
+echo "Container data dir: $DECONZ_DATA_DIR"
+echo "Zigbee device: ${ZIGBEE_DEVICE}"
+echo "uid: $(id -u)"
+echo "gid: $(id -g)"
+echo "Entrypoint: $0"
+echo "----------------"
+echo
+echo
+
+set -x
+set -e
+
+/usr/bin/deCONZ \
+    --auto-connect=1 \
+    --appdata=${DECONZ_DATA_DIR} \
+    --dbg-ota=${DEBUG_OTA} \
+    --dbg-info=${DEBUG_INFO} \
+    --dbg-error=${DEBUG_ERROR} \
+    --dbg-http=${DEBUG_HTTP} \
+    --dbg-aps=0 \
+    --dbg-zcl=0 \
+    --dbg-ddf=0 \
+    --dbg-dev=0 \
+    --dbg-zdp=0 \
+    --http-port=${DECONZ_WEB_PORT} \
+    --ws-port=${DECONZ_WS_PORT} \
+    -platform minimal \
+    --dev=${ZIGBEE_DEVICE} \
+    --upnp=0
+

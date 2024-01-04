@@ -2,3 +2,5 @@
 
 - name: udevadm reload rules
   command: udevadm control --reload-rules
+
+

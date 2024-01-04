@@ -1,18 +1,5 @@
 ---
 
-- name: udev rule for sdr
-  template:
-    src: "{{ item }}.j2"
-    dest: /etc/udev/rules.d/{{ item }}
-    owner: root
-    group: root
-    mode: 0644
-  notify: udevadm reload rules
-  with_items:
-    - 20-sdr.rules
-  tags:
-    - hass-udev
-
 - name: create dir structure
   file:
     path: "{{ systemuserlist.hass.home }}/{{ item.name }}"

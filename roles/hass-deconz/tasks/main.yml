@@ -1,0 +1,96 @@
+---
+
+- name: remove hass-zigbee2mqtt container
+  docker_container:
+    name: hass-zigbee2mqtt
+    state: absent
+  when:
+    - hass_zigbee == "deconz"
+    - hass_zigbee2mqtt|default(false) == false
+  tags:
+    - hass-zigbee-container
+    - hass-deconz-container
+    - hass-container
+    - docker-containers
+
+- name: create dir structure
+  file:
+    path: "{{ systemuserlist.hass.home }}/{{ item.name }}"
+    state: directory
+    mode: "{{ item.mode | default('0755') }}"
+    owner: hass
+    group: hass
+  tags:
+    - hass-dirs
+    - hass-zigbee-dirs
+    - hass-deconz-dirs
+    - hass-zigbee-deconz-dirs
+  loop_control:
+    label: "{{ item.name }}"
+  with_items:
+    - name: deconz
+    - name: deconz/bin
+    - name: deconz/data
+    - name: deconz/data/otau
+    - name: deconz/data/devices
+
+- name: template better entrypoint
+  template:
+    src: start.sh.j2
+    dest: "{{ systemuserlist.hass.home }}/deconz/bin/start.sh"
+    owner: root
+    group: hass
+    mode: "0755"
+  notify: restart hass-deconz container
+
+- name: start hass-deconz container
+  docker_container:
+    name: hass-deconz
+    image: deconzcommunity/deconz
+    detach: true
+    pull: true
+    auto_remove: false
+    restart_policy: "no"
+    state: "{{ hass_container_state | default('stopped') }}"
+    container_default_behavior: compatibility
+    user: "{{ systemuserlist.hass.uid }}:dialout"
+    networks_cli_compatible: false
+    network_mode: bridgewithdns
+    networks:
+      - name: bridgewithdns
+        ipv4_address: "{{ bridgewithdns.hass_deconz }}"
+    #devices:
+    #  - "/dev/zigbee0:/dev/zigbee:rwm"
+    env:
+      DECONZ_WEB_PORT: "8080"
+      DECONZ_WS_PORT: "3030"
+      DECONZ_DATA_DIR: "/usr/local/var/deconz"
+      DEBUG_OTA: "0"
+      DEBUG_INFO: "0"
+      DEBUG_ERROR: 0"
+      DEBUG_HTTP: "0"
+      TZ: "Europe/Berlin"
+    ports:
+      - "127.0.0.1:3030:3030"
+      - "127.0.0.1:8080:8080"
+    mounts:
+      - type: bind
+        read_only: true
+        source: "{{ systemuserlist.hass.home }}/deconz/bin/start.sh"
+        target: /usr/local/bin/start.sh
+      - type: bind
+        read_only: true
+        source: "{{ systemuserlist.hass.home }}/deconz/bin/start.sh"
+        target: /start.sh
+      - type: bind
+        source: "{{ systemuserlist.hass.home }}/deconz/data"
+        target: /usr/local/var/deconz
+    entrypoint: /usr/local/bin/start.sh
+  register: hass_deconz_container
+  when:
+    - hass_zigbee == "deconz" or hass_deconz|default(false) == true
+  tags:
+    - hass-zigbee-container
+    - hass-deconz-container
+    - hass-container
+    - docker-containers

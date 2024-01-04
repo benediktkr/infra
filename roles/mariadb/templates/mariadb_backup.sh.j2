@@ -4,24 +4,46 @@ lockfile -l 86400 -r 0 /var/run/maridb_backup.lock || exit 2
 
 print () {
     PRINT=true
-    if [ "$PRINT" = "true" ]; then  echo `date +"%F %R:"` "$*" ; fi
+    if [[ "$PRINT" == "true" ]]; then
+        echo `date +"%F %R:"` "$*"
+    fi
 }
 
 
-if [ ! -d {{ mariadb_dump_path }} ]; then
+if [[ ! -d "{{ mariadb_dump_path }}" ]]; then
     print "path '{{ mariadb_dump_path }}' does not exist, bailing"
     exit 1
 fi
 
-{% set name = inventory_hostname.split('.')[0] %}
-if [ -f {{ mariadb_dump_path }}/{{ name }}.1.sql.gz ]; then
-    rm {{ mariadb_dump_path }}/{{ name }}.1.sql.gz
-fi
-if [ -f {{ mariadb_dump_path }}/{{ name }}.sql.gz ]; then
-    mv {{ mariadb_dump_path }}/{{ name }}.sql.gz {{ mariadb_dump_path }}/{{ name }}.1.sql.gz
+if [[ -t 1 ]]; then
+    VERBOSE="-v"
 fi
 
-# for more compressin, use `gzip --best`
-mysqldump --all-databases | gzip > {{ mariadb_dump_path }}/{{ name }}.sql.gz
+for db in $(mariadb -B -s -e "show databases;" | grep -v "performance_schema" | grep -v "information_schema" | grep -v "sys" | grep -v "mysql"); do
+    table_count=$(mariadb -D $db -B -s -e "show tables;" | wc -l)
+    if [[ "${table_count}" != "0" ]]; then
+        if [[ -f "{{ mariadb_dump_path }}/${db}.1.sql.gz" ]]; then
+            mv $VERBOSE {{ mariadb_dump_path }}/${db}.1.sql.gz {{ mariadb_dump_path }}/${db}.2.sql.gz
+        fi
+        if [[ -f "{{ mariadb_dump_path }}/${db}.sql.gz" ]]; then
+            mv $VERBOSE {{ mariadb_dump_path }}/${db}.sql.gz {{ mariadb_dump_path }}/${db}.1.sql.gz
+        fi
+        if [[ -t 1 ]]; then
+            echo "dumping: $db"
+        fi
+        # for more compressin, use `gzip --best`
+        mysqldump --databases $db | gzip > {{ mariadb_dump_path }}/${db}.sql.gz
+
+        if [[ -f "{{ mariadb_dump_path }}/${db}.2.sql.gz" ]]; then
+            rm $VERBOSE {{ mariadb_dump_path }}/${db}.2.sql.gz
+        fi
+        if [[ -t 1 ]]; then
+            du -sh {{ mariadb_dump_path }}/${db}.*
+        fi
+    elif [[ -t 1 ]]; then
+        echo "skipping database with no tables: ${db}"
+    fi
+done
+
 
 rm -f /var/run/maridb_backup.lock

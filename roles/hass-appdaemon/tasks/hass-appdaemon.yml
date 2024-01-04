@@ -5,8 +5,8 @@
     path: "{{ item.path_prefix | default(systemuserlist.hass.home + '/') }}{{ item.path }}"
     state: directory
     mode: "{{ item.mode | default('0755') }}"
-    owner: hass
-    group: hass
+    owner: "{{ item.owner | default('hass') }}"
+    group: "{{ item.group | default('hass') }}"
   tags:
     - hass-dirs
     - hass-ad-redis
@@ -29,10 +29,10 @@
       # files in the www dir are available under {{ bridgewithdns.hass_ad }}:8000/local/
     - path: appdaemon/etc/www
     - path: redis
-      owner: '999'
+      mode: '0775'
       group: '999'
     - path: redis/data
-      owner: '999'
+      mode: '0775'
       group: '999'
 
 

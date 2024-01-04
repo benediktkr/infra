@@ -108,87 +108,14 @@ homeassistant:
     sensor.edge_LAN_combined:
       friendly_name: "Edge router LAN (combined)"
       package: internet_online
-    
+
 
     # CPU
     sensor.edge_cpu:
       friendly_name: "Edge router CPU"
       package: internet_online
 
-binary_sensor:
-  - platform: ping
-    host: "1.1.1.1"
-    name: "ping_internet_online_cloudflare_1"
-    count: 2
-    scan_interval: 60
-  - platform: ping
-    host: "1.0.0.1"
-    name: "ping_internet_online_cloudflare_2"
-    count: 2
-    scan_interval: 60
-  - platform: ping
-    host: "8.8.8.8"
-    name: "ping_internet_online_google_1"
-    count: 2
-    scan_interval: 60
-  - platform: ping
-    host: "8.8.4.4"
-    name: "ping_internet_online_google_2"
-    count: 2
-    scan_interval: 60
-  - platform: ping
-    host: "hi.is"
-    name: "ping_internet_online_hi_1"
-    count: 2
-    scan_interval: 60
-
-  - platform: ping
-    host: !secret host_turris_wg
-    name: "ping_vpn_turris"
-    count: 2
-    scan_interval: 60
-  - platform: ping
-    host: !secret host_dns_s21
-    name: "ping_s21_dns"
-    count: 3
-    scan_interval: 10
-  - platform: ping
-    host: !secret host_vpn_ber1
-    name: "ping_vpn_ber1"
-    count: 2
-    scan_interval: 60
-  - platform: ping
-    host: !secret host_vpn_ls54
-    name: "ping_vpn_ls54_edge"
-    count: 2
-    scan_interval: 60
-  - platform: ping
-    host: !secret host_vpn_mainframe 
-    name: "ping_vpn_mainframe"
-    count: 2
-    scan_interval: 60
-  - platform: ping
-    host: !secret host_vpn_edge 
-    name: "ping_vpn_edge"
-    count: 2
-    scan_interval: 60
-  - platform: ping
-    name: "ping_vpn_rvk0"
-    host: !secret host_vpn_rvk0
-    count: 2
-    scan_interval: 60
-  - platform: ping
-    host: !secret turris_wwan_gateway
-    name: "ping_turris_wwan_gateway"
-    count: 2
-    scan_interval: 60
-  - platform: ping
-    host: !secret turris_wwan_interface 
-    name: "ping_turris_wwan_interface"
-    count: 2
-    scan_interval: 60
-
-sensor: 
+sensor:
   - platform: netdata
     host: !secret s21_router_hostname
     resources:
@@ -201,7 +128,7 @@ sensor:
         data_group: "net.eth2.7"
         element: "sent"
         icon: "mdi:upload-network-outline"
-      
+
       # WWAN
       turris_wwan_in:
         data_group: "net.wlan1"
@@ -294,7 +221,7 @@ template:
         {% set kbits = states("sensor.netdata_turris_wan_out") %}
         {% set mbits = kbits|float / 1000 %}
         {{ mbits|round(2)|abs }}
-      
+
       # WWAN
     - name: edge_wwan_in
       icon: "mdi:download-network-outline"
@@ -348,9 +275,9 @@ template:
       state_class: measurement
       device_class: data_rate
       availability: |
-        {{ 
-        states("sensor.edge_wg0_in") | float(none) | is_number 
-        and states("sensor.edge_wg0_out") | float(none) | is_number 
+        {{
+        states("sensor.edge_wg0_in") | float(none) | is_number
+        and states("sensor.edge_wg0_out") | float(none) | is_number
         }}
       state: |
         {% set in = states("sensor.edge_wg0_in") %}
@@ -370,7 +297,7 @@ template:
       state: |
         {% set kbits = states("sensor.netdata_turris_br_lan_in") %}
         {% set mbits = kbits|float / 1000 %}
-        {{ mbits|round(2) }} 
+        {{ mbits|round(2) }}
     - name: edge_lan_out
       icon: "mdi:upload-network-outline"
       unit_of_measurement: "Mbit/s"
@@ -388,9 +315,9 @@ template:
       state_class: measurement
       device_class: data_rate
       availability: |
-        {{ 
-        states("sensor.edge_lan_in") | float(none) | is_number 
-        and states("sensor.edge_lan_out") | float(none) | is_number 
+        {{
+        states("sensor.edge_lan_in") | float(none) | is_number
+        and states("sensor.edge_lan_out") | float(none) | is_number
         }}
       state: |
         {% set in = states("sensor.edge_lan_in") %}
@@ -398,7 +325,7 @@ template:
         {% set total = in|float + out|float %}
         {{ total|float|round(2) }}
 
-    
+
 
       # CPU
     - name: edge_cpu
@@ -474,7 +401,7 @@ template:
           and is_state("binary_sensor.ping_internet_online_google_1", "off")
           and is_state("binary_sensor.ping_internet_online_google_2", "off")
           and is_state("binary_sensor.ping_internet_online_hi_1", "off")
-          and now()|as_timestamp - states("sensor.hass_uptime")|as_timestamp > 300.0 
+          and now()|as_timestamp - states("sensor.hass_uptime")|as_timestamp > 300.0
           }}
         attributes:
           comment: |
@@ -494,7 +421,7 @@ template:
           and is_state("binary_sensor.ping_vpn_ber1", "off")
           and is_state("binary_sensor.ping_vpn_ls54_edge", "off")
           and is_state("binary_sensor.ping_vpn_mainframe", "off")
-          and is_state("binary_sensor.ping_vpn_edge", "off")  
+          and is_state("binary_sensor.ping_vpn_edge", "off")
           }}
 
       - name: vpn_sudo_is_online
@@ -540,10 +467,10 @@ template:
           {% endif %}
         state: >-
           {{ is_state("binary_sensor.ping_vpn_ls54_edge", "off") }}
-      
+
         # binary_sensor.pihole_ls_54_sudo_is_status turns 'unavailable' when
         # disconnected.
-        # 
+        #
       - name: vpn_sudo_is_ls54_online
         device_class: "connectivity"
         icon: >-
@@ -553,12 +480,12 @@ template:
           mdi:close-network
           {% endif %}
         state: >-
-          {{ 
-          not is_state("binary_sensor.vpn_sudo_is_ls54_edge_offline", "on") 
-          and not is_state("binary_sensor.vpn_sudo_is_ber1_offline", "on") 
+          {{
+          not is_state("binary_sensor.vpn_sudo_is_ls54_edge_offline", "on")
+          and not is_state("binary_sensor.vpn_sudo_is_ber1_offline", "on")
           and not is_state("device_tracker.unifi_lychener_str", "away")
           and is_state("binary_sensor.pihole_ls54_sudo_is_status", "on")
-          
+
           }}
       - name: vpn_sudo_is_ls54_offline
         device_class: "problem"
@@ -613,7 +540,7 @@ template:
         state: >-
           {{ states("sensor.myip") != states("sensor.home0157_sudo_is") }}
 
-      
+
 
 
 

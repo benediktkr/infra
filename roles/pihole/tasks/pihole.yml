@@ -4,7 +4,7 @@
 # also has generally better reverse proxy config
 
 - name: systemd-resolved is started and enabled
-  service:  
+  service:
     name: systemd-resolved
     state: started
     enabled: true
@@ -66,19 +66,23 @@
     - { dir: "etc/unbound" }
   tags: docker
 
-- name: template custom.list
+- name: template files in {{ pihole_root }}/etc/pihole/
   template:
-    src: custom.list.j2
-    dest: "{{ pihole_root }}/etc/pihole/custom.list"
+    src: "{{ item }}.j2"
+    dest: "{{ pihole_root }}/etc/pihole/{{ item }}"
     owner: root
     group: root
     mode: 0644
+  loop_control:
+    label: "{{ item }}"
   tags:
     - pihole-custom-list
     - pihole-config
     - pihole-overrides
   notify: pihole restartdns
-  when: pihole_static_a_records|length > 0
+  with_items:
+    - custom.list
+    - adlists.list
 
 - name: cron file
   template:
@@ -223,7 +227,7 @@
 # * FTLCONF_LOCAL_IPV4 is a workaround for pihole rewriting LOCAL_IPV4 in pihole-FTL.conf
 #   see: https://github.com/pi-hole/docker-pi-hole/issues/1017
 # * underscore in PIHOLE_DNS_ is intentional
-#   see: 
+#   see:
 # * DNSMASQ_LISTENING is set to 'all' because the container runs on a bridged network, which
 #   works as a NAT, and since we selectively forward the ports, it works as a firewall
 - name: start docker container
@@ -242,7 +246,7 @@
       - NET_BIND_SERVICE
     env:
       WEB_PORT: "{{ pihole_http_port|string }}"
-      DNSMASQ_LISTENING: "all" 
+      DNSMASQ_LISTENING: "all"
       VIRTUAL_HOST: "{{ pihole_url }}"
       TZ: "Europe/Berlin"
       PIHOLE_DNS_: "{{ bridgewithdns.unbound0 }};{{ bridgewithdns.unbound1 }}"

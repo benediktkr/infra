@@ -9,6 +9,6 @@
     label: "{{ item.prog }}"
   with_items: "{{ airconnect_containers }}"
   when:
-    - airconnect_containers is not defined or not airconnect_containers_task.changed
+    - airconnect_containers_task.changed|default(false)
     - item.state|default("started") == "started"
     - airconnect_restart_handler|default(true)

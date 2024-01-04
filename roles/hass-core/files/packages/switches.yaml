@@ -1,0 +1,7 @@
+---
+
+script:
+  switch_noop:
+    mode: single
+    sequence: []
+

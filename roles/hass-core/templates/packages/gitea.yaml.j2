@@ -1,0 +1,12 @@
+---
+
+sensor:
+  - platform: gitea
+    token: !secret gitea_token
+    host: {{ gitea_url }}
+    protocol: https
+    port: 443
+    repositories:
+      {% for item in hass_gitea_repos -%}
+      - path: '{{ item.name }}'
+      {% endfor %}

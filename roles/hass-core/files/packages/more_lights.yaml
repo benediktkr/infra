@@ -166,6 +166,9 @@ homeassistant:
     binary_sendor.light_bedroom_ceiling_disabled:
       friendly_name: "Bedroom ceiling lights have been disabled"
       <<: *zwave_attrs
+    switch.light_bedroom_ceiling_enabled:
+      friendly_name: "Bedroom ceiling lights enabled"
+      <<: *zwave_attrs
 
 
     # groups
@@ -178,6 +181,21 @@ homeassistant:
     automation.bedroom_ceiling_light_turns_on_belid:
       icon: "mdi:ceiling-light-multiple-outline"
       <<: *common_attrs
+
+switch:
+  - platform: template
+    switches:
+      light_bedroom_ceiling_enabled:
+        icon_template: |
+          {{ state_attr("binary_sendor.light_bedroom_ceiling_disabled", "icon") }}
+        availability_template: |
+          {{ has_value("binary_sendor.light_bedroom_ceiling_disabled") }}
+        value_template: |
+          {{ is_state("binary_sendor.light_bedroom_ceiling_disabled", "off") }}
+        turn_on:
+          - service: script.disable_light_bedroom_ceiling
+        turn_off:
+          - service: script.enable_light_bedroom_ceiling
 
 light:
   # legacy name, no time to go through and change right now
@@ -269,6 +287,39 @@ automation:
         target:
           entity_id: light.bedroom_ben_belid
 
+  - alias: disable_light_bedroom_ceiling_bed_occupancy
+    description: |
+      Disable ceiling light when bed occupancy
+      is detected at any time of day
+    mode: single
+    trigger:
+      - platform: state
+        entity_id:
+          - binary_sensor.occupancy_bedroom_bed
+        to: 'on'
+        from: 'off'
+        for:
+          hours: 0
+          minutes: 5
+          seconds: 0
+    condition:
+      - condition: state
+        entity_id: binary_sensor.home_somebody
+        state: 'on'
+      - condition: state
+        entity_id: binary_sensor.light_bedroom_ceiling_disabled
+        state: 'off'
+    action:
+      - service: script.disable_light_bedroom_ceiling
+        data: {}
+      - service: notify.persistent_notification
+        data:
+          title: |
+            Bedroom light
+          message: |
+            has been disabled (bed occupancy detected)
+
+
 template:
   - trigger:
       - platform: state
@@ -326,7 +377,7 @@ template:
             and min_dim == 0
           )
           }}
-  
+
   - binary_sensor:
       # max value for "dimming duration": 127
       # min value for "min dimming value": 1

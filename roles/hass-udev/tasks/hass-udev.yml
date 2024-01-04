@@ -1,0 +1,27 @@
+---
+
+- name: udev rules
+  template:
+    src: "{{ item.name }}.j2"
+    dest: /etc/udev/rules.d/{{ item.name }}
+    owner: "{{ item.owner | default('root') }}"
+    group: "{{ item.group | default('root') }}"
+    mode: 0644
+  notify: udevadm reload rules
+  with_items:
+    - name: 10-zwave.rules
+    - name: 11-zigbee.rules
+    - name: 20-sdr.rules
+    - name: 21-blink1.rules
+      owner: "65534"
+      group: "65534"
+  tags:
+    - hass-ser2net-udev
+    - hass-zigbee-udev
+    - hass-zwave-udev
+    - hass-rtl433-udev
+    - hass-blink1-udev
+
+- meta: flush_handlers
+
+

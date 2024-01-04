@@ -1,27 +1,38 @@
 ---
 
-- name: install certs (zerossl)
+- name: install certs if tls is used
   copy:
-    src: "private/zerossl/{{ coturn_url }}"
+    src: "/usr/local/etc/letsencrypt/live/{{ item }}"
     dest: "/usr/local/etc/certs/"
     owner: root
     group: root
     mode: 0755
   tags:
-    - zerossl-certs
+    - letsencrypt-certs
   notify: restart coturn
+  when: coturn_tls|bool == true
   vars:
     prediff_cmd: echo
+  with_items:
+    - "{{ coturn_url }}"
+
+- name: cert files if tls is used
+  file:
+    path: "/usr/local/etc/letsencrypt/live/{{ item }}"
+    state: absent
+  tags:
+    - letsencrypt-certs
+  notify: restart coturn
+  when: coturn_tls|bool == false
+  vars:
+    prediff_cmd: echo
+  with_items:
+    - "{{ coturn_url }}"
 
 # coturn isnt in the ubuntu 22.04 repos because of this bug:
 # https://bugs.launchpad.net/ubuntu/+source/coturn/+bug/1967018
 #
 # using the ppa instead
-
-- name: add ppa for coturn while its not in the main repos
-  apt_repository:
-    repo: 'ppa:ubuntuhandbook1/coturn'
-    state: present
 
 - name: install coturn
   apt:
@@ -32,13 +43,24 @@
   tags:
     - packages
 
+- name: ensure log dir ownership
+  file:
+    state: directory
+    path: /var/log/turnserver
+    owner: turnserver
+    group: turnserver
+
 - name: template coturn config
   template:
     src: turnserver.conf.j2
     dest: /etc/turnserver.conf
+    owner: root
+    group: turnserver
+    mode: "0640"
+  tags:
+    - coturn-config
+    - turnserver.conf
   notify: restart coturn
-
-- meta: flush_handlers
 
 - name: enable and start coturn
   service:

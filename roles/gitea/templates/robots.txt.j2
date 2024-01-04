@@ -34,6 +34,28 @@ Disallow: /
 
 User-agent: *
 
+Disallow: /*/*/src/commit/*
+Disallow: /*/*/commit/*
+Disallow: /*/*/*/refs/*
+Disallow: /*/*/*/star
+Disallow: /*/*/*/watch
+Disallow: /*/*/labels
+Disallow: /*/*/activity/*
+Disallow: /*/vendor
+
+
+# Language spam
+Disallow: /*?lang=
+
+# from Github, to be cleaned
+Allow: /*/*/tree/master
+Allow: /*/*/tree/main
+Allow: /*/*/blob/master
+Allow: /*/*/blob/main
+Disallow: /*/*/pulse
+Disallow: /*/*/tree/*
+Disallow: /*/*/blob/*
+Disallow: /gist/*/*/*
 Disallow: /*/pulse
 Disallow: /*/tree/
 Disallow: /gist/
@@ -42,7 +64,12 @@ Disallow: /*/stars
 Disallow: /*/download
 Disallow: /*/revisions
 Disallow: /*/issues/new
+Disallow: /*/*/issues/new
+Disallow: /*/*/issues/search
 Disallow: /*/issues/search
+Disallow: /*/*/commits/*/*
+Disallow: /*/*/commits/*?author
+Disallow: /*/*/commits/*?path
 Disallow: /*/commits/
 Disallow: /*/commits/*?author
 Disallow: /*/commits/*?path
@@ -51,14 +78,24 @@ Disallow: /*/tags
 Disallow: /*/contributors
 Disallow: /*/comments
 Disallow: /*/stargazers
+Disallow: /*/*/stargazers
 Disallow: /*/archive/
 Disallow: /*/blame/
+Disallow: /*/*/blame/
 Disallow: /*/watchers
 Disallow: /*/network
+Disallow: /*/*/network
+Disallow: /*/*/graphs
 Disallow: /*/graphs
 Disallow: /*/raw/
+Disallow: /*/*/raw
+Disallow: /raw/*
+Disallow: /*/*/compare/
 Disallow: /*/compare/
+Disallow: /*/*/cache/
 Disallow: /*/cache/
+Disallow: /*/projects
+Disallow: /*/projects/
 Disallow: /.git/
 Disallow: */.git/
 Disallow: /*.git$
@@ -67,7 +104,61 @@ Disallow: /search
 Disallow: */search
 Disallow: /*q=
 Disallow: /*.atom
+Disallow: /*/followrs
+Disallow: /*/following
+Disallow: /oembed
+Disallow: /searc/advanced
+Disallow: /search
+Disallow: /*/sitemap.xml
 
+{# mirrors #}
+Disallow: /mirrors/*/commit/
+Disallow: /mirrors/*/commit/*
+Disallow: /mirrors/*/issues/
+Disallow: /mirrors/*/issues/*
+Disallow: /mirrors/*/projects/
+Disallow: /mirrors/*/projects/*
+Disallow: /mirrors/*/labels/
+Disallow: /mirrors/*/labels/*
+Disallow: /mirrors/*/activity/
+Disallow: /mirrors/*/activity/*
+
+Disallow: /matrix/*/commit/
+Disallow: /matrix/*/commit/*
+Disallow: /matrix/*/issues/
+Disallow: /matrix/*/issues/*
+Disallow: /matrix/*/projects/
+Disallow: /matrix/*/projects/*
+Disallow: /matrix/*/labels/
+Disallow: /matrix/*/labels/*
+Disallow: /matrix/*/activity/
+Disallow: /matrix/*/activity/*
+
+Disallow: /home-assistant/*/commit/
+Disallow: /home-assistant/*/commit/*
+Disallow: /home-assistant/*/issues/
+Disallow: /home-assistant/*/issues/*
+Disallow: /home-assistant/*/projects/
+Disallow: /home-assistant/*/projects/*
+Disallow: /home-assistant/*/labels/
+Disallow: /home-assistant/*/labels/*
+Disallow: /home-assistant/*/activity/
+Disallow: /home-assistant/*/activity/*
+
+{# internal #}
+Disallow: /api
+Disallow: /swagger
+Disallow: /swagger.*.json
+Disallow: /avatars
+Disallow: /user/*
+Disallow: /assets
+Disallow: /lokun
+Disallow: /b
+Disallow: /ops
 Disallow: /user/login
+Disallow: /*/-/
+
+Allow: /{{ myusername }}
+Allow: /explore/repos
 
 Sitemap: https://{{ gitea_url }}/sitemap.xml

@@ -18,6 +18,7 @@
     host: 'localhost'
     priv: "{{ mariadb_db }}.*:ALL"
     login_unix_socket: /run/mysqld/mysqld.sock
+    column_case_sensitive: false
   tags:
     - mariadb-users
 
@@ -29,6 +30,7 @@
     priv: "{{ mariadb_db }}.*:ALL"
     password: "{{ systemuserlist.paperless.mariadb_pass }}"
     login_unix_socket: /run/mysqld/mysqld.sock
+    column_case_sensitive: false
   loop_control:
     label: "'{{ systemuserlist.paperless.username }}'@'{{ item }}'"
   when:
@@ -219,7 +221,12 @@
 - name: start paperless-ngx-webserver container
   docker_container:
     name: paperless-ngx-user-{{ paperless_user }}
-    image: ghcr.io/paperless-ngx/paperless-ngx:latest
+    #image: ghcr.io/paperless-ngx/paperless-ngx:latest
+    # the latest version requires mariadb 10.4, but the latest available on the system is 10.3
+    # so pinning to an older version.
+    # The latest versions are 2.x
+    # TOOD: change back to 'latest'
+    image: ghcr.io/paperless-ngx/paperless-ngx:1.17.4
     restart_policy: "unless-stopped"
     auto_remove: false
     detach: true

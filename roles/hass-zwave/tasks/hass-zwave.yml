@@ -1,17 +1,5 @@
 ---
 
-- name: udev rule for z-wave
-  template:
-    src: "{{ item }}.j2"
-    dest: /etc/udev/rules.d/{{ item }}
-    owner: root
-    group: root
-    mode: 0644
-  notify: udevadm reload rules
-  with_items:
-    - 10-zwave.rules
-  tags:
-    - hass-zwave-udev
 
 - name: create dir structure
   file:
@@ -41,6 +29,36 @@
   tags:
     - hass-dirs
     - hass-zwave-dirs
+
+- name: script to fix indent in config file
+  copy:
+    src: format-json.py
+    dest: /usr/local/bin/format-json.py
+    owner: hass
+    group: hass
+    mode: "0755"
+  tags:
+    - scripts
+    - hass-zwave-scripts
+    - hass-scripts
+    - hass-zwave-config
+    - hass-zwave-config-fix
+
+- name: cron file
+  template:
+    src: hass-zwave-cron.j2
+    dest: /etc/cron.d/hass-zwave
+    owner: root
+    group: root
+    mode: 0640
+  tags:
+    - cron
+    - hass-cron
+    - hass-git
+    - hass-zwave-scripts
+    - hass-scripts
+    - hass-zwave-config
+    - hass-zwave-config-fix
 
 # docker run --run -it -p 8091:8091 -p 3000:3000 --network
 #bridgewithdns --device /dev/ttyACM0:/dev/zwave -v
@@ -120,7 +138,7 @@
     - hass-zwave-config
     - hass-zwave-config-fix
 
-- name: decode and parse settins.json 
+- name: decode and parse settins.json
   set_fact:
     current_settings_json: "{{ settings_json_file.content | b64decode | from_json }}"
   #ignore_errors: ansible_check_mode == true

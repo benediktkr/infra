@@ -1,0 +1,7 @@
+# distributed from ansible
+
+# m h dom mon dow
+
+*/30 * * * * {{ systemuserlist.hass.username }} /usr/local/bin/format-json.py {{ systemuserlist.hass.home }}/zwavejs/data/settings.json --indent 2 {% if hass_zwave_fix_json_quiet|default(false) %}--quiet{% endif %}
+
+#

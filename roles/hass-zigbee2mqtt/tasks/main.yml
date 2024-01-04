@@ -1,0 +1,6 @@
+---
+ - import_tasks: hass-zigbee2mqtt.yml
+   tags:
+     - hass
+     - hass-zigbee
+     - hass-zigbee2mqtt

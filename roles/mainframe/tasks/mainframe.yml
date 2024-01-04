@@ -168,18 +168,20 @@
     owner: root
     group: root
     mode: "{{ item.mode }}"
+  tags:
+    - convergence
   loop_control:
     label: "{{ item.src }}"
   with_items:
     - src: git-cron.sh.j2
-      dest: /usr/local/sbin/git-cron.sh
-      mode: 770
+      dest: /usr/local/bin/git-cron.sh
+      mode: '0755'
     - src: ansible-convergence.sh.j2
-      dest: /usr/local/sbin/ansible-convergence.sh
-      mode: 770
+      dest: /usr/local/bin/ansible-convergence.sh
+      mode: '0755'
     - src: tf-convergence.sh.j2
-      dest: /usr/local/sbin/tf-convergence.sh
-      mode: 770
+      dest: /usr/local/bin/tf-convergence.sh
+      mode: '0755'
 
 - name: install certs
   copy:
@@ -202,6 +204,20 @@
     - static.{{ domain }}
     - "{{ inventory_hostname }}"
     - "{{ xmr_url }}"
+
+- name: template sitemap.xml for static
+  template:
+    src: "static-{{ item }}.j2"
+    dest: "/var/www/static.{{ domain }}/{{ item }}"
+    owner: www-data
+    group: www-data
+    mode: 0644
+  with_items:
+    - sitemap.xml
+    - robots.txt
+  tags:
+    - www
+    - www-static
 
 - name: template static vhost(s)
   template:

@@ -84,19 +84,6 @@ device_tracker:
     new_device_defaults:
       track_new_devices: false
 
-  - platform: ping
-    # these are probably not used, because they are "global settings"
-    # and only the first values from the first platform (bluetooth_le_tracker)
-    # are used according to the docs
-    # interval_seconds: 30
-    # track_new_devices: true
-    # # but consider_hoem can be overridden
-    # consider_home: 120
-    hosts:
-      {% for target in hass_ping -%}
-      ping_{{ target.name }}: {{ target.host }}
-      {% endfor %}
-
 
 homeassistant:
   auth_providers:
@@ -299,6 +286,7 @@ recorder:
       - sensor.morning_alarm_next_wihout_offset
       - sensor.sorted_motion_last_changed
       - sensor.edge_wan_in2
+      - sensor.ics_1
     entity_globs:
       - sensor.uptime_*
       - sensor.*_uptime
@@ -321,6 +309,10 @@ recorder:
       - device_tracker.*_*_*_*_*_*
       - sensor.random_*
       - sensor.netdata_turris_*
+      - sensor.esphome_*_electric
+      - sensor.esphome_*_electric_w
+      - sensor.esphome_*_electric_w_*
+      - sensor.esphome_electric_w_*
 
 
 sql:
@@ -550,6 +542,8 @@ logger:
 
 # enable SVT play
 svt_play:
+
+battery_notes:
 
 sonos:
   # useful for not using docker host networking

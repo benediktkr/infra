@@ -33,6 +33,19 @@ homeassistant:
       friendly_name: "Vacuum robot charging"
       <<: *common_attrs_templated
 
+    sensor.vacuum_robot_last_cleaned:
+      friendly_name: "Vacuum robot last cleaned"
+      <<: *common_attrs_templated
+
+    input_boolean.vacuum_robot_closed_room:
+      friendly_name: Vacuum robot cleaning a closed room (no return to dock)
+
+
+
+input_boolean:
+  vacuum_robot_closed_room:
+    name: vacuum_robot_closed_room
+    icon: "mdi:robot-vacuum"
 
 template:
   - sensor:
@@ -93,7 +106,8 @@ template:
         state: >-
           {% set vac = "vacuum.valetudo_meatyenchantedsquirrel" %}
           {{
-          not (
+          is_state(vac, "cleaning")
+          or not (
             is_state(vac, "docked")
             or is_state(vac, "paused")
             or is_state(vac, "idle")
@@ -107,5 +121,21 @@ template:
         availability: >-
           {{ has_value("vacuum.valetudo_meatyenchantedsquirrel") }}
         device_class: battery_charging
-        state: >-  
+        state: >-
           {{ "charging" in state_attr("vacuum.valetudo_meatyenchantedsquirrel", "battery_icon") }}
+
+  - trigger:
+      - platform: state
+        entity_id:
+          - binary_sensor.vacuum_robot
+        from: "off"
+        to: "on"
+    sensor:
+      - name: vacuum_robot_last_cleaned
+        icon: mdi:robot-vacuum
+        device_class: timestamp
+        state: |
+          {{ now().isoformat() }}
+
+
+

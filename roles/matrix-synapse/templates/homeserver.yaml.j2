@@ -1106,12 +1106,18 @@ url_preview_accept_language:
 #
 #turn_uris: ["turn:{{ coturn_url }}:3478?transport=udp", "turn:{{ coturn_url }}:3478?transport=tcp"]
 turn_uris:
-  {{ turn.uris | to_nice_yaml(indent=2, sort_keys=false) | indent(2) }}
+  {% for item_host in turn.hosts|default([]) -%}
+  {%   if not item_host.get('disabled', false) -%}
+  {%   for item_transport in item_host.transports -%}
+  {%     set turn_protocol = "turns" if item_host.tls else "turn" -%}
+  - {{ turn_protocol }}:{{ item_host.hostname }}?transport={{ item_transport }}
+  {%   endfor -%}
+  {%   endif -%}
+  {% endfor %}
 
 
 # The shared secret used to compute passwords for the TURN server
 #
-#turn_shared_secret: "{{ coturn_static_auth_secret }}"
 turn_shared_secret: "{{ turn.shared_secret }}"
 
 # The Username and password if the TURN server needs them and

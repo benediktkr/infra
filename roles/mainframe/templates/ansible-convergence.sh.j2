@@ -3,26 +3,81 @@
 set -e
 
 LOCKFILE=/tmp/ansible-convergence.lock
-/usr/bin/lockfile -r 0 $LOCKFILE
+ANSIBLE_STDOUT_CALLBACK=json
+CONV_PLAYBOOK={{ git_cron.convergence_playbook }}
+
+usage() {
+    echo "usage: $0 LIMIT [ARGUMENTS]"
+    echo
+    echo "LIMIT"
+    echo "  home"
+    echo "  servers"
+    echo "  sensors"
+    echo "  all"
+    echo
+    echo "Arguments:"
+    echo "--help, -h                Show this message"
+    echo "--playbook                Ansible playbook to use [default: ${CONV_PLAYBOOK}]"
+}
+cleanup_lockfile() {
+    if [[ -f $LOCKFILE ]]; then
+        /usr/bin/rm -f $LOCKFILE
+    fi
+}
+
+case $1 in
+    home|servers|sensors|all)
+        CONV_LIMIT=$1
+        shift
+        ;;
+    *)
+    usage
+    exit 1
+esac
+
+for arg in "$@"; do
+    case $arg in
+        -h|--help)
+            help
+            exit 0
+            ;;
+        --playbook)
+            shift;
+            CONV_PLAYBOOK=$1
+            shift;
+            ;;
+        *)
+            usage
+            echo
+            echo "unrecognized argument: '$1'"
+            exit 2
+        esac
+done
+
+# 43200s == 12h
+/usr/bin/lockfile -l 43200 -r 0 $LOCKFILE
+trap cleanup_lockfile EXIT
+
+ls --color=always -l $LOCKFILE
 
 {% set base = git_cron.base_path %}
 {% set tools_path = "/var/www/" + git_cron.tools_url %}
 
-cd {{ base }}/infra
+#cd {{ base }}/infra
+#
+#if [[ "$1" == "sensors" ]]; then
+#    echo ansible-playbook \
+#        -i hosts-sensors.yml \
+#        sensors.yml \
+#        --diff \
+#        --check &> {{ base }}/ansible-convergence-sensors.txt
+#else
+#    echo ansible-playbook \
+#        -i hosts.yml \
+#        {{ git_cron.convergence_playbook }} \
+#        --diff \
+#        --check &> {{ base }}/ansible-convergence.txt
+#fi
 
-if [ "$1" = "sensors" ]; then
-    ansible-playbook \
-        -i hosts-sensors.yml \
-        sensors.yml \
-        --diff \
-        --check &> {{ base }}/ansible-convergence-sensors.txt
-else
-    ansible-playbook \
-        -i hosts.yml \
-        {{ git_cron.convergence }} \
-        --diff \
-        --check &> {{ base }}/ansible-convergence.txt
-fi
+#/usr/bin/cp {{ base }}/ansible-convergence*.txt {{ tools_path }}/convergence/
 
-/usr/bin/cp {{ base }}/ansible-convergence*.txt {{ tools_path }}/convergence/
-/usr/bin/rm -f $LOCKFILE

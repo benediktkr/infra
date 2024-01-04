@@ -2,30 +2,12 @@
 
 - name: install ser2net
   apt:
-    name: 
+    name:
       - ser2net
     state: present
   register: install_ser2net
   tags:
     - packages
-
-- name: udev rule for z-wave
-  template:
-    src: "{{ item }}.j2"
-    dest: /etc/udev/rules.d/{{ item }}
-    owner: root
-    group: root
-    mode: 0644
-  notify: udevadm reload rules
-  with_items:
-    - 10-zwave.rules
-    - 11-zigbee.rules
-  tags:
-    - hass-ser2net-udev
-    - hass-zwave-udev
-    - hass-zigbee-udev
-
-- meta: flush_handlers
 
 - name: ser2net config file
   template:
@@ -35,7 +17,7 @@
     group: root
     mode: "0644"
   notify: restart ser2net
- 
+
 - name: start and enable ser2net
   service:
     name: ser2net

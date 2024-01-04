@@ -8,6 +8,10 @@ homeassistant:
       common_attrs_templated: &common_attrs_templated
         templated: true
         <<: *common_attrs
+      common_attrs_zwave: &common_attrs_zwave
+        proto: "Z-Wave"
+        templated: true
+        <<: *common_attrs
 
     input_boolean.skylight_lock:
       friendly_name: "Skylight lock state"
@@ -28,6 +32,16 @@ homeassistant:
     sensor.skylight_position:
       friendly_name: "Skylight position"
       <<: *common_attrs_templated
+
+    cover.flush_shutter:
+      friendly_name: Skylight
+      <<: *common_attrs_zwave
+    sensor.electric_kwh_shutter_hallway_skylight:
+      friendly_name: "Skylight Electric [kWh]"
+      <<: *common_attrs_zwave
+    sensor.electric_w_shutter_hallway_skylight:
+      friendly_name: "Skylight Electric [W]"
+      <<: *common_attrs_zwave
 
     sensor.electric_w_shutter_hallway_skylight_max_30d:
       friendly_name: Hallway Skylight Electrix [W] max over 30d

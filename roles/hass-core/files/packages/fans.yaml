@@ -113,7 +113,6 @@ script:
 #     action:
 #       - service: script.standing_fan_1_off
 
-
 fan:
   - platform: template
     fans:
@@ -135,9 +134,12 @@ fan:
           - turbo
           - normal
 
-      study:
-        unique_id: study
-        friendly_name: "Fan in study"
+      noop:
+        # Used in groups placeholder while Z-Wave outlets are used for other
+        # purposes when fans are not needed so that fan entities still exist
+        # as to not break automations/scripts/dashboards.
+        unique_id: noop
+        friendly_name: "No-op placeholder for fans"
         value_template: |
           {{ false }}
         preset_mode_template: |
@@ -151,20 +153,17 @@ fan:
         preset_modes:
           - normal
 
-      bedroom:
-        unique_id: bedroom
-        friendly_name: "Fan in bedroom"
-        value_template: |
-          {{ false }}
-        preset_mode_template: |
-          {{ "normal" }}
-        turn_on:
-          service: script.fan_noop
-        turn_off:
-          service: script.fan_noop
-        set_preset_mode:
-          service: script.fan_noop
-        preset_modes:
-          - normal
+  - platform: group
+    name: bedroom
+    entities:
+      - fan.noop
+  - platform: group
+    name: study
+    entities:
+      - fan.noop
+  - platform: group
+    name: livingroom
+    entities:
+      - fan.standing_fan_1
 
 

@@ -10,23 +10,27 @@
   <loc>https://{{ gitea_url }}/</loc>
   <priority>1.00</priority>
 </url>
+<url>
+  <loc>https://{{ gitea_url }}/{{ myusername }}</loc>
+  <priority>1.0</priority>
+</url>
 
 <url>
-  <loc>https://{{ gitea_url }}/{{ myusername }}/</loc>
-  <priority>0.80</priority>
-</url>
-<url>
   <loc>https://{{ gitea_url }}/matrix</loc>
-  <priority>0.80</priority>
+  <priority>0.20</priority>
 </url>
 <url>
   <loc>https://{{ gitea_url }}/mirrors</loc>
-  <priority>0.80</priority>
+  <priority>0.20</priority>
+</url>
+<url>
+  <loc>https://{{ gitea_url }}/home-assistant</loc>
+  <priority>0.20</priority>
 </url>
 
 <url>
   <loc>https://{{ gitea_url }}/explore/repos</loc>
-  <priority>0.80</priority>
+  <priority>0.20</priority>
 </url>
 
 </urlset>

@@ -9,5 +9,3 @@
     - zwavejs_container is not defined or not zwavejs_container.changed
     - hass_container_state|default("stopped") == "started"
 
-- name: udevadm reload rules
-  command: udevadm control --reload-rules

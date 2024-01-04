@@ -26,6 +26,20 @@
     - "{{ apt_url }}"
     - "{{ jenkins_url }}"
 
+- name: template sitemap.xml for jenkins and apt repo
+  template:
+    src: "robots.txt.j2"
+    dest: "/var/www/{{ item }}/robots.txt"
+    owner: www-data
+    group: www-data
+    mode: 0644
+  with_items:
+    - html
+    - "{{ apt_url }}"
+  tags:
+    - jenkins-robots
+    - jenkins-nginx
+
 - name: template nginx vhost(s)
   template:
     src: "{{ item }}.j2"

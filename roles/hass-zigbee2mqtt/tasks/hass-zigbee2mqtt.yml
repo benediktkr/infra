@@ -1,17 +1,17 @@
 ---
 
-- name: udev rule for zigbee
-  template:
-    src: "{{ item }}.j2"
-    dest: /etc/udev/rules.d/{{ item }}
-    owner: root
-    group: root
-    mode: 0644
-  notify: udevadm reload rules
-  with_items:
-    - 11-zigbee.rules
+- name: remove hass-deconz container
+  docker_container:
+    name: hass-deconz
+    state: absent
+  when:
+    - hass_zigbee == "zigbee2mqtt"
+    - hass_deconz|default(false) == false
   tags:
-    - hass-zigbee-udev
+    - hass-zigbee-container
+    - hass-zigbee2mqtt-container
+    - hass-container
+    - docker-containers
 
 - name: create dir structure
   file:
@@ -23,6 +23,7 @@
   tags:
     - hass-dirs
     - hass-zigbee-dirs
+    - hass-zigbee2mqtt-dirs
   loop_control:
     label: "{{ item.name }}"
   with_items:
@@ -37,13 +38,14 @@
     owner: hass
     group: hass
     mode: 0644
-  notify: restart hass-zigbee container
+  notify: restart hass-zigbee2mqtt container
   tags:
     - hass-zigbee-config
+    - hass-zigbee2mqtt-config
 
 - name: start hass-zigbee container
   docker_container:
-    name: hass-zigbee
+    name: hass-zigbee2mqtt
     image: koenkk/zigbee2mqtt
     detach: true
     pull: true
@@ -56,7 +58,7 @@
     network_mode: bridgewithdns
     networks:
       - name: bridgewithdns
-        ipv4_address: "{{ bridgewithdns.hass_zigbee }}"
+        ipv4_address: "{{ bridgewithdns.hass_zigbee2mqtt }}"
     #devices:
     #  - "/dev/zigbee0:/dev/zigbee:rwm"
     env:
@@ -68,8 +70,11 @@
       - type: bind
         source: "{{ systemuserlist.hass.home }}/zigbee2mqtt/log"
         target: /app/data/log
-  register: hass_zigbee_container
+  register: hass_zigbee2mqtt_container
+  when:
+    - hass_zigbee == "zigbee2mqtt" or hass_zigbee2mqtt|default(false) == true
   tags:
     - hass-zigbee-container
+    - hass-zigbee2mqtt-container
     - hass-container
     - docker-containers

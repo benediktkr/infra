@@ -15,8 +15,6 @@
     {% endif -%}
     {% endfor %}
 
-{% endif %}
-
   condition: []
   mode: single
   action:
@@ -28,6 +26,8 @@
       data:
         title: 'device not reporting'
         message: 'stopped reporting: {%raw%}{{ trigger.id }}{%endraw%}'
+
+{% endif %}
 
 
 {% for linux_tracker in hass_linux_presence_trackers -%}

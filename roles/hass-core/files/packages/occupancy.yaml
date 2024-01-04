@@ -291,7 +291,10 @@ template:
           {% endif %}
         device_class: occupancy
         state: >-
-          {{ states("binary_sensor.radar_bedroom_bed") }}
+          {{
+            is_state("binary_sensor.radar_bedroom_bed", "on")
+            and is_state("binary_sensor.home_somebody", "on")
+          }}
 
       - name: occupancy_study_desk
         icon: >-
@@ -302,7 +305,10 @@ template:
           {% endif %}
         device_class: occupancy
         state: >-
-          {{ states("binary_sensor.radar_study_desk") }}
+          {{
+            is_state("binary_sensor.radar_study_desk", "on")
+            and is_state("binary_sensor.home_somebody", "on")
+          }}
 
       - name: occupancy_bedroom
         icon: |

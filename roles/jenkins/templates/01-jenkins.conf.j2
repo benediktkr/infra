@@ -12,6 +12,10 @@ server {
     include listen-proxy-protocol.conf;
     server_name {{ jenkins_url }};
 
+    location = /robots.txt {
+        alias /var/www/html/robots.txt;
+    }
+
     location / {
         include /etc/nginx/require_auth.conf;
 

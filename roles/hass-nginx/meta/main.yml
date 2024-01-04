@@ -3,5 +3,4 @@
 dependencies:
   - role: nginx
     tags:
-      - hass-nginx
       - nginx

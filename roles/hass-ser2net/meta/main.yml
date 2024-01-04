@@ -1,0 +1,6 @@
+---
+
+dependencies:
+    - role: hass-udev
+      tags:
+        - hass-udev

@@ -16,6 +16,16 @@ homeassistant:
     switch.heating:
       friendly_name: Heating
 
+group:
+  climate:
+    name: heating
+    icon: "mdi:radiator"
+    entities:
+      - climate.bathroom
+      - climate.bedroom
+      - climate.livingroom
+      - climate.study
+    all: false
 
 template:
   - binary_sensor:

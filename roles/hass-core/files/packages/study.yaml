@@ -6,7 +6,7 @@ homeassistant:
       common_attrs_templated: &common_attrs_templated
         templated: true
         <<: *common_attrs
-    
+
     binary_sensor.wakeup_ble_mouse:
       friendly_name: Mouse waking up
       templated: true
@@ -21,6 +21,48 @@ homeassistant:
     #   templated: true
     #   package: "study"
 
+    switch.outlet_study_1:
+      friendly_name: "Study outlet 1 (IKEA Askvader)"
+      comment: "IKEA Askvader strip at the desk"
+      proto: "Z-Wave"
+      <<: *common_attrs
+
+    sensor.electric_w_outlet_study_1:
+      friendly_name: "Study outlet 1 (IKEA Askvader) Electric [W]"
+      comment: "IKEA Askvader strip at the desk"
+      proto: "Z-Wave"
+      <<: *common_attrs
+
+    switch.outlet_study_2:
+      friendly_name: "Study outlet 2 (shelves)"
+      comment: "Power strips in shelves"
+      proto: "Z-Wave"
+      <<: *common_attrs
+
+    sensor.electric_w_outlet_study_2:
+      friendly_name: "Study outlet 2 (shelves) [W]"
+      comment: "Power strips in study shelves"
+      proto: "Z-Wave"
+      <<: *common_attrs
+
+    switch.outlet_study_3:
+      friendly_name: "Sudy outlet 3 (corner)"
+      comment: "Power strip in corner, powers router+ap and ber-nullspace1"
+      proto: "Z-Wave"
+      <<: *common_attrs
+
+    sensor.electric_w_outlet_study_3:
+      friendly_name: "Sudy outlet 3 (corner) Electric [W]"
+      comment: "Power strip in corner, powers router+ap and ber-nullspace1"
+      proto: "Z-Wave"
+      <<: *common_attrs
+
+    sensor.electric_w_switch_study_desk_monitor:
+      friendly_name: "Study Desk monitor Electric [W]"
+      LG_monitor: "ca 24W"
+      proto: "Z-Wave"
+      <<: *common_attrs
+
     sensor.electric_w_switch_study_desk_monitor_min_24h:
       friendly_name: Study Computer Monitor min power [W] over 24h
       <<: *common_attrs
@@ -31,6 +73,13 @@ homeassistant:
       icon: "mdi:monitor"
       <<: *common_attrs
 
+    sensor.ics_1_next_event:
+      friendly_name: "Next meeting"
+      <<: *common_attrs_templated
+
+    sensor.ics_1_next_event_start:
+      friendly_name: "Next meeting"
+      <<: *common_attrs_templated
 
 
 template:
@@ -58,16 +107,16 @@ template:
             or is_state("binary_sensor.ble_m720_triathlon_4a1e", "on")
             or is_state("binary_sensor.ble_m720_triathlon_4a1e", "on")
           %}
-          {% set mx_ergo = is_state("device_tracker.ble_mx_ergo", "home") 
+          {% set mx_ergo = is_state("device_tracker.ble_mx_ergo", "home")
             or is_state("device_tracker.ble_mx_ergo_2", "home")
-            or is_state("binary_sensor.ble_mx_ergo_e9af", "on")  
+            or is_state("binary_sensor.ble_mx_ergo_e9af", "on")
             or is_state("binary_sensor.ble_mx_ergo_e9b0", "on")
             or is_state("binary_sensor.ble_mx_ergo_e9b1", "on")
           %}
-          {% set mx_vertical = is_state("device_tracker.ble_mx_vertical", "home") 
-            or is_state("binary_sensor.ble_mx_vertical_7db7", "on")  
+          {% set mx_vertical = is_state("device_tracker.ble_mx_vertical", "home")
+            or is_state("binary_sensor.ble_mx_vertical_7db7", "on")
           %}
-          {{ mx_720 or mx_ergo or mx_vertical }}       
+          {{ mx_720 or mx_ergo or mx_vertical }}
         attributes:
           source: "BLE"
           comment: >-
@@ -120,3 +169,106 @@ template:
       #   attributes:
       #     source__entity_id: sensor.electric_w_switch_study_desk_monitor
       #     source_proto: "zwave"
+
+    # this could also be written as
+    # state: |
+    #   {% set t = state_attr("sensor.battery_level_oxygen", "Time to Empty") | int(0) %}
+    #   {{ t or state_attr(this.entity_id) }}
+    #
+    # but given how fragile this jinja-in-yalm soup is, i wrote it the uglier and more verbose way
+  - sensor:
+      - name: battery_oxygen_time_left
+        unit_of_measurement: min
+        device_class: duration
+        state_class: measurement
+        icon: |
+          {{ state_attr("sensor.battery_level_oxygen", "icon") }}
+        availability: |
+          {{
+            has_value("sensor.battery_level_oxygen")
+            and state_attr("sensor.battery_level_oxygen", "Time to Empty") is number
+          }}
+        state: |
+          {% set t = state_attr("sensor.battery_level_oxygen", "Time to Empty") | int(0) %}
+          {% if t > 0 %}
+          {{ t }}
+          {% else %}
+          {{ states(this.entity_id) | int(0) }}
+          {% endif %}
+         attributes:
+          source_value: |
+            {{ state_attr("sensor.battery_level_oxygen", "Time to Empty") }}
+
+      - name: ics_1_next_event
+        icon: "mdi:calendar"
+        availability: |
+          {{
+            state_attr("sensor.ics_1", "description") is string
+            and state_attr("sensor.ics_1", "location") is string
+          }}
+        state: |
+            {{ state_attr("sensor.ics_1", "description") }}
+        attributes:
+          relevancy: |
+            {% set loc = state_attr("sensor.ics_1", "location") or "" %}
+            {% set zoom = loc.startswith("https") and "zoom" in loc %}
+            {% set d = state_attr("sensor.ics_1", "description") or "" %}
+            {% set time_off = "time off" in d|lower %}
+            {{ zoom and not time_off }}
+
+      - name: ics_1_next_event_duration
+        icon: "mdi:calendar"
+        availability: |
+          {{
+            state_attr("sensor.ics_1", "start") is datetime
+            and state_attr("sensor.ics_1", "end") is datetime
+          }}
+        state: |
+          {% set end = state_attr("sensor.ics_1", "end") %}
+          {% set start = state_attr("sensor.ics_1", "start") %}
+          {{ end - start }}
+
+
+      - name: ics_1_next_event_start
+        icon: "mdi:calendar"
+        device_class: timestamp
+        availability: |
+          {{ state_attr("sensor.ics_1", "start") is datetime }}
+        state: |
+          {% set start = state_attr("sensor.ics_1", "start") %}
+          {{ start.isoformat() }}
+
+
+  - binary_sensor:
+      - name: ics_1_zoom_call
+        icon: "mdi:calendar"
+        availability: |
+          {{
+            state_attr("sensor.ics_1_next_event", "relevancy") is boolean
+            and state_attr("sensor.ics_1", "start") is datetime
+            and state_attr("sensor.ics_1", "end") is datetime
+          }}
+        state: |
+          {{
+            is_state_attr("sensor.ics_1_next_event", "relevancy", true)
+            and now() >= state_attr("sensor.ics_1", "start")
+            and now() <= state_attr("sensor.ics_1", "end")
+          }}
+
+      - name: ics_1_5m_warning
+        icon: "mdi:calendar"
+        availability: |
+          {{
+            state_attr("sensor.ics_1_next_event", "relevancy") is boolean
+            and state_attr("sensor.ics_1", "start") is datetime
+          }}
+        state: |
+          {% set start = state_attr("sensor.ics_1", "start") %}
+          {% set warning_start = start - timedelta(minutes=5) %}
+          {% set warning_end = start + timedelta(minutes=5) %}
+          {{
+            is_state_attr("sensor.ics_1_next_event", "relevancy", true)
+            and now() >= warning_start
+            and now() <= warning_end
+          }}
+

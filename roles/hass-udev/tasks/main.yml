@@ -1,0 +1,5 @@
+---
+ - import_tasks: hass-udev.yml
+   tags:
+     - hass
+     - hass-udev

@@ -146,6 +146,9 @@
       loop_control:
         label: "{{ item.username }}"
       with_items: "{{ systemuserlist.values() | selectattr('sshkey', 'true') }}"
+      tags:
+        - sshkeys
+        - authorized_keys
 
     - name: remove disabled system users
       user:

@@ -1,3 +1,32 @@
+server {
+    listen 443 ssl http2;
+    {% if inventory_hostname in wg_clients -%}
+    listen {{ wg_clients[inventory_hostname].ip }}:443 ssl http2;
+    {% endif -%}
+
+    charset utf-8;
+
+    include listen-proxy-protocol.conf;
+    server_name {{ static2_url }};
+
+    ssl_certificate /usr/local/etc/certs/static.{{ domain }}/fullchain.pem;
+    ssl_certificate_key /usr/local/etc/certs/static.{{ domain }}/privkey.pem;
+
+    access_log /var/log/nginx/access_{{ static2_url }}.log main;
+    error_log /var/log/nginx/error_{{ static2_url }}.log warn;
+
+    {% for item in ["robots.txt", "keybase.txt"] -%}
+    location /{{ item }} {
+        add_header X-Robots-Tag "all" always;
+        root /var/www/static.{{ domain }};
+    }
+    {% endfor %}
+
+    location / {
+        return 301 https://static.{{ domain }}$request_uri;
+    }
+}
+
 
 server {
     listen 443 ssl http2;
@@ -8,7 +37,7 @@ server {
     charset utf-8;
 
     include listen-proxy-protocol.conf;
-    server_name static.{{ domain }} {{ static2_url }};
+    server_name static.{{ domain }};
     root /var/www/static.{{ domain }};
 
     # valid for both
@@ -28,19 +57,24 @@ server {
         # good side effect, removes X-Robots-Tag header
         add_header "x-for-hire" "false";
         add_header X-Robots-Tag "all" always;
+        add_header "Link" '<https://www.{{ domain }}/cv1.pdf>; rel="canonical">' always;
         rewrite ^/cv1.pdf$ https://www.{{ domain }}/cv1.pdf permanent;
     }
 
-    {% for item in ["ardrand.pdf", "tsense.pdf", "Found_Reykjavik.pdf", "Found_Reykjavik_144dpi.pdf"] %}
+    {% for item in ["ardrand.pdf", "tsense.pdf"] %}
     location = /{{ item }} {
-        rewrite ^/{{ item }}$ https://www.{{ domain }}/{{ item }} permanent;
+        add_header "Link" '<https://www.{{ domain }}/{{ item }}>; rel="canonical">' always;
         add_header X-Robots-Tag "all" always;
+        rewrite ^/{{ item }}$ https://www.{{ domain }}/{{ item }} permanent;
     }
     {% endfor %}
 
-    location = /sitemap.xml {
-        alias /var/www/www.sudo.is/sitemap.xml;
+    {% for item in ["sitemap.xml", "keybase.txt", "Found_Reykjavik.pdf", "Found_Reykjavik_144dpi.pdf"] -%}
+    location = /{{ item }} {
+        add_header "Link" '<https://static.{{ domain }}/{{ item }}>; rel="canonical">' always;
+        add_header X-Robots-Tag "all" always;
     }
+    {% endfor %}
 
     access_log /var/log/nginx/access_static.{{ domain }}.log main;
     error_log /var/log/nginx/error_static.{{ domain }}.log warn;

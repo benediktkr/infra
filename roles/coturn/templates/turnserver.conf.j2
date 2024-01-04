@@ -1,13 +1,14 @@
+# {{ ansible_managed }}
 # config reference: https://github.com/coturn/coturn/wiki/turnserver
 
 use-auth-secret
-static-auth-secret={{ coturn_static_auth_secret }}
+static-auth-secret={{ coturn_shared_secret }}
 realm={{ coturn_url }}
 
 # logs
 #syslog
-#log-file=/var/log/coturn/coturn.log
-log-file=/tmp/coturn.log
+log-file=/var/log/turnserver/coturn.log
+#log-file=/tmp/coturn.log
 
 # VoIP traffic is all UDP. no reason to let users connect to any TCP endpoints
 # via the relay.
@@ -34,29 +35,42 @@ denied-peer-ip=240.0.0.0-255.255.255.255
 
 # special case the turn server itself so that client->TURN->TURN->client
 # flows work
-# TODO: might need DO internal ip
 allowed-peer-ip={{ wg_clients[inventory_hostname]['ip'] }}
+{% for item in coturn_allowed_peer_ip|default([]) -%}
+allowed-peer-ip={{ item }}
+{% endfor %}
 
 # its possible to limit the quota of relayed streams per user (or
-total) to avoid risk of DoS.
+# total) to avoid risk of DoS.
 #
 # 4 streams per video call, so 12 streams = 3 simultaneous relayed calls
 # per user.
+
 user-quota=12
 total-quota=1200
 
 # these are not the regular letsencrypt certs
 # see item 4 under "Configuration": https://matrix-org.github.io/synapse/develop/turn-howto.html
+# Voice & video WebRTC traffic is always encrypted.
+# Not using TLS will only leave signaling traffic unencrypted (when used by matrix clients,
+# the turn server cant force clients to use client-side encryption, bue Element does)
+# TLS certificates provided by Let's Encryp will not work with any Matrix client that
+#   uses Chromium's WebRTC library. This currently includes Element Android & iOS
+#   https://github.com/vector-im/element-android/issues/1533
+#   https://github.com/vector-im/element-ios/issues/2712
+#   https://bugs.chromium.org/p/webrtc/issues/detail?id=11710
+#   https://matrix-org.github.io/synapse/latest/setup/turn/coturn.html
+
+{% if coturn_tls|default(false) -%}
 cert=/usr/local/etc/certs/{{ coturn_url }}/fullchain.crt
 pkey=/usr/local/etc/certs/{{ coturn_url }}/private.key
-
-# ensuring lines that disable tls/dtls are disabled
-#no-tls
-#no-dtls
-
+{% else -%}
+no-tls
+no-dtls
 # no-tlsv1
 # no-tlsv1_1
 # no-tlsv1_2
+{% endif %}
 
 
 # Ensure your firewall allows traffic into the TURN server on the

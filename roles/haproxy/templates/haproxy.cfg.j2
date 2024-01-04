@@ -76,8 +76,9 @@ listen health
 frontend https-redirect
     mode http
     bind :80
-    http-request redirect scheme https
 
+    http-request redirect code 301 location https://www.{{ domain }}%[capture.req.uri] if { req.hdr(host) -i {{ domain }} }
+    http-request redirect code 301 scheme https
 
 frontend {{ haproxy_url }}
     bind *:443
@@ -95,6 +96,7 @@ frontend {{ haproxy_url }}
     {% endfor %}
 
     {# balance leastconn #}
+
 
 
 {#

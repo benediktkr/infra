@@ -1,0 +1,10 @@
+---
+
+- name: restart hass-zigbee2mqtt container
+  docker_container:
+    name: hass-zigbee2mqtt
+    state: started
+    restart: true
+  when:
+    - not hass_zigbee2mqtt_container.changed
+    - hass_container_state|default("stopped") == "started"

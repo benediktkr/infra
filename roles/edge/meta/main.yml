@@ -7,5 +7,7 @@ dependencies:
     tags: sshd
   - role: haproxy
     tags: haproxy
+  - role: coturn
+    tags: coturn
 
 

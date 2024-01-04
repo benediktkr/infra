@@ -1,0 +1,95 @@
+---
+
+homeassistant:
+  customize:
+    package.node_anchors:
+      common_attrs: &common_attrs
+        package: "potato"
+      common_attrs_templated: &common_attrs_templated
+        templated: true
+        <<: *common_attrs
+
+    media_player.owntone_output_potato:
+      friendly_name: "Potato (OwnTone output)"
+      <<: *common_attrs
+
+    switch.owntone_potato:
+      friendly_name: "OwnTone Potato output"
+      <<: *common_attrs_templated
+
+    binary_sensor.owntone_potato:
+      friendly_name: "OwnTone potato output"
+      <<: *common_attrs_templated
+
+    binary_sensor.owntone_potato_playing:
+      friendly_name: "OwnTone Potato playing"
+      <<: *common_attrs_templated
+
+switch:
+  - platform: template
+    switches:
+      owntone_potato:
+        icon_template: |
+          {% if is_state(this.entity_id, "off") %}
+          mdi:speaker-off
+          {% elif is_state("binary_sensor.owntone_playing", "on") %}
+          mdi:speaker-play
+          {% else %}
+          mdi:speaker-stop
+          {% endif %}
+        availability_template: |
+          {{
+            has_value("media_player.owntone_output_potato")
+            and (
+              has_value("media_player.potato")
+              or has_value("media_player.sonos_potato")
+            )
+          }}
+        value_template: |
+          {{ is_state("media_player.owntone_output_potato", "on") }}
+        turn_on:
+          - service: media_player.turn_on
+            target:
+              entity_id: media_player.owntone_output_potato
+          - service: media_player.volume_set
+            target:
+              entity_id: media_player.owntone_output_potato
+            data:
+              volume_level: 0.2
+          #- service: media_player.join
+          #  data:
+          #    group_members:
+          #      - media_player.potato
+          #  target:
+          #    entity_id: media_player.potato
+        turn_off:
+          service: media_player.turn_off
+          target:
+            entity_id: media_player.owntone_output_potato
+
+template:
+  - binary_sensor:
+      - name: owntone_potato
+        icon: |
+          {{ state_attr("switch.owntone_potato", "icon") }}
+        availability: |
+          {{ has_value("switch.owntone_potato")}}
+        state: |
+          {{ is_state("switch.owntone_potato", "on") }}
+
+      - name: owntone_potato_playing
+        icon: |
+          {{ state_attr("switch.owntone_potato", "icon") }}
+        device_class: "running"
+        availability: |
+          {{
+            has_value("switch.owntone_potato")
+            and has_value("binary_sensor.owntone_playing")
+          }}
+        state: |
+          {{
+            is_state("switch.owntone_potato", "on")
+            and is_state("binary_sensor.owntone_playing", "on")
+          }}
+
+

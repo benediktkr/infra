@@ -30,6 +30,7 @@
     priv: "{{ systemuserlist.hass.username }}.*:ALL"
     password: "{{ systemuserlist.hass.mariadb_pass }}"
     login_unix_socket: /run/mysqld/mysqld.sock
+    column_case_sensitive: false
   loop_control:
     label: "'{{ systemuserlist.hass.username }}'@'{{ item }}'"
   when:
@@ -142,6 +143,7 @@
     - automations-ansible-managed.yaml
     - scripts-ansible-managed.yaml
     - packages/blink1.yaml
+    - packages/gitea.yaml
     - packages/lights.yaml
     - packages/openwrt.yaml
     # - packages/bvg.yaml
@@ -202,11 +204,13 @@
     - nad_c370.yaml
     - internet_online.yaml
     - occupancy.yaml
+    - potato.yaml
     - proxy_entities.yaml
     - remotes.yaml
     - smoke_detectors.yaml
     - skylight.yaml
     - study.yaml
+    - switches.yaml
     - tv.yaml
     - usb_led_strings.yaml
     - vacuum_robot.yaml
@@ -414,29 +418,6 @@
     enabled: true
   tags:
     - hass-bluetooth
-
-- name: add container ips to /etc/hosts
-  lineinfile:
-    dest: /etc/hosts
-    line: "{{ bridgewithdns[item.replace('-', '_')] }} {{ item }}"
-    state: present
-  with_items:
-    - hass-ad
-    - hass-mqtt
-    - hass-zigbee
-    - zwavejs
-    - unifi
-    - zflux
-  tags:
-    - etc-hosts
-    - hass-etc-hosts
-    - hass-container
-    - docker-containers
-    - hass-rtl433
-    - hass-zigbee
-    - hass-mqtt
-    - hass-appdaemon
-    - hass-ad
 
 # docker run --rm it --name hass -p 8123:8123 -e TZ=Etc/UTC -v
 # /home/ben/hass:/config --network=bridgewithdns

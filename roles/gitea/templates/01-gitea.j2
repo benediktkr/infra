@@ -29,6 +29,8 @@ server {
 
   location / {
 
+      rewrite ^/LICENSE(.*)$ https://www.sudo.is/LICENSE.txt redirect;
+
       proxy_pass         http://{{ bridgewithdns.gitea }}:{{ gitea_docker_port }};
 
       proxy_redirect     off;
@@ -63,9 +65,10 @@ server {
        set $header_sudo_gitea "gitea, {{ item }}";
    }
    {% endfor %}
-   location = /{{ myusername }} {
-       return 302 https://{{ gitea_url }}/{{ myusername }}/;
-   }
+
+   #location = /{{ myusername }} {
+   #    return 302 https://{{ gitea_url }}/{{ myusername }}/;
+   #}
    location /robots.txt {
        # gitea itself can also serve this file
        alias {{ gitea_user.home }}/robots.txt;

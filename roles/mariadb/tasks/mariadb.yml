@@ -10,6 +10,7 @@
       - python3-pymysql
       - gzip
     state: present
+    #update_cache: true
   tags:
     - packages
 
@@ -71,6 +72,7 @@
     priv: "{{ item.mariadb_username|default(item.username) }}.*:ALL"
     state: present
     login_unix_socket: /run/mysqld/mysqld.sock
+    column_case_sensitive: false
   with_items: "{{ systemuserlist.values() | selectattr('mariadb', 'true') }}"
   when:
     - '"mariadb_pass" in item'

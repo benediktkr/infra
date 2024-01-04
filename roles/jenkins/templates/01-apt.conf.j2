@@ -13,6 +13,9 @@ server {
     server_name {{ apt_url }};
     root /var/www/{{ apt_url }};
 
+    location = /robots.txt {
+        alias /var/www/{{ apt_url }}/robots.txt;
+    }
     location / {
         include /etc/nginx/require_auth.conf;
         index index.html index.htm;

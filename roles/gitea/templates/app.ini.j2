@@ -162,7 +162,7 @@ ROOT = /data/git/repositories
 DEFAULT_BRANCH = main
 # default: last. options: last, private, public
 DEFAULT_PRIVATE = public
-# default to creating private repo when using push-to-create
+ENABLE_PUSH_CREATE_USER = true
 DEFAULT_PUSH_CREATE_PRIVATE = true
 
 [repository.editor]
@@ -343,8 +343,19 @@ PATH = /data/gitea/attachments
 ENABLED = true
 RUN_AT_START = false
 
+# The docs don't say that these are for, but 'robots.txt' was mentioned
+# somewhere. I think its the zip files for branches to download.
+# Let's run this cron job pretty agressively.
+#
+# https://projects.blender.org/infrastructure/blender-projects-platform/issues/32#
+# https://github.com/go-gitea/gitea/issues/25992
+# https://docs.gitea.com/administration/config-cheat-sheet#repository-archives-repo-archive
 [cron.archive_cleanup]
-ENABLED = false
+ENABLED = true
+RUN_AT_START = true
+NOTICE_ON_SUCCESS = false
+SCHEDULE = @every 2h
+OLDER_THAN = 1h
 
 [cron.update_mirrors]
 ENABLED = true
