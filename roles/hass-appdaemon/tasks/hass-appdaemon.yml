@@ -30,7 +30,6 @@
     - path: appdaemon/etc/www
     - path: redis
       mode: '0775'
-      group: '999'
     - path: redis/data
       mode: '0775'
       group: '999'
@@ -97,6 +96,7 @@
     auto_remove: false
     detach: true
     pull: true
+    user: "{{ systemuserlist.hass.uid }}:{{ systemuserlist.hass.gid }}"
     state: "{{ hass_container_state | default('stopped') }}"
     container_default_behavior: compatibility
     env:
