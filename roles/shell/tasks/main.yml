@@ -1,0 +1,6 @@
+---
+
+ - import_tasks: shell.yml
+   tags:
+     - shell
+     - shellserver

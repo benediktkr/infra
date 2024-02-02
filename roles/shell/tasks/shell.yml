@@ -1,0 +1,43 @@
+---
+
+- name: install packages
+  apt:
+    name:
+      - gnupg2
+      - kpcli
+      - avahi-utils
+      - zip
+      - pwgen
+      - restic
+      - simple-cdd # create custom debian-installer images
+      - pipx
+      - pinentry-tty
+      - rustup # when added, current version according to github tags (1.27)
+      # -rust-all # slightly older (1.70, fedora repos have 1.75)
+      - protobuf-compiler # to build zellij
+    update_cache: true
+    state: present
+  tags:
+    - packages
+
+- name: install things with pipx
+  community.general.pipx:
+    name: "{{ item }}"
+    # for now use 'latest'
+    state: latest
+  become: true
+  with_items:
+    #- ldap3  # new_user.py
+    - ansible
+    - awscli
+    - hatch
+    - esphome
+    - bdfr
+    - poetry
+    - yt-dlp
+    - docker-compose
+  loop_control:
+    label: "{{ item }}"
+  tags:
+    - packages
+
