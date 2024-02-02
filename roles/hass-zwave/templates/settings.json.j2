@@ -3,7 +3,7 @@
     "deviceConfigPriorityDir": "/usr/src/app/store/config",
     "enableSoftReset": false,
 {% if hass_ser2net_zwave == true %}
-    "port": "tcp://{{ hass_ser2net_host }}:{{ hass_ser2net_port_zwave }}",
+    "port": "tcp://{{ hass_ser2net_host.zwave }}:{{ hass_ser2net_port_zwave }}",
 {% else %}
     "port": "/dev/zwave",
 {% endif %}

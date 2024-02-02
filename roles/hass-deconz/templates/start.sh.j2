@@ -6,11 +6,13 @@
 # need to run the container as root
 # https://github.com/deconz-community/deconz-docker/blob/main/docker/root/start.sh
 
-{% if hass_zigbee == "deconz" -%}
-ZIGBEE_DEVICE="tcp://{{ hass_ser2net_host }}:{{ hass_ser2net_port_zigbee }}"
+{% if hass_zigbee == "deconz" and false -%}
+# ZIGBEE_DEVICE="tcp://{{ hass_ser2net_host.deconz }}:{{ hass_ser2net_port_zigbee }}"
 {% else -%}
-ZIGBEE_DEVICE="tcp://{{ hass_ser2net_host }}:{{ hass_ser2net_port_zigbee|int + 13 }}"
+# ZIGBEE_DEVICE="tcp://{{ hass_ser2net_host.deconz }}:{{ hass_ser2net_port_zigbee|int + 13 }}"
 {% endif %}
+
+ZIGBEE_DEVICE="tcp://{{ hass_ser2net_host.deconz }}:{{ hass_ser2net_port_zigbee }}"
 
 echo
 echo "----------------"
@@ -44,6 +46,6 @@ set -e
     --http-port=${DECONZ_WEB_PORT} \
     --ws-port=${DECONZ_WS_PORT} \
     -platform minimal \
-    --dev=${ZIGBEE_DEVICE} \
+    --dev="${ZIGBEE_DEVICE}" \
     --upnp=0
 

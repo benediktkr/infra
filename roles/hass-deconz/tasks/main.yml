@@ -41,6 +41,8 @@
     owner: root
     group: hass
     mode: "0755"
+  tags:
+    - hass-deconz-config
   notify: restart hass-deconz container
 
 - name: start hass-deconz container
@@ -94,3 +96,4 @@
     - hass-deconz-container
     - hass-container
     - docker-containers
+    - hass-deconz-config

@@ -3,5 +3,6 @@
 hass_zigbee_devices: []
 hass_zigbee_blocklist: []
 hass_ser2net_zigbee: false
-hass_ser2net_host: 'localhost'
+hass_ser2net_host:
+  zigbee2mqtt: 'localhost'
 hass_ser2net_port_zigbee: 30803

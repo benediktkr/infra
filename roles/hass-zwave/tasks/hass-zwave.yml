@@ -54,7 +54,6 @@
   tags:
     - cron
     - hass-cron
-    - hass-git
     - hass-zwave-scripts
     - hass-scripts
     - hass-zwave-config

@@ -5,7 +5,7 @@ mqtt:
   server: {{ hass_zigbee2mqtt_mqtt }}
 serial:
 {% if hass_ser2net_zigbee == true %}
-  port: tcp://{{ hass_ser2net_host }}:{{ hass_ser2net_port_zigbee }}
+  port: tcp://{{ hass_ser2net_host.zigbee2mqtt }}:{{ hass_ser2net_port_zigbee }}
   adapter: deconz
 {% else %}
   port: /dev/zigbee
@@ -14,6 +14,12 @@ serial:
 frontend:
   port: 8633
   url: https://{{ zwavejs_url }}/_zigbee/
+{#
+ # enable the availability feature.
+ # each device defaults to 'availability: true' which should be enough to enable the feature, but it doesnt seem to work.
+ # https://www.zigbee2mqtt.io/guide/configuration/device-availability.html
+ #}
+availability: true
 {% if hass_zigbee2mqtt_network_key | length > 0 -%}
 advanced:
   network_key:

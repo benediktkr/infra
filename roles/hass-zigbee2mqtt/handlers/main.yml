@@ -6,5 +6,6 @@
     state: started
     restart: true
   when:
-    - not hass_zigbee2mqtt_container.changed
+    - hass_zigbee2mqtt_container is defined or hass_zigbee2mqtt_container.changed|default(true)|bool
+    #- not hass_zigbee2mqtt_container.changed
     - hass_container_state|default("stopped") == "started"

@@ -1,0 +1,5 @@
+---
+
+hass_ser2net_host:
+  deconz: 'localhost'
+hass_ser2net_port_zigbee: 30803
