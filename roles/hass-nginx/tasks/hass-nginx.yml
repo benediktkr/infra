@@ -14,6 +14,8 @@
     prediff_cmd: echo
   with_items:
     - "{{ domain }}"
+    - "{{ inventory_hostname.split('.')[1:] | join('.') }}"
+
 - name: create dir structure
   file:
     path: "/var/www/{{ item }}"

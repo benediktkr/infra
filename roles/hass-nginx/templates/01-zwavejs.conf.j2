@@ -93,12 +93,13 @@ server {
         sub_filter_once off;
 
         proxy_redirect https://$host/ https://$host/_deconz/;
+        proxy_http_version 1.1;
         proxy_pass http://{{ bridgewithdns.hass_deconz }}:8080/;
 
-        location /_deconz/api/ {
-            proxy_http_version 1.1;
-            proxy_pass http://{{ bridgewithdns.hass_deconz }}:8080/api/;
-        }
+        #location /_deconz/api/ {
+        #    proxy_http_version 1.1;
+        #    proxy_pass http://{{ bridgewithdns.hass_deconz }}:8080/api/;
+        #}
     }
     {% endif %}
 
