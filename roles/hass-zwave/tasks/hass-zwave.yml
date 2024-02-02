@@ -3,7 +3,7 @@
 
 - name: create dir structure
   file:
-    path: "{{ systemuserlist.hass.home }}/{{ item.name }}"
+    path: "{{ zwavejs_user.home }}/{{ item.name }}"
     state: directory
     mode: "{{ item.mode | default('0755') }}"
     owner: hass
@@ -75,7 +75,7 @@
     restart_policy: "unless-stopped"
     state: "{{ hass_container_state | default('stopped') }}"
     container_default_behavior: compatibility
-    user: "{{ systemuserlist.hass.uid }}:dialout"
+    user: "{{ zwavejs_user.uid }}:dialout"
     networks_cli_compatible: false
     network_mode: bridgewithdns
     networks:
@@ -109,16 +109,16 @@
 
     mounts:
       - type: bind
-        source: "{{ systemuserlist.hass.home }}/zwavejs/data"
+        source: "{{ zwavejs_user.home }}/zwavejs/data"
         target: /usr/src/app/store
       - type: bind
-        source: "{{ systemuserlist.hass.home }}/zwavejs/logs"
+        source: "{{ zwavejs_user.home }}/zwavejs/logs"
         target: /usr/src/app/store/logs
       - type: bind
         source: "/srv/zwavejs_backups"
         target: /usr/src/app/store/backups
       - type: bind
-        source: "{{ systemuserlist.hass.home }}/zwavejs/config-db"
+        source: "{{ zwavejs_user.home }}/zwavejs/config-db"
         target: /usr/src/app/store/.config-db
   register: zwavejs_container
   tags:
@@ -130,7 +130,7 @@
 
 - name: read current settings.json
   slurp:
-    src: "{{ systemuserlist.hass.home }}/zwavejs/data/settings.json"
+    src: "{{ zwavejs_user.home }}/zwavejs/data/settings.json"
   register: settings_json_file
   #ignore_errors: ansible_check_mode == true
   tags:
@@ -148,9 +148,9 @@
 - name: ensure settings.json is well formatted
   copy:
     content: "{{ current_settings_json | to_json(indent=2) }}\n"
-    dest: "{{ systemuserlist.hass.home }}/zwavejs/data/settings.json"
-    owner: "{{ systemuserlist.hass.uid }}"
-    group: "{{ systemuserlist.hass.gid }}"
+    dest: "{{ zwavejs_user.home }}/zwavejs/data/settings.json"
+    owner: "{{ zwavejs_user.uid }}"
+    group: "{{ zwavejs_user.gid }}"
     mode: "0644"
   #ignore_errors: ansible_check_mode == true
   tags:
@@ -167,7 +167,7 @@
 - name: template settings.json
   template:
     src: settings.json.j2
-    dest: "{{ systemuserlist.hass.home }}/zwavejs/data/settings.json"
+    dest: "{{ zwavejs_user.home }}/zwavejs/data/settings.json"
     owner: hass
     group: hass
     mode: 0644

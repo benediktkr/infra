@@ -2,6 +2,6 @@
 
 # m h dom mon dow
 
-*/30 * * * * {{ systemuserlist.hass.username }} /usr/local/bin/format-json.py {{ systemuserlist.hass.home }}/zwavejs/data/settings.json --indent 2 {% if hass_zwave_fix_json_quiet|default(false) %}--quiet{% endif %}
+*/30 * * * * {{ zwavejs_user.username }} /usr/local/bin/format-json.py {{ zwavejs_user.home }}/zwavejs/data/settings.json --indent 2 {% if hass_zwave_fix_json_quiet|default(false) %}--quiet{% endif %}
 
 #
