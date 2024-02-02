@@ -15,6 +15,7 @@
       - rustup # when added, current version according to github tags (1.27)
       # -rust-all # slightly older (1.70, fedora repos have 1.75)
       - protobuf-compiler # to build zellij
+      - cython3    # needed to build some wheels
     update_cache: true
     state: present
   tags:
@@ -28,6 +29,7 @@
   become: true
   with_items:
     #- ldap3  # new_user.py
+    #- docker-compose
     - ansible
     - awscli
     - hatch
@@ -35,7 +37,9 @@
     - bdfr
     - poetry
     - yt-dlp
-    - docker-compose
+  environment:
+    PIPX_HOME: /usr/local/pipx
+    PIPX_BIN_DIR: /usr/local/bin
   loop_control:
     label: "{{ item }}"
   tags:
