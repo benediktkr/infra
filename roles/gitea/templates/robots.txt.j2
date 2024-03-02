@@ -145,6 +145,8 @@ Disallow: /home-assistant/*/labels/*
 Disallow: /home-assistant/*/activity/
 Disallow: /home-assistant/*/activity/*
 
+Disallow: /mirros/m3u-radio-music-playlists/*
+
 {# internal #}
 Disallow: /api
 Disallow: /swagger
@@ -159,6 +161,7 @@ Disallow: /user/login
 Disallow: /*/-/
 
 Allow: /{{ myusername }}
-Allow: /explore/repos
+Disallow: /explore
+Disallow: /expore/repos
 
 Sitemap: https://{{ gitea_url }}/sitemap.xml

@@ -81,7 +81,7 @@
     mode: 0644
   with_items:
     # where the gitea internal webserver wants it to be
-    - data/gitea/public/robots.txt
+    #- data/gitea/public/robots.txt
     # where our actual web server serves the file from
     - robots.txt
   tags:
