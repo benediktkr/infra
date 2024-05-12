@@ -1,6 +1,15 @@
 ---
 
 dependencies:
+    - role: mariadb
+      tags:
+        - mariadb
+        - hass-mariadb
+
+    - role: docker
+      tags:
+        - docker
+
     - role: hass-udev
       tags:
         - hass-udev
