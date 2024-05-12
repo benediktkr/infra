@@ -111,6 +111,7 @@
     - nfs-mounts
   with_items: "{{ nfs_mounts }}"
 
+
 - name: start nfs mounts
   service:
     daemon_reload: true
@@ -124,6 +125,27 @@
   when:
     - nfs_mounts | length > 0
     - systemd_name != ".mount"
+    - item.enabled|default(true)
   with_items: "{{ nfs_mounts }}"
   tags:
     - nfs-mounts
+
+- name: stop nfs mounts
+  service:
+    daemon_reload: true
+    name: "{{ systemd_name }}"
+    state: stopped
+    enabled: false
+  loop_control:
+    label: "{{ systemd_name }}"
+  vars:
+    systemd_name: "{{ item.where.split('/')[1:] | join('-') }}.mount"
+  when:
+    - nfs_mounts | length > 0
+    - systemd_name != ".mount"
+    - not item.enabled|default(true)
+  with_items: "{{ nfs_mounts }}"
+  tags:
+    - nfs-mounts
+
+
