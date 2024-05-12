@@ -2,17 +2,20 @@
 
 dependencies:
   - role: nfs
-    tags: 
+    tags:
       - nfs
   - role: samba
-    tags: 
+    tags:
       - samba
   - role: airconnect
     tags:
       - airconnect
   - role: owntone
-    tags: 
+    tags:
       - owntone
+  - role: navidrome
+    tags:
+      - navidrome
 
 
 #  - role: podgrab
@@ -21,9 +24,6 @@ dependencies:
 #  - role: shairplay
 #    tags:
 #      - shairplay
-#  - role: navidrome
-#    tags: 
-#      - navidrome
 #  - role: bonob
-#    tags: 
+#    tags:
 #      - bonob
