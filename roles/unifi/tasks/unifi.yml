@@ -84,6 +84,7 @@
     init: true
     pull: true
     user: "{{ systemuserlist['unifi']['uid'] }}:{{ systemuserlist['unifi']['gid'] }}"
+    memory: "1G"
     env:
       TZ: "Europe/Berlin"
       RUNAS_UID0: "false"
@@ -120,7 +121,7 @@
     port: 8080
     host: localhost
     sleep: 2
-  when: 
+  when:
     - unifi_container_state|default('started') == "started"
   tags:
     - docker
