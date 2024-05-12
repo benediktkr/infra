@@ -10,10 +10,26 @@
     PATH: "{{ ansible_env.PATH }}:/sbin:/usr/sbin"
   when: not skip_apt|default(false)
   tags:
+    - wwwsudois-package
     - packages
     - wwwsudois
     - www.sudo.is
     - apt.sudo.is
+
+# rest of the example
+# https://www.digitalocean.com/community/tutorials/how-to-target-your-users-with-nginx-analytics-and-a-b-testing
+- name: install geoip for nginx
+  apt:
+    name:
+      - geoip-database
+    state: present
+    update_cache: true
+  environment:
+    PATH: "{{ ansible_env.PATH }}:/sbin:/usr/sbin"
+  when: not skip_apt|default(false)
+  tags:
+    - packages
+    - nginx
 
 - name: install certs
   copy:
@@ -32,6 +48,17 @@
     - www.{{ domain }}
     - docs.{{ domain }}
 
+- name: template {{ domain }} headers
+  template:
+    src: headers-{{ domain }}.conf.j2
+    dest: /etc/nginx/conf.d/headers-{{ domain }}.conf
+  notify: reload nginx
+  tags:
+    - www-nginx
+    - nginx-config
+    - www.sudo.is
+    - wwwsudois
+
 - name: template {{ domain }} vhost
   template:
     src: 01-{{ domain }}.conf.j2
@@ -41,4 +68,93 @@
     - www-nginx
     - nginx-config
     - www.sudo.is
-    - wwwsudo.is
+    - wwwsudois
+
+- name: redis dirs
+  file:
+    path: "/srv/wwwsudois/{{ item }}"
+    state: directory
+    mode: "0755"
+    owner: 999
+    group: 999
+    #owner: "www-data"
+    #group: "www-data"
+  tags:
+  loop_control:
+    label: "{{ item }}"
+  with_items:
+    - "redis"
+    - "redis/data"
+  tags:
+    - www
+    - www-redis
+    - www-api
+    - wwwsudois
+
+- name: redis container for wwwsudois
+  docker_container:
+    name: wwwsudois-redis
+    image: "redis:latest"
+    restart_policy: "unless-stopped"
+    auto_remove: false
+    detach: true
+    pull: true
+    user: "www-data:www-data"
+    state: "started"
+    container_default_behavior: compatibility
+    env:
+      REDIS_HOST: wwwsudois-redis
+    networks_cli_compatible: false
+    networks:
+      - name: bridgewithdns
+    healthcheck:
+      interval: 30s
+      timeout: 60s
+      start_period: 10s
+      test: "redis-cli --raw incr ping"
+    mounts:
+      - type: bind
+        source: /srv/wwwsudois/redis/data
+        target: /data
+  tags:
+    - www
+    - www-redis
+    - www-api
+    - www-container
+    - wwwsudois-container
+    - wwwsudois
+    - redis-container
+    - docker-containers
+
+- name: start wwwsudois container
+  docker_container:
+    name: wwwsudois-api
+    image: git.sudo.is/b/wwwsudois:latest
+    detach: true
+    pull: true
+    auto_remove: false
+    restart_policy: "no"
+    state: "started"
+    container_default_behavior: compatibility
+    #user: "www-data:www-data"
+    networks_cli_compatible: false
+    network_mode: bridgewithdns
+    networks:
+      - name: bridgewithdns
+        ipv4_address: "{{ bridgewithdns.wwwsudois }}"
+    exposed_ports:
+      - 3000
+    env:
+      FORWARDED_ALLOW_IPS: "{{ www_forwarded_allow_ips | default([]) | join(',') }}"
+      SUDO_ENV: "prod"
+    mounts:
+      - type: bind
+        source: /var/www/www.sudo.is
+        target: /var/www/www.sudo.is
+  register: wwwsudois_container
+  tags:
+    - www-api
+    - www-container
+    - wwwsudois-container
+    - wwwsudois
+    - docker-containers
