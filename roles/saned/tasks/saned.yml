@@ -1,0 +1,30 @@
+---
+
+- name: saned config file
+  template:
+    src: saned.conf.j2
+    dest: /etc/sane.d/saned.conf
+  notify:
+    - restart saned
+    - systemctl daemon-reload
+
+- name: saned systemd units
+  copy:
+    src: "{{ item }}"
+    dest: "/etc/systemd/system/{{ item }}"
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - saned.socket
+    - saned@.service
+  notify:
+    - systemctl daemon-reload
+
+- name: start and enabled saned units
+  service:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  with_items:
+    - saned.socket

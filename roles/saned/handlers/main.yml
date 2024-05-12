@@ -1,0 +1,13 @@
+---
+
+- name: systemctl daemon-reload
+  command: systemctl daemon-reload
+
+- name: restart saned
+  service:
+    name: "{{ item }}"
+    state: restarted
+  loop_control:
+    label: "{{ item }}"
+  with_items:
+    - saned.socket

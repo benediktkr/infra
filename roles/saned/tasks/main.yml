@@ -1,0 +1,6 @@
+---
+
+- import_tasks: saned.yml
+  tags:
+    - saned
+
