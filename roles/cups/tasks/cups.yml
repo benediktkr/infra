@@ -5,6 +5,7 @@
     name: ufw
     state: stopped
     enabled: false
+  when: cups_disable_ufw|default(false)|bool
 
 
 - name: install cups
