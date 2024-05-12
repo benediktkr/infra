@@ -36,6 +36,11 @@
     path: "~{{ myusername }}/projects/dotfiles"
   register: projects_dotfiles
 
+- name: check if the dotfiles are managed by yadm
+  stat:
+    path: "~/.local/share/yadm/repo.git/"
+  register: yadm_dotfiles
+
 - name: put my dotfiles in place if dotfiles repo isnt human-managed
   copy:
     remote_src: true
@@ -47,7 +52,7 @@
   loop_control:
     label: "{{ item.dest }}"
   when:
-    - not projects_dotfiles.stat.exists
+    - not (yadm_dotfiles.stat.exists or projects_dotfiles.stat.exists)
 
 - name: clone ohmyzsh if not human-managed
   git:
@@ -58,7 +63,7 @@
     force: true
   become_user: "{{ myusername }}"
   when:
-    - not projects_dotfiles.stat.exists
+    - not (yadm_dotfiles.stat.exists or projects_dotfiles.stat.exists)
 
 - name: put dotfiles for root in place
   copy:
@@ -96,4 +101,4 @@
   with_items:
     - "{{ dotfiles_rm }}"
   when:
-    - not projects_dotfiles.stat.exists
+    - not (yadm_dotfiles.stat.exists or projects_dotfiles.stat.exists)
