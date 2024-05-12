@@ -353,8 +353,7 @@ RUN_AT_START = false
 [cron.archive_cleanup]
 ENABLED = true
 RUN_AT_START = true
-NOTICE_ON_SUCCESS = false
-SCHEDULE = @every 2h
+SCHEDULE = @every 1h
 OLDER_THAN = 1h
 
 [cron.update_mirrors]
@@ -394,20 +393,22 @@ RUN_AT_START = false
 [cron.cleanup_packages]
 ENABLED = true
 RUN_AT_START = true
-SCHEDULE = @midnight
-OLDER_THAN = 24h
+SCHEDULE = @every 2h
+OLDER_THAN = 4h
 
 [cron.delete_inactive_accounts]
 ENABLED = false
 
 [cron.delete_repo_archives]
-ENABLED = false
+ENABLED = true
+RUN_AT_START = false
+SCHEDULE = @every 30m
 
 [cron.git_gc_repos]
 ENABLED = true
-RUN_AT_START = false
+RUN_AT_START = true
 SCHEDULE = @every 72h
-TIMEOUT = 60s
+TIMEOUT = 300s
 # args for 'git gc'
 # ARGS =
 
