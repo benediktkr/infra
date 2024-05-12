@@ -12,7 +12,7 @@ lockfile -r 0 $LOCKFILE
 IGNORE="{% for excl in deadspace_ignore %}--exclude {{ excl }} {% endfor %}"
 PARAMS="-rahS --numeric-ids --delete-after"
 
-{% for item in deadspace[inventory_hostname] %}
+{% for item in deadspace[inventory_hostname]|default([]) %}
 {%   for replica in item.replicas %}
 if [[ "$1" == "-v" ]]; then echo "{{ replica }}:{{ item.path }}"; fi
 
