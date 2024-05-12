@@ -2,6 +2,7 @@
 
 dependencies:
   - postgresql
+  - matrix-fed-tester
   - matrix-nginx
   - matrix-synapse
   - matrix-admin

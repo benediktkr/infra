@@ -1,0 +1,24 @@
+---
+
+- name: start federation tester
+  docker_container:
+    name: matrix-fed-tester
+    image: git.sudo.is/ben/build-matrix-fed-tester:latest
+    auto_remove: false
+    detach: true
+    pull: true
+    restart_policy: "unless-stopped"
+    state: "started"
+    #user: "nobody:nogroup"
+    container_default_behavior: compatibility
+    networks_cli_compatible: false
+    env:
+      BIND_ADDRESS: "{{ matrix_fed_tester_bind }}"
+    networks:
+      - name: bridgewithdns
+        ipv4_address: "{{ bridgewithdns.matrix_fed_tester }}"
+  tags:
+    - matrix-fed-tester-container
+    - matrix-container
+    - docker-containers
+
