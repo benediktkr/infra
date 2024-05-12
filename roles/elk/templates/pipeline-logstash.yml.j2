@@ -164,22 +164,34 @@ filter {
 
 output {
   if [type] == "syslog" {
-    elasticsearch {
-      hosts => "{{ bridgewithdns.elasticsearch }}:9200"
-      user => "{{ elk_users.elastic.user }}"
-      password => "{{ elk_users.elastic.passwd }}"
-      ecs_compatibility => disabled
-      index => "syslog-%{+YYYY.MM.dd}"
-    }
+    {#
+     # elasticsearch {
+     #  hosts => "{{ bridgewithdns.elasticsearch }}:9200"
+     #  user => "{{ elk_users.elastic.user }}"
+     # password => "{{ elk_users.elastic.passwd }}"
+     # ecs_compatibility => disabled
+     # index => "syslog-%{+YYYY.MM.dd}"
+     #}
+
+     file {
+       {# docker bind-mounted from {{ elk_root }}/logstash/logs -#}
+       path => "/usr/share/logstash/logs/logstash_syslog_%{+YYYY-MM-dd}.json"
+     }
   }
   if [type] == "beats" {
-    elasticsearch {
-      hosts => "{{ bridgewithdns.elasticsearch }}:9200"
-      user => "{{ elk_users.elastic.user }}"
-      password => "{{ elk_users.elastic.passwd }}"
-      ecs_compatibility => disabled
-      index => "beats-%{+YYYY.MM.dd}"
-    }
+    {#
+     # elasticsearch {
+     # hosts => "{{ bridgewithdns.elasticsearch }}:9200"
+     # user => "{{ elk_users.elastic.user }}"
+     # password => "{{ elk_users.elastic.passwd }}"
+     # ecs_compatibility => disabled
+     # index => "beats-%{+YYYY.MM.dd}"
+     #}
+
+     file {
+       {# docker bind-mounted from {{ elk_root }}/logstash/logs -#}
+       path => "/usr/share/logstash/logs/logstash_beats_%{+YYYY-MM-dd}.json"
+     }
   }
 }
 

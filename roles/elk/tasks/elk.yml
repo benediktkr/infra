@@ -76,18 +76,20 @@
 #     group: "{{ elk_gid }}"
 #     mode: 0644
 
-- name: start elasticsearch container
+- name: elasticsearch container {{ elasticsearch_container_state }}
   docker_container:
     name: elasticsearch
     hostname: elasticsearch
     image: docker.elastic.co/elasticsearch/elasticsearch:{{ elk_version }}
     auto_remove: false
-    restart_policy: "unless-stopped"
+    restart_policy: "no"
     detach: true
     pull: true
-    state: started
+    state: "{{ elasticsearch_container_state }}"
     container_default_behavior: compatibility
     #user: "{{ elk_uid }}:{{ elk_gid }}"
+    # testing commebnting this out following a craah
+    #memory: "5G" # 5G
     mounts:
       - type: bind
         source: "{{ elk_root }}/elasticsearch/config/elasticsearch.yml"
@@ -100,7 +102,8 @@
       - 127.0.0.1:9200:9200
       - 127.0.0.1:9300:9300
     env:
-      ES_JAVA_OPTS: "-Xmx1g -Xms1g"
+      #ES_JAVA_OPTS: "-Xmx4g -Xms4g"  # 4g
+      ES_JAVA_OPTS: "-Xmx6g -Xms6g"
       #ELASTIC_PASSWORD: "{{ elk_default_password }}"
       discovery.type: single-node
     networks_cli_compatible: false
@@ -123,7 +126,7 @@
     pull: true
     state: started
     container_default_behavior: compatibility
-    memory: "4G"
+    memory: "3G"
     mounts:
       - type: bind
         source: /usr/local/etc/certs/{{ domain }}
@@ -149,7 +152,7 @@
       - "{{ wg_clients[inventory_hostname].ip}}:{{ logstash_syslog_port }}:{{ logstash_syslog_port }}/udp"
       - "127.0.0.1:9600:9600"
     env:
-      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+      LS_JAVA_OPTS: "-Xmx2g -Xms2g"
     networks_cli_compatible: false
     networks:
       - name: bridgewithdns
@@ -160,7 +163,7 @@
     - logstash
     - logstash-container
 
-- name: start kibana container
+- name: kibana container {{ elasticsearch_container_state }}
   docker_container:
     name: kibana
     hostname: kibana
@@ -169,7 +172,7 @@
     restart_policy: "unless-stopped"
     detach: true
     pull: true
-    state: started
+    state: "{{ elasticsearch_container_state }}"
     container_default_behavior: compatibility
     mounts:
       - type: bind

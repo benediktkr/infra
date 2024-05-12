@@ -16,3 +16,5 @@
     name: kibana
     state: started
     restart: true
+  when:
+    - elasticsearch_container_state == "started"
