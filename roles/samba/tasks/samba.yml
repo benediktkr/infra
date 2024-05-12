@@ -23,11 +23,12 @@
     owner: root
     group: root
     mode: 0755
+    force: false
   loop_control:
     label: "{{ item }}"
   when:
     - samba_cups == true
-  with_items: 
+  with_items:
     - lj1010serieshb-vista64.zip
     - lj1010series/
 
@@ -76,7 +77,7 @@
       {%- if samba_smbd -%}
       true
       {%- else -%}
-      false 
+      false
       {%- endif -%}
   tags:
     - sambda-smbd

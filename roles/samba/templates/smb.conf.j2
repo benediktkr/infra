@@ -2,12 +2,14 @@
 #
 {% if inventory_hostname in wg_clients %}
 {# wireguard_cidr #}
-{% set wg_interfaces = [wg_clients[inventory_hostname].ip + "/24"] %}
+{# this should probably just be either the ip withuot the cidr block, or the ip with the cidr block, both only one of either, and one in each cidr block if used #}
+{% set wg_interfaces2 = [wg_clients[inventory_hostname].ip] %}
 {% else %}
-{% set wg_interfaces = [] %}
+{% set wg_interfaces2 = [] %}
 {% endif %}
 
-{% set interfaces = samba_interfaces + wg_interfaces + [ansible_default_ipv4.address] %}
+{% set wg_interfaces = [wg_clients[inventory_hostname].ip] | default([]) %}
+{% set interfaces = [samba_interfaces, wg_interfaces, ansible_default_ipv4.address] | flatten | unique %}
 
 #======================= Global Settings =======================
 
@@ -24,7 +26,8 @@
    netbios name = {{ hostname | replace("-", "") }}
    {% endif -%}
 
-   interfaces = 127.0.0.0/8 {{ interfaces | ansible.utils.ipaddr('private') | join(" ")}}
+   # interfaces
+   interfaces = 127.0.0.0/8 {{ interfaces| join(" ")}}
 
    #hosts allow = 192.168.21. 10.102.47.
    server string = {{ inventory_hostname.split('.')[0] }}
@@ -33,9 +36,17 @@
 
    bind interfaces only = yes
 
+   {% if samba_allow_ntlmv1|default(false) -%}
+   server min protocol = NT1
+   ntlm auth = ntlmv1-permitted
+   {% endif %}
+
    log file = /var/log/samba/log.%m
    max log size = 1000
    logging = file
+
+   streams_xattr:store_stream_type = yes
+   streams_xattr:prefix = user.DosStream.
 
    ## time for inactive connections to-be closed in minutes
    ## 2880 mins = 2 days
@@ -245,17 +256,20 @@
 # Enables the default home directory shares. This will share each
 # user's home directory as \\server\username
 [homes]
-   comment = Home Directories
-   browseable = no
-   create mask = 0700
-   directory mask = 0700
-   valid users = %S
-   guest ok = no
-   inherit owner = yes
+    valid users = %S
+    comment = Home Directories
+    browseable = no
+    create mask = 0660
+    directory mask = 0770
+    read only = no
+    guest ok = no
+    inherit owner = yes
 {% for item in samba_shares %}
 
 [{{ item.name }}]
 {% set guest_ok = "yes" if item.guest_ok|default(false) else "no" %}
+{% set read_only = "yes" if item.read_only|default(false) else "no" %}
+{% set browseable = "yes" if item.browseable|default(false) else "no" %}
     path = {{ item.path }}
     {% if 'valid_users' in item -%}
     valid users = {{ item.valid_users }}
@@ -263,12 +277,14 @@
     {% if 'comment' in item -%}
     comment = {{ item.comment }}
     {% endif -%}
-    {% if item.browseable|default(false) == true-%}
-    browseable = yes
-    {% endif -%}
+    browseable = {{ browseable }}
     create mask = 0660
+    {% if item.guest_ok|default(false) == true -%}
+    directory mask = 0775
+    {% else -%}
     directory mask = 0770
-    read only = no
+    {% endif -%}
+    read only = {{ read_only }}
     guest ok = {{ guest_ok }}
     inherit owner = yes
 
