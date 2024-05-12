@@ -16,9 +16,9 @@
     - name: utils
     - name: utils/config
 
-- name: install virtualenv for scripts
+- name: install venv for scripts
   pip:
-    name: 
+    name:
       - pip
       - pyyaml
       - loguru
