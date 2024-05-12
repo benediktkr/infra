@@ -2,7 +2,6 @@
 
 import argparse
 import sys
-import json
 from socket import gethostname
 
 import requests
@@ -35,17 +34,7 @@ def send(text, room=None, add_prefix=True):
     }
 
     r = requests.post(URL, json=d, params=params)
-
-    if r.status_code == 502:
-        print("502 bad gateway")
-        return 2
-
-    j = r.json()
-    # print(j)
-    if r.status_code == 200:
-        return 0
-    else:
-        return 1
+    return r.status_code
 
 def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -68,8 +57,15 @@ def main():
     else:
         msg = args.msg
 
-    rc = send(msg, args.room)
-    sys.exit(rc)
+    status_code = send(msg, args.room)
+    if status_code == 502:
+        print("502 bad gateway")
+        return sys.exit(2)
+
+    if status_code in [200, 201]:
+        return sys.exit(0)
+    else:
+        return sys.exit(1)
 
 if __name__ == "__main__":
     main()

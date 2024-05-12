@@ -230,6 +230,7 @@
       - cryptsetup-initramfs
       - curl
       - dnsutils
+      - ethtool
       - file
       - git
       - gnupg
