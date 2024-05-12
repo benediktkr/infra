@@ -6,11 +6,27 @@ homeassistant:
       common_attrs_templated: &common_attrs_templated
         templated: true
         <<: *common_attrs
-    
+
+    sensor.electricity_price_schreinerstr_21:
+      accuracy_demicals: 3
+      # already set by tibber integration
+      state_class: measurement
+      unit_of_measurement: "EUR/kWh"
+      <<: *common_attrs
+    sensor.electric_w_switch_core_study_poe:
+      friendly_name: "switch-core-study PoE output [W]"
+      <<: *common_attrs_templated
+    sensor.poe_capacity_switch_core_study:
+      friendly_name: "switch-core-study PoE capacity"
+      poe_adapter: "U-POE-af"
+      max_output: "15W"
+      unifi_shop: "https://eu.store.ui.com/eu/en/pro/category/accessories-poe-power/products/u-poe-af"
+      <<: *common_attrs_templated
+
     sensor.electric_w_study:
       friendly_name: "Study electric consumption [W]"
       <<: *common_attrs_templated
- 
+
     sensor.electric_w_livingroom:
       friendly_name: "Livingroom electric consumption [W]"
       <<: *common_attrs_templated
@@ -19,19 +35,50 @@ homeassistant:
 
 template:
   - sensor:
+      - name: electric_w_switch_core_study_poe
+        device_class: power
+        state_class: measurement
+        unit_of_measurement: "W"
+        state: |
+          {% set p = [
+            5.0,
+            states("sensor.electric_w_switch_core_study_poe_wifi_ap") | float(0.0),
+            states("sensor.electric_w_switch_core_study_poe_switch_study_desk") | float(0.0),
+            states("sensor.electric_w_switch_core_study_poe_port_4") | float(0.0),
+            states("sensor.electric_w_switch_core_study_poe_port_5") | float(0.0)
+          ] %}
+          {{ p | sum | round(1) }}
+        attributes:
+          comment: |
+            Assumes drawing 5W itself (the max draw according to Unifi)
+
+      - name: poe_capacity_switch_core_study
+        icon: "mdi:flash"
+        device_class: "power_factor"
+        unit_of_measurement: "%"
+        state_class: measurement
+        availability: |
+          {{ has_value("sensor.electric_w_switch_core_study_poe") }}
+        state: |
+          {% set max_w = 15.0 %}
+          {% set poe_w = states("sensor.electric_w_switch_core_study_poe") | float(0.0) | round(1) %}
+          {% set pct = poe_w / max_w * 100 %}
+          {{ pct | round(0) | int }}
+
       - name: electric_w_study
         device_class: power
         state_class: measurement
         unit_of_measurement: "W"
+        icon: "mdi:flash"
         state: >-
-          {{
-            states("sensor.electric_w_switch_study_desk_monitor")|float(0.0)|round(1)
-            + states("sensor.electric_w_light_study_ceiling")|float(0.0)|round(1)
-            + states("sensor.electric_w_outlet_study_1")|float(0.0)|round(1)
-            + states("sensor.electric_w_outlet_study_2")|float(0.0)|round(1)
-            + states("sensor.electric_w_outlet_study_3")|float(0.0)|round(1)
-            + states("sensor.electric_w_switch_study_fornuftig")|float(0.0)|round(1)
-          }}
+          {% set sum_w = states("sensor.electric_w_switch_study_desk_monitor")|float(0.0)
+              + states("sensor.electric_w_light_study_ceiling")|float(0.0)
+              + states("sensor.electric_w_outlet_study_1")|float(0.0)
+              + states("sensor.electric_w_outlet_study_2")|float(0.0)
+              + states("sensor.electric_w_outlet_study_3")|float(0.0)
+              + states("sensor.electric_w_outlet_study_4")|float(0.0)
+              + states("sensor.electric_w_switch_study_fornuftig")|float(0.0) %}
+          {{ sum_w | float(0.0) | round(0) }}
 
       - name: electric_w_livingroom
         device_class: power
@@ -43,6 +90,7 @@ template:
             + states("sensor.electric_w_switch_ber_nullspace0")|float(0.0)|round(1)
             + states("sensor.electric_w_socket_livingroom_gfci")|float(0.0)|round(1)
             + states("sensor.electric_w_switch_tv_livingroom")|float(0.0)|round(1)
+            + states("sensor.esphome_plugb_livingroom_power")|float(0.0)|round(1)
             + states("sensor.electric_w_switch_nad_c370")|float(0.0)|round(1)
             + states("sensor.electric_w_light_livingroom_ceiling")|float(0.0)|round(1)
           }}

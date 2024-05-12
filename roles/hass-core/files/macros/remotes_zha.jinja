@@ -1,0 +1,38 @@
+{% macro get_zha_device_id(device_name) %}
+    {{ device_id("button.identity_" ~ device_name) }}
+{% endmacro %}
+
+{% macro symfonisk_i_device_id(device_name) %}
+    {% set d_id = device_id("button.identity_" ~ device_name) %}
+    {{ d_id }}
+{% endmacro %}
+
+{% macro is_symfonisk_i_volume(device_name, move_mode) %}
+    {% set move_modes = {"volume_up": 0, "volume_down": 1} %}
+    {{
+    trigger.platform == "event"
+    and trigger.event.event_type == "zha_event"
+    and trigger.event.data.device_id == device_id("button.identity_" ~ device_name)
+    and trigger.event.data.get("command", "") == "move"
+    and trigger.event.data.get("params", {}).get("move_mode", "") == move_mode
+    }}
+{% endmacro %}
+
+{% macro is_symfonisk_i_stop(device_name) %}
+    {{
+    trigger.platform == "event"
+    and trigger.event.event_type == "zha_event"
+    and trigger.event.data.device_id == device_id("button.identity_" ~ device_name)
+    and trigger.event.data.get("command", "") == "stop"
+    }}
+{% endmacro %}
+
+{% macro is_symfonisk_i_pressed(device_name) %}
+    {{
+    trigger.platform == "event"
+    and trigger.event.event_type == "zha_event"
+    and trigger.event.data.device_id == device_id("button.identity_" ~ device_name)
+    and 'command' in trigger.event.data
+    and trigger.event.data.command == "toggle"
+  }}
+{% endmacro %}

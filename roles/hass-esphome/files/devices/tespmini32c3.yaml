@@ -12,18 +12,178 @@ packages:
 
 
 
+sensor:
+  - platform: adc
+    pin: GPIO4
+    id: adc_ct
+    name: "${hostname} CT clamp ADC"
+    update_interval: 5.0s
+    internal: false
+    attenuation: "auto"
+    disabled_by_default: false
+    device_class: voltage
+    unit_of_measurement: V
+    accuracy_decimals: 3
+    #filters:
+    #  - delta: 0.001
 
-display:
-  - platform: lcd_gpio
-    dimensions: 20x4
-    rs_pin: GPIO4
-    rw_pin: GPIO3
-    enable_pin: GPIO1
-    data_pins:
-      - GPIO6
-      - GPIO7
-      - GPIO20
-      - GPIO10
+  - platform: ct_clamp
+    sensor: adc_ct
+    id: ct_current
+    name: "${hostname} ct_clamp component"
+    update_interval: 1.0s
+    sample_duration: 200ms
+    internal: false
+    disabled_by_default: false
+    device_class: current
+    unit_of_measurement: A
+    #filters:
+    #  - calibrate_linear:
+    #      # Measured value of 0 maps to 0A
+    #      - 0 -> 0
+    #      # Known load: 4.0A
+    #      # Value shown in logs: 0.1333A
+    #      #- 0.1333 -> 4.0
+
+  - platform: copy
+    source_id: ct_current
+    id: ct_power
+    name: "${hostname} ct_clamp component power"
+    internal: false
+    disabled_by_default: false
+    device_class: power
+    unit_of_measurement: W
+    filters:
+      - lambda: !lambda |-
+          return x*230.0;
+
+  # https://wiki.dfrobot.com/Gravity_Analog_AC_Current_Sensor__SKU_SEN0211_
+  - platform: copy
+    source_id: adc_ct
+    id: dfrobot_current
+    name: "${hostname} DFRobot Current"
+    internal: false
+    disabled_by_default: false
+    device_class: Current
+    unit_of_measurement: A
+    filters:
+      - lambda: !lambda |-
+          return x*0.707/1024.0*3.3/2;
+
+  - platform: copy
+    source_id: dfrobot_current
+    id: dfrobot_power
+    name: "${hostname} DFRobot power"
+    internal: false
+    disabled_by_default: false
+    device_class: power
+    unit_of_measurement: W
+    filters:
+      - lambda: !lambda |-
+          return x*230.0;
+
+  - platform: copy
+    source_id: adc_ct
+    id: test_current
+    name: "${hostname} Test Current"
+    internal: false
+    disabled_by_default: false
+    device_class: Current
+    unit_of_measurement: A
+    filters:
+      - lambda: !lambda |-
+          return x/2.8*20;
+
+  - platform: copy
+    source_id: test_current
+    id: test_power
+    name: "${hostname} Test power"
+    internal: false
+    disabled_by_default: false
+    device_class: power
+    unit_of_measurement: W
+    filters:
+      - lambda: !lambda |-
+          return x*235.0;
+
+  - platform: copy
+    source_id: test_current
+    id: test_power_220v
+    name: "${hostname} Test power 220V"
+    internal: false
+    disabled_by_default: false
+    device_class: power
+    unit_of_measurement: W
+    filters:
+      - lambda: !lambda |-
+          return x*230.0;
+
+
+  - platform: copy
+    source_id: test_current
+    id: test_power_230v
+    name: "${hostname} Test power 230V"
+    internal: false
+    disabled_by_default: false
+    device_class: power
+    unit_of_measurement: W
+    filters:
+      - lambda: !lambda |-
+          return x*230.0;
+
+  - platform: copy
+    source_id: test_current
+    id: test_power_240v
+    name: "${hostname} Test power 240V"
+    internal: false
+    disabled_by_default: false
+    device_class: power
+    unit_of_measurement: W
+    filters:
+      - lambda: !lambda |-
+          return x*230.0;
+
+
+
+
+  - platform: copy
+    source_id: adc_ct
+    id: test2_current
+    name: "${hostname} Test2 Current"
+    internal: false
+    disabled_by_default: false
+    device_class: Current
+    unit_of_measurement: A
+    filters:
+      - lambda: !lambda |-
+          return x-0.02;
+      - lambda: !lambda |-
+          return x/2.8*20;
+
+  - platform: copy
+    source_id: test2_current
+    id: test2_power
+    name: "${hostname} Test2 power"
+    internal: false
+    disabled_by_default: false
+    device_class: power
+    unit_of_measurement: W
+    filters:
+      - lambda: !lambda |-
+          return x*230.0;
+
+
+# display:
+#   - platform: lcd_gpio
+#     dimensions: 20x4
+#     rs_pin: GPIO4
+#     rw_pin: GPIO3
+#     enable_pin: GPIO1
+#     data_pins:
+#       - GPIO6
+#       - GPIO7
+#       - GPIO20
+#       - GPIO10
 #i2c:
 #  sda: GPIO8
 #  scl: GPIO9
@@ -36,6 +196,8 @@ display:
 #    i2c_id: i2c_lcd
 #    lambda: |-
 #      it.print("hello world!");
+
+
 
 
 

@@ -1,0 +1,34 @@
+---
+
+homeassistant:
+  customize:
+    package.node_anchors:
+      package_name: &package_name "entities"
+      common_attrs: &common_attrs
+        package: *package_name
+      common_attrs_templated: &common_attrs_templated
+        templated: true
+        <<: *common_attrs
+
+
+    sensor.battery_level_ben_phone:
+      device_class: battery
+      state_class: measurement
+      <<: *common_attrs
+    sensor.battery_level_ben_phone_icloud:
+      device_class: battery
+      state_class: measurement
+      <<: *common_attrs
+    sensor.battery_level_oxygen:
+      device_class: battery
+      state_class: measurement
+      <<: *common_attrs
+    sensor.battery_level_oxygen_icloud:
+      device_class: battery
+      state_class: measurement
+      <<: *common_attrs
+
+    sensor.notflix_sudo_is:
+      state_class: measurement
+      <<: *common_attrs
+

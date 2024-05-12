@@ -5,7 +5,7 @@
 {% if hass_ser2net_zwave == true %}
     "port": "tcp://{{ hass_ser2net_host.zwave }}:{{ hass_ser2net_port_zwave }}",
 {% else %}
-    "port": "/dev/zwave",
+    "port": "/dev/zwave0",
 {% endif %}
     "allowBootloaderOnly": false,
     "commandsTimeout": 300,
@@ -24,11 +24,12 @@
     "maxFiles": 7,
     "serverEnabled": true,
     "serverServiceDiscoveryDisabled": true,
-    "enableStatistics": true,
+    "enableStatistics": false,
     "serverPort": {{ hass_zwavejs_ws_port }},
     "maxNodeEventsQueueSize": 100,
     "higherReportsTimeout": false,
-    "disclaimerVersion": 1
+    "disclaimerVersion": 1,
+    "securityKeysLongRange": {}
   },
   "mqtt": {
     "name": "Zwavejs2Mqtt",
@@ -49,12 +50,12 @@
     "disabled": true
   },
   "gateway": {
-    "type": 0,
+    "type": {{ zwavejs_gateway_type|default(0) }},
     "plugins": [],
     "authEnabled": false,
     "payloadType": 0,
     "nodeNames": true,
-    "hassDiscovery": true,
+    "hassDiscovery": false,
     "discoveryPrefix": "homeassistant",
     "logEnabled": true,
     "logLevel": "info",
@@ -64,7 +65,7 @@
     "disableChangelog": false,
     "notifyNewVersions": false,
     "https": false,
-    "versions": {{ zwavejs_versions | to_json(indent=2) | indent(4) }}
+    "versions": {{ zwavejs_versions | default({}) | to_json(indent=2) | indent(4) }}
   },
   "backup": {
     "storeBackup": true,
@@ -72,8 +73,8 @@
     "storeKeep": 7,
     "nvmBackup": true,
     "nvmBackupOnEvent": false,
-    "nvmCron": "4 4 * * 4",
-    "nvmKeep": 7
+    "nvmCron": "4 4 * * *",
+    "nvmKeep": 14
   },
   "ui": {
     "darkMode": true,

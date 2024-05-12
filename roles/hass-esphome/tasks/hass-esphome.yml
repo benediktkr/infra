@@ -15,16 +15,7 @@
     - path: .secrets
       # this is where builds are writen to
     - path: target
-    - path: fonts
     - path: data
-    - path: packages
-    - path: packages/boards
-    - path: packages/common
-    - path: packages/hass
-    - path: packages/sensors
-    - path: packages/switch
-    - path: packages/lights
-    - path: packages/displays
     - path: bootstrap
       # which of these are still needed?
     - path: platformio
@@ -44,13 +35,22 @@
     - hass-dirs
     - hass-esphome-dirs
 
-- name: install esphome virtualenv
+#- name: create venv
+#  command:
+#    cmd: "python3 -m venv {{ systemuserlist.hass.home }}/.cache/virtualenvs/esphome"
+#    creates: "{{ systemuserlist.hass.home }}/.cache/virtualenvs/esphome/bin/pip"
+#  tags:
+#    - hass-esphome-virtualenv
+#    - esphome-virtualenv
+
+- name: install esphome venv
   pip:
     name:
       - pip
       - wheel
       - esphome
-      - pillow==10.0.1    # for packages/displays/max7219.yaml
+      - setuptools
+      - pillow==10.2.0    # for packages/displays/max7219.yaml
     # lets just use the ansible task to update esphome when needed
     state: latest
     virtualenv: "{{ systemuserlist.hass.home }}/.cache/virtualenvs/esphome"
@@ -103,95 +103,18 @@
     - hass-esphome-secrets
     - hass-esphome-data
 
-- name: copy packages
+- name: copy boostrap files
   copy:
-    src: packages/{{ item }}
-    dest: "{{ systemuserlist.hass.home }}/esphome/packages/{{ item }}"
-    mode: "0755"
-    owner: hass
-    group: hass
-  with_items:
-    - boards/esp32s2mini.yaml
-    - boards/esp32c3supermini.yaml
-    - boards/esp32nodemcu.yaml
-    - boards/esp32wrover.yaml
-    - boards/esp8266d1.yaml
-    - boards/esp8266nodemcu.yaml
-    - common/esphome.yaml
-    - common/network.yaml
-    - common/alt_wifi.yaml
-    - common/http_server.yaml
-    - common/ntp.yaml
-    - common/time.yaml
-    - hass/time.yaml
-    - displays/ssd1306.yaml
-    - displays/max7219.yaml
-    - displays/pcd8544.yaml
-    - sensors/esphome.yaml
-    - sensors/esp32.yaml
-    - sensors/binary_gpio.yaml
-    - sensors/generic_motion.yaml
-    - sensors/ld2410.yaml
-    - sensors/potentiometer.yaml
-    - sensors/rfid.yaml
-    - sensors/VINDRIKTNING.yaml
-    - sensors/vl53l0x.yaml
-    - sensors/wifi.yaml
-    - switch/binary_gpio.yaml
-    - lights/ledc.yaml
-    - lights/rgb_ledc.yaml
-    - lights/effects.yaml
-    - fonts.yaml
-  tags:
-   - hass-esphome-config
-   - hass-esphome-packages
-
-- name: copy fonts for display components
-  copy:
-    src: fonts/{{ item }}
-    dest: "{{ systemuserlist.hass.home }}/esphome/fonts/{{ item }}"
-    mode: "0755"
-    owner: hass
-    group: hass
-  with_items:
-    - pixelmix.ttf
-    - pixelmix_bold.ttf
-    - NotoSansMono-Regular.ttf
-  tags:
-    - esphome-fonts
-    - esphome-packages
-    - hass-esphome-fonts
-    - hass-esphome-packages
-
-- name: copy device (types?)
-  copy:
-    src: devices/{{ item }}
-    dest: "{{ systemuserlist.hass.home }}/esphome/devices/{{ item }}"
+    src: bootstrap/{{ item }}
+    dest: "{{ systemuserlist.hass.home }}/esphome/bootstrap/{{ item }}"
     mode: "0755"
     owner: hass
     group: hass
   tags:
    - hass-esphome-config
-   - hass-esphome-devices
+   - hass-esphome-bootstrap
   with_items:
-    - tesp8266.yaml
-    - tespmini8266.yaml
-    - tespmini32.yaml
-    - tespmini32c3.yaml
-    - tesp32.yaml
-    - akustomat.yaml
-    - camera.yaml
-    - cats.yaml
-    - cats-led.yaml
-    - fairylights.yaml
-    - VINDRIKTNING.yaml
-    - VINDRUTA.yaml
-    - irrigation-esotec.yaml
-    - radar.yaml
-    - rfid-reader.yaml
-    - RG9-S2.yaml
-    - RG9-C3.yaml
-    - SOVGOTT.yaml
+    - esp32s2mini.yaml
 
 - name: template data files
   template:
@@ -288,7 +211,7 @@
   # notify:
   #   - esphome ota
 
-- name: esp bootstrap config files
+- name: template esp bootstrap config files
   template:
     src: "bootstrap/{{ item }}.yaml.j2"
     dest: "{{ systemuserlist.hass.home }}/esphome/bootstrap/{{ item }}.yaml"
@@ -303,18 +226,6 @@
     - esp32-s2-mini
     - vindriktning
 
-- name: remove old files
-  file:
-    dest: "{{ systemuserlist.hass.home }}/esphome/{{ item }}"
-    state: absent
-  tags:
-    - esphome-configs
-    - hass-esphome-configs
-  with_items:
-    - packages/boards/esp32s2.yaml
-    - packages/devices/RG9.yaml
-    - devices/tesboard.yaml
-    - devices/screek-1u.yaml
 
 - name: remove disabled configs
   file:

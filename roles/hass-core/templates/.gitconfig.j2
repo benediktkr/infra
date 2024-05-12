@@ -5,5 +5,19 @@ name = Home Assistant
 [init]
 defaultBranch = main
 
+[pull]
+rebase = true
+
 [push]
 default = current
+
+[alias]
+st = status
+
+[credential "https://{{ gitea_url }}"]
+username = {{ systemuserlist.hass.username }}
+
+[credential]
+helper = store --file={{ systemuserlist.hass.home }}/.git-credentials
+
+

@@ -13,22 +13,115 @@ homeassistant:
       friendly_name: "Potato (OwnTone output)"
       <<: *common_attrs
 
-    switch.owntone_potato:
-      friendly_name: "OwnTone Potato output"
+    switch.sonos_potato_study:
+      friendly_name: "Study (Potato output)"
       <<: *common_attrs_templated
 
-    binary_sensor.owntone_potato:
-      friendly_name: "OwnTone potato output"
+    switch.sonos_potato_hallway:
+      friendly_name: "Hallway (Potato output)"
       <<: *common_attrs_templated
 
-    binary_sensor.owntone_potato_playing:
-      friendly_name: "OwnTone Potato playing"
+    switch.sonos_potato_livingroom:
+      friendly_name: "Livingroom (Potato output)"
       <<: *common_attrs_templated
+
+    switch.sonos_potato_kitchen:
+      friendly_name: "Kitchen (Potato output)"
+      <<: *common_attrs_templated
+
+    switch.sonos_potato_owntone:
+      friendly_name: "Potato OwnTone output"
+      <<: *common_attrs_templated
+
+    binary_sensor.sonos_potato:
+      friendly_name: "Sonos Potato"
+      <<: *common_attrs_templated
+
 
 switch:
   - platform: template
     switches:
-      owntone_potato:
+      sonos_potato_study:
+        turn_on:
+          - service: media_player.join
+            data:
+              group_members:
+                - media_player.sonos_study
+            target:
+              entity_id:
+                - media_player.sonos_potato
+        turn_off:
+          - service: media_player.unjoin
+            data: {}
+            target:
+              entity_id:
+                - media_player.sonos_study
+        availability_template: |
+          {{ has_value("media_player.sonos_study") }}
+        value_template: |
+          {{ "media_player.sonos_potato" in states.sonos_study.attributes.get("group_members", []) }}
+
+      sonos_potato_hallway:
+        turn_on:
+          - service: media_player.join
+            data:
+              group_members:
+                - media_player.sonos_hallway
+            target:
+              entity_id:
+                - media_player.sonos_potato
+        turn_off:
+          - service: media_player.unjoin
+            data: {}
+            target:
+              entity_id:
+                - media_player.sonos_hallway
+        availability_template: |
+          {{ has_value("media_player.sonos_template") }}
+        value_template: |
+          {{ "media_player.sonos_potato" in states.sonos_hallway.attributes.get("group_members", []) }}
+
+      sonos_potato_livingroom:
+        turn_on:
+          - service: media_player.join
+            data:
+              group_members:
+                - media_player.sonos_livingroom
+            target:
+              entity_id:
+                - media_player.sonos_potato
+        turn_off:
+          - service: media_player.unjoin
+            data: {}
+            target:
+              entity_id:
+                - media_player.sonos_livingroom
+        availability_template: |
+          {{ has_value("media_player.sonos_livingroom") }}
+        value_template: |
+          {{ "media_player.sonos_potato" in states.sonos_livingroom.attributes.get("group_members", []) }}
+
+      sonos_potato_kitchen:
+        turn_on:
+          - service: media_player.join
+            data:
+              group_members:
+                - media_player.sonos_kitchen
+            target:
+              entity_id:
+                - media_player.sonos_potato
+        turn_off:
+          - service: media_player.unjoin
+            data: {}
+            target:
+              entity_id:
+                - media_player.sonos_kitchen
+        availability_template: |
+          {{ has_value("media_player.sonos_kitchen") }}
+        value_template: |
+          {{ "media_player.sonos_potato" in states.sonos_kitchen.attributes.get("group_members", []) }}
+
+      sonos_potato_owntone:
         icon_template: |
           {% if is_state(this.entity_id, "off") %}
           mdi:speaker-off
@@ -40,55 +133,161 @@ switch:
         availability_template: |
           {{
             has_value("media_player.owntone_output_potato")
-            and (
-              has_value("media_player.potato")
-              or has_value("media_player.sonos_potato")
-            )
+            and has_value("binary_sensor.owntone_playing")
           }}
         value_template: |
           {{ is_state("media_player.owntone_output_potato", "on") }}
         turn_on:
           - service: media_player.turn_on
+            data: {}
             target:
               entity_id: media_player.owntone_output_potato
           - service: media_player.volume_set
-            target:
-              entity_id: media_player.owntone_output_potato
             data:
               volume_level: 0.2
-          #- service: media_player.join
-          #  data:
-          #    group_members:
-          #      - media_player.potato
-          #  target:
-          #    entity_id: media_player.potato
+            target:
+              entity_id: media_player.owntone_output_potato
         turn_off:
-          service: media_player.turn_off
-          target:
-            entity_id: media_player.owntone_output_potato
+          - service: media_player.turn_off
+            data: {}
+            target:
+              entity_id: media_player.owntone_output_potato
+
 
 template:
   - binary_sensor:
-      - name: owntone_potato
+      - name: sonos_potato
+        icon: |
+          {% if is_state(this.entity_id, "off") %}
+          mdi:speaker-off
+          {% elif is_state("media_player.sonos_potato", "playing") %}
+          mdi:speaker-play
+          {% else %}
+          mdi:speaker-stop
+          {% endif %}
+        availability: |
+          {{ has_value("media_player.sonos_potato") }}
+        state: |
+          {% set group_members = states.media_player.sonos_potato.attributes.get("group_members", []) %}
+          {{ "media_player.sonos_potato" in group_members }}
+        attributes:
+          rincon: "RINCON_000E58A9E9F201400"
+          rincons: |
+            {% set rincons =  {"study": "RINCON_000E58D50AF401400",
+                               "kitchen": "RINCON_347E5C308EC601400",
+                               "hallway": "RINCON_949F3E87209401400",
+                               "livingroom":  "RINCON_B8E937940CAC01400",
+                               "potato": "RINCON_000E58A9E9F201400"} %}
+            {{ rincons }}
+
+
+#      - name: sonos_potato_study
+#        icon: |
+#          {% if is_state(this.entity_id, "off") %}
+#          mdi:speaker-off
+#          {% elif is_state("media_player.sonos_study", "playing") %}
+#          mdi:speaker-play
+#          {% else %}
+#          mdi:speaker-stop
+#          {% endif %}
+#        availability: |
+#          {{ has_value("media_player.sonos_study") }}
+#        state: |
+#          {% set group_members = states.media_player.sonos_study.attributes.get("group_members", []) %}
+#          {{ "media_player.sonos_potato" in group_members }}
+#        attributes:
+#          rincon: "RINCON_000E58D50AF401400"
+#
+#      - name: sonos_potato_hallway
+#        icon: |
+#          {% if is_state(this.entity_id, "off") %}
+#          mdi:speaker-off
+#          {% elif is_state("media_player.sonos_hallway", "playing") %}
+#          mdi:speaker-play
+#          {% else %}
+#          mdi:speaker-stop
+#          {% endif %}
+#        availability: |
+#          {{
+#            has_value("media_player.sonos_hallway")
+#            and has_value("binary_sensor.sonos_potato_self")
+#          }}
+#        state: |
+#          {% set group_members = states.media_player.sonos_hallway.attributes.get("group_members", []) %}
+#          {{ "media_player.sonos_potato" in group_members }}
+#        attributes:
+#          rincon: "RINCON_949F3E87209401400"
+#
+#      - name: sonos_potato_livingroom
+#        icon: |
+#          {% if is_state(this.entity_id, "off") %}
+#          mdi:speaker-off
+#          {% elif is_state("media_player.sonos_livingroom", "playing") %}
+#          mdi:speaker-play
+#          {% else %}
+#          mdi:speaker-stop
+#          {% endif %}
+#        availability: |
+#          {{
+#            has_value("media_player.sonos_livingroom")
+#            and has_value("binary_sensor.sonos_potato_self")
+#          }}
+#        state: |
+#          {% set group_members = states.media_player.sonos_livingroom.attributes.get("group_members", []) %}
+#          {{ "media_player.sonos_potato" in group_members }}
+#        attributes:
+#          rincon: "RINCON_B8E937940CAC01400"
+#
+#      - name: sonos_potato_kitchen
+#        icon: |
+#          {% if is_state(this.entity_id, "off") %}
+#          mdi:speaker-off
+#          {% elif is_state("media_player.sonos_,,itchen", "playing") %}
+#          mdi:speaker-play
+#          {% else %}
+#          mdi:speaker-stop
+#          {% endif %}
+#        availability: |
+#          {{
+#            has_value("media_player.sonos_kitchen")
+#            and has_value("binary_sensor.sonos_potato_self")
+#          }}
+#        state: |
+#          {% set group_members = states.media_player.sonos_livingroom.attributes.get("group_members", []) %}
+#          {{ "media_player.sonos_potato" in group_members }}
+#        attributes:
+#          rincon: |
+#            {% set rincons = state_attr("binary_sensor.sonos_potato_self", "rincons")
+
+  - sensor:
+      - name: dlna_study_media_content_id
+        state_class: measurement
         icon: |
           {{ state_attr("switch.owntone_potato", "icon") }}
-        availability: |
-          {{ has_value("switch.owntone_potato")}}
         state: |
-          {{ is_state("switch.owntone_potato", "on") }}
+          {{ state_attr("media_player.dlna_study", "media_content_id") }}
 
+      - name: dlna_potato_media_content_id
+        state_class: measurement
+        icon: |
+          {{ state_attr("switch.owntone_potato", "icon") }}
+        state: |
+          {{ state_attr("media_player.dlna_potato", "media_content_id") }}
+
+  - binary_sensor:
       - name: owntone_potato_playing
         icon: |
-          {{ state_attr("switch.owntone_potato", "icon") }}
+          {{ state_attr("switch.sonos_potato_self", "icon") }}
         device_class: "running"
         availability: |
           {{
-            has_value("switch.owntone_potato")
+            has_value("switch.sonos_potato_owntone")
+            and has_value("switch.sonos_potato_self")
             and has_value("binary_sensor.owntone_playing")
           }}
         state: |
           {{
-            is_state("switch.owntone_potato", "on")
+            is_state("switch.sonos_potato_owntone", "on")
             and is_state("binary_sensor.owntone_playing", "on")
           }}
 

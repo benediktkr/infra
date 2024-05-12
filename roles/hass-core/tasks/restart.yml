@@ -1,0 +1,18 @@
+---
+
+- import_tasks: config_check_cmd.yml
+
+- name: restart hass container
+  docker_container:
+    name: hass
+    state: started
+    restart: true
+  register: hass_container_restarted
+  when:
+    - hass_container is not defined or not hass_container.changed
+    - hass_container_state|default("stopped") == "started"
+    - hass_restart_handler|default(true)
+
+- import_tasks: health_check.yml
+- import_tasks: config_check.yml
+

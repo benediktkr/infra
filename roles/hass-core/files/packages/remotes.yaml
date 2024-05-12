@@ -134,13 +134,30 @@ homeassistant:
     binary_sensor.remote_hallway_wallmote_004_released:
       friendly_name: "Wallmote button 4 released"
       <<: *common_attrs_templated
-    
+
     # Wallmote
     binary_sensor.remote_hallway_wallmote:
       friendly_name: "Wallmote (any button pressed)"
       <<: *common_attrs_templated
 
-    # IKEA Symfonisk
+    # IKEA SYMFONISK I (rotary)
+    binary_sensor.remote_symfonisk_i_volume_up:
+      friendly_name: "IKEA SYMFONISK volume up"
+      <<: *common_attrs_templated
+    binary_sensor.remote_symfonisk_i_volume_down:
+      friendly_name: "IKEA SYMFONISK volume down"
+      <<: *common_attrs_templated
+    binary_sensor.remote_symfonisk_i_stop:
+      friendly_name: "IKEA SYMFONISK move stopped"
+      <<: *common_attrs_templated
+    binary_sensor.remote_symfonisk_i_pressed:
+      friendly_name: "IKEA SYMFONISK pressed"
+      <<: *common_attrs_templated
+    binary_sensor.remote_symfonisk_i:
+      friendly_name: "IKEA SYMFONISK I"
+      <<: *common_attrs_templated
+
+    # IKEA SYMFONISK II
     binary_sensor.remote_study_symfonisk:
       friendly_name: "Study remote (any button pressed)"
       <<: *common_attrs_templated
@@ -178,18 +195,98 @@ homeassistant:
       <<: *common_attrs_templated
 
 template:
+  # ZHA
   - trigger:
-      - platform: time_pattern
-        minutes: "*"
-      - platform: event
-        event_type: zwave_js_value_notification
-        event_data:
-          command_class: 91
+    - platform: event
+      event_type: zha_event
+    - platform: event
+      event_type: homeassistant_start
+    - platform: time_pattern
+      minutes: "*"
+
+    #    state: |
+    #      {% from 'remotes_zha.jinja' import is_symfonisk_i_volume with context %}
+    #      {{ is_symfonisk_i_volume('remote_symfonisk_i', 'volume_up') }}
+    #
+    #    state: |
+    #      {% from 'remotes_zha.jinja' import is_symfonisk_i_volume with context %}
+    #      {{ is_symfonisk_i_volume('remote_symfonisk_i', 'volume_down') }}
+
+    binary_sensor:
+      # IKEA SYMFONISK I
+      - name: remote_symfonisk_i_volume_up
+        state: |
+          {% set device_name = "remote_symfonisk_i" %}
+          {% set d_id = device_id("button.identity_" ~ device_name) %}
+          {{
+            trigger.platform == "event"
+            and trigger.event.event_type == "zha_event"
+            and trigger.event.data.device_id == d_id
+            and trigger.event.data.get("command", "") == "move"
+            and 'params' in trigger.event.data
+            and trigger.event.data.params.get("move_mode", "") == 0
+           }}
+
+      - name: remote_symfonisk_i_volume_down
+        state: |
+          {% set device_name = "remote_symfonisk_i" %}
+          {% set d_id = device_id("button.identity_" ~ device_name) %}
+          {{
+            trigger.platform == "event"
+            and trigger.event.event_type == "zha_event"
+            and trigger.event.data.device_id == d_id
+            and trigger.event.data.get("command", "") == "move"
+            and 'params' in trigger.event.data
+            and (
+              trigger.event.data.params.get("move_mode", "")|int(0) == 1
+              or trigger.event.data.params.get("move_mode", "") != 0
+            )
+           }}
+
+      - name: remote_symfonisk_i_stop
+        state: |
+          {% from 'remotes_zha.jinja' import is_symfonisk_i_stop with context %}
+          {{ is_symfonisk_i_stop('remote_symfonisk_i') }}
+
+      - name: remote_symfonisk_i_pressed
+        state: |
+          {% from 'remotes_zha.jinja' import is_symfonisk_i_pressed with context %}
+          {{ is_symfonisk_i_pressed('remote_symfonisk_i') }}
+
+  - sensor:
+    - name: remote_symfonisk_i_device_id
+      state: |
+        {% from 'remotes_zha.jinja' import symfonisk_i_device_id with context %}
+        {% set d_name = "remote_symfonisk_i" %}
+        {{ symfonisk_i_device_id(d_name) }}
+
+  - binary_sensor:
+      - name: remote_symfonisk_i
+        state: |
+          {{
+            states.binary_sensor
+              | selectattr("entity_id", "match", "^binary_sensor\.remote_symfonisk_i_.+$")
+              | map(attribute="entity_id")
+              | select("is_state", "on")
+              | list
+              | length > 0
+          }}
+
+  # Z-Wave
+  - trigger:
+    - platform: event
+      event_type: zwave_js_value_notification
+      event_data:
+        command_class: 91
+    - platform: event
+      event_type: homeassistant_start
+    - platform: time_pattern
+      minutes: "*"
 
 
     sensor:
       - name: remote_pressed_event_context_id
-        state: >-
+        state: |
           {% if trigger.platform == "event" and trigger.event.event_type == "zwave_js_value_notification" %}
           {{ trigger.event.context.id }}
           {% elif this.entity_id is defined %}
@@ -203,7 +300,7 @@ template:
     binary_sensor:
       # Yellow button (ignoring KeyPressed2x, etc)
       - name: remote_bathroom_yellow
-        state: >-
+        state: |
           {% from 'remotes_zwave.jinja' import is_remote_event with context %}
           {{ is_remote_event('remote_bathroom_yellow', '001') }}
         # attributes:
@@ -218,49 +315,49 @@ template:
 
       # Wallmote 001
       - name: remote_hallway_wallmote_001
-        state: >-
+        state: |
           {% from 'remotes_zwave.jinja' import is_remote_event with context %}
           {{ is_remote_event('remote_hallway_wallmote', '001') }}
       - name: remote_hallway_wallmote_001_held
-        state: >-
+        state: |
           {% from 'remotes_zwave.jinja' import is_remote_event with context %}
           {{ is_remote_event('remote_hallway_wallmote', '001', 'KeyHeldDown') }}
       - name: remote_hallway_wallmote_001_released
-        state: >-
+        state: |
           {% from 'remotes_zwave.jinja' import is_remote_event with context %}
           {{ is_remote_event('remote_hallway_wallmote', '001', 'KeyReleased') }}
 
       # Wallmote 002
       - name: remote_hallway_wallmote_002
-        state: >-
+        state: |
           {% from 'remotes_zwave.jinja' import is_remote_event with context %}
           {{ is_remote_event('remote_hallway_wallmote', '002') }}
       - name: remote_hallway_wallmote_002_held
-        state: >-
+        state: |
           {% from 'remotes_zwave.jinja' import is_remote_event with context %}
           {{ is_remote_event('remote_hallway_wallmote', '002', 'KeyHeldDown') }}
       - name: remote_hallway_wallmote_002_released
-        state: >-
+        state: |
           {% from 'remotes_zwave.jinja' import is_remote_event with context %}
           {{ is_remote_event('remote_hallway_wallmote', '002', 'KeyReleased') }}
 
       # Wallmote 003
       - name: remote_hallway_wallmote_003
-        state: >-
+        state: |
           {% from 'remotes_zwave.jinja' import is_remote_event with context %}
           {{ is_remote_event('remote_hallway_wallmote', '003') }}
       - name: remote_hallway_wallmote_003_held
-        state: >-
+        state: |
           {% from 'remotes_zwave.jinja' import is_remote_event with context %}
           {{ is_remote_event('remote_hallway_wallmote', '003', 'KeyHeldDown') }}
       - name: remote_hallway_wallmote_003_released
-        state: >-
+        state: |
           {% from 'remotes_zwave.jinja' import is_remote_event with context %}
           {{ is_remote_event('remote_hallway_wallmote', '003', 'KeyReleased') }}
 
       # Wallmote 004
       - name: remote_hallway_wallmote_004
-        state: >-
+        state: |
           {% from 'remotes_zwave.jinja' import is_remote_event with context %}
           {{ is_remote_event('remote_hallway_wallmote', '004') }}
         # attributes:
@@ -273,92 +370,92 @@ template:
         #     {% endif %}
 
       - name: remote_hallway_wallmote_004_held
-        state: >-
+        state: |
           {% from 'remotes_zwave.jinja' import is_remote_event with context %}
           {{ is_remote_event('remote_hallway_wallmote', '004', 'KeyHeldDown') }}
       - name: remote_hallway_wallmote_004_released
-        state: >-
+        state: |
           {% from 'remotes_zwave.jinja' import is_remote_event with context %}
           {{ is_remote_event('remote_hallway_wallmote', '004', 'KeyReleased') }}
 
   - binary_sensor:
       - name: remote_hallway_wallmote
-        state: >-
+        state: |
           {{
             states.binary_sensor
-              | selectattr("entity_id", "match", "binary_sensor.remote_hallway_wallmote")
-              | rejectattr("entity_id", "eq", "binary_sensor.remote_hallway_wallmote")
+              | selectattr("entity_id", "match", "^binary_sensor\.remote_hallway_wallmote_.+$")
               | map(attribute="entity_id")
               | select("is_state", "on")
               | list
               | length > 0
           }}
 
+  # zigbee2mqtt
   - binary_sensor:
       # IKEA KNYCKLAN remote
-      - name: remote_hallway_knycklan
-        delay_off: "00:00:10"
-        state: >-
-          {{ 
-            not is_state("sensor.remote_hallway_knycklan", none) 
-            and not is_state("sensor.remote_hallway_knycklan", "None") 
-            and not is_state("sensor.remote_hallway_knycklan", "") 
-          }}
-
       - name: remote_hallway_knycklan_on
         delay_off: "00:00:10"
-        state: >-
-          {{ is_state("sensor.remote_hallway_knycklan", "on") }}
-      
+        state: |
+          {{ is_state("sensor.remote_hallway", "on") }}
+
       - name: remote_hallway_knycklan_off
         delay_off: "00:00:10"
-        state: >-
-          {{ is_state("sensor.remote_hallway_knycklan", "off") }}
+        state: |
+          {{ is_state("sensor.remote_hallway", "off") }}
 
-      # IKEA SYMFONISK remote 
+      - name: remote_hallway_knycklan
+        delay_off: "00:05:00"
+        state: |
+          {{
+            not is_state("binary_sensor.remote_hallway_knycklan_on", "on")
+            and not is_state("binary_sensor.remote_hallway_knycklan_off", "on")
+          }}
+
+
+      # IKEA SYMFONISK remote
       - name: remote_study_symfonisk
         delay_off: "00:00:10"
-        state: >-
-          {{ 
-            not is_state("sensor.remote_study_symfonisk", none) 
-            and not is_state("sensor.remote_study_symfonisk", "None") 
-            and not is_state("sensor.remote_study_symfonisk", "") 
+        state: |
+          {{
+            not is_state("sensor.remote_study_symfonisk", none)
+            and not is_state("sensor.remote_study_symfonisk", "None")
+            and not is_state("sensor.remote_study_symfonisk", "")
           }}
 
       - name: remote_study_symfonisk_dots1
         delay_off: "00:00:10"
-        state: >-
+        state: |
           {{ is_state("sensor.remote_study_symfonisk", "dots_1_initial_press") }}
 
       - name: remote_study_symfonisk_dots2
         delay_off: "00:00:10"
-        state: >-
+        state: |
           {{ is_state("sensor.remote_study_symfonisk", "dots_2_initial_press") }}
-      
+
 
       - name: remote_study_symfonisk_volume_up
         delay_off: "00:00:10"
-        state: >-
+        state: |
           {{ is_state("sensor.remote_study_symfonisk", "volume_up") }}
 
       - name: remote_study_symfonisk_volume_down
         delay_off: "00:00:10"
-        state: >-
+        state: |
           {{ is_state("sensor.remote_study_symfonisk", "volume_down") }}
 
       - name: remote_study_symfonisk_play_pause
         delay_off: "00:00:10"
-        state: >-
+        state: |
           {{ is_state("sensor.remote_study_symfonisk", "play_pause") }}
 
       - name: remote_study_symfonisk_track_next
         delay_off: "00:00:10"
-        state: >-
+        state: |
           {{ is_state("sensor.remote_study_symfonisk", "track_next") }}
 
       - name: remote_study_symfonisk_track_previous
         delay_off: "00:00:10"
-        state: >-
+        state: |
           {{ is_state("sensor.remote_study_symfonisk", "track_previous") }}
 
 

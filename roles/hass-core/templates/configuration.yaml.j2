@@ -80,7 +80,7 @@ device_tracker:
     # tracked unless 'track' is set to 'true' for a device there (edit
     # the file to track a discovered device).
     track_new_devices: false
-    track_battery: false
+    track_battery: true
     new_device_defaults:
       track_new_devices: false
 
@@ -97,33 +97,19 @@ homeassistant:
   unit_system: metric
   time_zone: "Europe/Berlin"
   country: DE
-  #external_url: https://{{ hass_url }}
+  external_url: https://{{ hass_url }}
   internal_url: https://{{ hass_url }}
   allowlist_external_dirs:
+    - "{{ systemuserlist.hass.home }}/home-assistant/notify"
+    - "{{ systemuserlist.hass.home }}/home-assistant/inputs"
     - "/usr/var/media"
+    - "/config"
   allowlist_external_urls:
     - "https://{{ static_url }}"
     - "https://{{ hass_notflix_url }}"
   media_dirs:
     media: "/usr/var/media"
   packages: !include_dir_named packages
-  customize:
-    sensor.mariadb_database_size:
-      friendly_name: MariaDB hass DB size
-      package: configuration
-    sensor.mariadb_database_size_hourly:
-      friendly_name: MariaDB hass DB size mb/hour
-      package: configuration
-    sensor.mariadb_database_size_daily:
-      friendly_name: MariaDB hass DB size mb/day
-      package: configuration
-    sensor.mariadb_database_rows_states_meta:
-      friendly_name: MariaDB table hass.states_meta
-      package: configuration
-    #sensor.mariadb_database_rows_states:
-    #  friendly_name: MariaDB table hass.states
-    #  package: configuration
-
 
 http:
   server_host: 127.0.0.1
@@ -159,7 +145,7 @@ calendar:
   {% for item in hass_caldav -%}
   # {{ item.name }}
   - platform: caldav
-    url: {{ item.url | trim }}
+    url: "{{ item.url | trim }}"
     {% if 'username_secret' in item -%}
     username: !secret {{ item.username_secret | trim }}
     password: !secret {{ item.passwd_secret | trim }}
@@ -192,6 +178,34 @@ panel_custom:
     require_admin: true
     config:
       ingress: core_configurator
+  - name: ikea
+    sidebar_title: IKEA
+    sidebar_icon: mdi:sofa-single
+    js_url: /api/hassio/app/entrypoint.js
+    url_path: 'config/integrations/integration/tradfri'
+    embed_iframe: true
+    require_admin: true
+    config:
+      ingress: core_configurator
+  - name: mqtt
+    sidebar_title: MQTT
+    sidebar_icon: mdi:emoticon-poop
+    js_url: /api/hassio/app/entrypoint.js
+    url_path: 'config/integrations/integration/mqtt'
+    embed_iframe: true
+    require_admin: true
+    config:
+      ingress: core_configurator
+  - name: mobile_app
+    sidebar_title: Mobile app
+    sidebar_icon: mdi:cellphone
+    js_url: /api/hassio/app/entrypoint.js
+    url_path: 'config/integrations/integration/mobile_app'
+    embed_iframe: true
+    require_admin: true
+    config:
+      ingress: core_configurator
+
   - name: logs
     sidebar_title: Logs
     sidebar_icon: mdi:file
@@ -262,9 +276,11 @@ recorder:
   db_url: mysql://{{ systemuserlist.hass.username }}:@localhost/{{ systemuserlist.hass.username }}?charset=utf8mb4&unix_socket=/run/mysqld/mysqld.sock
   auto_purge: true
   auto_repack: true
-  # Removed as per 2023.12.0 release notes
-  #purge_keep_days: 30
+  # See 2023.12.0 release notes
+  purge_keep_days: 7
   exclude:
+    event_types:
+      - imap_content
     entities:
       - sensor.esphmoe_ble_names
       - sensor.ble_proxy_json_ble_scanner
@@ -278,9 +294,12 @@ recorder:
       - sensor.date
       - sensor.date_time
       - sensor.date_time_utc
+      - sensor.date_time_utc_2
       - sensor.date_time_iso
+      - sensor.date_time_iso_2
       - sensor.time_date
       - sensor.time_utc
+      - sensor.time_utc_2
       - binary_sensor.morning_alarm_is_today
       - sensor.morning_alarm_next
       - sensor.morning_alarm_next_wihout_offset
@@ -288,20 +307,52 @@ recorder:
       - sensor.edge_wan_in2
       - sensor.ics_1
     entity_globs:
+      - sensor.whois_*_days_until_expiration
       - sensor.uptime_*
+      - sensor.unifi_uptime_*
+      - sensor.esphome_uptime_*
       - sensor.*_uptime
+      - input_text.esphome_private_ble_*
+      - input_number.esphome_private_ble_*
+      # Large sensors from android companion
+      - sensor.*_active_notification_count
+      - sensor.*_last_reboot
+      - sensor.*_last_removed_notification
+      - sensor.*_last_used_app
+      - sensor.*_app_tx_gb
+      - sensor.*_app_rx_gb
+      - sensor.*_becon_monitor
+      - sensor.*_ble_transmitter
+      - sensor.*_current_time_zone
+      - sensor.*_external_storage
+      - sensor.*_internal_storage
+      - sensor.*_total_rx_gb
+      - sensor.*_total_tx_gb
+      # Redundant ESPHome Private BLE sensors
+      - sensor.esphome_*_private_ble_*_area
+      - sensor.esphome_*_private_ble_device_tracker_*
+      - sensor.esphome_*_private_ble_*_proxied
+      - sensor.esphome_*_private_ble_*_distance
+      - sensor.esphome_*_private_ble_*_max_signal
+      - sensor.esphome_*_private_ble_*_esphome_proxy
+      - sensor.esphome_*_baseline_0xco2eq
+      - sensor.esphome_*_baseline_0xtvoc
       #- sensor.*_rx
       #- sensor.*_tx
       #- sensor.unifi_rx_esphome_*
       #- sensor.unifi_tx_esphome_*
       #- sensor.unifi_uptime_*
-      - sensor.esphome_uptime_*
+      - sensor.ble_private_source_*
+      - sensor.tile_*
+      - device_tracker.tile_*
       - sensor.esphome_*_time
       - sensor.esphome_*_hour
       - sensor.esphome_*_minute
       - sensor.esphome_*_adc_voltage
       - sensor.*_adc_a0
       - sensor.*_adc_*
+      - sensor.last_seen_*
+      - sensor.*_last_seen
       - sensor.rssi_*
       - sensor.*_rssi
       - sensor.*_ble_scanner
@@ -314,21 +365,6 @@ recorder:
       - sensor.esphome_*_electric_w_*
       - sensor.esphome_electric_w_*
 
-
-sql:
-  - name: mariadb_database_size
-    query: 'SELECT table_schema "{{ systemuserlist.hass.username }}", ROUND(SUM(data_length + index_length) / 1024 / 1024, 1) "value" FROM information_schema.tables WHERE table_schema="{{ systemuserlist.hass.username}}" GROUP BY table_schema;'
-    column: "value"
-    device_class: data_size
-    unit_of_measurement: MB
-  - name: mariadb_database_rows_states_meta
-    query: 'SELECT count(*) as value FROM {{ systemuserlist.hass.username }}.states_meta;'
-    column: "value"
-    unit_of_measurement: rows
-  # currently the 'states' table takes about 14 seconds
-  #- name: mariadb_database_rows_states
-  #  query: 'SELECT count(*) as value FROM {{ systemuserlist.hass.username }}.states;'
-  #  column: "value"
 
 # ping_motion_hallway_west
 # firmware_motion_hallway_west
@@ -348,61 +384,29 @@ sensor:
   - platform: time_date
     display_options:
       - 'time'
+      #- 'time_date'
+      - 'time_utc'
       - 'date'
       - 'date_time'
       - 'date_time_utc'
       - 'date_time_iso'
-      - 'time_date'
-      - 'time_utc'
-  - platform: derivative
-    source: sensor.mariadb_database_size
-    name: mariadb_database_size_hourly
-    round: 2
-    unit_time: h
-    time_window: "01:00:00"
-  - platform: derivative
-    source: sensor.mariadb_database_size
-    name: mariadb_database_size_daily
-    round: 2
-    unit_time: d
-    time_window: "24:00:00"
 
+  - platform: worldclock
+    time_zone: UTC
+    name: UTC
+  - platform: worldclock
+    time_zone: Atlantic/Reykjavik
+    name: Iceland
+  - platform: worldclock
+    time_zone: Europe/Berlin
+    name: Berlin
+  - platform: worldclock
+    time_zone: America/New_York
+    name: Boston
+  - platform: worldclock
+    time_zone: America/Chicago
+    name: Austin
   #- platform: linux_battery
-
-  - platform: systemmonitor
-    resources:
-      - type: disk_use_percent
-        arg: /config
-      - type: disk_use
-      - type: disk_free
-      - type: memory_use_percent
-      #- type: memory_use
-      #- type: memory_free
-      #- type: swap_use_percent
-      #- type: swap_use
-      #- type: swap_free
-      - type: load_1m
-      #- type: load_5m
-      #- type: load_15m
-      #- type: network_in
-      #  arg: {{ ansible_default_ipv4.alias }}
-      #- type: network_out
-      #  arg: {{ ansible_default_ipv4.alias }}
-      - type: throughput_network_in
-        arg: {{ ansible_default_ipv4.alias }}
-      - type: throughput_network_out
-        arg: {{ ansible_default_ipv4.alias }}
-      #- type: packets_in
-      #  arg: {{ ansible_default_ipv4.alias }}
-      #- type: packets_out
-      #  arg: {{ ansible_default_ipv4.alias }}
-      - type: ipv4_address
-        arg: {{ ansible_default_ipv4.alias }}
-      - type: ipv6_address
-        arg: {{ ansible_default_ipv4.alias }}
-      - type: processor_use
-      #- type: processor_temperature
-      - type: last_boot
 
   # YAML config was removed :(
   # https://www.home-assistant.io/integrations/dwd_weather_warnings/
@@ -429,21 +433,6 @@ sensor:
   #  # Stadt Berlin
   #  region_name: 811000000
 
-  - platform: worldclock
-    time_zone: UTC
-    name: UTC
-  - platform: worldclock
-    time_zone: Atlantic/Reykjavik
-    name: Iceland
-  - platform: worldclock
-    time_zone: Europe/Berlin
-    name: Berlin
-  - platform: worldclock
-    time_zone: America/New_York
-    name: Boston
-  - platform: worldclock
-    time_zone: America/Chicago
-    name: Austin
 
 input_select:
   heating_mode_test:
@@ -502,21 +491,15 @@ notify:
   - name: matrix
     platform: matrix
     default_room: !secret matrix_default_room
-  - name: pagerduty
-    timeout: 60
-    platform: smtp
-    sender: hass@{{ domain }}
-    recipient:
-      - !secret smtp_recipient_email
-    server: !secret smtp_server
-    port: {{ smtp_port_starttls }}
-    username: !secret smtp_username
-    password: !secret smtp_passwd
-    encryption: starttls
-    sender_name: "{{ hass_url }}"
+
+  - name: file_notify
+    platform: file
+    timestamp: true
+    filename: {{ systemuserlist.hass.home }}/home-assistant/notify/file_notify.txt
 
   {% for item in hass_notify_smtp -%}
-  - name: email_{{ item.name }}
+    {% set name = "email_" ~ item.name if item.name not in ["pagerduty"] else item.name -%}
+  - name: {{ name }}
     platform: smtp
     timeout: 60
     sender: hass@{{ domain }}
@@ -527,6 +510,7 @@ notify:
     username: !secret smtp_username
     password: !secret smtp_passwd
     encryption: starttls
+    verify_ssl: {{ item.verify_ssl|default(true) | lower }}
     sender_name: "{{ hass_url }}"
   {% endfor %}
 
@@ -540,10 +524,16 @@ logger:
     pyatv: warning
     homeassistant.components.apple_tv: warning
 
+# https://www.home-assistant.io/integrations/browser/
+browser:
+
 # enable SVT play
 svt_play:
 
 battery_notes:
+
+#ifttt:
+#  key: !secret ifttt_token
 
 sonos:
   # useful for not using docker host networking
@@ -560,13 +550,11 @@ sonos:
     #  - sonos-kitchen.{{ inventory_hostname.split('.')[1:] | join(".") }}
     #  - sonos-livingroom.{{ inventory_hostname.split('.')[1:] | join(".") }}
 
-{#
 media_player:
   - platform: mpd
-    host: audio.{{ domain }}
+    host: {{ owntone_url }}
     port: 6600
     name: OwnTone MPD
-#}
 
 {# mqtt:
  #   sensor:

@@ -157,10 +157,12 @@ fan:
     name: bedroom
     entities:
       - fan.noop
+      - fan.fan_bedroom
   - platform: group
     name: study
     entities:
       - fan.noop
+      - fan.fan_study
   - platform: group
     name: livingroom
     entities:

@@ -1,5 +1,6 @@
 ---
 
+hass_zwavejs_root: "{{ zwavejs_user.home }}/zwavejs"
 hass_zwavejs_ws_port: 3000
 
 hass_ser2net_zwave: false

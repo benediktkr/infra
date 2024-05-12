@@ -4,6 +4,8 @@ homeassistant:
   customize:
     package.node_anchors:
       common_attrs: &common_attrs
+        accuracy_decimals: 1
+        suggested_display_precision: 1
         package: "air_temps"
       common_attrs_templated: &common_attrs_templated
         templated: true
@@ -11,7 +13,7 @@ homeassistant:
       common_attr_air_temp_group: &common_attrs_air_temp_group
         type: median
         group: true
-        <<: *common_attrs   
+        <<: *common_attrs
 
     sensor.difference_air_temperature_indoor_outdoor:
       friendly_name: "Temperature indoor/outdoor difference"
@@ -70,8 +72,8 @@ template:
         device_class: temperature
         state_class: measurement
         availability: >-
-          {{ 
-            has_value("sensor.air_temperature_outdoor") 
+          {{
+            has_value("sensor.air_temperature_outdoor")
             and has_value("sensor.air_temperature_indoor")
             and is_number(states("sensor.air_temperature_outdoor"))
             and is_number(states("sensor.air_temperature_indoor"))
@@ -88,8 +90,8 @@ template:
         device_class: temperature
         state_class: measurement
         availability: >-
-          {{ 
-            has_value("sensor.difference_air_temperature_indoor_outdoor") 
+          {{
+            has_value("sensor.difference_air_temperature_indoor_outdoor")
             and is_number(states("sensor.difference_air_temperature_indoor_outdoor"))
           }}
         state: >-
@@ -123,69 +125,81 @@ sensor:
   - platform: group
     name: air_temperature_bathroom
     type: median
+    state_class: measurement
     device_class: temperature
-    entities: 
-     - sensor.air_temperature_bathroom_motion
-     - sensor.air_temperature_bathroom_door
-     - sensor.air_temperature_bathroom_window
-     # these are wildly off, so they are not included in the group
-     # when air_temperature_bathroom_washingmachine reported 38C, air_temperature_bathroom_radiator reported 25C at the same time
-     #- sensor.air_temperature_bathroom_washingmachine
-     #- sensor.air_temperature_bathroom_radiator
+    unit_of_measurement: '°C'
+    entities:
+      - sensor.air_temperature_bathroom_motion
+      - sensor.air_temperature_bathroom_door
+      - sensor.air_temperature_bathroom_window
+      - sensor.air_temperature_bathroom_radiator
+      # these are wildly off, so they are not included in the group
+      # when air_temperature_bathroom_washingmachine reported 38C, air_temperature_bathroom_radiator reported 25C at the same time
+      #- sensor.air_temperature_bathroom_washingmachine
 
   - platform: group
     name: air_temperature_bedroom
     type: median
+    state_class: measurement
     device_class: temperature
-    entities: 
-     - sensor.air_temperature_bedroom_motion_south
-     - sensor.air_temperature_bedroom_motion_east
-     - sensor.air_temperature_bedroom_door
-     - sensor.air_temperature_bedroom_air_quality_sensor
-     #- sensor.air_temperature_bedroom_smokealarm
+    unit_of_measurement: '°C'
+    entities:
+      - sensor.air_temperature_bedroom_motion_south
+      - sensor.air_temperature_bedroom_motion_east
+      - sensor.air_temperature_bedroom_door
+      - sensor.air_temperature_bedroom_air_quality_sensor
+      #- sensor.air_temperature_bedroom_smokealarm
 
   - platform: group
     name: air_temperature_hallway
     type: median
+    state_class: measurement
     device_class: temperature
-    entities: 
-     - sensor.air_temperature_hallway_motion_north
-     - sensor.air_temperature_hallway_motion_west
-     - sensor.air_temperature_hallway_motion_east
+    unit_of_measurement: '°C'
+    entities:
+      - sensor.air_temperature_hallway_motion_north
+      - sensor.air_temperature_hallway_motion_west
+      - sensor.air_temperature_hallway_motion_east
 
   - platform: group
     name: air_temperature_kitchen
     type: median
+    state_class: measurement
     device_class: temperature
-    entities: 
-     - sensor.air_temperature_kitchen_motion
+    unit_of_measurement: '°C'
+    entities:
+      - sensor.air_temperature_kitchen_motion
 
   - platform: group
     name: air_temperature_livingroom
     type: median
+    state_class: measurement
     device_class: temperature
+    unit_of_measurement: '°C'
     entities:
-     - sensor.air_temperature_livingroom_motion_east
-     - sensor.air_temperature_livingroom_door_balcony
-     #- sensor.air_temperature_livingroom_mold
-     - sensor.air_temperature_livingroom_illuminance_balcony
-     # the TRV doesnt seem to update the temperature sensor
-     #- sensor.air_temperature_livingroom_radiator
+      - sensor.air_temperature_livingroom_motion_east
+      - sensor.air_temperature_livingroom_door_balcony
+      - sensor.air_temperature_livingroom_illuminance_balcony
+      - sensor.air_temperature_livingroom_radiator
 
   - platform: group
     name: air_temperature_study
     type: median
+    state_class: measurement
     device_class: temperature
-    entities: 
-     - sensor.air_temperature_study_north_motion
-     - sensor.air_temperature_study_air_quality_sensor
-     - sensor.air_temperature_study_radiator
+    unit_of_measurement: '°C'
+    entities:
+      - sensor.air_temperature_study_north_motion
+      - sensor.air_temperature_study_air_quality_sensor
+      - sensor.air_temperature_study_radiator
 
   - platform: group
     name: air_temperature_indoor
     type: median
+    state_class: measurement
     device_class: temperature
-    entities: 
+    unit_of_measurement: '°C'
+    entities:
       - sensor.air_temperature_bathroom
       - sensor.air_temperature_bedroom
       - sensor.air_temperature_hallway
@@ -197,9 +211,10 @@ sensor:
     name: air_temperature_outdoor
     type: median
     device_class: temperature
+    unit_of_measurement: '°C'
     entities:
-     - sensor.owm_home_temperature
-     
+      - sensor.owm_home_temperature
+
 
 # renames:
 # air quality temp: sensor.air_temperature_study_air_quality_sensor
@@ -211,7 +226,7 @@ sensor:
 # sensor.hallway_north_air_temperature_motion    -> sensor.air_temperature_hallway_motion_north
 # sensor.air_temperature_hallway_west_motion     -> sensor.air_temperature_hallway_motion_west
 # sensor.air_temperature_hallway_east_motion     -> sensor.air_temperature_hallway_motion_east
-# sensor.motion_livingroom_air_temperature       -> sensor.air_temperature_livingroom_motion_east 
+# sensor.motion_livingroom_air_temperature       -> sensor.air_temperature_livingroom_motion_east
 # sensor.air_temperature_balcony_door            -> sensor.air_temperature_livingroom_door_balcony
 # sensor.mold_livingroom_air_temperature         -> sensor.air_temperature_livingroom_mold
 # sensor.illuminance_balcony_air_temperature     -> sensor.air_temperature_livingroom_illuminance_balcony

@@ -1,0 +1,30 @@
+substitutions:
+  pin_pcf8574_i2c_sda: GPIO33
+  pin_pcf8574_i2c_scl: GPIO35
+
+
+i2c:
+  - sda: ${pin_pcf8574_i2c_sda}
+    scl: ${pin_pcf8574_i2c_scl}
+    scan: true
+    id: i2c_pcf8574
+
+sensor:
+  - platform: homeassistant
+    id: hass_electric_w_study_2
+    name: "${hostname} Study electric"
+    entity_id: sensor.electric_w_study
+    state_class: measurement
+    device_class: power
+    unit_of_measurement: "W"
+    internal: true
+
+display:
+  - platform: lcd_pcf8574
+    dimensions: 16x2
+    address: 0x27
+    i2c_id: i2c_pcf8574
+    lambda: |-
+      if (id(hass_electric_w_study_2).has_state()) {
+        it.printf("Study: %3.0f W", id(hass_electric_w_study_2).state);
+      }

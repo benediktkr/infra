@@ -1,4 +1,5 @@
 ---
+
 homeassistant:
   customize:
     package.node_anchors:
@@ -8,7 +9,13 @@ homeassistant:
     light.study_plants:
       icon: mdi:sprout
       proto: zigbee
-      <<: *common_attrs 
+      <<: *common_attrs
+
+    binary_sensor.grow_lights_1_schedule:
+      start_time: "09:00"
+      end_time: "18:00"
+      icon: mdi:sprout
+      <<: *common_attrs
 
 input_boolean:
   grow_lights_1_state:
@@ -180,7 +187,7 @@ automation:
       - service: >-
           light.turn_{{ trigger.to_state.state }}
         target:
-          entity_id: 
+          entity_id:
             - light.grow_lights_1
             - light.study_plants
         data: {}
@@ -213,7 +220,7 @@ binary_sensor:
     unique_id: grow_lights_1_schedule
     name: grow_lights_1_schedule
     after: "09:00"
-    before: "19:00"
+    before: "18:00"
 
 
 light:

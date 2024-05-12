@@ -1,0 +1,54 @@
+---
+
+{% if hass_in_docker|default(true)|bool -%}
+{% set hass_zha_path = "/zha" -%}
+{% else -%}
+{% set hass_zha_path = systemuserlist.hass.home + "/home-assistant/zha" -%}
+{% endif -%}
+
+homeassistant:
+  customize:
+    package.node_anchors:
+      common_attrs: &common_attrs
+        package: "zha"
+      common_attrs_templated: &common_attrs_templated
+        templated: true
+        <<: *common_attrs
+
+    {% for item in hass_zha_devices -%}
+    {{ item.entity_id }}:
+      {% if item.entity_id.split('.')[0] == "light" -%}
+      #effect: null
+      effect_list:
+        - blink
+        - breathe
+        - okay
+        - channel_change
+        - finish_effect
+        - stop_effect
+      {% endif -%}
+      <<: *common_attrs
+    {% endfor %}
+
+zha:
+  database_path: networkdb
+  custom_quirks_path: {{ hass_zha_path }}/quirk_modules
+  enable_quirks: true
+  zigpy_config:
+    ota:
+      ikea_provider: true
+      otau_directory: {{ hass_zha_path }}/firmware
+  {% if hass_zha_devices | length > 0 -%}
+  device_config:
+    {% for item in hass_zha_devices -%}
+      {% if item.get("modify_device_type", false) -%}
+      {{ item.ieee }}-{{ item.endpoint_id }}:
+        type: "{{ item.device_type }}"
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+
+{% if hass_zha_toolkit_enabled|default(false)|bool -%}
+zha_toolkit:
+{% endif %}
+

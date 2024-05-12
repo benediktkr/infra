@@ -1,0 +1,52 @@
+---
+
+
+packages:
+  board: !include ../packages/boards/esp32c3supermini.yaml
+  esphome: !include ../packages/common/esphome.yaml
+  network: !include ../packages/common/network.yaml
+  http_server: !include ../packages/common/http_server.yaml
+  sensors_esp32: !include ../packages/sensors/esp32.yaml
+  sensors_esphome: !include ../packages/sensors/esphome.yaml
+  sensors_wifi: !include ../packages/sensors/wifi.yaml
+  display_ss31306: !include
+    file:  ../packages/displays/ssd1306.yaml
+    vars:
+      #pin_ssd1306_i2c_sda: 33
+      #pin_ssd1306_i2c_scl: 35
+      #frequency_ssd1306_i2c: 400kHz
+      pin_ssd1306_i2c_sda: GPIO3
+      pin_ssd1306_i2c_scl: GPIO4
+      ssd1306_rotation: 180
+      ssd1306_lambda: |-
+        it.printf(64, 0, id(notomono8), TextAlign::TOP_CENTER, "hass.sudo.is");
+        it.printf(0, 25, id(notomono16), TextAlign::BASELINE_LEFT, "P ");
+        if (id(hass_radar_study_desk).has_state() and id(hass_radar_study_desk).state) {
+          it.printf(127, 30, id(notomono24), TextAlign::BASELINE_RIGHT, "DESK");
+        }
+        it.printf(0, 55, id(notomono16), TextAlign::BASELINE_LEFT, "W ");
+        if (id(hass_electric_w_study).has_state()) {
+          it.printf(127, 60, id(notomono24), TextAlign::BASELINE_RIGHT, "%3.0f W", id(hass_electric_w_study).state);
+        }
+
+
+binary_sensor:
+  - platform: homeassistant
+    id: hass_radar_study_desk
+    name: "${hostname} Radar Study desk"
+    entity_id: binary_sensor.radar_study_desk
+    publish_initial_state: true
+    internal: false
+
+sensor:
+  - platform: homeassistant
+    id: hass_electric_w_study
+    name: "${hostname} Study electric"
+    entity_id: sensor.electric_w_study
+    state_class: measurement
+    device_class: power
+    unit_of_measurement: "W"
+    internal: false
+
+
+

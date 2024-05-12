@@ -1,0 +1,33 @@
+{% macro private_ble_icon() %}
+  {% if has_value(this.entity_id) %}
+  mdi:bluetooth-connect
+  {% else %}
+  mdi:bluetooth-off
+  {% endif %}
+{% endmacro %}
+
+{% macro private_ble_state() %}
+  {% set device_tracker = this.attributes.get("device_tracker_entity_id", "") %}
+  {% set input_text = this.attributes.get("input_text_entity_id", "") %}
+  {% set is_home = is_state(device_tracker, "home") %}
+  {% if is_home|bool(false) %}
+  {{ states(input_text, "") }}
+  {% else %}
+  unknown
+  {% endif %}
+{% endmacro %}
+
+{% macro private_ble_attr_device_tracker_entity_id() %}
+  {{ "device_tracker." ~ this.entity_id.split('.')[1]["esphome_"|length:] }}
+{% endmacro %}
+
+{% macro private_ble_attr_input_text_entity_id() %}
+  {{ "input_text." ~ this.entity_id.split('.')[1] }}
+{% endmacro %}
+
+{% macro private_ble_attr_area() %}
+  {% set ent_id = "binary_sensor." ~ this.state.replace("-", "_") ~ "_" ~ this.entity_id.split('.')[1]["esphome_"|length:] %}
+  {% set dev_id = device_id(ent_id) %}
+  {% set area = area_name(dev_id) %}
+  {{ area }}
+{% endmacro %}

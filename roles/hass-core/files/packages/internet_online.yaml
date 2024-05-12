@@ -57,58 +57,119 @@ homeassistant:
     binary_sensor.ping_vpn_ls54_edge:
       friendly_name: "ping to ls54 edge router"
       package: internet_online
-    binary_sensor.ping_turris_wwan_gateway:
-      friendly_name: "Ping to Turris wwan gateway (TP-Link M7200)"
+    binary_sensor.ping_turris_wwan_lte_gateway:
+      friendly_name: "Ping to WWAN_LTE gateway (Alcatel)"
       package: internet_online
-    binary_sensor.ping_turris_wwan_interface:
-      friendly_name: "Ping to Turris wwan gateway"
+    binary_sensor.ping_turris_wwan_lte_interface:
+      friendly_name: "Ping to WWAN_LTE interface br-wwan-lte"
       package: internet_online
-    binary_sensor.internet_failover_mwan3_wwan_up:
-      friendly_name: "WWAN failover interface"
-    binary_sensor.internet_failover_mwan3_wwan_down:
-      friendly_name: "WWAN failover interface DOWN"
-    binary_sensor.internet_failover_mwan3_wwan_active:
-      friendly_name: "Internet connection is using failover interface"
+    binary_sensor.internet_failover_mwan3_wwan_lte_up:
+      friendly_name: "WWAN_LTE interface br-wwan-lte state"
+      package: internet_online
+    binary_sensor.internet_failover_mwan3_wwan_lte_down:
+      friendly_name: "WWAN_LTE interface br-wwan-lte DOWN"
+      package: internet_online
+    binary_sensor.internet_failover_mwan3_wwan_lte_active:
+      friendly_name: "WWAN_LTE mwan3 failover active"
       package: internet_online
     binary_sensor.cloudflare_ddns_home0157_sudo_is:
       friendly_name: "home0157.sudo.is is up to date"
       package: internet_online
 
+    sensor.download_avg:
+      friendly_name: "Internet download (averge)"
+      sources: "speedtest.net, fast.com"
+      package: internet_online
+      source_ids:
+        - "sensor.fast_com_download"
+        - "sensor.speedtest_download"
+
     # WAN
     sensor.edge_wan_in:
       friendly_name: "Edge router WAN in"
+      device: eth2.7
+      interface: WAN
       package: internet_online
     sensor.edge_wan_out:
       friendly_name: "Edge router WAN out"
+      device: eth2.7
+      interface: WAN
       package: internet_online
-    # WWAN
-    sensor.edge_wwan_in:
-      friendly_name: "Edge router WWAN in"
+    # WWAN_LTE
+    sensor.edge_wwan_lte_in:
+      friendly_name: "Edge router WWAN_LTE in"
+      device: br-wwan-lte
+      interface: WWAN_LTE
       package: internet_online
-    sensor.edge_wwan_out:
-      friendly_name: "Edge router WWAN out"
+    sensor.edge_wwan_lte_out:
+      friendly_name: "Edge router WWAN_LTE out"
+      device: br-wwan-lte
+      interface: WWAN_LTE
       package: internet_online
     # wg0
     sensor.edge_wg0_in:
       friendly_name: "Edge router wg0 in"
+      device: wg0
+      interface: WG0
       package: internet_online
     sensor.edge_wg0_out:
       friendly_name: "Edge router wg0 out"
+      device: wg0
+      interface: WG0
       package: internet_online
     sensor.edge_wg0_combined:
       friendly_name: "Edge router wg0 (combined)"
+      device: wg0
+      interface: WG0
       package: internet_online
     # LAN
     sensor.edge_lan_in:
       friendly_name: "Edge router LAN in"
+      device: br-lan
+      interface: LAN
       package: internet_online
-    sensor.edge_LAN_out:
+    sensor.edge_lan_out:
       friendly_name: "Edge router LAN out"
+      device: br-lan
+      interface: LAN
       package: internet_online
-    sensor.edge_LAN_combined:
+    sensor.edge_lan_combined:
       friendly_name: "Edge router LAN (combined)"
+      device: br-lan
+      interface: LAN
       package: internet_online
-
+    # LAN_CARE
+    sensor.edge_lan_care_in:
+      friendly_name: "Edge router LAN_CARE in"
+      device: br-lan-care
+      interface: LAN_CARE
+      package: internet_online
+    sensor.edge_lan_care_out:
+      friendly_name: "Edge router LAN_CARE out"
+      device: br-lan-care
+      interface: LAN_CARE
+      package: internet_online
+    sensor.edge_lan_care_combined:
+      friendly_name: "Edge router LAN_CARE (combined)"
+      device: br-lan-care
+      interface: LAN_CARE
+      package: internet_online
+    # NVR
+    sensor.edge_nvr_in:
+      friendly_name: "Edge router NVR in"
+      device: br-nvr
+      interface: NVR
+      package: internet_online
+    sensor.edge_nvr_out:
+      friendly_name: "Edge router NVR out"
+      device: br-nvr
+      interface: NVR
+      package: internet_online
+    sensor.edge_nvr_combined:
+      friendly_name: "Edge router NVR (combined)"
+      device: br-nvr
+      interface: NVR
+      package: internet_online
 
     # CPU
     sensor.edge_cpu:
@@ -119,7 +180,7 @@ sensor:
   - platform: netdata
     host: !secret s21_router_hostname
     resources:
-      # WAN
+      # WAN / eth2.7
       turris_wan_in:
         data_group: "net.eth2.7"
         element: "received"
@@ -129,17 +190,17 @@ sensor:
         element: "sent"
         icon: "mdi:upload-network-outline"
 
-      # WWAN
-      turris_wwan_in:
-        data_group: "net.wlan1"
+      # WWAN_LTE / br-wwan-lte
+      turris_wwan_lte_in:
+        data_group: "net.br-wwan-lte"
         element: "received"
         icon: "mdi:download-network-outline"
-      turris_wwan_out:
-        data_group: "net.wlan1"
+      turris_wwan_lte_out:
+        data_group: "net.br-wwan-lte"
         element: "sent"
         icon: "mdi:upload-network-outline"
 
-      # wg0
+      # WG0 / wg0
       turris_wg0_in:
         data_group: "net.wg0"
         element: "received"
@@ -149,7 +210,7 @@ sensor:
         element: "sent"
         icon: "mdi:upload-network-outline"
 
-      # br-lan
+      # LAN / br-lan
       turris_br_lan_in:
         data_group: "net.br-lan"
         element: "received"
@@ -159,7 +220,7 @@ sensor:
         element: "sent"
         icon: "mdi:upload-network-outline"
 
-      # br-lan-care
+      # LAN_CARE / br-lan-care
       turris_br_lan_care_in:
         data_group: "net.br-lan-care"
         element: "received"
@@ -169,7 +230,7 @@ sensor:
         element: "sent"
         icon: "mdi:upload-network-outline"
 
-      # br-nvr
+      # NVR / br-nvr
       turris_br_nvr_in:
         data_group: "net.br-nvr"
         element: "received"
@@ -198,6 +259,46 @@ sensor:
 
 template:
   - sensor:
+    - name: download_avg
+      icon: "mdi:download-network"
+      unit_of_measurement: "Mbit/s"
+      state_class: measurement
+      device_class: data_rate
+      # avoid divison by zero with max(len, 1)
+      #  {% set fast_com = states("sensor.fast_com_download") | float(0.0) %}
+      #  {% set speedtest = states("sensor.speedtest_download") | float(0.0) %}
+      # has_value("sensor.fast_com_download") or has_value("sensor.speedtest_download")
+      #    has_value("sensor.fast_com_download") or has_value("sensor.speedtest_download")
+      #    states(this.attributes.get("fast_com"))|is_number
+      #    or states(this.attributes.get("speedtest"))|is_number
+      #
+      #    this.attributes.get("fast_com")|is_number
+      #    or this.attributes.get("speedtest")|is_number
+
+      # this would have been nice:
+      #   this.attributes.get('source_ids') | select("has_value") | list | length > 0
+      # but:
+      #   Invalid config for 'template' at packages/internet_online.yaml, line 232: template value should be a string for dictionary value 'sensor->0->attributes->source_ids', got ['sensor.fast_com_downloads', 'sensor.speedtest_downloads']
+      #
+      # with a dict:
+      # this.attributes.get("source_ids", {}).items() | map("last") | select("has_value") | list | length > 0
+      availability: |
+        {{
+          this.attributes.get('source_ids') | select("has_value") | map("states") | select("is_number") | list | length > 0
+        }}
+      state: |
+        {% set fast_com = this.attributes.get("fast_com") | float(0.0) %}
+        {% set speedtest = this.attributes.get("speedtest") | float(0.0) %}
+        {% set down = [fast_com, speedtest] | select(">", 0.0) | list  %}
+        {% set down_avg = down|sum / max(down|length, 1) %}
+        {{ down_avg | float | round(0) }}
+      attributes:
+        fast_com: |
+          {{ states("sensor.fast_com_download") }}
+        speedtest: |
+          {{ states("sensor.speedtest_download") }}
+
+
       # WAN
     - name: edge_wan_in
       icon: "mdi:download-network-outline"
@@ -222,27 +323,27 @@ template:
         {% set mbits = kbits|float / 1000 %}
         {{ mbits|round(2)|abs }}
 
-      # WWAN
-    - name: edge_wwan_in
+      # WWAN_LTE
+    - name: edge_wwan_lte_in
       icon: "mdi:download-network-outline"
       unit_of_measurement: "Mbit/s"
       state_class: measurement
       device_class: data_rate
       availability: |
-        {{ states("sensor.netdata_turris_wwan_in") | float(none) | is_number }}
+        {{ states("sensor.netdata_turris_wwan_lte_in") | float(none) | is_number }}
       state: |
-        {% set kbits = states("sensor.netdata_turris_wwan_in") %}
+        {% set kbits = states("sensor.netdata_turris_wwan_lte_in") %}
         {% set mbits = kbits|float / 1000 %}
         {{ mbits|round(2) }}
-    - name: edge_wwan_out
+    - name: edge_wwan_lte_out
       icon: "mdi:upload-network-outline"
       unit_of_measurement: "Mbit/s"
       state_class: measurement
       device_class: data_rate
       availability: |
-        {{ states("sensor.netdata_turris_wwan_out") | float(none) | is_number }}
+        {{ states("sensor.netdata_turris_wwan_lte_out") | float(none) | is_number }}
       state: |
-        {% set kbits = states("sensor.netdata_turris_wwan_out") %}
+        {% set kbits = states("sensor.netdata_turris_wwan_lte_out") %}
         {% set mbits = kbits|float / 1000 %}
         {{ mbits|round(2)|abs }}
 
@@ -285,8 +386,7 @@ template:
         {% set total = in|float + out|float %}
         {{ total|float|round(2) }}
 
-
-      # br-lan
+      # LAN
     - name: edge_lan_in
       icon: "mdi:download-network-outline"
       unit_of_measurement: "Mbit/s"
@@ -325,7 +425,83 @@ template:
         {% set total = in|float + out|float %}
         {{ total|float|round(2) }}
 
+      # LAN_CARE
+    - name: edge_lan_care_in
+      icon: "mdi:download-network-outline"
+      unit_of_measurement: "Mbit/s"
+      state_class: measurement
+      device_class: data_rate
+      availability: |
+        {{ states("sensor.netdata_turris_br_lan_care_in") | float(none) | is_number }}
+      state: |
+        {% set kbits = states("sensor.netdata_turris_br_lan_care_in") %}
+        {% set mbits = kbits|float / 1000 %}
+        {{ mbits|round(2) }}
+    - name: edge_lan_care_out
+      icon: "mdi:upload-network-outline"
+      unit_of_measurement: "Mbit/s"
+      state_class: measurement
+      device_class: data_rate
+      availability: |
+        {{ states("sensor.netdata_turris_br_lan_care_out") | float(none) | is_number }}
+      state: |
+        {% set kbits = states("sensor.netdata_turris_br_lan_care_out") %}
+        {% set mbits = kbits|float / 1000 %}
+        {{ mbits|round(2)|abs }}
+    - name: edge_lan_care_combined
+      icon: "mdi:network-outline"
+      unit_of_measurement: "Mbit/s"
+      state_class: measurement
+      device_class: data_rate
+      availability: |
+        {{
+        states("sensor.edge_lan_care_in") | float(none) | is_number
+        and states("sensor.edge_lan_care_out") | float(none) | is_number
+        }}
+      state: |
+        {% set in = states("sensor.edge_lan_care_in") %}
+        {% set out = states("sensor.edge_lan_care_out") %}
+        {% set total = in|float + out|float %}
+        {{ total|float|round(2) }}
 
+      # NVR
+    - name: edge_nvr_in
+      icon: "mdi:download-network-outline"
+      unit_of_measurement: "Mbit/s"
+      state_class: measurement
+      device_class: data_rate
+      availability: |
+        {{ states("sensor.netdata_turris_br_nvr_in") | float(none) | is_number }}
+      state: |
+        {% set kbits = states("sensor.netdata_turris_br_nvr_in") %}
+        {% set mbits = kbits|float / 1000 %}
+        {{ mbits|round(2) }}
+    - name: edge_nvr_out
+      icon: "mdi:upload-network-outline"
+      unit_of_measurement: "Mbit/s"
+      state_class: measurement
+      device_class: data_rate
+      availability: |
+        {{ states("sensor.netdata_turris_br_nvr_out") | float(none) | is_number }}
+      state: |
+        {% set kbits = states("sensor.netdata_turris_br_nvr_out") %}
+        {% set mbits = kbits|float / 1000 %}
+        {{ mbits|round(2)|abs }}
+    - name: edge_nvr_combined
+      icon: "mdi:network-outline"
+      unit_of_measurement: "Mbit/s"
+      state_class: measurement
+      device_class: data_rate
+      availability: |
+        {{
+        states("sensor.edge_nvr_in") | float(none) | is_number
+        and states("sensor.edge_nvr_out") | float(none) | is_number
+        }}
+      state: |
+        {% set in = states("sensor.edge_nvr_in") %}
+        {% set out = states("sensor.edge_nvr_out") %}
+        {% set total = in|float + out|float %}
+        {{ total|float|round(2) }}
 
       # CPU
     - name: edge_cpu
@@ -362,18 +538,21 @@ template:
         state: |
           {{ not is_state("binary_sensor.internet_offline", "on") }}
         attributes:
+          comment: |
+            Is false if >4 'binary_sensor.ping_internet_online_*' are "off"
+          source_entity_id: binary_sensor.internet_offline
           active_uplink: |
-            {% if is_state("binary_sensor.internet_failover_mwan3_wwan_active", "on") %}
-            Failover WWAN
+            {% if is_state("binary_sensor.internet_failover_mwan3_wwan_lte_active", "on") %}
+            WWAN_LTE
             {% else %}
-            Main WAN
+            WAN
             {% endif %}
           vpn: |
             {{ not is_state("binary_sensor.vpn_sudo_is_online", "off") }}
           LS54: |
             {{ not is_state("binary_sensor.vpn_sudo_is_ls54_online", "off") }}
-          wwan_failover_interface: |
-            {{ not is_state("binary_sensor.internet_failover_mwawn3_wwan", "off") }}
+          wwan_lte_failover_connection_up: |
+            {{ not is_state("binary_sensor.internet_failover_mwan3_wwan_lte_down", "on") }}
 
       - name: internet_offline
         device_class: "problem"
@@ -383,39 +562,36 @@ template:
           {% else %}
           mdi:check-network
           {% endif %}
-        availability: |
-          {{
-          has_value("binary_sensor.ping_internet_online_cloudflare_1")
-          and has_value("binary_sensor.ping_internet_online_cloudflare_2")
-          and has_value("binary_sensor.ping_internet_online_google_1")
-          and has_value("binary_sensor.ping_internet_online_google_2")
-          and has_value("binary_sensor.ping_internet_online_hi_1")
-          and has_value("sensor.hass_uptime")
-          and states("sensor.hass_uptime") | as_timestamp(none) | is_number
-          and now() | as_timestamp(none) | is_number
-          }}
         state: |
+          {% set ping_unreachable = [
+            is_state("binary_sensor.ping_internet_online_cloudflare_1", "off"),
+            is_state("binary_sensor.ping_internet_online_cloudflare_2", "off"),
+            is_state("binary_sensor.ping_internet_online_google_1", "off"),
+            is_state("binary_sensor.ping_internet_online_google_2", "off"),
+            is_state("binary_sensor.ping_internet_online_hi_1", "off"),
+            is_state("binary_sensor.ping_internet_online_en_wikipedia_org", "off"),
+            is_state("binary_sensor.ping_internet_online_github_com", "off"),
+            is_state("binary_sensor.ping_internet_online_home_assistant_io", "off"),
+            is_state("binary_sensor.ping_internet_online_rc_home_assistant_io", "off"),
+            is_state("binary_sensor.ping_internet_online_debian_org", "off")
+          ]
+          %}
           {{
-          is_state("binary_sensor.ping_internet_online_cloudflare_1", "off")
-          and is_state("binary_sensor.ping_internet_online_cloudflare_2", "off")
-          and is_state("binary_sensor.ping_internet_online_google_1", "off")
-          and is_state("binary_sensor.ping_internet_online_google_2", "off")
-          and is_state("binary_sensor.ping_internet_online_hi_1", "off")
-          and now()|as_timestamp - states("sensor.hass_uptime")|as_timestamp > 300.0
+            ping_unreachable
+            | select("==", true)
+            | list
+            | length > 4
           }}
-        attributes:
-          comment: |
-            does not report "on" if 'sensor.hass_uptime' is less than 5m
 
       - name: vpn_sudo_is_offline
         device_class: "problem"
-        icon: >-
+        icon: |
           {% if is_state(this.entity_id, "on") %}
           mdi:close-network
           {% else %}
           mdi:check-network
           {% endif %}
-        state: >-
+        state: |
           {{
           is_state("binary_sensor.ping_vpn_turris", "off")
           and is_state("binary_sensor.ping_vpn_ber1", "off")
@@ -426,7 +602,7 @@ template:
 
       - name: vpn_sudo_is_online
         device_class: "connectivity"
-        icon: >-
+        icon: |
           {% if is_state(this.entity_id, "on") %}
           mdi:check-network
           {% else %}
@@ -437,92 +613,126 @@ template:
 
       - name: vpn_sudo_is_ber1_offline
         device_class: "problem"
-        icon: >-
+        icon: |
           {% if is_state(this.entity_id, "on") %}
           mdi:close-network
           {% else %}
           mdi:check-network
           {% endif %}
-        state: >-
+        state: |
           {{ is_state("binary_sensor.ping_vpn_ber1", "off") }}
 
       - name: vpn_sudo_is_rvk0_offline
         device_class: "problem"
-        icon: >-
+        icon: |
           {% if is_state(this.entity_id, "on") %}
           mdi:close-network
           {% else %}
           mdi:check-network
           {% endif %}
-        state: >-
+        state: |
           {{ is_state("binary_sensor.ping_vpn_rvk0", "off") }}
 
       - name: vpn_sudo_is_ls54_edge_offline
         device_class: "problem"
-        icon: >-
+        icon: |
           {% if is_state(this.entity_id, "on") %}
           mdi:close-network
           {% else %}
           mdi:check-network
           {% endif %}
-        state: >-
+        state: |
           {{ is_state("binary_sensor.ping_vpn_ls54_edge", "off") }}
 
         # binary_sensor.pihole_ls_54_sudo_is_status turns 'unavailable' when
         # disconnected.
-        #
+        #    and is_state("binary_sensor.pihole_ls54_sudo_is_status", "on")
       - name: vpn_sudo_is_ls54_online
         device_class: "connectivity"
-        icon: >-
+        icon: |
           {% if is_state(this.entity_id, "on") %}
           mdi:check-network
           {% else %}
           mdi:close-network
           {% endif %}
-        state: >-
+        state: |
           {{
           not is_state("binary_sensor.vpn_sudo_is_ls54_edge_offline", "on")
           and not is_state("binary_sensor.vpn_sudo_is_ber1_offline", "on")
           and not is_state("device_tracker.unifi_lychener_str", "away")
-          and is_state("binary_sensor.pihole_ls54_sudo_is_status", "on")
-
           }}
       - name: vpn_sudo_is_ls54_offline
         device_class: "problem"
-        icon: >-
+        icon: |
           {% if is_state(this.entity_id, "on") %}
           mdi:close-network
           {% else %}
           mdi:check-network
           {% endif %}
-        state: >-
+        state: |
           {{ is_state("binary_sensor.vpn_sudo_is_ls54_online", "off") }}
 
-      - name: internet_failover_mwan3_wwan_down
+      - name: internet_failover_mwan3_wwan_lte_down
         device_class: "problem"
-        icon: >-
+        icon: |
           {% if is_state(this.entity_id, "on") %}
           mdi:close-network
           {% else %}
           mdi:check-network
           {% endif %}
-        state: >-
-          {{ is_state("binary_sensor.ping_turris_wwan_gateway", "off") }}
+        state: |
+          {{ is_state("binary_sensor.ping_turris_wwan_lte_gateway", "off") }}
 
-        # meant to be updated through restapi or appdaemon
-        # but this is something for starters
-      - name: internet_failover_mwan3_wwan_active
+      - name: internet_failover_mwan3_wwan_lte_active
         device_class: "problem"
-        icon: >-
+        icon: |
           {% if is_state(this.entity_id, "on") %}
           mdi:alert-box-outline
           {% else %}
           mdi:network-outline
           {% endif %}
-        availability: >-
-          {{ has_value("sensor.myip") }}
-        state: >-
-          {{ states("sensor.myip").startswith("46") }}
+        state: |
+          {{
+            not (
+              this.attributes.get("sudo_is_check", False)
+              or this.attributes.get("akamai_check", False)
+            )
+          }}
+        attributes:
+          akamai_check: |
+            {{ is_state("binary_sensor.internet_failover_akamai_check", "off") }}
+          sudo_is_check: |
+            {{ is_state("binary_sensor.sudo_is_api_myip_check", "off") }}
+
+
+
+
+        # meant to be updated through restapi or appdaemon
+        # but this is something for starters
+      - name: internet_failover_akamai_check
+        device_class: "problem"
+        icon: |
+          {% if is_state(this.entity_id, "on") %}
+          mdi:alert-box-outline
+          {% else %}
+          mdi:network-outline
+          {% endif %}
+        availability: |
+          {{ has_value("sensor.dns_whoami_akamai_net") }}
+        state: |
+          {% set akamai_myip = states("sensor.dns_whoami_akamai_net") %}
+          {% set akamai_check = not (
+              akamai_myip.startswith("79.")
+              or akamai_myip.startswith("217.19")
+              or akamai_myip.startswith("217.2")
+            )
+            and (
+              akamai_myip.startswith("46.")
+              or akamai_myip.startswith("176.")
+
+            )
+          %}
+          {{ akamai_check }}
 
       - name: cloudflare_ddns_home0157_sudo_is
         device_class: "problem"
@@ -532,12 +742,12 @@ template:
           {% else %}
           mdi:web
           {% endif %}
-        availability: >-
+        availability: |
           {{
           has_value("sensor.myip")
           and has_value("sensor.home0157_sudo_is")
           }}
-        state: >-
+        state: |
           {{ states("sensor.myip") != states("sensor.home0157_sudo_is") }}
 
 

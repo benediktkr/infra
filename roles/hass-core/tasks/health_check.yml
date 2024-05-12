@@ -1,0 +1,38 @@
+---
+
+- name: Wait for Home Assistant to be healthy
+  uri:
+    url: "https://{{ hass_url }}/api/"
+    method: GET
+    status_code: 200
+    validate_certs: true
+    headers:
+      Authorization: "Bearer {{ hass_ansible_token }}"
+      Content-Type: application/json
+    return_content: true
+  # forces the handler to run normally in --check mode (make the http request)
+  check_mode: false
+  #diff_mode: true
+  when:
+    - hass_container_state | default('stopped') == "started"
+  until:
+    - hass_health_check.status == 200
+    - hass_health_check.json is defined
+    - hass_health_check.json.message.endswith("running.")
+  retries: 300
+  delay: 1
+  register: hass_health_check
+
+- name: Show Home Assitant health check response
+  debug:
+    var: health_check_results
+  vars:
+    health_check_results:
+      attemps: "{{ hass_health_check.attempts }}"
+      changed: "{{ hass_health_check.changed }}"
+      failed: "{{ hass_health_check.failed }}"
+      json: "{{ hass_health_check.json }}"
+      redirected: "{{ hass_health_check.redirected }}"
+      server: "{{ hass_health_check.server }}"
+      status: "{{ hass_health_check.status }}"
+      url: "{{ hass_health_check.url }}"

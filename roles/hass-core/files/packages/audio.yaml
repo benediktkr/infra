@@ -1,92 +1,5 @@
 ---
 
-script:
-  uher_akustomat_f411_short_blink:
-    alias: uher_akustomat_f411_short_blink
-    mode: single
-    icon: mdi:led-on
-    sequence:
-      - service: light.turn_on
-        data:
-          effect: pulse_fast
-        target:
-          entity_id: light.uher_akustomat_f411_indicator_s
-      - delay:
-          milliseconds: 500
-      - service: light.turn_off
-        target:
-          entity_id: light.uher_akustomat_f411_indicator_s
-
-
-automation:
-  - alias: owntone_uher_akustomat_f411_in_sync
-    description: ""
-    mode: single
-    trigger:
-      - platform: state
-        entity_id:
-          - binary_sensor.owntone_uher_akustomat_f411_volume_synced
-        from: "off"
-        to: "on"
-    condition: []
-    action:
-      - service: script.uher_akustomat_f411_short_blink
-
-  - alias: owntone_uher_akustomat_volume
-    id: owntone_uher_akustomat_volume
-    description: "UHER Akustomat F411"
-    mode: restart
-    max: 40
-    trigger:
-      #- platform: numeric_state
-      #  entity_id:
-      #    - sensor.uher_akustomat_f411_volume_level
-      #  above: -0.01
-      #  below: 1.01
-      - platform: state
-        entity_id:
-          - sensor.uher_akustomat_f411_volume_level
-        from: null
-        to: null
-
-    condition:
-      - condition: template
-        alias: "volue states and attrs are valid and available"
-        value_template: |-
-          {{
-          is_number(state_attr("media_player.owntone_server", "volume_level"))
-          and is_number(trigger.to_state.state)
-          }}
-      - condition: template
-        alias: "to_state.state is within bounds"
-        value_template: |-
-          {{
-            trigger.to_state.state|float <= 1.0
-            and trigger.to_state.state|float >= 0.0
-          }}
-      - condition: template
-        alias: "binary_sensor.owntone_uher_akustomat_f411_volume_synced"
-        value_template: |-
-          {{ is_state("binary_sensor.owntone_uher_akustomat_f411_volume_synced", "on") }}
-
-      - condition: template
-        alias: "akustomat and owntone are in sync with each other"
-        enabled: false
-        value_template: |-
-          {% set owntone = state_attr("media_player.owntone_server", "volume_level")  %}
-          {% set diff = trigger.to_state.state|float - owntone|float %}
-          {{ diff|abs|float < 0.30 }}
-    action:
-      - service: media_player.volume_set
-        data:
-          volume_level: |-
-            {%- set akustomat = states("sensor.uher_akustomat_f411_volume")|float / 100.0 -%}
-            {{ akustomat | round(2) }}
-        target:
-          entity_id: media_player.owntone_server
-
-
-
 media_player:
   - platform: universal
     name: bedroom
@@ -171,6 +84,7 @@ media_player:
       is_volume_muted: media_player.sonos_bedroom|is_volume_muted
       #source_list: media_player.owntone_server|source_list
       source_list: None, OwnTone
+      group_members: media_player.sonos_bedroom|group_members
 
   - platform: universal
     name: kitchen
@@ -235,6 +149,7 @@ media_player:
       is_volume_muted: media_player.sonos_kitchen|is_volume_muted
       #source_list: media_player.owntone_server|source_list
       source_list: None, OwnTone
+      group_members: media_player.sonos_kitchen|group_members
 
   - platform: universal
     name: study
@@ -299,6 +214,7 @@ media_player:
       is_volume_muted: media_player.sonos_study|is_volume_muted
       #source_list: media_player.owntone_server|source_list
       source_list: None, OwnTone
+      group_members: media_player.sonos_study|group_members
 
   - platform: universal
     name: hallway
@@ -363,6 +279,7 @@ media_player:
       is_volume_muted: media_player.sonos_hallway|is_volume_muted
       #source_list: media_player.owntone_server|source_list
       source_list: None, OwnTone
+      group_members: media_player.sonos_hallway|group_members
 
 
 template:
@@ -449,24 +366,6 @@ template:
             {{ state_attr("media_player.owntone_server", "media_artist") }}
             {% else %}None{% endif %}
 
-      - name: owntone_uher_akustomat_f411_volume_synced
-        icon: >-
-          {% if is_state(this.entity_id, "on") %}
-          mdi:volume-equal
-          {% else %}
-          mdi:volume-variant-off
-          {% endif %}
-        availability: >-
-          {{
-          is_number(state_attr("media_player.owntone_server", "volume_level"))
-          and is_number(states("sensor.uher_akustomat_f411_volume"))
-          }}
-        state: >-
-          {% set akustomat = states("sensor.uher_akustomat_f411_volume_level") %}
-          {% set owntone = state_attr("media_player.owntone_server", "volume_level") %}
-          {% set diff = akustomat|float - owntone|float %}
-          {{ diff|abs|float  < 0.30 }}
-
 
 homeassistant:
   customize:
@@ -539,7 +438,9 @@ homeassistant:
       friendly_name: "OwnTone playing"
     binary_sensor.owntone_playing_podcast:
       friendly_name: "OwnTone playing a podcast"
-    binary_sensor.owntone_uher_akustomat_f411_volume_synced:
-      friendly_name: "UHER Akustomat F411 dial in sync with OwnTone volume"
-      package: "audio"
-      templated: true
+
+    sensor.audiobookshelf_sessions:
+      unit_of_measurement: sessions
+      state_class: measurement
+      package: audio
+

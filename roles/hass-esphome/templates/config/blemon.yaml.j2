@@ -44,6 +44,12 @@ web_server:
   js_url: "https://www.{{ domain }}/esphome/webserver-v2.min.js"
 
 esp32_ble_tracker:
+  #scan_parameters:
+  #  active: true
+
+#bluetooth_proxy:
+#  active: true
+#  cache_services: true
 
 ble_client:
 {% for item in hass_esphome_ble_client %}
@@ -64,8 +70,10 @@ binary_sensor:
     {% endif -%}
     name: "BLE {{ ble_device.name }}"
     id: "ble_{{ ble_device_id }}"
+    {% if ble_device.disable_delay_off|default(false) != true -%}
     filters:
       - delayed_off: "{{ ble_device.delay_off | default('5min') }}"
+    {% endif %}
 
 {% endfor %}
 
@@ -73,6 +81,18 @@ binary_sensor:
     name: "{{ item.name }} ESHome status"
     entity_category: "diagnostic"
     id: ${id_prefix}_status
+
+  ## A sensor that always is (should be) true, just to clearly mark
+  ## an esphome node as a BLE proxy (if it is one).
+  #- platform: template
+  #  id: is_ble_proxy
+  #  #name: "{{ item.name }} ESPHome BLE Proxy"
+  #  name: "ESPHome BLE Proxy blemon"
+  #  icon: "mdi:bluetooth"
+  #  publish_initial_state: true
+  #  internal: false
+  #  disabled_by_default: false
+  #  entity_category: "diagnostic"
 
 sensor:
 

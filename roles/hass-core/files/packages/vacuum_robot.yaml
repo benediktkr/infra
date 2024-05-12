@@ -9,6 +9,11 @@ homeassistant:
         templated: true
         <<: *common_attrs
 
+    sensor.vacuum_robot_segments:
+      friendly_name: "vacuum-robot Segments"
+      source_entity_id: "sensor.valetudo_vacuum_robot_map_segments"
+      <<: *common_attrs
+
     sensor.wifi_signal_vacuum_robot:
       friendly_name: "Vacuum robot WiFi signal"
       <<: *common_attrs_templated
@@ -39,6 +44,7 @@ homeassistant:
 
     input_boolean.vacuum_robot_closed_room:
       friendly_name: Vacuum robot cleaning a closed room (no return to dock)
+      <<: *common_attrs
 
 
 
@@ -49,7 +55,27 @@ input_boolean:
 
 template:
   - sensor:
+      - name: vacuum_robot_segments
+        unique_id: vacuum_robot_setments
+        icon: mdi:vector-selection
+        unit_of_measurement: areas
+        state: |
+          {{ states(this.attributes.source_entity_id) }}
+        availability: |
+          {{ has_value(this.attributes.get("source_entity_id")|string) }}
+        attributes:
+          map: |
+            {% set source_entity_id = this.attributes.get("source_entity_id") -%}
+            {% set source_sensor = source_entity_id.split(".")[1] -%}
+            {% for attr in states.sensor[source_sensor].attributes.items()|default([]) -%}
+            {% if is_number(attr[0]) -%}
+            {{ attr[1] }}: {{ attr[0] }}
+            {% endif -%}
+            {% endfor %}
+
+
       - name: wifi_signal_vacuum_robot
+        unique_id: wifi_signal_vacuum_robot
         state_class: measurement
         device_class: power_factor
         unit_of_measurement: "%"
@@ -64,6 +90,7 @@ template:
           }}
 
       - name: vacuum_robot_total_area
+        unique_id: vacuum_robot_total_area
         state_class: measurement
         unit_of_measurement: "m²"
         availability: >-
@@ -74,6 +101,7 @@ template:
           {{ sqm | float | round(2) }}
 
       - name: vacuum_robot_current_area
+        unique_id: vacuum_robot_current_area
         state_class: measurement
         unit_of_measurement: "m²"
         availability: >-
@@ -84,6 +112,7 @@ template:
           {{ sqm | float | round(2) }}
 
       - name: battery_level_vacuum_robot
+        unique_id: battery_level_vacuum_robot
         state_class: measurement
         device_class: "battery"
         unit_of_measurement: "%"
@@ -94,16 +123,17 @@ template:
 
   - binary_sensor:
       - name: vacuum_robot
-        icon: >-
+        unique_id: vacuum_robot
+        icon: |
           {% if is_state(this.entity_id, "on") %}
           mdi:robot-vacuum
           {% else %}
           mdi:robot-vacuum-off
           {% endif %}
-        availability: >-
+        availability: |
           {{ has_value("vacuum.valetudo_meatyenchantedsquirrel") }}
         device_class: running
-        state: >-
+        state: |
           {% set vac = "vacuum.valetudo_meatyenchantedsquirrel" %}
           {{
           is_state(vac, "cleaning")
@@ -116,7 +146,8 @@ template:
           }}
 
       - name: vacuum_robot_charging
-        icon: >-
+        unique_id: vacuum_robot_charging
+        icon: |
           {{ state_attr("vacuum.valetudo_meatyenchantedsquirrel", "battery_icon") }}
         availability: >-
           {{ has_value("vacuum.valetudo_meatyenchantedsquirrel") }}
@@ -132,6 +163,7 @@ template:
         to: "on"
     sensor:
       - name: vacuum_robot_last_cleaned
+        unique_id: vacuum_robot_last_cleaned
         icon: mdi:robot-vacuum
         device_class: timestamp
         state: |

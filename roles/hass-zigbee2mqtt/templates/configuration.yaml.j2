@@ -25,6 +25,7 @@ advanced:
   network_key:
   {% set network_key =  hass_zigbee2mqtt_network_key | to_nice_yaml(indent=2) %}
   {{ network_key | indent(4) | trim }}
+  log_level: warn
 {{ {'devices': hass_zigbee2mqtt_devices} | to_nice_yaml(indent=2, sort_keys=false) | trim }}
 {{ {'blocklist': hass_zigbee2mqtt_blocklist} | to_nice_yaml(indent=2) | indent(2) | trim }}
 {% else -%}

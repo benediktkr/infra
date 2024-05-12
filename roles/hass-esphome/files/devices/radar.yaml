@@ -13,6 +13,9 @@ packages:
 logger:
   level: WARN
 
+preferences:
+  flash_write_interval: 60min
+
 #esphome:
 #  platformio_options:
 #    board_build.flash_mode: dio

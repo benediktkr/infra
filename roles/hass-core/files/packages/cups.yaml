@@ -1,0 +1,20 @@
+---
+homeassistant:
+  customize:
+    package.node_anchors:
+      package_name: &package_name "cups"
+      common_attrs: &common_attrs
+        package: *package_name
+      common_attrs_templated: &common_attrs_templated
+        templated: true
+        <<: *common_attrs
+
+sensor:
+  - platform: cups
+    host: printer.s21.sudo.is
+    # defaults to the default cups port 631
+    # port: 631
+    port: 443
+    printers:
+      - hp_1010
+    is_cups_server: true

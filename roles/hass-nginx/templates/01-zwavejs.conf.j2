@@ -55,13 +55,12 @@ server {
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection "upgrade";
 
-
+    {% if hass_zigbee_enabled -%}
     location /_zigbee/ {
         # redirect to {{ hass_zigbee }}
         rewrite ^/_zigbee/(.*)$ /_{{ hass_zigbee }}/$1 redirect;
     }
 
-    {% if hass_zigbee == "zigbee2mqtt" or hass_zigbee2mqtt|default(false) == true -%}
     location /_zigbee2mqtt/ {
         include /etc/nginx/require_auth.conf;
 
@@ -81,9 +80,7 @@ server {
             proxy_pass http://{{ bridgewithdns.hass_zigbee2mqtt }}:8633/api;
         }
     }
-    {% endif %}
 
-    {% if hass_zigbee == "deconz" or hass_deconz|default(false) == true -%}
     location /_deconz/ {
         include /etc/nginx/require_auth.conf;
 
@@ -91,6 +88,11 @@ server {
         sub_filter '/api/' '/_deconz/api/';
         sub_filter_types '*';
         sub_filter_once off;
+
+        {% set basic_cleartext_user = hass_deconz_user ~ ":" ~ hass_deconz_passwd -%}
+        {% set basic_cleartext = hass_deconz_passwd -%}
+        #proxy_set_header Authorization "Basic {{ basic_cleartext | b64encode }}";
+        #proxy_pass_header Authorization;
 
         proxy_redirect https://$host/ https://$host/_deconz/;
         proxy_http_version 1.1;
@@ -101,7 +103,7 @@ server {
         #    proxy_pass http://{{ bridgewithdns.hass_deconz }}:8080/api/;
         #}
     }
-    {% endif %}
+    {% endif -%}
 
     access_log /var/log/nginx/access_{{ zwavejs_url }}.log main;
     error_log /var/log/nginx/error_{{ zwavejs_url }}.log warn;

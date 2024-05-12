@@ -1,0 +1,11 @@
+---
+
+- name: hass check config
+  command: docker exec hass hass -c /config --script check_config
+  #become_user: "{{ systemuserlist.hass.username }}"
+  become: true
+  register: hass_check_config_cmd
+  failed_when: hass_check_config_cmd.rc != 0
+  changed_when: false
+  when:
+    - hass_container_state|default("stopped") == "started"

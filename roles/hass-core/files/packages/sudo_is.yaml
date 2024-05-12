@@ -1,0 +1,154 @@
+
+homeassistant:
+  customize:
+    package.node_anchors:
+      package_name: &package_name "sudo_is"
+      common_attrs: &common_attrs
+        package: *package_name
+      common_attrs_templated: &common_attrs_templated
+        templated: true
+        <<: *common_attrs
+
+    sensor.sudo_is_api_myip:
+      friendly_name: "sudo.is/api/myip IP"
+      <<: *common_attrs
+    sensor.sudo_is_api_myip_dns:
+      friendly_name: "sudo.is/api/myip DNS"
+      <<: *common_attrs
+    binary_sensor.sudo_is_api_myip_check:
+      friendly_name: "sudo.is/api/myip DNS check"
+      <<: *common_attrs
+
+    binary_sensor.sudo_is_api_health_www:
+      friendly_name: "sudo.is/api/health: www"
+      <<: *common_attrs
+    binary_sensor.sudo_is_api_health_api:
+      friendly_name: "sudo.is/api/health: api"
+      <<: *common_attrs
+    binary_sensor.sudo_is_api_health_login:
+      friendly_name: "sudo.is/api/health: login"
+      <<: *common_attrs
+    binary_sensor.sudo_is_api_health_git:
+      friendly_name: "sudo.is/api/health: git"
+      <<: *common_attrs
+
+    sensor.sudo_is_version:
+      friendly_name: "www.sudo.is version"
+      entity_picture: "https://www.sudo.is/favicon.png"
+      <<: *common_attrs
+
+    sensor.sudo_is_version_date:
+      friendly_name: "www.sudo.is date"
+      entity_picture: "https://www.sudo.is/favicon.png"
+      <<: *common_attrs
+
+
+rest:
+  - resource: https://www.sudo.is/api/myip/check
+    params:
+      domain: !secret myip_domain
+    scan_interval: 60
+    method: GET
+    verify_ssl: true
+    sensor:
+      - name: sudo_is_api_myip
+        icon: |
+          {% set check_id = "binary_sensor.sudo_is_api_myip_domain" %}
+          {% if has_value(check_id) and is_state(check_id, "on") %}
+          mdi:close-network-outline
+          {% else %}
+          mdi:ip-network
+          {% endif %}
+        value_template: |
+          {{ value_json.myip.ip_address }}
+        json_attributes_path: "$.myip"
+        json_attributes:
+          - ipv
+          - ipv4
+          - ipv6
+          - "User-Agent"
+          - name
+      - name: sudo_is_api_myip_dns
+        icon: mdi:network
+        value_template: |
+          {{ value_json.myip.name }}
+      - name: sudo_is_api_myip_request_param_domain
+        icon: mdi:network
+        value_template: |
+          {{ value_json.domain }}
+
+    binary_sensor:
+      - name: sudo_is_api_myip_check
+        device_class: problem
+        icon: |
+          {% if is_state(this.entity_id, "off") %}
+          mdi:web
+          {% else %}
+          mdi:web-off
+          {% endif %}
+        value_template: |
+          {{ value_json.domain_check|bool == false }}
+
+  - resource: https://www.sudo.is/api/health
+    scan_interval: 60
+    method: GET
+    verify_ssl: true
+    binary_sensor:
+      - name: sudo_is_api_health_www
+        device_class: problem
+        icon: |
+          {% if is_state(this.entity_id, "off") %}
+          mdi:web
+          {% else %}
+          mdi:web-off
+          {% endif %}
+        value_template: |
+          {{ value_json.www|bool == false }}
+      - name: sudo_is_api_health_api
+        device_class: problem
+        icon: |
+          {% if is_state(this.entity_id, "off") %}
+          mdi:api
+          {% else %}
+          mdi:api-off
+          {% endif %}
+        value_template: |
+          {{ value_json.api|bool == false }}
+      - name: sudo_is_api_health_login
+        device_class: problem
+        icon: |
+          {% if is_state(this.entity_id, "off") %}
+          mdi:login
+          {% else %}
+          mdi:network-off-outline
+          {% endif %}
+        value_template: |
+          {{ value_json.login|bool == false }}
+      - name: sudo_is_api_health_git
+        device_class: problem
+        icon: |
+          {% if is_state(this.entity_id, "off") %}
+          mdi:git
+          {% else %}
+          mdi:network-off-outline
+          {% endif %}
+        value_template: |
+          {{ value_json.git|bool != true }}
+
+  - resource: https://www.sudo.is/version.json
+    scan_interval: 60
+    method: GET
+    verify_ssl: true
+    sensor:
+      - name: sudo_is_version
+        icon: mdi:git
+        value_template: |
+          {{ value_json.version }}
+        json_attributes:
+          - commit
+      - name: sudo_is_version_date
+        icon: mdi:git
+        device_class: date
+        value_template: |
+          {{ value_json.date }}
+

@@ -1,9 +1,8 @@
 ---
 
-
 - name: create dir structure
   file:
-    path: "{{ zwavejs_user.home }}/{{ item.name }}"
+    path: "{{ hass_zwavejs_root }}/{{ item.name }}"
     state: directory
     mode: "{{ item.mode | default('0755') }}"
     owner: hass
@@ -14,10 +13,9 @@
   loop_control:
     label: "{{ item.name }}"
   with_items:
-    - name: zwavejs
-    - name: zwavejs/logs
-    - name: zwavejs/data
-    - name: zwavejs/config-db
+    - name: logs
+    - name: data
+    - name: config-db
 
 - name: create backup dir
   file:
@@ -39,6 +37,7 @@
     mode: "0755"
   tags:
     - scripts
+    - zwave-cron
     - hass-zwave-scripts
     - hass-scripts
     - hass-zwave-config
@@ -53,11 +52,72 @@
     mode: 0640
   tags:
     - cron
+    - zwave-cron
     - hass-cron
     - hass-zwave-scripts
     - hass-scripts
     - hass-zwave-config
     - hass-zwave-config-fix
+
+- name: check if settings.json exists
+  stat:
+    path: "{{ zwavejs_user.home }}/zwavejs/data/settings.json"
+  register: settings_json
+  tags:
+    - hass-zwave-config
+    - hass-zwave-config-fix
+
+- name: read current settings.json
+  slurp:
+    src: "{{ zwavejs_user.home }}/zwavejs/data/settings.json"
+  register: settings_json_file
+  #ignore_errors: ansible_check_mode == true
+  when: settings_json.stat.exists
+  tags:
+    - hass-zwave-config
+    - hass-zwave-config-fix
+
+- name: decode and parse settings.json
+  set_fact:
+    current_settings_json: "{{ settings_json_file.content | b64decode | from_json }}"
+  #ignore_errors: ansible_check_mode == true
+  when: settings_json.stat.exists
+  tags:
+    - hass-zwave-config
+    - hass-zwave-config-fix
+
+- name: ensure settings.json is well formatted
+  copy:
+    content: "{{ current_settings_json | to_json(indent=2) }}\n"
+    dest: "{{ zwavejs_user.home }}/zwavejs/data/settings.json"
+    owner: "{{ zwavejs_user.uid }}"
+    group: "{{ zwavejs_user.gid }}"
+    mode: "0644"
+  #ignore_errors: ansible_check_mode == true
+  when: settings_json.stat.exists
+  tags:
+    - hass-zwave-config
+    - hass-zwave-config-fix
+
+- name: set versions from current settings.json
+  set_fact:
+    zwavejs_versions: "{{ current_settings_json.gateway.versions }}"
+  #ignore_errors: ansible_check_mode|bool == true
+  when: settings_json.stat.exists
+  tags:
+    - hass-zwave-config
+
+- name: template settings.json
+  template:
+    src: settings.json.j2
+    dest: "{{ zwavejs_user.home }}/zwavejs/data/settings.json"
+    owner: hass
+    group: hass
+    mode: 0644
+  #ignore_errors: ansible_check_mode|bool == true
+  #when: settings_json.stat.exists
+  tags:
+    - hass-zwave-config
 
 # docker run --run -it -p 8091:8091 -p 3000:3000 --network
 #bridgewithdns --device /dev/ttyACM0:/dev/zwave -v
@@ -65,7 +125,7 @@
 
 # the name has changed to zwave-js-ui:
 # https://github.com/zwave-js/zwave-js-ui/pull/2650
-- name: start zwavejs container
+- name: zwavejs container
   docker_container:
     name: zwavejs
     image: zwavejs/zwave-js-ui:latest
@@ -125,53 +185,6 @@
     - zwavejs
     - zwavejs-container
     - hass-container
+    - hass-zwave-container
     - docker-containers
-
-
-- name: read current settings.json
-  slurp:
-    src: "{{ zwavejs_user.home }}/zwavejs/data/settings.json"
-  register: settings_json_file
-  #ignore_errors: ansible_check_mode == true
-  tags:
-    - hass-zwave-config
-    - hass-zwave-config-fix
-
-- name: decode and parse settins.json
-  set_fact:
-    current_settings_json: "{{ settings_json_file.content | b64decode | from_json }}"
-  #ignore_errors: ansible_check_mode == true
-  tags:
-    - hass-zwave-config
-    - hass-zwave-config-fix
-
-- name: ensure settings.json is well formatted
-  copy:
-    content: "{{ current_settings_json | to_json(indent=2) }}\n"
-    dest: "{{ zwavejs_user.home }}/zwavejs/data/settings.json"
-    owner: "{{ zwavejs_user.uid }}"
-    group: "{{ zwavejs_user.gid }}"
-    mode: "0644"
-  #ignore_errors: ansible_check_mode == true
-  tags:
-    - hass-zwave-config
-    - hass-zwave-config-fix
-
-- name: set versions from current settings.json
-  set_fact:
-    zwavejs_versions: "{{ current_settings_json.gateway.versions }}"
-  #ignore_errors: ansible_check_mode|bool == true
-  tags:
-    - hass-zwave-config
-
-- name: template settings.json
-  template:
-    src: settings.json.j2
-    dest: "{{ zwavejs_user.home }}/zwavejs/data/settings.json"
-    owner: hass
-    group: hass
-    mode: 0644
-  #ignore_errors: ansible_check_mode|bool == true
-  tags:
-    - hass-zwave-config
 

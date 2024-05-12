@@ -1,3 +1,5 @@
+---
+
 homeassistant:
   customize:
     package.node_anchors:
@@ -21,6 +23,14 @@ homeassistant:
     #   templated: true
     #   package: "study"
 
+    sensor.study_air_quality_voc_level:
+      state_class: measurement
+      device_class: "volatile_organic_compounds_parts"
+      unit_of_measurement: "ppm"
+      icon: "mdi:air-filter"
+      proto: "Z-Wave"
+      <<: *common_attrs
+
     switch.outlet_study_1:
       friendly_name: "Study outlet 1 (IKEA Askvader)"
       comment: "IKEA Askvader strip at the desk"
@@ -34,32 +44,45 @@ homeassistant:
       <<: *common_attrs
 
     switch.outlet_study_2:
-      friendly_name: "Study outlet 2 (shelves)"
-      comment: "Power strips in shelves"
+      friendly_name: "Study outlet 2 (east wall, socket 1)"
+      comment: "In left outlet on wall to bedroom"
+      host: "ber-nullspace1"
       proto: "Z-Wave"
       <<: *common_attrs
 
     sensor.electric_w_outlet_study_2:
-      friendly_name: "Study outlet 2 (shelves) [W]"
-      comment: "Power strips in study shelves"
+      friendly_name: "Study outlet 2 (east wall, socket 1) [W]"
+      host: "ber-nullspace1"
+      comment: "In left outlet on wall to bedroom"
       proto: "Z-Wave"
       <<: *common_attrs
 
     switch.outlet_study_3:
-      friendly_name: "Sudy outlet 3 (corner)"
+      friendly_name: "Sudy outlet 3 (east wall, socket 2)"
       comment: "Power strip in corner, powers router+ap and ber-nullspace1"
       proto: "Z-Wave"
       <<: *common_attrs
 
     sensor.electric_w_outlet_study_3:
-      friendly_name: "Sudy outlet 3 (corner) Electric [W]"
+      friendly_name: "Sudy outlet 3 (east wall, socket 2) Electric [W]"
       comment: "Power strip in corner, powers router+ap and ber-nullspace1"
+      proto: "Z-Wave"
+      <<: *common_attrs
+
+    switch.outlet_study_4:
+      friendly_name: "Sudy outlet 4 (north wall, IVAR)"
+      comment: "Outlet on wall to livingroom, power strip in IVAR"
+      proto: "Z-Wave"
+      <<: *common_attrs
+
+    sensor.electric_w_outlet_study_4:
+      friendly_name: "Sudy outlet 4 (north vall, IVAR) Electric [W]"
+      comment: "Outlet on wall to livingroom, power strip in IVAR"
       proto: "Z-Wave"
       <<: *common_attrs
 
     sensor.electric_w_switch_study_desk_monitor:
       friendly_name: "Study Desk monitor Electric [W]"
-      LG_monitor: "ca 24W"
       proto: "Z-Wave"
       <<: *common_attrs
 
@@ -108,10 +131,15 @@ template:
             or is_state("binary_sensor.ble_m720_triathlon_4a1e", "on")
           %}
           {% set mx_ergo = is_state("device_tracker.ble_mx_ergo", "home")
+            or is_state("device_tracker.ble_mx_ergo", "home")
             or is_state("device_tracker.ble_mx_ergo_2", "home")
+            or is_state("device_tracker.mx_ergo", "home")
+            or is_state("device_tracker.mx_ergo_e9b5", "home")
             or is_state("binary_sensor.ble_mx_ergo_e9af", "on")
             or is_state("binary_sensor.ble_mx_ergo_e9b0", "on")
             or is_state("binary_sensor.ble_mx_ergo_e9b1", "on")
+            or is_state("binary_sensor.ble_mx_ergo_e9b4", "on")
+            or is_state("binary_sensor.ble_mx_ergo_e9b5", "on")
           %}
           {% set mx_vertical = is_state("device_tracker.ble_mx_vertical", "home")
             or is_state("binary_sensor.ble_mx_vertical_7db7", "on")
@@ -138,14 +166,12 @@ template:
           and states("switch.study_desk_monitor") is defined
           and has_value("switch.study_desk_monitor")
           }}
-        delay_off: "00:00:30"
-        delay_on: "00:00:15"
         state: >-
           {% set power_w = states('sensor.electric_w_switch_study_desk_monitor')|float %}
           {% set power_on = is_state('switch.study_desk_monitor', 'on') %}
           {{
           power_on
-          and power_w > 19.0
+          and power_w > 10.0
           and power_w < 1000
           }}
         attributes:
@@ -153,29 +179,11 @@ template:
           source_switch_entity_id: "switch.study_desk_monitor"
           source_proto: "zwave"
           notes: >-
-            uses ca 23.68 W when not powering/charging a laptop over usb-c
-            while charing a laptop, power usage fluctuates between ca 55-110W
+            Uses ca 23.68 W when not powering/charging a laptop over usb-c
+            while charing a laptop, power usage fluctuates between ca 55-110W.
+          on_value: 10.0
+          former_on_value: 19.0
 
-      # - name: study_desk_monitor_standby
-      #   icon: mdi:monitor-shimmer
-      #   availability: >-
-      #     {{
-      #     states("binary_sensor.study_desk_monitor") is defined
-      #     and has_value("binary_sensor.study_desk_monitor")
-      #     }}
-      #   state: >-
-      #     {% set power_w = states('sensor.electric_w_switch_study_desk_monitor')|float %}
-      #     {{ power_w > 0.0 and power_w <= 15 }}
-      #   attributes:
-      #     source__entity_id: sensor.electric_w_switch_study_desk_monitor
-      #     source_proto: "zwave"
-
-    # this could also be written as
-    # state: |
-    #   {% set t = state_attr("sensor.battery_level_oxygen", "Time to Empty") | int(0) %}
-    #   {{ t or state_attr(this.entity_id) }}
-    #
-    # but given how fragile this jinja-in-yalm soup is, i wrote it the uglier and more verbose way
   - sensor:
       - name: battery_oxygen_time_left
         unit_of_measurement: min
@@ -195,7 +203,7 @@ template:
           {% else %}
           {{ states(this.entity_id) | int(0) }}
           {% endif %}
-         attributes:
+        attributes:
           source_value: |
             {{ state_attr("sensor.battery_level_oxygen", "Time to Empty") }}
 

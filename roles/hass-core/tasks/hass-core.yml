@@ -34,6 +34,7 @@
   loop_control:
     label: "'{{ systemuserlist.hass.username }}'@'{{ item }}'"
   when:
+    - false
     - "item | ansible.utils.ipaddr('private') or item.endswith('%')"
   with_items:
     - "{{ ansible_default_ipv4.address }}"
@@ -42,7 +43,7 @@
     - mariadb-users
     - hass-mariadb
 
-- name: copy ssh keys for {{ hass_config_repo_name }}
+- name: copy ssh key
   template:
     src: "private/sshkeys/{{ item }}"
     dest: "{{ systemuserlist.hass.home }}/.ssh/{{ item }}"
@@ -56,7 +57,7 @@
     - "{{ systemuserlist.hass.username }}"
     - "{{ systemuserlist.hass.username }}.pub"
   tags:
-    - hass-git
+    - hass-ss-git
 
 # hass + zwave
 
@@ -70,6 +71,7 @@
   tags:
     - hass-dirs
     - hass-core-dirs
+    - hass-core-dir
   loop_control:
     label: "{{ item.name }}"
   with_items:
@@ -86,7 +88,15 @@
     - name: home-assistant/config/custom_templates
     - name: home-assistant/config/packages
     - name: home-assistant/config/python_scripts
+    - name: home-assistant/zha
+    - name: home-assistant/zha/networkdb
+    - name: home-assistant/zha/quirk_modules
+    - name: home-assistant/zha/firmware
     - name: home-assistant/media
+      mode: "0775"
+    - name: home-assistant/notify
+      mode: "0775"
+    - name: home-assistant/inputs
       mode: "0775"
     - name: home-assistant/media/cameras
       mode: "0775"
@@ -95,46 +105,137 @@
     - name: home-assistant/media/cameras/snapshots
       mode: "0775"
     - name: git
+    - name: git/hass-config
+      mode: "0750"
 
-- name: template gitconfig
+- name: create backup dir
+  file:
+    path: "/srv/homeassistant_backups"
+    state: directory
+    mode: "0750"
+    owner: hass
+    group: hass
+  tags:
+    - hass-dirs
+    - hass-dirs-backup
+    - hass-core-dirs
+
+- name: template git configs
   template:
-    src: gitconfig.j2
-    dest: "{{ systemuserlist.hass.home }}/.gitconfig"
+    src: "{{ item.name }}.j2"
+    dest: "{{ systemuserlist.hass.home }}/{{ item.name }}"
     owner: "{{ systemuserlist.hass.uid }}"
     group: "{{ systemuserlist.hass.gid }}"
-    mode: 0644
+    mode: "{{ item.mode }}"
+  no_log: "{{ item.no_log|default(false)|bool }}"
+  with_items:
+    - name: .gitconfig
+      mode: "0644"
+    - name: .git-credentials
+      mode: "0600"
+      no_log: true
+  tags:
+    - hass-git
+
+- name: ensure dir exists for {{ hass_config_repo_name }}
+  file:
+    state: directory
+    path: "{{ systemuserlist.hass.home }}/git/{{ hass_config_repo_name }}"
+    owner: "{{ systemuserlist.hass.uid }}"
+    group: "{{ systemuserlist.hass.gid }}"
+    mode: "0750"
   tags:
     - hass-git
 
 - name: set up the {{ hass_config_repo_name }} repo
-  when: false
   git:
     repo: "{{ hass_config_repo }}"
-    dest: "{{ systemuserlist.hass.home }}/git/{{ hass_config_repo_name }}"
+    dest: "{{ systemuserlist.hass.home }}/git/{{ hass_config_repo_name}}"
     version: main
     clone: true
     update: false
     force: false
     accept_newhostkey: true
-    #key_file: "{{ systemuserlist.hass.home }}/.ssh/{{ hass_config_repo_name }}"
   become_user: "{{ systemuserlist.hass.username }}"
   tags:
     - hass-git
     - hass-git-clone
+
+- name: template .gitignore for hass-config
+  template:
+    src: "hass-config.gitignore.j2"
+    dest: "{{ systemuserlist.hass.home }}/git/{{ hass_config_repo_name }}/.gitignore"
+    owner: "{{ systemuserlist.hass.uid }}"
+    group: "{{ systemuserlist.hass.gid }}"
+    mode: "0644"
+  tags:
+    - hass-git
+
+- name: install git sync script
+  template:
+    src: git-hass-config.sh.j2
+    dest: /usr/local/bin/git-hass-config.sh
+    mode: 0775
+    owner: hass
+    group: hass
+  notify: git-hass-config.sh
+  tags:
+    - hass-git
+    - hass-git-script
+
+- name: cron file
+  template:
+    src: hass-cron.j2
+    dest: /etc/cron.d/hass
+    owner: root
+    group: root
+    mode: 0640
+  tags:
+    - cron
+    - hass-cron
+    - hass-git
 
 - debug:
     var: ansible_default_ipv4
   tags:
     - hass-core-configg
 
-- name: home assistant config files and config packages
+- name: remove config files
+  file:
+    path: "{{ systemuserlist.hass.home }}/home-assistant/config/{{ item }}"
+    state: absent
+  notify:
+    - restart hass container
+  loop_control:
+    label: "{{ item }}"
+  with_items:
+    - packages/potato.yaml
+    - packages/apple_tv.yaml
+    - packages/toothbrush.yaml
+    - packages/bvg.yaml
+    - packages/zha.yaml
+    - mini.yaml
+    - ui-test.yaml
+    - card_room.yaml
+    - packages/buttons.yaml
+    - custom_templates/buttons_zwave.jinja
+  tags:
+    - hass-config
+    - hass-package
+    - hass-packages
+    - hass-core-config
+  when:
+    - hass_package is not defined
+
+- name: template home assistant config files and config packages
   template:
     src: "{{ item }}.j2"
     dest: "{{ systemuserlist.hass.home }}/home-assistant/config/{{ item }}"
     owner: "{{ systemuserlist.hass.uid }}"
     group: "{{ systemuserlist.hass.gid }}"
     mode: 0644
-  notify: restart hass container
+  notify:
+    - restart hass container
   no_log: "{{ item.startswith('secret') }}"
   with_items:
     - secrets.yaml
@@ -143,29 +244,38 @@
     - automations-ansible-managed.yaml
     - scripts-ansible-managed.yaml
     - packages/blink1.yaml
+    - packages/files.yaml
     - packages/gitea.yaml
     - packages/lights.yaml
+    - packages/mariadb_sensors.yaml
     - packages/openwrt.yaml
+    #- packages/zha.yaml
     # - packages/bvg.yaml
     # - packages/climate.yaml
   tags:
     - hass-config
     - hass-packages
+    - hass-core-packages
     - hass-core-config
+  when:
+    - (hass_package is not defined) or item.startswith("packages/" + hass_package) or item.startswith(hass_package)
 
 - name: copy macros
   copy:
-    src: "macros/{{ item }}"
-    dest: "{{ systemuserlist.hass.home }}/home-assistant/config/custom_templates/{{ item }}"
+    src: "macros/{{ item }}.jinja"
+    dest: "{{ systemuserlist.hass.home }}/home-assistant/config/custom_templates/{{ item }}.jinja"
     mode: 0644
     owner: "{{ systemuserlist.hass.uid }}"
     group: "{{ systemuserlist.hass.gid }}"
-  notify: restart hass container
+  notify:
+    - restart hass container
   with_items:
-    - remotes_zwave.jinja
-    - formatting.jinja
-    - triggers.jinja
-    - weather.jinja
+    - private_ble
+    - remotes_zwave
+    - remotes_zha
+    - formatting
+    - triggers
+    - weather
   tags:
     - hass-config
     - hass-packages
@@ -183,14 +293,16 @@
     mode: 0644
     owner: "{{ systemuserlist.hass.uid }}"
     group: "{{ systemuserlist.hass.gid }}"
-  notify: restart hass container
+  notify:
+    - restart hass container
   with_items:
     - adaptive_lighting.yaml
     - air_temps.yaml
     - audio.yaml
-    #- battery.yaml
     - broadlink.yaml
     - camera.yaml
+    - cups.yaml
+    - entities.yaml
     - doorbell.yaml
     - electric.yaml
     - fans.yaml
@@ -204,10 +316,10 @@
     - nad_c370.yaml
     - internet_online.yaml
     - occupancy.yaml
-    - potato.yaml
     - proxy_entities.yaml
     - remotes.yaml
     - smoke_detectors.yaml
+    - sudo_is.yaml
     - skylight.yaml
     - study.yaml
     - switches.yaml
@@ -216,7 +328,10 @@
     - vacuum_robot.yaml
     - washing_machine.yaml
     - weather.yaml
-    # - nad_c370.yaml
+    - zigbee2mqtt.yaml
+    #- battery.yaml
+    #- potato.yaml
+    #- nad_c370.yaml
   tags:
     - hass-config
     - hass-packages
@@ -233,14 +348,16 @@
     mode: 0644
     owner: "{{ systemuserlist.hass.uid }}"
     group: "{{ systemuserlist.hass.gid }}"
-  notify: restart hass container
+  notify:
+    - restart hass container
   with_items:
-    #- air_quality.yaml
     - morning_alarm.yaml
     - bathroom.yaml
     - tgtg.yaml
     - private_package.yaml
     - persons.yaml
+    #- air_quality.yaml
+    #- trash_collection.yaml
   tags:
     - hass-config
     - hass-package
@@ -250,29 +367,7 @@
     - hass-core-config
     - hass-core-packages
   when:
-    - (hass_private_package is not defined) or item.startswith(hass_private_package)
-
-- name: remove config files
-  file:
-    path: "{{ systemuserlist.hass.home }}/home-assistant/config/{{ item }}"
-    state: absent
-  notify: restart hass container
-  loop_control:
-    label: "{{ item }}"
-  with_items:
-    - packages/apple_tv.yaml
-    - packages/toothbrush.yaml
-    - packages/bvg.yaml
-    - mini.yaml
-    - ui-test.yaml
-    - card_room.yaml
-    - packages/buttons.yaml
-    - custom_templates/buttons_zwave.jinja
-  tags:
-    - hass-config
-    - hass-package
-    - hass-packages
-    - hass-core-config
+    - (hass_package is not defined) or item.startswith(hass_package)
 
 - name: copy dashboard config file (disabled, removed in another task)
   copy:
@@ -281,7 +376,8 @@
     mode: 0644
     owner: "{{ systemuserlist.hass.uid }}"
     group: "{{ systemuserlist.hass.gid }}"
-  notify: restart hass container
+  notify:
+    - restart hass container
   when: false
   with_items:
     - mini.yaml
@@ -290,17 +386,6 @@
   tags:
     - hass-config
     - hass-core-config
-
-- name: install git sync script
-  template:
-    src: git-hass-config.sh.j2
-    dest: /usr/local/bin/git-hass-config.sh
-    mode: 0775
-    owner: hass
-    group: hass
-  notify: git-hass-config.sh
-  tags:
-    - hass-git
 
 - name: copy scripts
   copy:
@@ -314,18 +399,6 @@
   tags:
     - hass-scripts
     - scripts
-
-- name: cron file
-  template:
-    src: hass-cron.j2
-    dest: /etc/cron.d/hass
-    owner: root
-    group: root
-    mode: 0640
-  tags:
-    - cron
-    - hass-cron
-    - hass-git
 
 # key source:
 # - http://download.ag-projects.com/agp-debian-gpg.key
@@ -385,6 +458,11 @@
 - name: install packages
   apt:
     name:
+      # avahi-browse is in avahi-utils, which also installs avahi-daemon
+      #- avahi-utils
+      #- avahi-daemon
+      #- avahi-discover
+      #- avahi-dnsconfd
       - arp-scan
       - ustreamer
       - vlc
@@ -452,6 +530,12 @@
         source: "{{ systemuserlist.hass.home }}/home-assistant/config"
         target: /config
       - type: bind
+        source: "{{ systemuserlist.hass.home }}/home-assistant/zha"
+        target: /zha
+      - type: bind
+        source: "/srv/homeassistant_backups"
+        target: "/config/backups/"
+      - type: bind
         source: "{{ systemuserlist.hass.home }}/.config"
         target: /.config
       - type: bind
@@ -463,6 +547,12 @@
       - type: bind
         source: "{{ systemuserlist.hass.home }}/.homeassistant"
         target: /.homeassistant
+      - type: bind
+        source: "{{ systemuserlist.hass.home }}/home-assistant/notify"
+        target: "{{ systemuserlist.hass.home }}/home-assistant/notify"
+      - type: bind
+        source: "{{ systemuserlist.hass.home }}/home-assistant/inputs"
+        target: "{{ systemuserlist.hass.home }}/home-assistant/inputs"
       - type: bind
         source: "{{ systemuserlist.hass.home }}/home-assistant/media"
         target: /usr/var/media
@@ -501,3 +591,11 @@
     - hass-core-container
     - docker-containers
   register: hass_container
+
+- import_tasks: health_check.yml
+  tags:
+    - hass-container
+    - hass-core-container
+    - hass-core-healthcheck
+    - docker-containers
+

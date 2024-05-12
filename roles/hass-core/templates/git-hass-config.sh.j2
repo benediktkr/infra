@@ -3,11 +3,13 @@
 set -e
 
 NAME_REPO="{{ hass_config_repo_name }}"
-
 PATH_REPO="{{ systemuserlist.hass.home }}/git/${NAME_REPO}"
-PATH_HASS="{{ systemuserlist.hass.home }}/home-assistant"
+PATH_HASS_HOME="{{ systemuserlist.hass.home }}"
+REPO_SUBDIRS="home-assistant zwavejs appdaemon esphome deconz zigbee2mqtt utils"
 
-export GIT_SSH_COMMAND="ssh -i ~/.ssh/${NAME_REPO}"
+shopt -s expand_aliases
+alias git="git -C $PATH_REPO"
+
 
 cd $PATH_REPO
 
@@ -22,39 +24,27 @@ if ! grep -q "secrets.y[a]ml" ${PATH_REPO}/.gitignore; then
     exit 3
 fi
 
+for item in $REPO_SUBDIRS; do
+    mkdir -p ${PATH_REPO}/${item}
+done
 
-mkdir -p ${PATH_REPO}/home-assistant
-mkdir -p ${PATH_REPO}/home-assistant/config/
-mkdir -p ${PATH_REPO}/home-assistant/config/.storage
-
-{% for item in hass_config_repo_cp_files -%}
-cp -a ${PATH_HASS}/config/{{ item }} ${PATH_REPO}/home-assistant/config/{{ item }}
-{% endfor %}
-
-{% for item in hass_config_repo_cp_dirs -%}
-cp -ra ${PATH_HASS}/config/{{ item }}/ ${PATH_REPO}/home-assistant/config/{{ item }}/
-{% endfor %}
-
-{% for item in hass_config_repo_cp_globs -%}
-{% set dest_dir = item.split('/')[:-1] | join("/") %}
-cp -ra ${PATH_HASS}/config/{{ item }} ${PATH_REPO}/home-assistant/config/{{ dest_dir }}
-{% endfor %}
-
-set +e
-
-{% for item in hass_config_repo_rm -%}
-git rm -rf ${PATH_REPO}/home-assistant/config/{{ item }} &> /dev/null
-{% endfor %}
 
 set -e
+
+rsync -rah --numeric-ids --delete-after --safe-links --quiet --exclude-from=$PATH_REPO/.gitignore $PATH_HASS_HOME/zwavejs/ $PATH_REPO/zwavejs/
+/usr/local/bin/format-json.py --indent 2 zwavejs/data/nodes.json
+/usr/local/bin/format-json.py --indent 2 zwavejs/data/settings.json
+
+git add zwavejs/
+
 if test -n "$(git status --porcelain)" ; then
-    git add home-assistant/config/ > /dev/null
-    git commit -m "home-assistant/config updated" > /dev/null
+    git commit -m "updated" > /dev/null
 fi
 
-git pull --quiet --rebase
-git push origin main --quiet 2> /dev/null
-#git push test main --force
+#git add $REPO_SUBDIRS > /dev/null
 
+git pull --quiet --rebase
+#git push origin main --quiet 1>/dev/null
+#git push test main --force
 
 # TODO: copy changes from git

@@ -51,6 +51,7 @@
     mode: 0644
     owner: www-data
     group: www-data
+  no_log: true
 
 - name: template nginx vhosts for hass and friends
   template:
@@ -63,6 +64,8 @@
     - hass
     - zwavejs
     - valetudo
+  when:
+    - item in hass_nginx_vhosts
   tags:
     - nginx
     - hass-nginx
@@ -84,6 +87,8 @@
     owner: root
     group: root
     mode: 0644
+  when:
+    - hass_grafana_proxy_vhost == true
   tags:
     - nginx
     - grafana-proxy-nginx

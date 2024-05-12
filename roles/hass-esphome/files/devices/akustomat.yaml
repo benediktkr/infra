@@ -4,7 +4,8 @@ substitutions:
   uher_name: "UHER Akustomat F411"
 
 packages:
-  board: !include ../packages/boards/esp32s2mini.yaml
+  board: !include ../packages/boards/esp32c3supermini.yaml
+  #board: !include ../packages/boards/esp32s2mini.yaml
   esphome: !include ../packages/common/esphome.yaml
   network: !include ../packages/common/network.yaml
   http_server: !include ../packages/common/http_server.yaml
@@ -16,26 +17,37 @@ packages:
     vars:
       ledc_name: "${uher_name} Indicator S"
       ledc_id: indicator_s
-      ledc_gpio: GPIO21
+      ledc_gpio: GPIO3
   binary_sensor_indicator_s: !include
     file: ../packages/sensors/binary_gpio.yaml
     vars:
       binary_sensor_gpio_name: "${uher_name} Indicator S"
-      binary_sensor_gpio: GPIO17
-  switch_indicator_s: !include
-    file: ../packages/switch/binary_gpio.yaml
-    vars:
-      binary_switch_gpio_name: "${uher_name} Indicator S"
-      binary_switch_gpio: GPIO17
+      binary_sensor_gpio: GPIO2
+      binary_sensor_gpio_inverted: "true"
+  #switch_indicator_s: !include
+  #  file: ../packages/switch/binary_gpio.yaml
+  #  vars:
+  #    binary_switch_gpio_name: "${uher_name} Indicator S"
+  #    binary_switch_gpio: GPIO2
 
+
+# GPIO 2: Binary sensor (button)
+# GPIO 3: LED PWM
+# GPIO 4: ADC
 
 esphome:
   comment: "${uher_name}"
+logger:
+  level: WARN
 
 sensor:
   - platform: adc
     id: akustomat_adc
-    pin: GPIO09
+    pin:
+      number: GPIO4
+      mode:
+        input: true
+        pulldown: true
     name: "${hostname} ADC Voltage"
     update_interval: 0.05s
     attenuation: "auto"
@@ -45,7 +57,9 @@ sensor:
     unit_of_measurement: V
     accuracy_decimals: 3
     filters:
-      - delta: 0.003
+      #- debounce: 0.1s
+      #- delta: 0.003
+      - delta: 0.006
 
   - platform: copy
     id: akustomat_volume
@@ -63,15 +77,38 @@ sensor:
           else if (x > 100) return 100;
           return int(x);
       - lambda: !lambda |-
-          int max_vol = id(max_volume).state;
-          return int(x/100*max_vol);
+          int volume_limit = id(tmpl_volume_limit).state;
+          return int(x/100*volume_limit);
       - delta: 1.0
-      #- debounce: 1s
+      - debounce: 0.001s
       #- throttle: 5s
       #- heartbeat: 3600s
+    on_value:
+      then:
+        - if:
+            condition:
+              light.is_on: indicator_s
+            then:
+              - light.turn_on:
+                  id: indicator_s
+                  transition_length: 0.001s
+                  brightness: !lambda |-
+                    return min(x+10.0, 100.0)/100.0;
+        # - if:
+        #     condition:
+        #       binary_sensor.is_on: owntone_volume_synced
+        #     then:
+        #       - homeassistant.service:
+        #           service: media_player.volume_set
+        #           data:
+        #             volume_level: !lambda |-
+        #               return x;
+        #           target:
+        #             entity_id: media_player.owntone_server
 
   - platform: copy
     source_id: akustomat_volume
+    id: akustomat_volume_level
     name: "${uher_name} Volume level"
     device_class: ""
     unit_of_measurement: ""
@@ -110,9 +147,17 @@ binary_sensor:
             condition:
               binary_sensor.is_on: owntone_volume_synced
             then:
-              - light.turn_on: indicator_s
+              - light.turn_on:
+                  id: indicator_s
+                  transition_length: 0.5s
+                  brightness: !lambda |-
+                    auto vol = id(akustomat_volume).state;
+                    return min(vol+10.0, 100.0)/100.0;
             else:
-              - light.turn_off: indicator_s
+              - light.turn_off:
+                  id: indicator_s
+                  transition_length: 0.001s
+
 
   - platform: homeassistant
     internal: false
@@ -142,8 +187,8 @@ text_sensor:
 
 number:
   - platform: template
-    id: "max_volume"
-    name: "${hostname} Max Volume"
+    id: "tmpl_volume_limit"
+    name: "${hostname} Volume limit"
     min_value: 1
     max_value: 100
     initial_value: 100

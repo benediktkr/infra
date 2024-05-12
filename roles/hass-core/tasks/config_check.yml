@@ -1,0 +1,41 @@
+---
+
+- name: Home Asssistant config check
+  uri:
+    url: "https://{{ hass_url }}/api/config/core/check_config"
+    method: POST
+    #status_code: 200
+    validate_certs: true
+    headers:
+      Authorization: "Bearer {{ hass_ansible_token }}"
+      Content-Type: application/json
+    return_content: true
+  check_mode: false
+  register: hass_config_check
+  until:
+    - hass_config_check.status == 200
+  #  - hass_config_check.status != 502
+  #  - hass_config_check.json is defined
+  #  - hass_config_check.json.result is defined
+  retries: 300
+  delay: 1
+  failed_when:
+    - hass_config_check is failed
+    - hass_config_check.status not in [200, 502]
+    - hass_config_check.json.result != "valid" or hass_config_check.json.result == "invalid"
+
+- name: Show Home Assistant config check response
+  debug:
+    var: config_check_results
+  vars:
+    config_check_results:
+      attemps: "{{ hass_health_check.attempts }}"
+      changed: "{{ hass_health_check.changed }}"
+      failed: "{{ hass_health_check.failed }}"
+      json: "{{ hass_health_check.json }}"
+      redirected: "{{ hass_health_check.redirected }}"
+      server: "{{ hass_health_check.server }}"
+      status: "{{ hass_health_check.status }}"
+      url: "{{ hass_health_check.url }}"
+
+

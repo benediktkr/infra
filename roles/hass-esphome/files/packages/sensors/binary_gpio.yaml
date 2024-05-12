@@ -1,12 +1,15 @@
 ---
 
 substitutions:
+  # fucking yaml..
   binary_sensor_gpio_pullup: "true"
+  binary_sensor_gpio_inverted: "false"
 
 binary_sensor:
   - platform: gpio
     pin:
       number: "${binary_sensor_gpio}"
+      inverted: ${binary_sensor_gpio_inverted}
       mode:
         input: true
         pullup: ${binary_sensor_gpio_pullup}

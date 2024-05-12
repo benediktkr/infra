@@ -1,12 +1,35 @@
 ---
+homeassistant:
+  customize:
+    package.node_anchors:
+      package_name: &package_name "gitea"
+      common_attrs: &common_attrs
+        package: *package_name
+      common_attrs_templated: &common_attrs_templated
+        templated: true
+        <<: *common_attrs
+
+    {% for gitea in hass_gitea -%}
+    {%   for item in gitea.repos -%}
+    {%-    set repo = item.repo.replace('-', '_').replace('.', '_') -%}
+    {%-    set org = item.org.replace('-', '_').replace('.', '_') -%}
+    sensor.gitea_{{ repo }}:
+      friendly_name: "{{ item.org }}/{{ item.repo }}"
+      gitea_server: "{{ gitea.server }}"
+      unique_id: "{{ gitea.server.replace('.', '_') }}_{{ org }}_{{ repo }}"
+      <<: *common_attrs
+    {%   endfor %}
+    {% endfor %}
 
 sensor:
+  {% for gitea in hass_gitea -%}
   - platform: gitea
-    token: !secret gitea_token
-    host: {{ gitea_url }}
+    token: !secret gitea_token_{{ gitea.server.replace('.', '_') }}
+    host: {{ gitea.server }}
     protocol: https
     port: 443
     repositories:
-      {% for item in hass_gitea_repos -%}
-      - path: '{{ item.name }}'
+      {% for item in gitea.repos -%}
+      - path: '{{ item.org }}/{{ item.repo }}'
       {% endfor %}
+  {% endfor %}

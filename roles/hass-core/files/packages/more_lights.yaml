@@ -9,6 +9,11 @@ homeassistant:
         <<: *common_attrs
       zigbee_attrs: &zigbee_attrs
         proto: "Zigbee"
+        integration: "zigbee2mqtt"
+        <<: *common_attrs
+      zha_attrs: &zha_attrs
+        proto: "Zigbee"
+        integration: "zigbee2mqtt"
         <<: *common_attrs
 
       binary_sensor_manual_light: &binary_sensor_manual_light
@@ -117,9 +122,17 @@ homeassistant:
     sensor.electric_w_light_livingroom_ceiling:
       friendly_name: "Livingroom Ceiling light Electric [W]"
       <<: *zwave_attrs
+    sensor.ok_tx_per_min_light_livingroom_ceiling:
+      friendly_name: "Livingroom Ceiling light Successful commands/min (TX)"
+      <<: *zwave_attrs
     sensor.ok_rx_per_min_light_livingroom_ceiling:
       friendly_name: "Livingroom Ceiling light Successful commands/min (RX)"
       <<: *zwave_attrs
+
+    light.study_shelves:
+      friendly_name: Study MITTLED in shelves
+      icon: "mdi:library-shelves"
+      <<: *zha_attrs
 
     light.study_ceiling:
       friendly_name: "Study ceiling light"
@@ -187,15 +200,15 @@ switch:
     switches:
       light_bedroom_ceiling_enabled:
         icon_template: |
-          {{ state_attr("binary_sendor.light_bedroom_ceiling_disabled", "icon") }}
+          {{ state_attr("binary_sensor.light_bedroom_ceiling_disabled", "icon") }}
         availability_template: |
-          {{ has_value("binary_sendor.light_bedroom_ceiling_disabled") }}
+          {{ has_value("binary_sensor.light_bedroom_ceiling_disabled") }}
         value_template: |
-          {{ is_state("binary_sendor.light_bedroom_ceiling_disabled", "off") }}
+          {{ is_state("binary_sensor.light_bedroom_ceiling_disabled", "off") }}
         turn_on:
-          - service: script.disable_light_bedroom_ceiling
-        turn_off:
           - service: script.enable_light_bedroom_ceiling
+        turn_off:
+          - service: script.disable_light_bedroom_ceiling
 
 light:
   # legacy name, no time to go through and change right now
@@ -208,14 +221,14 @@ light:
     name: the_usual_lights
     unique_id: the usual_lights
     entities:
-      - light.livingroom_lamps
       - light.study_desk_lamp
-      - light.hallway_lamps
-      - light.livingroom_ceiling
-      - light.hallway_ceiling
-      - light.hallway_fairy
       - light.study_ceiling
       - light.study_shelves
+      - light.hallway_lamps
+      - light.hallway_ceiling
+      - light.hallway_fairy
+      - light.livingroom_lamps
+      - light.livingroom_ceiling
       - light.usb_led_string_1
 
 script:

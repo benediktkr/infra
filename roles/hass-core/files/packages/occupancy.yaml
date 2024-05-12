@@ -77,6 +77,10 @@ homeassistant:
       icon: mdi:desk
       proto: esphome
       <<: *common_attrs
+    binary_sensor.radar_livingroom_sofa:
+      icon: mdi:sofa
+      proto: esphome
+      <<: *common_attrs
 
     # legacy names, used in a bunch of autiomations.
     # the binary_sensor.radar_${room}_${placement} service this purpose now
@@ -91,6 +95,13 @@ homeassistant:
     # occupancy (study desk)
     binary_sensor.occupancy_study_desk:
       friendly_name: Desk occupancy
+      proto: esphome
+      legacy: true
+      templated: true
+      <<: *common_attrs
+    # occupancy (livingroom sofa)
+    binary_sensor.occupancy_livingroom_sofa:
+      friendly_name: Sofa occupancy
       proto: esphome
       legacy: true
       templated: true
@@ -121,34 +132,6 @@ template:
       - name: lightswitch_light_study
         <<: *binary_sensor_lightswitch_light
 
-  - trigger:
-      - platform: state
-        entity_id: binary_sensor.door_entrance
-        from: "off"
-        to: "on"
-    binary_sensor:
-      - unique_id: home_entry_2
-        name: home_entry_2
-        delay_off: "00:00:30"
-        icon: >-
-          {% if this.state is true %}
-          mdi:home-import-outline
-          {% else %}
-          mdi:home-outline
-          {% endif %}
-        state: >-
-          {{ is_state("binary_sensor.motion_hallway", "off") }}
-      - unique_id: home_exit_2
-        name: home_exit_2
-        delay_off: "00:00:30"
-        icon: >-
-          {% if this.state is true %}
-          mdi:home-export-outline
-          {% else %}
-          mdi:home-outline
-          {% endif %}
-        state: >-
-          {{ is_state("binary_sensor.motion_hallway", "on") }}
 
   - trigger:
       - platform: state
@@ -307,6 +290,20 @@ template:
         state: >-
           {{
             is_state("binary_sensor.radar_study_desk", "on")
+            and is_state("binary_sensor.home_somebody", "on")
+          }}
+
+      - name: occupancy_livingroom_sofa
+        icon: >-
+          {% if is_state(this.entity_id, 'on') %}
+          mdi:sofa
+          {% else %}
+          mdi:sofa-outline
+          {% endif %}
+        device_class: occupancy
+        state: >-
+          {{
+            is_state("binary_sensor.radar_livingroom_sofa", "on")
             and is_state("binary_sensor.home_somebody", "on")
           }}
 

@@ -1,7 +1,13 @@
 ---
 
 hass_zwavejs_ws_port: 3000
+hass_grafana_proxy_vhost: false
 
+hass_zigbee_enabled: false
 
+hass_nginx_vhosts:
+  - hass
+  - zwavejs
+  - valetudo
 
 

@@ -15,38 +15,31 @@ esp32:
 
 light:
   # only works with arduino framework
-  #- platform: neopixelbus
-  #  name: "${hostname} LED GPIO7"
-  #  id: esp_rgb_led
-  #  type: GRB
-  # variant: WS2812
-  #  method: ESP32_RMT_1
-  #  num_leds: 1
-  #  pin: GPIO7
-  #  effects:
-  #    - addressable_rainbow:
-  #        name: Rainbow Effect With Custom Values
-  #        speed: 10
-  #        width: 50 
-
   # doesnt need arduino framework, but i dont think gpio7 is an internal/builtin led
-  #- platform: status_led 
-  #  name: "${hostname} LED GPIO7"
-  #  id: esp_status_led_gpio7
-  #  icon: "mdi:alarm-light"
-  #  pin:
-  #    number: GPIO7
-  #    inverted: false
-  #  restore_mode: ALWAYS_OFF
-
-  - platform: status_led 
+  - platform: status_led
     name: "${hostname} Status LED"
-    id: esp_status_led_gpio8
+    id: esp_status_led
     icon: "mdi:alarm-light"
     pin:
       number: GPIO8
       inverted: true
     restore_mode: ALWAYS_OFF
+  # - platform: status_led
+  #   name: "${hostname} Status LED 2 (GPIO2)"
+  #   id: esp_status_led_2
+  #   icon: "mdi:alarm-light"
+  #   pin:
+  #     number: GPIO2
+  #     inverted: false
+  #   restore_mode: ALWAYS_OFF
+  # - platform: status_led
+  #   name: "${hostname} Status LED 3 (GPIO7)"
+  #   id: esp_status_led_3
+  #   icon: "mdi:alarm-light"
+  #   pin:
+  #     number: GPIO7
+  #     inverted: false
+  #   restore_mode: ALWAYS_OFF
 
 
 # https://www.reddit.com/r/esp32/comments/wn9dzx/update_esphome_on_c3/
