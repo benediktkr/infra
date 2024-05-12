@@ -1,0 +1,42 @@
+---
+
+dependencies:
+  - role: hass-ser2net
+    tags:
+      - hass-ser2net
+  - role: shell
+    tags:
+      - shell
+  - role: pihole
+    tags:
+      - pihole
+  - role: deadspace
+    tags:
+      - deadspace
+  - role: nfs
+    tags:
+      - nfs
+  - role: cups
+    tags:
+      - cups
+  - role: samba
+    tags:
+      - samba
+  - role: unifi
+    tags:
+      - unifi
+  #- role: homeaudio
+  #  tags:
+  #    - homeaudio
+  #
+  ## homeaudio/meta/main.yml dependencies:
+  #- role: airconnect
+  #  tags:
+  #    - airconnect
+  #- role: owntone
+  #  tags:
+  #    - owntone
+  #- role: navidrome
+  #  tags:
+  #    - navidrome
+
