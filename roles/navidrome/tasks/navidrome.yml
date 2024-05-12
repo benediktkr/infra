@@ -1,5 +1,14 @@
 ---
 
+- name: install mpv for jukebox
+  apt:
+    name:
+      - mpv
+    state: present
+    update_cache: true
+  tags:
+    - packages
+
 - name: create dir structure
   file:
     state: directory
