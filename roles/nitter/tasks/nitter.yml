@@ -66,7 +66,7 @@
 - name: nitter
   docker_container:
     name: nitter
-    image: zedeus/nitter
+    image: zedeus/nitter:latest
     restart_policy: "unless-stopped"
     auto_remove: false
     detach: true
