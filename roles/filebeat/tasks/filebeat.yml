@@ -3,24 +3,35 @@
 # there are no builds provied for armhf/armv7l (32 bit arm, e.g. raspberry pi 3), so we dont install filebeat then
 
 - debug:
-    var: ansible_architecture 
+    var: ansible_architecture
 
-- name: add apt key for elastic.co
-  apt_key:
-    url: https://artifacts.elastic.co/GPG-KEY-elasticsearch
-    state: present
-  when: 
+- name: copy elastic.co repo key
+  copy:
+    src: elasticsearch-keyring.asc
+    dest: /usr/share/keyrings/elasticsearch-keyring.asc
+    owner: root
+    group: root
+    mode: '0644'
+  when:
     - ansible_architecture != "armv7l"
   tags:
     - packages
 
-- name: add elastic.co repo
+- name: remove repo definition without 'signed-by'
   apt_repository:
     repo: "deb https://artifacts.elastic.co/packages/7.x/apt stable main"
+    state: absent
+    update_cache: false
+  tags:
+    - packages
+
+- name: add elastic.co repo with 'signed-by'
+  apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/elasticsearch-keyring.asc] https://artifacts.elastic.co/packages/7.x/apt stable main"
     state: present
     filename: elastic.co
     update_cache: true
-  when: 
+  when:
     - ansible_architecture != "armv7l"
   tags:
     - packages
@@ -30,7 +41,7 @@
     name:
       - filebeat
     state: latest
-  when: 
+  when:
     - ansible_architecture != "armv7l"
   tags:
     - packages
@@ -50,7 +61,7 @@
     owner: root
     group: root
     mode: 0600
-  when: 
+  when:
     - ansible_architecture != "armv7l"
   tags:
     - filebeat
@@ -62,7 +73,7 @@
     name: filebeat
     state: started
     enabled: true
-  when: 
+  when:
     - ansible_architecture != "armv7l"
   tags:
     - packages
