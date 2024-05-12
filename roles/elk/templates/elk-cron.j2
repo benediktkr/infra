@@ -1,7 +1,7 @@
 # {{ ansible_managed }}
 
 # m h dom mon dow
-30 7 * * * root /usr/bin/find {{ elk_root }}/logstash/logs/ -name "logstash_*.json" -maxdepth 1 -mtime +7 -type f -delete
+30 7 * * * root /usr/bin/find {{ elk_root }}/logstash/logs/ -name "logstash_*.json" -mtime +7 -type f -delete
 
 #30 7 * * * root /usr/bin/find {{ elk_root }}/logstash/logs/ -type f -mmin +2 -exec rm {} \;
 
