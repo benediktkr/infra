@@ -10,8 +10,8 @@ ListenPort = {{ wireguard_port }}
 PrivateKey = {{ lookup('file', 'private/wireguard/' + inventory_hostname ) }}
 #SaveConfig = true
 PostUp = /usr/local/bin/wg-post-up.sh
-{% if wireguard_dns -%}
-DNS = {{ pihole_dns }}
+{% if wireguard_dns and wg.dns|default(true) -%}
+DNS = {{ wireguard_dns_server | default(pihole_dns) }}
 {% endif %}
 
 {% if not wg.listen|default(false) %}
