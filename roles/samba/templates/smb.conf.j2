@@ -9,7 +9,7 @@
 {% endif %}
 
 {% set wg_interfaces = [wg_clients[inventory_hostname].ip] | default([]) %}
-{% set interfaces = [samba_interfaces, wg_interfaces, ansible_default_ipv4.address] | flatten | unique %}
+{% set interfaces = [samba_interfaces, wg_interfaces, ansible_default_ipv4.address] | flatten | unique | ansible.utils.ipaddr('private') %}
 
 #======================= Global Settings =======================
 
