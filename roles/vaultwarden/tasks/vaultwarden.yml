@@ -31,6 +31,7 @@
     host: 'localhost'
     priv: "{{ mariadb_db }}.*:ALL"
     login_unix_socket: /run/mysqld/mysqld.sock
+    column_case_sensitive: false
   with_items: "{{ vw_vaults }}"
   loop_control:
     label: "{{ mariadb_username}}@localhost: {{ mariadb_db }}"
@@ -48,6 +49,7 @@
     priv: "{{ mariadb_db }}.*:ALL"
     password: "{{ mariadb_pass }}"
     login_unix_socket: /run/mysqld/mysqld.sock
+    column_case_sensitive: false
   with_nested:
     - "{{ vw_vaults }}"
     - - "{{ ansible_default_ipv4.address }}"
@@ -88,7 +90,7 @@
     item_path: "{{ systemuserlist.vaultwarden.home }}/data/{{ item.name }}"
   with_items: "{{ vw_vaults }}"
 
-- name: template config for vaultwarden_ldap
+- name: template config for vaultwarden-ldap
   template:
     src: ldap-config.toml.j2
     dest: "{{ systemuserlist.vaultwarden.home }}/ldap/config.toml"
@@ -97,7 +99,7 @@
     mode: 0640
   tags:
     - vaultwarden-ldap
-  notify: restart vaultwarden_ldap
+  notify: restart vaultwarden-ldap
 
 - name: start vaultwarden containers
   docker_container:
@@ -128,6 +130,9 @@
       INVITATIONS_ALLOWED: "true"
       INVITATION_ORG_NAME: "{{ domain }}"
       SIGNUPS_ALLOWED: "false"
+      SIGNUPS_VERIFY: "true"
+      SIGNUPS_VERIFY_RESEND_TIME: "3600"
+      SIGNUPS_VERIFY_RESEND_LIMIT: "2"
       SIGNUPS_DOMAINS_WHITELIST: "{{ domain }}"
       LOG_FILE: "/data/{{ item.container_name }}.log"
       WEBSOCKET_ENABLED: "true"
@@ -156,9 +161,14 @@
     - vaultwarden-config
     - docker-containers
 
-- name: start vaultwarden_ldap container
+- name: stop old-name container
   docker_container:
     name: vaultwarden_ldap
+    state: absent
+
+- name: start vaultwarden-ldap container
+  docker_container:
+    name: vaultwarden-ldap
     image: vividboarder/vaultwarden_ldap
     restart_policy: "unless-stopped"
     auto_remove: false
@@ -185,7 +195,7 @@
     gid: "{{ systemuserlist.vaultwarden.gid }}"
   tags:
     - vaultwarden-containers
-    - vaultwarden_ldap-container
+    - vaultwarden-ldap-container
     - vaultwarden-ldap
     - docker-containers
 
