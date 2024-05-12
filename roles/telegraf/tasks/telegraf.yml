@@ -38,7 +38,7 @@
     name: humanize
     state: present
     virtualenv: /var/lib/virtualens/telegraf-scripts
-    virtualenv_site_packages: false 
+    virtualenv_site_packages: false
     virtualenv_command: python3 -m venv
   when: not ansible_check_mode
   tags:
@@ -93,10 +93,10 @@
     - influx-repo
     - packages
 
-- name: set codename to bullseye if bookworm
+- name: set codename to bullseye (oldstable) if trixie or bookwork
   set_fact:
     codename: bullseye
-  when: ansible_lsb.codename == "bookworm"
+  when: ansible_lsb.codename in ["bookworm", "trixie"]
   tags:
     - influx-repo
     - packages
@@ -104,7 +104,9 @@
 - name: set codename to focal if hirsute
   set_fact:
     codename: focal
-  when: ansible_lsb.codename == "hirsute"
+  when:
+   - false
+   - ansible_lsb.codename == "hirsute"
   tags:
     - influx-repo
     - packages
@@ -114,7 +116,8 @@
     codename: "{{ ansible_lsb.codename }}"
   when:
     - ansible_lsb.codename != "bookworm"
-    - ansible_lsb.codename != "hirsute"
+    - ansible_lsb.codename != "trixie"
+    #- ansible_lsb.codename != "hirsute"
   tags:
     - influx-repo
     - packages
