@@ -25,10 +25,12 @@ def renewed_cert(name):
         os.chmod(privkey, 0o640)
         shutil.chown(privkey, group="adm")
 
+        matrix_status_code = matrixmsg.send(f"cert: `{name}`")
+        if matrix_status_code not in [200, 201]:
+            print(f"matrixmsg error: {matrix_status_code}")
         print(f"renewed: {name}")
-        matrixmsg.send(f"cert: `{name}`")
     except FileNotFoundError:
-        matrixmsg.send(f"no files found for `{name}` in `RENEWED_DOAINS`")
+        matrixmsg.send(f"no files found for `{name}` in `RENEWED_DOMAINS`")
 
 
 def main():

@@ -11,16 +11,17 @@ def parse_args():
     parser.add_argument("fqdn", help="domain to request a cert for")
     parser.add_argument("--wildcard", action="store_true", help="wildcard cert")
     parser.add_argument("--www", action="store_true", help="include www.")
+    parser.add_argument("--dry-run", action="store_true")
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
-    return certbot_new(args.fqdn, wildcard=args.wildcard, www=args.www)
+    return certbot_new(args.fqdn, wildcard=args.wildcard, www=args.www, dry_run=args.dry_run)
 
 
 
-def certbot_new(fqdn, wildcard, www):
+def certbot_new(fqdn, wildcard, www, dry_run=False):
     dns_file = "dns-provider-domains.json"
     with open(f'/usr/local/etc/letsencrypt/{dns_file}', 'r') as f:
         domains = json.load(f)
@@ -29,14 +30,19 @@ def certbot_new(fqdn, wildcard, www):
     # and make 'domain' a list 'domains', and append/extend 'certbot_cmd'
     # with a -d for each.
 
-    dotted = fqdn.split('.')
-    domain = ".".join(dotted[1:])
+    if wildcard:
+        domain = fqdn
+    else:
+        dotted = fqdn.split('.')
+        domain = ".".join(dotted[1:])
 
     try:
         dns_provider = domains[domain]
     except KeyError:
-        print(f"domain '{domain}' not found in '{dns_file}'!")
+        print(f"[!] domain '{domain}' not found in '{dns_file}'!")
         sys.exit(2)
+
+    print(f"[ ] dns_provider: '{dns_provider}'")
 
     certbot_cmd = [
         "/usr/local/bin/certbot",
@@ -50,8 +56,12 @@ def certbot_new(fqdn, wildcard, www):
     if www:
         certbot_cmd.extend(["-d", f"www.{fqdn}"])
 
+    print("[>]", end=" ")
     print(" ".join(certbot_cmd))
 
+    if dry_run:
+        print("[<] This is a dry run, exiting without running command!")
+        return 0
     p = subprocess.run(certbot_cmd, check=True)
     return p.returncode
 
