@@ -7,6 +7,9 @@ Description=Pulseaudio sound server
 Before=sound.target
 
 [Service]
+# [pulseaudio] main.c: System mode refused for non-root user. Only starting the D-Bus server lookup service.
+#User=pulse
+#Group=pulse
 ExecStart=/usr/bin/pulseaudio --system --disallow-exit
 
 [Install]

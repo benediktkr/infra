@@ -19,7 +19,7 @@
     - name: fifo
 
 - name: create log dir (used when running as systemd service)
-  file: 
+  file:
     state: directory
     path: /var/log/owntone
     mode: '0775'
@@ -28,6 +28,21 @@
   tags:
     - owntone-log-dir
     - owntone-dirs
+
+- name: create pulseaudio dirs
+  file:
+    state: directory
+    path: "{{ item }}"
+    mode: '0644'
+    owner: root
+    group: root
+  loop_control:
+    label: "{{ item }}"
+  tags:
+    - owntone-pulseaudio
+  with_items:
+    - /etc/pulse/system.pa.d
+
 
 - name: ensure podcast audiobooks, and database dirs exists in {{ deadspace_root }}
   file:
@@ -154,12 +169,13 @@
     state: present
 
 - name: install owntone and pulseaudio
-  when: not owntone_docker 
+  when: not owntone_docker
   apt:
-    name: 
+    name:
       - owntone-server
       - pulseaudio
       - pulseaudio-dlna
+    update_cache: true
     state: latest
   tags:
     - owntone-packages
@@ -170,7 +186,7 @@
 # /etc/systemd/system/multi-user.target.wants/pulseaudio.service
 # /etc/systemd/user/default.target.wants/pulseaudio.service
 # /etc/systemd/user/sockets.target.wants/pulseaudio.socket
-- name: template systemd unit files for pulseaudio 
+- name: template systemd unit files for pulseaudio
   when: not owntone_docker
   template:
     src: "{{ item }}.j2"
@@ -178,7 +194,7 @@
     owner: root
     group: root
     mode: 0644
-  notify: systemctl daemon-reload 
+  notify: systemctl daemon-reload
   loop_control:
     label: "{{ item }}"
   with_items:
@@ -190,7 +206,7 @@
 
 - name: start and enable pulseaudio services
   when: not owntone_docker
-  service: 
+  service:
     name: "{{ item }}"
     state: started
     enabled: true
@@ -210,7 +226,7 @@
     name: owntone
     state: started
     enabled: true
-  tags: 
+  tags:
     - systemd
   register: owntone_service
 
@@ -301,6 +317,7 @@
   docker_container:
     name: owntone
     state: stopped
+  ignore_errors: true
 
 - name: clean up old config file
   file:

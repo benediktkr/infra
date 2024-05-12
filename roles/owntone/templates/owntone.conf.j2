@@ -1,4 +1,4 @@
-# ansible_managed
+# {{ ansible_managed }}
 
 
 general {
@@ -194,7 +194,7 @@ library {
     #m3u_overrides = false
 
     # Should iTunes metadata override ours?
-    itunes_overrides = {{ owntone_itunes_metadata_override | default(false) }}
+    itunes_overrides = {{ owntone_itunes_metadata_override | default(false) | string | lower }}
 
     # Should we import the content of iTunes smart playlists?
     #itunes_smartpl = false

@@ -7,8 +7,8 @@ Description=Pulseaudio DNLA service
 After=pulseadio.service
 
 [Service]
-User=pulse
-Group=pulse
+#User=pulse
+#Group=pulse
 ExecStart=/usr/bin/pulseaudio-dlna --disable-device-stop
 
 [Install]
