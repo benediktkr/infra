@@ -11,7 +11,7 @@ local-data: "{{ item.name }}. A {{ item.ip }}"
 # PTR Record
 #     local-data-ptr: "192.168.21.1 edge.s21.sudo.is."
 
-local-data-ptr: "{{ wg_clients[inventory_hostname]['ip'] | default(ansible_default_ipv4.address) }} {{ inventory_hostname }}."
+local-data-ptr: "{{ pihole_listen_addr }} {{ inventory_hostname }}."
 
 {% for name, ip in bridgewithdns.items() %}
 {% if name == "host" %}

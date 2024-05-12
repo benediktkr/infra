@@ -7,7 +7,11 @@ BLOCKINGMODE=NULL
 LOGFILE=/var/log/pihole/pihole-FTL.log
 MACVENDORDB=/macvendor.db
 
+{% if pihole_ipv6|default(true)|bool -%}
 RESOLVE_IPV6=yes
+{% else -%}
+RESOLVE_IPV6=no
+{% endif %}
 RESOLVE_IPV4=yes
 
 RATE_LIMIT=0/0
@@ -43,13 +47,8 @@ PIHOLE_PTR=NONE
  # the workaround is to set FTLCONF_LOCAL_IPV4 as an env var
  # see: https://github.com/pi-hole/docker-pi-hole/issues/1017
  #}
-{% if inventory_hostname in wg_clients %}
-LOCAL_IPV4={{ wg_clients[inventory_hostname]['ip'] }}
-BLOCK_ADDR4={{ wg_clients[inventory_hostname]['ip'] }}
-{% else %}
-LOCAL_IPV4={{ ansible_default_ipv4.address }}
-BLOCK_ADDR4={{ ansible_default_ipv4.address }}
-{% endif %}
+LOCAL_IPV4={{ pihole_listen_addr }}
+BLOCK_ADDR4={{ pihole_listen_addr }}
 
 
 

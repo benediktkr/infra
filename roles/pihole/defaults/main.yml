@@ -12,4 +12,5 @@ pihole_dhcp: false
 pihole_uid: '999'
 pihole_gid: '999'
 
-
+pihole_listen_addr: "{{ wg_clients[inventory_hostname]['ip'] | default(ansible_default_ipv4.address) }}"
+pihole_listen_addr_docker: "{{ pihole_listen_addr }}"

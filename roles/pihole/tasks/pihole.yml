@@ -3,12 +3,16 @@
 # authelia: https://github.com/linuxserver/reverse-proxy-confs/blob/master/pihole.subfolder.conf.sample
 # also has generally better reverse proxy config
 
+- debug:
+    var: pihole_listen_addr
+
 - name: systemd-resolved is started and enabled
   service:
     name: systemd-resolved
     state: started
     enabled: true
-  when: pihole_systemd_resolved|default(true)
+  when:
+   - pihole_systemd_resolved|default(true)
   tags:
     - systemd
 
@@ -234,9 +238,9 @@
   docker_container:
     name: "pihole"
     image: "pihole/pihole:latest"
-    auto_remove: no
-    detach: yes
-    pull: yes
+    auto_remove: false
+    detach: true
+    pull: true
     restart_policy: "always"
     state: started
     container_default_behavior: compatibility
@@ -255,7 +259,7 @@
       REV_SERVER_TARGET: "{{ pihole_rev_server_target|default('') }}"
       REV_SERVER_DOMAIN: "{{ pihole_rev_server_domain|default('') }}"
       REV_SERVER_CIDR: "{{ pihole_rev_server_cidr|default('') }}"
-      FTLCONF_LOCAL_IPV4: "{{ wg_clients[inventory_hostname]['ip'] | default(ansible_default_ipv4.address) }}"
+      FTLCONF_LOCAL_IPV4: "{{ pihole_listen_addr }}"
       WEBLOGS_STDOUT: "0"
     dns_servers:
       - "{{ bridgewithdns.unbound0 }}"
@@ -264,12 +268,11 @@
       - 127.0.0.1:53:53/udp
       - 127.0.0.1:53:53/tcp
       #- "{{ pihole_nginx_interface }}:53:53/udp"
-      - "{{ wg_clients[inventory_hostname]['ip'] | default(ansible_default_ipv4.address) }}:53:53/udp"
+      - "{{pihole_listen_addr_docker}}:53:53/udp"
       - 127.0.0.1:{{pihole_http_port}}:{{pihole_http_port}}
     hostname: "{{ inventory_hostname }}"
     network_mode: bridge
-    purge_networks: yes
-    networks_cli_compatible: yes
+    networks_cli_compatible: true
     # /var/log/pihole/pihole-FTL.log
     # add_message(type=7, message=/dev/shm) - SQL error step DELETE: database is locked
     shm_size: '2G'
