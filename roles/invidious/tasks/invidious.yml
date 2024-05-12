@@ -64,7 +64,7 @@
 - name: start container
   docker_container:
     name: invidious
-    image: quay.io/invidious/invidious:latest
+    image: git.sudo.is/ben/invidious:latest
     restart_policy: "unless-stopped"
     auto_remove: false
     detach: true
@@ -91,12 +91,20 @@
         channel_threads: 1
         check_tables: true
         feed_threads: 1
+        jobs:
+          clear_expired_items:
+            enabled: true
+          refresh_channels:
+            enabled: true
+          refresh_feeds:
+            enabled: true
         db:
           dbname: invidious
           user: invidious
           password: {{ systemuserlist.invidious.postgres_passwd }}
           host: 172.17.0.1
           port: 5432
+        use_pubsub_feeds: true
         hmac_key: {{ invidious_hmac_key }}
         admins:
           - {{ invidious_admin }}
@@ -105,11 +113,17 @@
         domain: {{ invidious_url }}
         external_port: 443
         statistics_enabled: true
-        registration_enabled: false
+        registration_enabled: true
         popular_enabled: false
         default_home: Subscriptions
         output: /var/log/invidious/invidious.log
         log_level: info
+        default_user_preferences:
+          dark_mode: true
+          autoplay: false
+          continue: false
+          video_loop: false
+          local: false
   tags:
     - invidious-container
     - docker-containers
