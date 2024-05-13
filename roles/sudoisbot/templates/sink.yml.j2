@@ -21,7 +21,7 @@ sink:
 mysql:
   host: "{{ mariadb_host }}"
   database: sink
-  user: sink
+  user: "{{ systemuserlist.sudoisbot.username }}"
   password: "{{ systemuserlist.sudoisbot.mariadb_pass }}"
 
 {# screen:
