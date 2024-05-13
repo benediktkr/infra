@@ -15,6 +15,11 @@ homeassistant:
       state_class: measurement
       device_class: data_size
       <<: *common_attrs
+    sensor.mariadb_database_sink_size:
+      friendly_name: MariaDB sink DB size
+      state_class: measurement
+      device_class: data_size
+      <<: *common_attrs
     sensor.mariadb_database_rows_states_meta:
       friendly_name: MariaDB table hass.states_meta
       state_class: measurement
@@ -47,12 +52,21 @@ sql:
     query: |
       SELECT count(*) AS value
       FROM {{ systemuserlist.hass.username }}.states_meta;
-    column: "value"
+    column: "{{ systemuserlist.hass.username }}"
     unit_of_measurement: rows
   # currently the 'states' table takes about 14 seconds
   #- name: mariadb_database_rows_states
   #  query: 'SELECT count(*) as value FROM {{ systemuserlist.hass.username }}.states;'
   #  column: "value"
+  - name: mariadb_database_sink_size
+    query: |
+        SELECT table_schema AS '{{ hass_sudoisbot_mariadb_name }}',
+               ROUND(SUM(data_length + index_length) / 1024 / 1024, 1) AS 'value'
+        FROM information_schema.tables
+        WHERE table_schema='{{ hass_sudoisbot_mariadb_name}}';
+    column: "value"
+    device_class: data_size
+    unit_of_measurement: MiB
 
 sensor:
   - platform: derivative
