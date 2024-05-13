@@ -58,15 +58,15 @@ sql:
   #- name: mariadb_database_rows_states
   #  query: 'SELECT count(*) as value FROM {{ systemuserlist.hass.username }}.states;'
   #  column: "value"
-  - name: mariadb_database_sink_size
-    query: |
-        SELECT table_schema AS '{{ hass_sudoisbot_mariadb_name }}',
-               ROUND(SUM(data_length + index_length) / 1024 / 1024, 1) AS 'value'
-        FROM information_schema.tables
-        WHERE table_schema='{{ hass_sudoisbot_mariadb_name}}';
-    column: "value"
-    device_class: data_size
-    unit_of_measurement: MiB
+  #- name: mariadb_database_sink_size
+  #  query: |
+  #      SELECT table_schema AS '{{ hass_sudoisbot_mariadb_name }}',
+  #             ROUND(SUM(data_length + index_length) / 1024 / 1024, 1) AS 'value'
+  #      FROM information_schema.tables
+  #      WHERE table_schema='{{ hass_sudoisbot_mariadb_name}}';
+  #  column: "value"
+  #  device_class: data_size
+  #  unit_of_measurement: MiB
 
 sensor:
   - platform: derivative
