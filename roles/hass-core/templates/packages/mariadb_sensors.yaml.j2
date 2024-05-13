@@ -52,7 +52,7 @@ sql:
     query: |
       SELECT count(*) AS value
       FROM {{ systemuserlist.hass.username }}.states_meta;
-    column: "{{ systemuserlist.hass.username }}"
+    column: "value"
     unit_of_measurement: rows
   # currently the 'states' table takes about 14 seconds
   #- name: mariadb_database_rows_states
