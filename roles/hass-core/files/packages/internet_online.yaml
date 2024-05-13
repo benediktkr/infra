@@ -693,16 +693,14 @@ template:
           {% endif %}
         state: |
           {{
-            not (
-              this.attributes.get("sudo_is_check", False)
-              or this.attributes.get("akamai_check", False)
-            )
+            this.attributes.get("sudo_is_check", False)
+            or this.attributes.get("akamai_check", False)
           }}
         attributes:
           akamai_check: |
-            {{ is_state("binary_sensor.internet_failover_akamai_check", "off") }}
+            {{ is_state("binary_sensor.internet_failover_akamai_check", "on") }}
           sudo_is_check: |
-            {{ is_state("binary_sensor.sudo_is_api_myip_check", "off") }}
+            {{ is_state("binary_sensor.sudo_is_api_myip_check", "on") }}
 
 
 
