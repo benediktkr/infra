@@ -3,6 +3,8 @@ homeassistant: true
 mqtt:
   base_topic: zigbee2mqtt
   server: {{ hass_zigbee2mqtt_mqtt }}
+  keepalive: 60
+  include_device_information: true
 serial:
 {% if hass_ser2net_zigbee == true %}
   port: tcp://{{ hass_ser2net_host.zigbee2mqtt }}:{{ hass_ser2net_port_zigbee }}
