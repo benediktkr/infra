@@ -254,6 +254,9 @@
       - ncdu
       - "{{ pkg_netcat_name |default('netcat') }}"
       - nethogs
+      - ifstat
+      - nload
+      - bmon
       - nmap
       - mergerfs
       - openssl
