@@ -93,3 +93,9 @@
     - nginx
     - grafana-proxy-nginx
   notify: reload nginx
+
+- name: ensure started
+  service:
+    name: nginx
+    state: started
+    enabled: true
