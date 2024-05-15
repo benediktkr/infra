@@ -148,6 +148,7 @@ sensor:
       - sensor.air_temperature_bedroom_motion_east
       - sensor.air_temperature_bedroom_door
       - sensor.air_temperature_bedroom_air_quality_sensor
+      # Is not actually in bedroom
       #- sensor.air_temperature_bedroom_smokealarm
 
   - platform: group
