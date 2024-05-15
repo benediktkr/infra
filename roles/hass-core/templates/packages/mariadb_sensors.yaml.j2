@@ -15,11 +15,11 @@ homeassistant:
       state_class: measurement
       device_class: data_size
       <<: *common_attrs
-    sensor.mariadb_database_sink_size:
-      friendly_name: MariaDB sink DB size
-      state_class: measurement
-      device_class: data_size
-      <<: *common_attrs
+    #sensor.mariadb_database_sink_size:
+    #  friendly_name: MariaDB sink DB size
+    #  state_class: measurement
+    #  device_class: data_size
+    #  <<: *common_attrs
     sensor.mariadb_database_rows_states_meta:
       friendly_name: MariaDB table hass.states_meta
       state_class: measurement
