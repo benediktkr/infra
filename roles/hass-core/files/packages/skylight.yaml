@@ -51,15 +51,35 @@ homeassistant:
       <<: *common_attrs
 
 
+script:
+  skylight_calibrate:
+    alias: skylight_calibrate
+    icon: "mdi:home-roof"
+    mode: single
+    sequence:
+      - service: select.select_last
+        metadata: {}
+        data: {}
+        target:
+          entity_id: select.skylight_forced_calibration
+
 input_boolean:
   skylight_lock:
     name: skylight_lock
+    icon: "mdi:home-roof"
+
+input_button:
+  skylight_calibrate:
+    # This sets friendly_name as 'Calibrate skylight' and entity id as 'input_button.skylight_calibrate'.
+    name: Calibrate skylight
+    icon: "mdi:home-roof"
 
 template:
 
   # see comments in weather.yaml
   - binary_sensor:
       - name: skylight_close_weather
+        unique_id: skylight_close_weather
         device_class: problem
         state: >-
           {{
@@ -70,18 +90,19 @@ template:
 
   - binary_sensor:
       - name: skylight_lock
-        icon: >-
+        unique_id: skylight_lock
+        icon: |
           {% if is_state("input_boolean.skylight_lock", "on") %}
           mdi:lock
           {% else %}
           mdi:lock-open-variant
           {% endif %}
-        availability: >-
+        availability: |
           {{
           states("input_boolean.skylight_lock") is defined
           and has_value("input_boolean.skylight_lock")
           }}
-        state: >-
+        state: |
           {{ is_state("input_boolean.skylight_lock", "on") }}
         attributes:
           source_entity_id: input_boolean.skylight_lock
@@ -93,7 +114,8 @@ template:
 
 
       - name: skylight_position
-        icon: >-
+        unique_id: skylight_position
+        icon: |
           {% if states("sensor.skylight_position") | int(0) > 0 %}
           mdi:electric-switch
           {% else %}
@@ -101,14 +123,14 @@ template:
           {% endif %}
         state_class: measurement
         unit_of_measurement: "%"
-        state: >-
+        state: |
           {% set source_id = state_attr(this.entity_id, "source_entity_id") or "" %}
           {{ state_attr(source_id, "current_position") }}
         attributes:
           source_entity_id: cover.flush_shutter
-          area_id: >-
+          area_id: |
             {{ area_id(state_attr(this.entity_id, "source_entity_id")) }}
-          area_name: >-
+          area_name: |
             {{ area_id(state_attr(this.entity_id, "source_entity_id")) }}
 
 
