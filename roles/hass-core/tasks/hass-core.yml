@@ -310,6 +310,7 @@
     - grow_lights.yaml
     - home.yaml
     - heating.yaml
+    - md.yaml
     - moosetv.yaml
     - more_lights.yaml
     - motion_sensor_hacks.yaml
@@ -496,6 +497,16 @@
     enabled: true
   tags:
     - hass-bluetooth
+
+# needed on debian
+- name: stop apparmor
+  service:
+    name: apparmor
+    enabled: false
+    state: stopped
+  tags:
+    - hass-apparmor
+    - apparmor
 
 # docker run --rm it --name hass -p 8123:8123 -e TZ=Etc/UTC -v
 # /home/ben/hass:/config --network=bridgewithdns

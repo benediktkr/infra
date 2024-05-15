@@ -1,0 +1,148 @@
+
+homeassistant:
+  customize:
+    package.node_anchors:
+      package_name: &package_name "md"
+      common_attrs: &common_attrs
+        package: *package_name
+        templated: true
+
+    sensor.md_audio_owntone_media_players:
+      friendly_name: "audio_owntone_media_players.md"
+      <<: *common_attrs
+
+    sensor.template_md_testing_media_players:
+      friendly_name: "testing_media_players.md"
+      owntone_server: "owntone_server"
+      <<: *common_attrs
+
+
+template:
+  - unique_id: md_audio
+    sensor:
+      - unique_id: owntone_media_players
+        name: md_audio_owntone_media_players
+        icon: |
+          mdi:cast-audio-variant
+        state: |
+          audio_owntone_media_player.md
+        attributes:
+          length: |
+            {{ this.attributes.get("md", "")|length }}
+          md: |
+            # `media_player` attrs
+
+            {%
+              set player_id = [
+                "owntone_mpd",
+                "owntone_server",
+                "owntone_output_fifo",
+                "owntone_output_bedroom",
+                "sonos_bedroom",
+                "dlna_bedroom",
+                "bedroom",
+              ] | map("regex_replace", "^", "media_player.")
+            -%}{%
+            set skip_attrs = [
+                "friendly_name",
+                "source_list",
+                "source",
+                "media_position",
+                "media_duration",
+                "media_track",
+                "media_title",
+                "media_artist",
+                "media_album_name",
+                "media_album_artist",
+                "media_content_type",
+                "media_content_id",
+                "media_position_updated_at",
+                "entity_picture",
+                "shuffle",
+                "repeat",
+                "supported_features",
+              ]
+            -%}{%
+              set n = 15
+            -%}
+
+            {% for item in player_id -%}
+            {% set attrs = states[item].attributes -%}
+            {% set friendly_name = attrs.get("friendly_name", item.entity_id) -%}
+            {% set title = attrs.get("media_title", "missing metadata").replace(" | ", " - ").split("?authSig=")[0] -%}
+            {% set pos = attrs.get("media_position", 0.0)|round(1) / attrs.get("media_duration", 1.0)|round(1) * 100 -%}
+            {% set img = attrs.get("entity_picture") -%}
+            {% set s = states(item) -%}
+            ## {{ friendly_name }}
+
+            State: `{{ states(item) }}` at {{ pos|round(0) }}%
+
+            {# /local/images/menu/play-16.png -#}
+            <ha-icon icon="mdi:{% if s == "playing" %}play{% else %}pause{% endif %}"></ha-icon> _{{ title }}_
+            <ha-icon icon="mdi:cast-audio-variant"></ha-icon> {{ attrs.get("media_content_type", "Audio item").capitalize() }} _{{ attrs.get("media_album_name") }}_ by _{{ attrs.get("media_artist") }}_.
+            <ha-icon icon="mdi:file"></ha-icon> `{{ attrs.get("media_content_id") }}`
+
+            {% if img -%}
+            <div style="text-align: center; margin-right: auto">
+              <img src="{{ img }}" width="66%">
+              <p>
+               <a href="https://hass.sudo.is{{ img }}">
+                 <code>
+                   {{ img.split("?")[0] }}
+                 </code>
+               </a>
+            </p>
+            </div>
+            {% endif %}
+
+            {% if attrs|length > 0 -%}
+            > | Attribute | Value     |
+            > |----------:|----------:|
+            {%   for k, v_ in attrs|items -%}
+            {%     if k not in skip_attrs -%}
+            {%       set v = v_ | string -%}
+            > | `{{ k }}`   | `{% if v|length>n %}...{% endif %}{{ v[-n:].strip() }}`
+            {%     endif -%}
+            {%   endfor %}
+            {% endif %}
+
+            {% endfor %}
+
+  - unique_id: md_testing
+    sensor:
+      - unique_id: media_players
+        icon: |
+          mdi:cast-audio-variant
+        #picture: |
+        #  {% set ot_server = this.attributes.get("owntone_server", "").strip() -%}
+        #  {% if ot_server|length>0 -%}
+        #  /api/media_player_proxy/media_player.{{ ot_server }}
+        #  {% endif %}
+        availability: |
+          {{ true }}
+        state: |
+          testing_media_players.yaml
+        attributes:
+          length: |
+            {{ this.attributes.get("md", "")|length }}
+          md: |
+            # OwnTone `media_player`
+
+            **NOTE**: this is a test card.
+
+            This sensor return a Markdown document
+            with info about audio `media_player`
+            entities, mostly for OwnTone.
+
+            To render this document in Home Assistant,
+            create a Markdown card, and template this
+            entity:
+
+            ```python
+            state_attr("sensor.template_md_testing_media_players", "md")
+            ```
+
+            This way, the template is rendered on the
+            backend instead of on the client. And it
+            is also kept in source control.
+

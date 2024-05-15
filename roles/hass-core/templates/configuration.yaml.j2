@@ -307,6 +307,8 @@ recorder:
       - sensor.edge_wan_in2
       - sensor.ics_1
     entity_globs:
+      - sensor.md_*
+      - sensor.template_md_*
       - sensor.whois_*_days_until_expiration
       - sensor.uptime_*
       - sensor.unifi_uptime_*
@@ -406,7 +408,9 @@ sensor:
   - platform: worldclock
     time_zone: America/Chicago
     name: Austin
-  #- platform: linux_battery
+  - platform: linux_battery
+    name: battery_level_system
+    system: linux
 
   # YAML config was removed :(
   # https://www.home-assistant.io/integrations/dwd_weather_warnings/
@@ -543,12 +547,10 @@ sonos:
     #advertise_addr: {{ local_ip }}
     advertise_addr: {{ ansible_default_ipv4.address }}
     # tells hass how to reach the sonos speakers
-    #hosts:
-    #  - sonos-bedroom.{{ inventory_hostname.split('.')[1:] | join(".") }}
-    #  - sonos-hallway.{{ inventory_hostname.split('.')[1:] | join(".") }}
-    #  - sonos-study.{{ inventory_hostname.split('.')[1:] | join(".") }}
-    #  - sonos-kitchen.{{ inventory_hostname.split('.')[1:] | join(".") }}
-    #  - sonos-livingroom.{{ inventory_hostname.split('.')[1:] | join(".") }}
+    hosts:
+      {% for item in hass_sonos.media_player_areas -%}
+      - sonos-{{ item }}.{{ inventory_hostname.split('.')[1:] | join(".") }}
+      {% endfor %}
 
 media_player:
   - platform: mpd

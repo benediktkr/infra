@@ -11,6 +11,9 @@ homeassistant:
         <<: *common_attrs
 
 
+    sensor.battery_level_system:
+      friendly_name: "System battery"
+      <<: *common_attrs
     sensor.battery_level_ben_phone:
       device_class: battery
       state_class: measurement
