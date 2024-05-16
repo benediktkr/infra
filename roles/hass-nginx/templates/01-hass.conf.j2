@@ -92,6 +92,9 @@ server {
        autoindex on;
        autoindex_exact_size off;
     }
+    location /_media/owntone/{{ hass_nginx_owntone_stream }} {
+        proxy_pass https://{{ owntone_url }}/{{ hass_nginx_owntone_stream }};
+    }
 
     #location = {{ nginx_podgrab_path }} {
     #    return 302 https://{{ hass_url }}{{ nginx_podgrab_path }};
