@@ -1,0 +1,13 @@
+---
+
+icecast_url: "localhost"
+icecast_baseurl: "/"
+icecast_auth:
+  source:
+    passwd: hackme
+  relay:
+    passwd: hackme
+  admin:
+    user: admin
+    passwd: hackme
+

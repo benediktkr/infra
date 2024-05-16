@@ -16,7 +16,9 @@ dependencies:
   - role: navidrome
     tags:
       - navidrome
-
+  - role: icecast
+    tags:
+      - icecast
 
 #  - role: podgrab
 #    tags:

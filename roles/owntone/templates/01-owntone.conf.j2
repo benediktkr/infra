@@ -78,6 +78,44 @@ server {
         proxy_pass http://{{ bridgewithdns.navidrome }}:4533;
     }
 
+    location {{ icecast_baseurl }}/ {
+        # https://stackoverflow.com/a/52284451
+        rewrite  ~*(ogg) https://{{ owntone_url }}{{ icecast_baseurl }}/ogg last;
+        rewrite  ~*([0-1][0-5]\d) https://{{ owntone_url }}{{ icecast_baseurl }}/128 last;
+        rewrite  ~*(?|([1][6-9]\d)|([2]\d\d)) https://{{ owntone_url }}{{ icecast_baseurl }}/192 last;
+        rewrite  ~*([3-9]\d\d) https://{{ owntone_url }}{{ icecast_baseurl }}/320 break;
+        #return  https://{{ owntone_url }}/320;
+
+        sub_filter_types text/xhtml text/xml text/css;
+        sub_filter 'href="/'  'href="{{ icecast_baseurl }}/';
+        sub_filter 'url(/'  'url({{ icecast_baseurl }}/';
+        sub_filter_once off;
+        sub_filter_last_modified on;
+        proxy_pass http://127.0.0.1:{{ icecast_port }}/;
+    }
+    location ~ ^{{ icecast_baseurl }}/(ogg|128|192|320)$ {
+        #proxy_bind $remote_addr transparent;
+        types        { }
+        default_type audio/mpeg;
+
+        #proxy_pass http://127.0.0.1:{{ icecast_port }};
+        proxy_pass http://127.0.0.1:{{ icecast_port }}/$1;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_pass_request_headers on;
+
+        #proxy_set_header Access-Control-Allow-Origin *;
+        proxy_set_header Range bytes=0-;
+        proxy_buffering off;
+        tcp_nodelay on;
+    }
+
     root /var/www/owntone/htdocs;
     location /ws {
          proxy_pass http://127.0.0.1:{{ owntone_port_ws }}/;

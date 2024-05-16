@@ -1,0 +1,29 @@
+---
+
+- name: install icecast
+  apt:
+    name:
+      - icecast2
+    state: latest
+  tags:
+    - packages
+
+- name: template config
+  template:
+    src: "{{ item }}.j2"
+    dest: "/etc/icecast2/{{ item }}"
+    owner: root
+    group: icecast
+    mode: '0640'
+  with_items:
+    - icecast.xml
+  notify:
+    - restart icecast
+  tags:
+    - icecast-config
+
+- name: start and enable service
+  service:
+    name: icecast2
+    state: started
+    enabled: true

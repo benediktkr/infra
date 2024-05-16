@@ -1,0 +1,6 @@
+---
+
+- import_tasks: icecast.yml
+  tags:
+    - icecast
+    - homeaudio
