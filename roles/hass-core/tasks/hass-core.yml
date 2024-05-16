@@ -476,6 +476,7 @@
       - podget
       - sqlite3
       - blink1  # git.sudo.is/ben/build-blink1
+      - python3-netdisco # python3 -m netdisco
       #- mosquitto
       # # sip tools
       # - python3-sipsimple
