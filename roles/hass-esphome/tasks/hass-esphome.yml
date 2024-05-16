@@ -87,22 +87,6 @@
     - hass-esphome-secrets
     - hass-esphome-data
 
-
-- name: template secrets file
-  template:
-    src: "secrets.yaml.j2"
-    dest: "{{ systemuserlist.hass.home }}/esphome/{{ item }}/secrets.yaml"
-    mode: "0750"
-    owner: hass
-    group: sudo
-  with_items:
-    - .secrets
-    - packages/common
-  tags:
-    - hass-esphome-config
-    - hass-esphome-secrets
-    - hass-esphome-data
-
 - name: copy boostrap files
   copy:
     src: bootstrap/{{ item }}
@@ -172,26 +156,6 @@
     - docker-esphome.sh
     - esphome.sh
     - esphome-ota-all.sh
-
-
-- name: template secerts
-  template:
-    src: "secrets.yaml.j2"
-    dest: "{{ systemuserlist.hass.home }}/esphome/{{ item.dest_dir }}/secrets.yaml"
-    mode: "0750"
-    owner: hass
-    group: sudo
-  loop_control:
-    label: "{{ item.dest_dir }} -- {{ item.comment }}"
-  with_items:
-    - dest_dir: config
-      comment: wrong location
-  tags:
-   - esphome-secrets
-   - esphome-config
-   - esphome-configs
-   - hass-esphome-config
-   - hass-esphome-configs
 
 - name: template esp config files
   template:
