@@ -34,13 +34,15 @@ template:
 
             {%
               set player_id = [
+                "apple_tv",
                 "owntone_mpd",
                 "owntone_server",
-                "owntone_output_fifo",
-                "owntone_output_bedroom",
+                "esphome_muse",
                 "sonos_bedroom",
                 "dlna_bedroom",
+                "owntone_output_bedroom",
                 "bedroom",
+                "owntone_output_fifo",
               ] | map("regex_replace", "^", "media_player.")
             -%}{%
             set skip_attrs = [
@@ -61,6 +63,7 @@ template:
                 "shuffle",
                 "repeat",
                 "supported_features",
+                "device_class",
               ]
             -%}{%
               set n = 15
@@ -99,11 +102,15 @@ template:
             > | Attribute | Value     |
             > |----------:|----------:|
             {%   for k, v_ in attrs|items -%}
-            {%     if k not in skip_attrs -%}
+            {%     if k not in skip_attrs or attrs.get("media_title") is none -%}
             {%       set v = v_ | string -%}
             > | `{{ k }}`   | `{% if v|length>n %}...{% endif %}{{ v[-n:].strip() }}`
             {%     endif -%}
             {%   endfor %}
+            {% endif %}
+
+            {% if attrs.get("media_title") is none -%}
+            _All available attributes are shown for this `media_player` entity, due to missing metadata._
             {% endif %}
 
             {% endfor %}
