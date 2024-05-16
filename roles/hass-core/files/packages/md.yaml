@@ -38,6 +38,7 @@ template:
                 "owntone_mpd",
                 "owntone_server",
                 "esphome_muse",
+                "vlcd",
                 "sonos_bedroom",
                 "dlna_bedroom",
                 "owntone_output_bedroom",
