@@ -65,11 +65,11 @@ template: !include templates.yaml
 #climate: !include climate.yaml
 
 device_tracker:
-  # - platform: bluetooth_tracker
-  #   #request_rssi: true
-  #   track_new_devices: true
-  #   new_device_defaults:
-  #     track_new_devices: true
+  - platform: bluetooth_tracker
+    #request_rssi: true
+    track_new_devices: true
+    new_device_defaults:
+      track_new_devices: true
   - platform: bluetooth_le_tracker
     # device tracker will only look for the following global settings
     # under the configuration of the first configured platform
