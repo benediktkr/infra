@@ -65,11 +65,17 @@ template: !include templates.yaml
 #climate: !include climate.yaml
 
 device_tracker:
-  - platform: bluetooth_tracker
-    #request_rssi: true
-    track_new_devices: true
-    new_device_defaults:
-      track_new_devices: true
+  # using this one for now: https://github.com/andriilahuta/hass-dbus-bluetooth-tracker/
+  # uses dbus, no autodiscovery (yay)
+  - platform: dbus_bluetooth_tracker
+    interval_seconds: 15
+    seen_interval_seconds: 60
+    consider_home: 90
+  #- platform: bluetooth_tracker
+  #  #request_rssi: true
+  #  track_new_devices: true
+  #  new_device_defaults:
+  #    track_new_devices: true
   - platform: bluetooth_le_tracker
     # device tracker will only look for the following global settings
     # under the configuration of the first configured platform
@@ -411,6 +417,7 @@ sensor:
   - platform: linux_battery
     name: battery_level_system
     system: linux
+    battery: 0
 
   # YAML config was removed :(
   # https://www.home-assistant.io/integrations/dwd_weather_warnings/
