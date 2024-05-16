@@ -3,12 +3,12 @@
 {% if inventory_hostname in wg_clients %}
 {# wireguard_cidr #}
 {# this should probably just be either the ip withuot the cidr block, or the ip with the cidr block, both only one of either, and one in each cidr block if used #}
-{% set wg_interfaces2 = [wg_clients[inventory_hostname].ip] %}
+{% set wg_interfaces = [wg_clients[inventory_hostname].ip] %}
 {% else %}
-{% set wg_interfaces2 = [] %}
+{% set wg_interfaces = [] %}
 {% endif %}
 
-{% set wg_interfaces = [wg_clients[inventory_hostname].ip] | default([]) %}
+{# set wg_interfaces = [wg_clients[inventory_hostname].ip] | default([]) #}
 {% set interfaces = [samba_interfaces, wg_interfaces, ansible_default_ipv4.address] | flatten | unique | ansible.utils.ipaddr('private') %}
 
 #======================= Global Settings =======================
