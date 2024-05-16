@@ -1,5 +1,7 @@
 ---
 
+hass_esphome_api_password: "foobar"
+hass_esphome_api_encryption_key: "{{ hass_esphome_api_key }}"
 hass_esphome_domain: "{{ inventory_hostname.split('.')[1:] | join('.') }}"
 hass_esphome_configs:
   - config: irrigation.yaml
@@ -37,7 +39,7 @@ hass_esphome_configs:
     enabled: false
   - config: irrigation-esp32.yaml
     name: esphome-irrigation
-    enabled: false  
+    enabled: false
     # since i currently have just one working s2 mini board
   - config: tespmini32.yaml
     templated_filename: tespmini32-2.yaml

@@ -17,7 +17,8 @@ esp32:
 logger:
 
 api:
-  password: "{{ hass_esphome_api_password }}"
+  encryption:
+    key: "{{ hass_esphome_api_key }}"
 
 ota:
   password: "{{ hass_esphome_ota_password }}"
