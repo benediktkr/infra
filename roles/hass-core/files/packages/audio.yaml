@@ -50,6 +50,7 @@ homeassistant:
 
     media_player.bedroom:
       friendly_name: Bedroom
+      entity_picture: https://www.sudo.is/img/icon-S38-Sonos-One-SL.png
       universal_media_player: true
       media_players:
         - media_player.owntone_server
@@ -58,6 +59,7 @@ homeassistant:
       <<: *common_attrs
     media_player.kitchen:
       friendly_name: Kitchen
+      entity_picture: https://www.sudo.is/img/icon-S21-Sonos-IKEA-SYMFONISK.png
       universal_media_player: true
       media_players:
         - media_player.owntone_server
@@ -74,6 +76,7 @@ homeassistant:
       <<: *common_attrs
     media_player.hallway:
       friendly_name: Hallway
+      entity_picture: https://www.sudo.is/img/icon-S12-Sonos-Play-1.png
       universal_media_player: true
       media_players:
         - media_player.owntone_server
