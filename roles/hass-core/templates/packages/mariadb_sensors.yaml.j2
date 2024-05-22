@@ -15,19 +15,14 @@ homeassistant:
       state_class: measurement
       device_class: data_size
       <<: *common_attrs
-    #sensor.mariadb_database_sink_size:
-    #  friendly_name: MariaDB sink DB size
-    #  state_class: measurement
-    #  device_class: data_size
-    #  <<: *common_attrs
     sensor.mariadb_database_rows_states_meta:
       friendly_name: MariaDB table hass.states_meta
       state_class: measurement
       <<: *common_attrs
-    #sensor.mariadb_database_rows_states:
-    #  friendly_name: MariaDB table hass.states
-    #  config_file: "configuration.yaml"
-    #  <<: *common_attrs
+    sensor.mariadb_database_rows_states:
+      friendly_name: MariaDB table hass.states
+      state_class: measurement
+      <<: *common_attrs
 
     sensor.mariadb_database_size_hourly:
       friendly_name: MariaDB hass DB size MiB/hour
@@ -55,18 +50,11 @@ sql:
     column: "value"
     unit_of_measurement: rows
   # currently the 'states' table takes about 14 seconds
-  #- name: mariadb_database_rows_states
-  #  query: 'SELECT count(*) as value FROM {{ systemuserlist.hass.username }}.states;'
-  #  column: "value"
-  #- name: mariadb_database_sink_size
-  #  query: |
-  #      SELECT table_schema AS '{{ hass_sudoisbot_mariadb_name }}',
-  #             ROUND(SUM(data_length + index_length) / 1024 / 1024, 1) AS 'value'
-  #      FROM information_schema.tables
-  #      WHERE table_schema='{{ hass_sudoisbot_mariadb_name}}';
-  #  column: "value"
-  #  device_class: data_size
-  #  unit_of_measurement: MiB
+  - name: mariadb_database_rows_states
+    query: |
+      SELECT count(*) AS value
+      FROM {{ systemuserlist.hass.username }}.states;
+    column: "value"
 
 sensor:
   - platform: derivative
@@ -82,5 +70,81 @@ sensor:
     unit_time: d
     time_window: "24:00:00"
 
+script:
+  01_recorder_purge:
+    alias: 01-recorder_purge
+    icon: mdi:database-minus-outline
+    description: |
+      Purges device_tracker entity states
+      older than 3d.
+    sequence:
+    - service: recorder.purge
+      data:
+        repack: true
+        apply_filter: true
+        keep_days: 10
+    mode: single
 
-
+  01_purge_glob_domain:
+    alias: 01-purge_glob_domain
+    icon: mdi:database-minus-outline
+    mode: single
+    sequence:
+    - if:
+      - condition: template
+        value_template: |
+          {% raw -%}
+          {{ are_you_sure != "i am sure" }}
+          {%- endraw +%}
+      then:
+      - stop: You were not sure
+        error: true
+      alias: fail if not sure
+    - service: recorder.purge_entities
+      data:
+        entity_globs: |
+          {% raw -%}
+          {# [purge_domain] | map("regex_replace", "$", '.*') | list #}
+          {% if "." in purge_domain -%}
+          {{ [purge_domain + "_*"] }}
+          {% else -%}
+          {{ [purge_domain + ".*"] }}
+          {% endif %}
+          {%- endraw +%}
+        keep_days: |
+          {% raw -%}
+          {{ keep_days|default(3) }}
+          {%- endraw +%}
+      enabled: true
+    - service: script.00_recorder_repack
+      data: {}
+    fields:
+      are_you_sure:
+        selector:
+          select:
+            options:
+            - are you sure?
+            - i am sure
+        name: Are you sure?
+        description: Are you sure?
+        required: true
+      keep_days:
+        selector:
+          number:
+            min: 0
+            max: 10
+            step: 1
+        name: keep_days
+        required: true
+        default: 1
+      purge_domain:
+        selector:
+          select:
+            options:
+            - media_player
+            - device_tracker
+            - device_tracker.nmap
+            - device_tracker.unifi
+        name: purge_domain
+        required: true
+        description: Domain
