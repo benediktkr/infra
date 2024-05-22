@@ -10,27 +10,27 @@ homeassistant:
         <<: *common_attrs
 
     sensor.inputs:
-      friendly_name: inputs
+      friendly_name: "{{ systemuserlist.hass.home }}/home-assistant/inputs"
       host_path: "{{ systemuserlist.hass.home }}/home-assistant/inputs"
       docker_path: "{{ systemuserlist.hass.home }}/home-assistant/inputs"
       <<: *common_attrs
     sensor.notify:
-      friendly_name: notify
+      friendly_name: "{{ systemuserlist.hass.home }}/home-assistant/notify"
       host_path: "{{ systemuserlist.hass.home }}/home-assistant/notify"
       docker_path: "{{ systemuserlist.hass.home }}/home-assistant/notify"
       <<: *common_attrs
     sensor.media:
-      friendly_name: media
+      friendly_name: "{{ systemuserlist.hass.home }}/home-assistant/media"
       host_path: "{{ systemuserlist.hass.home }}/home-assistant/media"
       docker_path: "/usr/var/media"
       <<: *common_attrs
     sensor.config:
-      friendly_name: config
+      friendly_name: "{{ systemuserlist.hass.home }}/home-assistant/config"
       host_path: "{{ systemuserlist.hass.home }}/home-assistant/config"
       docker_path: "/config"
       <<: *common_attrs
     sensor.backups:
-      friendly_name: backups
+      friendly_name: "/srv/homeassistant_backups"
       host_path: "/srv/homeassistant_backups"
       docker_path: "/config/backups"
       <<: *common_attrs

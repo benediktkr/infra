@@ -76,7 +76,7 @@ script:
   media_player_tv_livingroom_turn_off:
     icon: "mdi:television-off"
     mode: single
-    description: >-
+    description: |
       used for the turn_off service of media_player.tv_livingroom
       to be able to eecute more than one command.
     sequence:
@@ -102,7 +102,7 @@ script:
   media_player_tv_livingroom_turn_on:
     icon: "mdi:television"
     mode: single
-    description: >-
+    description: |
       used for the turn_on service of media_player.tv_livingroom
       to by able to execute more than one command.
     sequence:
@@ -135,7 +135,8 @@ script:
 
       - service: media_player.select_source
         data:
-          source: Line-In
+          # name is from "sonos favorite"
+          source: Line-in
         target:
           entity_id: media_player.sonos_livingroom
       - wait_template: |
