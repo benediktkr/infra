@@ -1,4 +1,5 @@
 ---
-
+owntone_airplay: []
+owntone_fifo: []
 owntone_docker: false
 bonob_port: 3005

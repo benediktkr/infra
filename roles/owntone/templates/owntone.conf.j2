@@ -312,16 +312,18 @@ audio {
 
 # Pipe output
 # Allows OwnTone to output audio data to a named pipe
+{% for item in owntone_fifo -%}
 fifo {
-    nickname = "fifo"
+    nickname = "{{ item.name }}"
     # placed outside of library
     {% if owntone_docker -%}
     path = "/fifo/output.fifo"
     {% else -%}
-    path = "{{ owntone_path }}/fifo/output.fifo"
+    path = "{{ owntone_path }}/fifo/{{ item.named_pipe }}"
     {% endif %}
 
 }
+{% endfor %}
 
 # AirPlay settings common to all devices
 #airplay_shared {
