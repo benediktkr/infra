@@ -81,6 +81,22 @@ homeassistant:
         - media_player.sonos_hallway
       <<: *common_attrs
 
+    media_player.dlna_bedroom:
+      entity_picture: https://www.sudo.is/img/icon-S38-Sonos-One-SL.png
+      <<: *common_attrs
+    media_player.dlna_hallway:
+      entity_picture: https://www.sudo.is/img/icon-S12-Sonos-Play-1.png
+      <<: *common_attrs
+    media_player.dlna_kitchen:
+      entity_picture: https://www.sudo.is/img/icon-S21-Sonos-IKEA-SYMFONISK.png
+      <<: *common_attrs
+    media_player.dlna_livingroom:
+      entity_picture: https://www.sudo.is/img/icon-ZP90-Sonos-Connect.png
+      <<: *common_attrs
+    media_player.dlna_study:
+      entity_picture: https://www.sudo.is/img/icon-ZP120-Sonos-Connect-Amp.png
+      <<: *common_attrs
+
     media_player.sonos_bedroom:
       entity_picture: https://www.sudo.is/img/icon-S38-Sonos-One-SL.png
       <<: *common_attrs
