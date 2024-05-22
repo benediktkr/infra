@@ -1,3 +1,46 @@
 ---
- - import_tasks: users.yml
-   tags: users
+
+- name: whoami
+  command: whoami
+  register: w
+  changed_when: false
+  tags:
+    - users
+    - whoami
+
+- name: whoami become
+  command: whoami
+  become: true
+  register: wb
+  changed_when: false
+  tags:
+    - users
+    - whoami
+
+- name: whoami become user
+  command: whoami
+  become: true
+  become_user: "{{ vlcd_user }}"
+  register: wbu
+  changed_when: false
+  tags:
+    - users
+    - whoami
+
+- debug:
+    var: item
+  vars:
+    item:
+      w: "{{ w.stdout }}"
+      wb: "{{ wb.stdout }}"
+      wbu: "{{ wbu.stdout }}"
+      ansible_user: "{{ ansible_user }}"
+      ansible_ssh_user: "{{ ansible_ssh_user }}"
+      remote_user: "{{ remote_user }}"
+  changed_when: false
+  tags:
+    - users
+    - whoami
+
+- import_tasks: users.yml
+  tags: users
