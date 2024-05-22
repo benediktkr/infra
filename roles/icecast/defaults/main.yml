@@ -10,4 +10,10 @@ icecast_auth:
   admin:
     user: admin
     passwd: hackme
+icecast_access_log_enabled: true
+icecast_playlist_log_enabled: true
+icecast_stdinpcm_enabled: false
+icecast_userid: icecast2
+icecast_groupid: icecast
 
+owntone_fifo: []

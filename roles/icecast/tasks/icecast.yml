@@ -15,8 +15,26 @@
     owner: root
     group: icecast
     mode: '0640'
+  loop_control:
+    label: "{{ item }}"
   with_items:
     - icecast.xml
+  notify:
+    - restart icecast
+  tags:
+    - icecast-config
+
+- name: template default file
+  template:
+    src: "{{ item }}.j2"
+    dest: "/etc/default/{{ item }}"
+    owner: root
+    group: root
+    mode: '0644'
+  loop_control:
+    label: "{{ item }}"
+  with_items:
+    - icecast2
   notify:
     - restart icecast
   tags:
