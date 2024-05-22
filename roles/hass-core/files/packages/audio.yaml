@@ -1,5 +1,122 @@
 ---
 
+homeassistant:
+  customize:
+    package.node_anchors:
+      package_name: &package_name "audio"
+      common_attrs: &common_attrs
+        package: *package_name
+      common_attrs_templated: &common_attrs_templated
+        templated: true
+        <<: *common_attrs
+  customize:
+    media_player.owntone_server:
+      friendly_name: "OwnTone server"
+      entity_picture: "https://www.sudo.is/img/owntone.svg"
+      <<: *common_attrs
+    media_player.owntone_output_living_room:
+      icon: "mdi:sofa"
+      friendly_name: "Livingroom (OwnTone output)"
+      entity_picture: "https://www.sudo.is/img/owntone.svg"
+      <<: *common_attrs
+    media_player.owntone_output_bedroom:
+      icon: "mdi:bed-empty"
+      friendly_name: "Bedroom (OwnTone output)"
+      entity_picture: "https://www.sudo.is/img/owntone.svg"
+      <<: *common_attrs
+    media_player.owntone_output_study:
+      friendly_name: "Study (OwnTone output)"
+      icon: "mdi:chair-rolling"
+      entity_picture: "https://www.sudo.is/img/owntone.svg"
+      <<: *common_attrs
+    media_player.owntone_output_hallway:
+      friendly_name: "Hallway (OwnTone output)"
+      icon: "mdi:speaker"
+      entity_picture: "https://www.sudo.is/img/owntone.svg"
+      <<: *common_attrs
+    media_player.owntone_output_kitchen:
+      friendly_name: "Kitchen (OwnTone output)"
+      icon: "mdi:stove"
+      entity_picture: "https://www.sudo.is/img/owntone.svg"
+      <<: *common_attrs
+    media_player.owntone_output_fifo:
+      friendly_name: "OwnTone FIFO output"
+      icon: "mdi:file-music"
+      entity_picture: "https://www.sudo.is/img/owntone.svg"
+      <<: *common_attrs
+    #media_player.owntone_output_apple_tv:
+    #  friendly_name: "Apple TV (OwnTone output)"
+    #  icon: "mdi:apple"
+
+    media_player.bedroom:
+      friendly_name: Bedroom
+      universal_media_player: true
+      media_players:
+        - media_player.owntone_server
+        - media_player.owntone_output_bedroom
+        - media_player.sonos_bedroom
+      <<: *common_attrs
+    media_player.kitchen:
+      friendly_name: Kitchen
+      universal_media_player: true
+      media_players:
+        - media_player.owntone_server
+        - media_player.owntone_output_kitchen
+        - media_player.sonos_kitchen
+      <<: *common_attrs
+    media_player.study:
+      friendly_name: Study
+      universal_media_player: true
+      media_players:
+        - media_player.owntone_server
+        - media_player.owntone_output_study
+        - media_player.sonos_study
+      <<: *common_attrs
+    media_player.hallway:
+      friendly_name: Hallway
+      universal_media_player: true
+      media_players:
+        - media_player.owntone_server
+        - media_player.owntone_output_hallway
+        - media_player.sonos_hallway
+      <<: *common_attrs
+
+    media_player.sonos_bedroom:
+      entity_picture: https://www.sudo.is/img/icon-S38-Sonos-One-SL.png
+      <<: *common_attrs
+    media_player.sonos_hallway:
+      entity_picture: https://www.sudo.is/img/icon-S12-Sonos-Play-1.png
+      <<: *common_attrs
+    media_player.sonos_kitchen:
+      entity_picture: https://www.sudo.is/img/icon-S21-Sonos-IKEA-SYMFONISK.png
+      <<: *common_attrs
+    media_player.sonos_livingroom:
+      entity_picture: https://www.sudo.is/img/icon-ZP90-Sonos-Connect.png
+      <<: *common_attrs
+    media_player.sonos_study:
+      entity_picture: https://www.sudo.is/img/icon-ZP120-Sonos-Connect-Amp.png
+      <<: *common_attrs
+
+    sensor.owntone_queue_position:
+      friendly_name: "OwnTone: current queue position"
+      entity_picture: "https://www.sudo.is/img/owntone.svg"
+      <<: *common_attrs_templated
+    binary_sensor.owntone_playing:
+      friendly_name: "OwnTone playing"
+      entity_picture: "https://www.sudo.is/img/owntone.svg"
+      <<: *common_attrs_templated
+    binary_sensor.owntone_playing_podcast:
+      <<: *common_attrs_templated
+      entity_picture: "https://www.sudo.is/img/owntone.svg"
+      friendly_name: "OwnTone playing a podcast"
+
+    sensor.audiobookshelf_sessions:
+      unit_of_measurement: sessions
+      state_class: measurement
+      entity_picture: "https://www.sudo.is/img/abs_logo.png"
+      <<: *common_attrs_templated
+
+
 media_player:
   - platform: universal
     name: bedroom
@@ -304,9 +421,6 @@ template:
           {{ mediatrack | int }}
         attributes:
           source_entity_id: "media_player.owntone_server"
-          templated: true
-          package: "audio"
-
 
   - binary_sensor:
       - name: owntone_playing
@@ -327,8 +441,6 @@ template:
           {{ is_state("media_player.owntone_server", "playing") }}
         attributes:
           source_entity_id: "media_player.owntone_server"
-          templated: true
-          package: "audio"
 
       - name: owntone_playing_podcast
         icon: "mdi:podcast"
@@ -349,8 +461,6 @@ template:
           }}
         attributes:
           source_entity_id: "media_player.owntone_server"
-          templated: true
-          package: "audio"
           podcast_in_queue: >-
             {{ is_state_attr("media_player.owntone_server", "media_content_type", "podcast") | bool }}
           podcast: >-
@@ -366,81 +476,4 @@ template:
             {{ state_attr("media_player.owntone_server", "media_artist") }}
             {% else %}None{% endif %}
 
-
-homeassistant:
-  customize:
-    media_player.owntone_output_living_room:
-      icon: "mdi:sofa"
-      friendly_name: "Livingroom (OwnTone output)"
-    media_player.owntone_output_bedroom:
-      icon: "mdi:bed-empty"
-      friendly_name: "Bedroom (OwnTone output)"
-    media_player.owntone_output_study:
-      friendly_name: "Study (OwnTone output)"
-      icon: "mdi:chair-rolling"
-    media_player.owntone_output_hallway:
-      friendly_name: "Hallway (OwnTone output)"
-      icon: "mdi:speaker"
-    media_player.owntone_output_kitchen:
-      friendly_name: "Kitchen (OwnTone output)"
-      icon: "mdi:stove"
-    media_player.owntone_output_fifo:
-      friendly_name: "OwnTone FIFO output"
-      icon: "mdi:file-music"
-    #media_player.owntone_output_apple_tv:
-    #  friendly_name: "Apple TV (OwnTone output)"
-    #  icon: "mdi:apple"
-
-    media_player.bedroom:
-      friendly_name: Bedroom
-      templated: true
-      package: "audio"
-      media_players:
-        - media_player.owntone_server
-        - media_player.owntone_output_bedroom
-        - media_player.sonos_bedroom
-    media_player.kitchen:
-      friendly_name: Kitchen
-      templated: true
-      media_players:
-        - media_player.owntone_server
-        - media_player.owntone_output_kitchen
-        - media_player.sonos_kitchen
-    media_player.study:
-      friendly_name: Study
-      templated: true
-      media_players:
-        - media_player.owntone_server
-        - media_player.owntone_output_study
-        - media_player.sonos_study
-    media_player.hallway:
-      friendly_name: Hallway
-      templated: true
-      media_players:
-        - media_player.owntone_server
-        - media_player.owntone_output_hallway
-        - media_player.sonos_hallway
-
-    # media_player.sonos_bedroom:
-    #   entity_picture: /entity_pictures/sonos-dark.png
-    # media_player.hallway:
-    #   entity_picture: /entity_pictures/sonos-dark.png
-    # media_player.kitchen:
-    #   entity_picture: /entity_pictures/sonos-dark.png
-    # media_player.living_room:
-    #   entity_picture: /entity_pictures/sonos-dark.png
-    # media_player.study:
-    #   entity_picture: /entity_pictures/sonos-dark.png
-
-    sensor.owntone_queue_position:
-      friendly_name: "OwnTone: current queue position"
-    binary_sensor.owntone_playing:
-      friendly_name: "OwnTone playing"
-    binary_sensor.owntone_playing_podcast:
-      friendly_name: "OwnTone playing a podcast"
-
-    sensor.audiobookshelf_sessions:
-      unit_of_measurement: sessions
-      state_class: measurement
-      package: audio
 
