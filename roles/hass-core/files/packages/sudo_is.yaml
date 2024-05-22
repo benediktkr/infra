@@ -11,25 +11,39 @@ homeassistant:
 
     sensor.sudo_is_api_myip:
       friendly_name: "sudo.is/api/myip IP"
+      check_domain: !secret myip_domain
+      entity_picture: "https://www.sudo.is/favicon.png"
       <<: *common_attrs
     sensor.sudo_is_api_myip_dns:
       friendly_name: "sudo.is/api/myip DNS"
+      check_domain: !secret myip_domain
+      entity_picture: "https://www.sudo.is/favicon.png"
       <<: *common_attrs
     binary_sensor.sudo_is_api_myip_check:
       friendly_name: "sudo.is/api/myip DNS check"
+      check_domain: !secret myip_domain
+      entity_picture: "https://www.sudo.is/favicon.png"
       <<: *common_attrs
 
     binary_sensor.sudo_is_api_health_www:
       friendly_name: "sudo.is/api/health: www"
+      entity_picture: "https://www.sudo.is/favicon.png"
       <<: *common_attrs
     binary_sensor.sudo_is_api_health_api:
       friendly_name: "sudo.is/api/health: api"
+      entity_picture: "https://www.sudo.is/favicon.png"
       <<: *common_attrs
     binary_sensor.sudo_is_api_health_login:
       friendly_name: "sudo.is/api/health: login"
+      entity_picture: "https://www.sudo.is/img/authelia.ico"
+      <<: *common_attrs
+    binary_sensor.sudo_is_api_health_notflix:
+      friendly_name: "sudo.is/api/health: notflix"
+      entity_picture: "https://www.sudo.is/img/logo-jellyfin.svg"
       <<: *common_attrs
     binary_sensor.sudo_is_api_health_git:
       friendly_name: "sudo.is/api/health: git"
+      entity_picture: "https://www.sudo.is/img/gitea.svg"
       <<: *common_attrs
 
     sensor.sudo_is_version:
@@ -114,6 +128,16 @@ rest:
           {% endif %}
         value_template: |
           {{ value_json.api|bool == false }}
+      - name: sudo_is_api_health_notflix
+        device_class: problem
+        icon: |
+          {% if is_state(this.entity_id, "off") %}
+          mdi:television-play
+          {% else %}
+          mdi:television-off
+          {% endif %}
+        value_template: |
+          {{ value_json.notflix|bool == false }}
       - name: sudo_is_api_health_login
         device_class: problem
         icon: |
