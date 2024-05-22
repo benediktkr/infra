@@ -1,0 +1,9 @@
+---
+
+vlcd_telnet_passwd: foobar
+vlcd_telnet_host: 127.0.0.1
+vlcd_telnet_port: "4212"
+vlcd_http_host: "{{ vlcd_telnet_host }}"
+vlcd_http_port: 8123
+vlcd_user: nobody
+vlcd_group: nogroup

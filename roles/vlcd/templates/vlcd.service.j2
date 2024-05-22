@@ -1,0 +1,12 @@
+[Unit]
+Description=VLC_Audio
+After=network-online.target
+
+[Service]
+ExecStart=/usr/bin/vlc -I telnet --telnet-host {{ vlcd_telnet_host }} --telnet-port {{ vlcd_telnet_port }} --telnet-password {{ vlcd_telnet_passwd }} --http-host {{ vlcd_http_host }} --http-port {{ vlcd_http_port }}
+Type=simple
+Restart=always
+Environment="DISPLAY=:0"
+
+[Install]
+WantedBy=default.target

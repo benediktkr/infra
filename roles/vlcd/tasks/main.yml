@@ -1,0 +1,6 @@
+---
+
+- import_tasks: vlcd.yml
+  tags:
+    - vlcd
+    - homeaudio

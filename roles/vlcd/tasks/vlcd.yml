@@ -1,0 +1,78 @@
+---
+
+- name: install systemd-container for machinectl
+  apt:
+    name: systemd-container
+    state: latest
+  tags:
+    - packages
+
+- name: install vlc and pulseaudio
+  apt:
+    name:
+      - vlc
+      - pulseaudio
+      - pulseaudio-utils
+      - pulseaudio-module-bluetooth
+      - pulseaudio-module-raop
+      - pulseaudio-module-zeroconf
+      #- pulseaudio-module-jack
+      #- squeezelite-pulseaudio
+    state: latest
+  notify:
+    - restart vlcd
+  tags:
+    - vlc
+    - pulseaudio
+    - packages
+
+- name: template system unit
+  template:
+    src: "{{ item }}.j2"
+    dest: "/etc/systemd/user/{{ item }}"
+    owner: root
+    group: root
+    mode: '0755'
+  with_items:
+    - vlcd.service
+  notify:
+    - restart vlcd
+  tags:
+    - systemd
+  register: systemd
+
+
+- name: enable linger for vlcd user, so a systemd process can run the the user
+  command: loginctl enable-linger {{ vlcd_user }}
+  become: true
+  tags:
+    - systemd
+  when: systemd.changed|default(false)
+
+# ben$ sudo machinectl shell --uid jellyfin
+# jellyfin$ systemctl --user daemon-reload
+
+- name: daemon reload user scope
+  systemd:
+    scope: user
+    daemon_reload: true
+  become: true
+  become_user: "{{ vlcd_user }}"
+  tags:
+    - systemd
+  when: systemd.changed|default(false)
+
+- name: start and enable user scope services
+  systemd:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+    daemon_reload: true
+    scope: user
+  become: true
+  become_user: "{{ vlcd_user }}"
+  with_items:
+    - vlcd
+  tags:
+    - systemd
+
