@@ -1,0 +1,6 @@
+---
+ - import_tasks: mass.yml
+   tags:
+     - hass
+     - mass
+     - hass-mass

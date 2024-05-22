@@ -1,0 +1,69 @@
+---
+
+- name: create dir structure
+  file:
+    path: "{{ item.path }}"
+    state: directory
+    mode: "{{ item.mode | default('0755') }}"
+    owner: "{{ systemuserlist[mass_user].uid }}"
+    group: "{{ systemuserlist[mass_user].gid }}"
+  tags:
+    - hass-dirs
+    - mass-dirs
+  loop_control:
+    label: "{{ item.path }}"
+  with_items:
+    - path: "{{ mass_root }}/data"
+    - path: "{{ mass_root }}/playlists"
+    - path: "{{ deadspace_root }}/audio"
+
+#- name: template config
+#  template:
+#    src: "{{ item }}.j2"
+#    dest: "{{ mass_root }}/data/{{ item }}"
+#    owner: "{{ systemuserlist[mass_user].uid }}"
+#    group: "{{ systemuserlist[mass_user].gid }}"
+#    mode: 0644
+#  with_items:
+#    - settings.json
+#  tags:
+#    - hass-config
+#    - mass-config
+#
+- name: start mass container
+  docker_container:
+    name: mass
+    image: ghcr.io/music-assistant/server
+    detach: true
+    pull: true
+    auto_remove: false
+    restart_policy: "unless-stopped"
+    state: "{{ hass_container_state | default('stopped') }}"
+    container_default_behavior: compatibility
+    user: "{{ systemuserlist[mass_user].uid }}:{{ systemuserlist[mass_user].gid }}"
+    networks_cli_compatible: false
+    network_mode: bridgewithdns
+    networks:
+      - name: bridgewithdns
+        ipv4_address: "{{ bridgewithdns.mass }}"
+    #network_mode: host
+    #privileged: true
+    ports:
+      - "127.0.0.1:{{ mass_port }}:{{ mass_port }}"
+      - "8097:8097"
+      - "8098:8098"
+    env:
+      TZ: "Europe/Berlin"
+    mounts:
+      - type: bind
+        source: "{{ mass_root }}/data"
+        target: /data
+      - type: bind
+        source: "{{ deadspace_root }}/audio"
+        target: /audio
+  register: mass_container
+  tags:
+    - mass-container
+    - hass-mass-container
+    - hass-container
+    - docker-containers

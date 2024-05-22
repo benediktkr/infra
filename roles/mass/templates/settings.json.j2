@@ -1,0 +1,72 @@
+{
+  "server_id": "{{ mass_server_id }}",
+  "providers": {
+    "hass--tnG2uJ4k": {
+      "values": {
+        "url": "https://{{ hass_url }}",
+        "token": "{{ mass_hass_token }}"
+      },
+      "type": "plugin",
+      "domain": "hass",
+      "instance_id": "hass--tnG2uJ4k",
+      "enabled": true,
+      "name": "Home Assistant",
+      "last_error": null
+    },
+    {% for item in mass_smb_mounts -%}
+    "filesystem_smb--{{ item.massid }}": {
+      "values": {
+        "host": "{{ item.host }}",
+        "share": "{{ item.share }}",
+        "username": "{{ item.user }}",
+        "password": "{{ item.passwd }},
+        "subfolder": "{{ item.subfolder }}"
+      },
+      "type": "music",
+      "domain": "filesystem_smb",
+      "instance_id": "filesystem_smb--{{ item.massid }}",
+      "enabled": true,
+      "name": "{{ item.subfolder }}",
+      "last_error": null
+    } {% if not loop.last %},{% endif %}
+    {% endfor -%}
+  },
+  "core": {
+    "metadata": {
+      "values": {
+        "language": "en_US"
+      },
+      "domain": "metadata",
+      "last_error": null
+    },
+    "webserver": {
+      "values": {
+        "base_url": "http://{{ mass_url }}:{{ mass_port }}{{ mass_baseurl }}"
+      },
+      "domain": "webserver",
+      "last_error": null
+    },
+    "streams": {
+      "values": {
+        "publish_ip": "{{ ansible_default_ipv4.address }}"
+      },
+      "domain": "streams",
+      "last_error": null
+    },
+    "music": {
+      "values": {
+        "sync_interval": 61
+      },
+      "domain": "music",
+      "last_error": null
+    }
+  },
+  "players": {
+  },
+  "stored_playlists": [
+    {
+      "item_id": "mfVPJ4kj",
+      "name": "Test"
+    }
+  ]
+}

@@ -67,6 +67,12 @@ dependencies:
     - role: hass-utils
       tags:
         - hass-utils
+
+    - role: mass
+      tags:
+        - mass
+        - hass-mass
+
     #- role: hass-usbip
     #  tags:
     #    - hass-usbip

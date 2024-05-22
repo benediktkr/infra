@@ -103,6 +103,17 @@ server {
         proxy_pass https://{{ owntone_url }}/{{ hass_nginx_owntone_stream }};
     }
 
+
+    location {{ mass_baseurl }}/ {
+
+        sub_filter_types text/xhtml text/xml text/css;
+        sub_filter 'href="/'  'href="{{ mass_baseurl }}/';
+        sub_filter 'url(/'  'url({{ mass_baseurl }}/';
+        sub_filter_once off;
+        sub_filter_last_modified on;
+        proxy_pass http://{{ bridgewithdns.mass }}:{{ mass_port }}/;
+    }
+
     #location = {{ nginx_podgrab_path }} {
     #    return 302 https://{{ hass_url }}{{ nginx_podgrab_path }};
     #}
