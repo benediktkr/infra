@@ -7,8 +7,26 @@ homeassistant:
         package: *package_name
         templated: true
 
+    sensor.md_audio_owntone_now_playing:
+      friendly_name: "audio_owntone_now_playing.md"
+      <<: *common_attrs
+
+    sensor.md_audio_sonos_favs:
+      friendly_name: "audio_sonos_favs.md"
+      source_id_s1: "sensor.sonos_favorites_s1"
+      source_id_s2: "sensor.sonos_favorites_s2"
+      <<: *common_attrs
+
     sensor.md_audio_owntone_media_players:
       friendly_name: "audio_owntone_media_players.md"
+      <<: *common_attrs
+
+    sensor.md_packages:
+      friendly_name: "packages.md"
+      <<: *common_attrs
+
+    sensor.md_wwwsudois:
+      friendly_name: "wwwsudois.md"
       <<: *common_attrs
 
     sensor.template_md_testing_media_players:
@@ -20,6 +38,65 @@ homeassistant:
 template:
   - unique_id: md_audio
     sensor:
+      - unique_id: owntone_now_playing
+        name: md_audio_owntone_now_playing
+        icon: |
+          mdi:cast-audio-variant
+        state: |
+          audio_owntone_now_playing.md
+        attributes:
+          length: |
+            {{ this.attributes.get("md", "")|length }}
+          md: |
+            {% set title = state_attr("media_player.owntone_server", "media_title") %}
+            {% set name = state_attr("media_player.owntone_server", "media_album_name") %}
+            {% set artist = state_attr("media_player.owntone_server", "media_artist") %}
+            {% set mediatype = state_attr("media_player.owntone_server", "media_content_type") %}
+            [{{ mediatype | capitalize }}] {{ name }} - {{ title }} | {{ artist }}
+          title: |
+            {% if state_attr("media_player.owntone_server", "media_content_type") =="podcast" %}
+            Playing podcast
+            {% else %}
+            Now playing
+            {% endif %}
+
+      - unique_id: sonos_favs
+        name: md_audio_sonos_favs
+        icon: |
+          mdi:star
+        availability: |
+          {{
+            has_value(this.attributes.get("source_id_s1"))
+            or has_value(this.attributes.get("source_id_s2"))
+          }}
+        state: |
+          {{ state_attr(this.entity_id, "friendly_name") }}
+        attributes:
+          length: |
+            {{ this.attributes.get("md", "")|length }}
+          md: |
+            {% set s1 = state_attr(this.attributes.get("source_id_s1"), "items") %}
+            {% set s2 = state_attr(this.attributes.get("source_id_s2"), "items") %}
+            {% set sonos = [
+              {"name": "S1", "favs": s1},
+              {"name": "S2", "favs": s2},
+            ] -%}
+            # Sonos favorites
+
+            {% for item in sonos -%}
+            ## {{ item.name }}
+
+            {% if item.favs|length > 0 -%}
+            | Name       | Value   |
+            |:-----------|:--------|
+            {% for k, v in item.favs.items() -%}
+            | `{{ k }}`  | {{ v }} |
+            {% endfor %}
+            {% endif %}
+
+            {% endfor %}
+
+        #"source",
       - unique_id: owntone_media_players
         name: md_audio_owntone_media_players
         icon: |
@@ -32,12 +109,15 @@ template:
           md: |
             # `media_player` attrs
 
+            - [OwnTone stream](https://hass.sudo.is/_media/owntone)
+
             {%
               set player_id = [
                 "apple_tv",
                 "owntone_mpd",
                 "owntone_server",
                 "esphome_muse",
+                "sonos_livingroom",
                 "vlcd",
                 "sonos_bedroom",
                 "dlna_bedroom",
@@ -49,7 +129,6 @@ template:
             set skip_attrs = [
                 "friendly_name",
                 "source_list",
-                "source",
                 "media_position",
                 "media_duration",
                 "media_track",
@@ -114,7 +193,111 @@ template:
             _All available attributes are shown for this `media_player` entity, due to missing metadata._
             {% endif %}
 
+            {% if attrs.get("source_list", [])|length > 0 -%}
+            {% set sl = attrs.get("source_list") -%}
+            ### Source list
+
+            **Total**: {{ sl|length }}
+
+            {% for srcitem in sl[:3] -%}
+            - `{{ srcitem }}`
             {% endfor %}
+            {% endif -%}
+
+            {% endfor %}
+
+  - sensor:
+      - unique_id: md_packages
+        name: md_packages
+        icon: |
+          mdi:package
+        state: |
+          packages.md
+        attributes:
+          length: |
+            {{ this.attributes.get("md", "")|length }}
+          md: |
+            {%
+              set in_transit = states("sensor.seventeentrack_packages_in_transit")
+                | int(0)
+            %}{%
+              set delivered = states("sensor.seventeentrack_packages_delivered")
+                | int(0)
+            %}{%
+              set expired = states("sensor.seventeentrack_packages_expired")
+                | int(0)
+            %}{%
+              set not_found = states("sensor.seventeentrack_packages_not_found")
+                | int(0)
+            %}{%
+              set pick_up = states("sensor.seventeentrack_packages_ready_to_be_picked_up")
+                | int(0)
+            %}{%
+              set returned = states("sensor.seventeentrack_packages_returned")
+                | int(0)
+            %}{%
+              set undelivered = states("sensor.seventeentrack_packages_undelivered")
+                | int(0)
+            %}{%
+              set total_pkgs = [
+                in_transit, delivered, expired, not_found, pick_up, returned, undelivered
+              ] | sum
+            %}
+
+            # Packages
+
+            ## Overview
+
+            {% if total_pkgs > 0 %}
+            | Status            | Number of packages                 |
+            |:------------------|-----------------------------------:|
+            {% if not_found > 0 -%}
+            | **Not found**     | {{ not_found }} pkgs               |
+            {% endif -%}
+            {% if in_transit > 0 -%}
+            | In transit         | {{ in_transit }} pkgs              |
+            {% endif -%}
+            {% if delivered > 0 -%}
+            | Delivered         | {{ delivered }} pkgs               |
+            {% endif %}
+            {% else %}
+            > _Currently no tracked packages_.
+            {% endif %}
+
+            ## In Transit
+
+            {% if in_transit > 0 -%}
+            {% for package in states.sensor.seventeentrack_packages_in_transit.attributes.packages %}
+
+            1. **{{ package.friendly_name }}** ( `{{ package.tracking_number }}` )
+               {{ package.info_text }}
+
+            {% endfor %}
+            {% else %}
+            > _No tracked packages in transit._
+            {% endif %}
+
+      - unique_id: md_wwwsudois
+        name: md_wwwsudois
+        icon: |
+          mdi:git
+        state: |
+          wwwsudois.md
+        attributes:
+          length: |
+            {{ this.attributes.get("md", "")|length }}
+          md: |
+            # ![](https://www.sudo.is/favicon.ico)
+
+            | Name                | [`wwwsudois`](https://git.sudo.is/ben/wwwsudois)
+            |:--------------------|----:
+            | Production released | {{states("sensor.sudo_is_version_date")}}
+            | Version             | `{{states("sensor.sudo_is_version")}}`
+            | URL                 | [`www.sudo.is`](https://www.sudo.is)
+            | Build status        | ![](https://www.sudo.is/api/buildstatus.png)
+
+            ![](https://www.sudo.is/avatar/green_fade.png)
+
 
   - unique_id: md_testing
     sensor:
