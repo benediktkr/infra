@@ -195,9 +195,18 @@ template:
 
             {% if attrs.get("source_list", [])|length > 0 -%}
             {% set sl = attrs.get("source_list") -%}
-            ### Source list
+            ### Source
 
-            **Total**: {{ sl|length }}
+            {% if attrs.get("source") -%}
+            **Source**:
+
+            ```text
+            {{ attr.get("source") }}
+            ```
+            {% endif -%}
+
+
+            **Source list**: {{ sl|length }}
 
             {% for srcitem in sl[:3] -%}
             - `{{ srcitem }}`

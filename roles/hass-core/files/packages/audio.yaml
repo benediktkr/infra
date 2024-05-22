@@ -12,7 +12,7 @@ homeassistant:
   customize:
     media_player.owntone_server:
       friendly_name: "OwnTone server"
-      entity_picture: "https://www.sudo.is/img/owntone.svg"
+      #entity_picture: "https://www.sudo.is/img/owntone.svg"
       <<: *common_attrs
     media_player.owntone_output_living_room:
       icon: "mdi:sofa"
@@ -50,7 +50,6 @@ homeassistant:
 
     media_player.bedroom:
       friendly_name: Bedroom
-      entity_picture: https://www.sudo.is/img/icon-S38-Sonos-One-SL.png
       universal_media_player: true
       media_players:
         - media_player.owntone_server
@@ -59,7 +58,6 @@ homeassistant:
       <<: *common_attrs
     media_player.kitchen:
       friendly_name: Kitchen
-      entity_picture: https://www.sudo.is/img/icon-S21-Sonos-IKEA-SYMFONISK.png
       universal_media_player: true
       media_players:
         - media_player.owntone_server
@@ -76,7 +74,6 @@ homeassistant:
       <<: *common_attrs
     media_player.hallway:
       friendly_name: Hallway
-      entity_picture: https://www.sudo.is/img/icon-S12-Sonos-Play-1.png
       universal_media_player: true
       media_players:
         - media_player.owntone_server
@@ -154,13 +151,13 @@ media_player:
       - media_player.sonos_bedroom
     browse_media_entity: media_player.owntone_server
     device_class: speaker
-    active_child_template: >-
+    active_child_template: |
       {% if is_state("media_player.owntone_output_bedroom", "on") %}
       media_player.owntone_server
       {% else %}
       media_player.sonos_bedroom
       {% endif %}
-    state_template: >-
+    state_template: |
       {% if is_state("media_player.owntone_output_bedroom", "on") %}
       {{ states("media_player.owntone_server") }}
       {% else %}
@@ -172,7 +169,7 @@ media_player:
         data:
           volume_level: "{{ volume_level }}"
         target:
-          entity_id: >-
+          entity_id: |
             {%- if is_state("media_player.owntone_output_bedroom", "on") -%}
             media_player.owntone_output_bedroom
             {%- else -%}
@@ -182,7 +179,7 @@ media_player:
         service: media_player.media_play
         data: {}
         target:
-          entity_id: >-
+          entity_id: |
             {%- if is_state("media_player.owntone_output_bedroom", "on") -%}
             media_player.owntone_server
             {%- else -%}
@@ -192,7 +189,7 @@ media_player:
         service: media_player.volume_up
         data: {}
         target:
-          entity_id: >-
+          entity_id: |
             {%- if is_state("media_player.owntone_output_bedroom", "on") -%}
             media_player.owntone_server
             {%- else -%}
@@ -202,7 +199,7 @@ media_player:
         service: media_player.volume_down
         data: {}
         target:
-          entity_id: >-
+          entity_id: |
             {%- if is_state("media_player.owntone_output_bedroom", "on") -%}
             media_player.owntone_server
             {%- else -%}
@@ -212,7 +209,7 @@ media_player:
         service: media_player.media_pause
         data: {}
         target:
-          entity_id: >-
+          entity_id: |
             {%- if is_state("media_player.owntone_output_bedroom", "on") -%}
             media_player.owntone_server
             {%- else -%}
@@ -221,7 +218,7 @@ media_player:
       volume_mute:
        service: media_player.volume_mute
        data:
-         is_volume_muted: >-
+         is_volume_muted: |
            {{ is_volume_muted }}
        target:
          entity_id: media_player.sonos_bedroom
@@ -239,13 +236,13 @@ media_player:
       - media_player.sonos_kitchen
     browse_media_entity: media_player.owntone_server
     device_class: speaker
-    active_child_template: >-
+    active_child_template: |
       {% if is_state("media_player.owntone_output_kitchen", "on") %}
       media_player.owntone_server
       {% else %}
       media_player.sonos_kitchen
       {% endif %}
-    state_template: >-
+    state_template: |
       {% if is_state("media_player.owntone_output_kitchen", "on") %}
       {{ states("media_player.owntone_server") }}
       {% else %}
@@ -257,7 +254,7 @@ media_player:
         data:
           volume_level: "{{ volume_level }}"
         target:
-          entity_id: >-
+          entity_id: |
             {%- if is_state("media_player.owntone_output_kitchen", "on") -%}
             media_player.owntone_output_kitchen
             {%- else -%}
@@ -267,7 +264,7 @@ media_player:
         service: media_player.media_play
         data: {}
         target:
-          entity_id: >-
+          entity_id: |
             {%- if is_state("media_player.owntone_output_kitchen", "on") -%}
             media_player.owntone_server
             {%- else -%}
@@ -277,7 +274,7 @@ media_player:
         service: media_player.media_pause
         data: {}
         target:
-          entity_id: >-
+          entity_id: |
             {%- if is_state("media_player.owntone_output_kitchen", "on") -%}
             media_player.owntone_server
             {%- else -%}
@@ -286,7 +283,7 @@ media_player:
       volume_mute:
        service: media_player.volume_mute
        data:
-         is_volume_muted: >-
+         is_volume_muted: |
            {{ is_volume_muted }}
        target:
          entity_id: media_player.sonos_kitchen
@@ -294,7 +291,7 @@ media_player:
       volume_level: media_player.sonos_kitchen|volume_level
       is_volume_muted: media_player.sonos_kitchen|is_volume_muted
       #source_list: media_player.owntone_server|source_list
-      source_list: None, OwnTone
+      source_list: "['Sonos', 'OwnTone']"
       group_members: media_player.sonos_kitchen|group_members
 
   - platform: universal
@@ -304,13 +301,13 @@ media_player:
       - media_player.sonos_study
     browse_media_entity: media_player.owntone_server
     device_class: speaker
-    active_child_template: >-
+    active_child_template: |
       {% if is_state("media_player.owntone_output_study", "on") %}
       media_player.owntone_server
       {% else %}
       media_player.sonos_study
       {% endif %}
-    state_template: >-
+    state_template: |
       {% if is_state("media_player.owntone_output_study", "on") %}
       {{ states("media_player.owntone_server") }}
       {% else %}
@@ -322,7 +319,7 @@ media_player:
         data:
           volume_level: "{{ volume_level }}"
         target:
-          entity_id: >-
+          entity_id: |
             {%- if is_state("media_player.owntone_output_study", "on") -%}
             media_player.owntone_output_study
             {%- else -%}
@@ -332,7 +329,7 @@ media_player:
         service: media_player.media_play
         data: {}
         target:
-          entity_id: >-
+          entity_id: |
             {%- if is_state("media_player.owntone_output_study", "on") -%}
             media_player.owntone_server
             {%- else -%}
@@ -342,7 +339,7 @@ media_player:
         service: media_player.media_pause
         data: {}
         target:
-          entity_id: >-
+          entity_id: |
             {%- if is_state("media_player.owntone_output_study", "on") -%}
             media_player.owntone_server
             {%- else -%}
@@ -351,7 +348,7 @@ media_player:
       volume_mute:
        service: media_player.volume_mute
        data:
-         is_volume_muted: >-
+         is_volume_muted: |
            {{ is_volume_muted }}
        target:
          entity_id: media_player.sonos_study
@@ -369,13 +366,13 @@ media_player:
       - media_player.sonos_hallway
     browse_media_entity: media_player.owntone_server
     device_class: speaker
-    active_child_template: >-
+    active_child_template: |
       {% if is_state("media_player.owntone_output_hallway", "on") %}
       media_player.owntone_server
       {% else %}
       media_player.sonos_hallway
       {% endif %}
-    state_template: >-
+    state_template: |
       {% if is_state("media_player.owntone_output_hallway", "on") %}
       {{ states("media_player.owntone_server") }}
       {% else %}
@@ -387,7 +384,7 @@ media_player:
         data:
           volume_level: "{{ volume_level }}"
         target:
-          entity_id: >-
+          entity_id: |
             {%- if is_state("media_player.owntone_output_hallway", "on") -%}
             media_player.owntone_output_hallway
             {%- else -%}
@@ -397,7 +394,7 @@ media_player:
         service: media_player.media_play
         data: {}
         target:
-          entity_id: >-
+          entity_id: |
             {%- if is_state("media_player.owntone_output_hallway", "on") -%}
             media_player.owntone_server
             {%- else -%}
@@ -407,7 +404,7 @@ media_player:
         service: media_player.media_pause
         data: {}
         target:
-          entity_id: >-
+          entity_id: |
             {%- if is_state("media_player.owntone_output_hallway", "on") -%}
             media_player.owntone_server
             {%- else -%}
@@ -416,7 +413,7 @@ media_player:
       volume_mute:
        service: media_player.volume_mute
        data:
-         is_volume_muted: >-
+         is_volume_muted: |
            {{ is_volume_muted }}
        target:
          entity_id: media_player.sonos_hallway
@@ -432,20 +429,20 @@ template:
   - sensor:
       - name: owntone_queue_position
         state_class: measurement
-        icon: >-
+        icon: |
           {% if is_state("binary_sensor.owntone_playing", "on") %}
           mdi:play
           {% else %}
           mdi:stop
           {% endif %}
-        availability: >-
+        availability: |
           {{
           states("media_player.owntone_server") is defined
           and has_value("media_player.owntone_server")
           and state_attr("media_player.owntone_server", "media_track") is defined
           and is_number(state_attr("media_player.owntone_server", "media_track"))
           }}
-        state: >-
+        state: |
           {% set mediatrack = state_attr("media_player.owntone_server", "media_track") %}
           {{ mediatrack | int }}
         attributes:
@@ -453,7 +450,7 @@ template:
 
   - binary_sensor:
       - name: owntone_playing
-        icon: >-
+        icon: |
           {% if is_state(this.entity_id, "on") %}
           mdi:play
           {% else %}
@@ -461,12 +458,12 @@ template:
           {% endif %}
         device_class: running
         delay_off: "00:00:05"
-        availability: >-
+        availability: |
           {{
           states("media_player.owntone_server") is defined
           and has_value("media_player.owntone_server")
           }}
-        state: >-
+        state: |
           {{ is_state("media_player.owntone_server", "playing") }}
         attributes:
           source_entity_id: "media_player.owntone_server"
@@ -475,13 +472,13 @@ template:
         icon: "mdi:podcast"
         device_class: running
         delay_off: "00:00:05"
-        availability: >-
+        availability: |
           {{
           states("binary_sensor.owntone_playing") is defined
           and has_value("binary_sensor.owntone_playing")
           and state_attr("media_player.owntone_server", "media_content_type") is defined
           }}
-        state: >-
+        state: |
           {% set playing = states("binary_sensor.owntone_playing", "on") or false %}
           {% set is_podcast = is_state_attr(this.entity_id, "podcast_in_queue", true) %}
           {{
@@ -490,17 +487,17 @@ template:
           }}
         attributes:
           source_entity_id: "media_player.owntone_server"
-          podcast_in_queue: >-
+          podcast_in_queue: |
             {{ is_state_attr("media_player.owntone_server", "media_content_type", "podcast") | bool }}
-          podcast: >-
+          podcast: |
             {% if is_state_attr(this.entity_id, "podcast_in_queue", true) %}
             {{ state_attr("media_player.owntone_server", "media_album_name") }}
             {% else %}None{% endif %}
-          episode: >-
+          episode: |
             {% if is_state_attr(this.entity_id, "podcast_in_queue", true) %}
             {{ state_attr("media_player.owntone_server", "media_title") }}
             {% else %}None{% endif %}
-          published_by: >-
+          published_by: |
             {% if is_state_attr(this.entity_id, "podcast_in_queue", true) %}
             {{ state_attr("media_player.owntone_server", "media_artist") }}
             {% else %}None{% endif %}
