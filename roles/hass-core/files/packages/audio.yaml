@@ -82,34 +82,44 @@ homeassistant:
       <<: *common_attrs
 
     media_player.dlna_bedroom:
+      friendly_name: "DLNA Bedroom"
       entity_picture: https://www.sudo.is/img/icon-S38-Sonos-One-SL.png
       <<: *common_attrs
     media_player.dlna_hallway:
+      friendly_name: "DLNA Hallway"
       entity_picture: https://www.sudo.is/img/icon-S12-Sonos-Play-1.png
       <<: *common_attrs
     media_player.dlna_kitchen:
+      friendly_name: "DLNA Kitchen"
       entity_picture: https://www.sudo.is/img/icon-S21-Sonos-IKEA-SYMFONISK.png
       <<: *common_attrs
     media_player.dlna_livingroom:
+      friendly_name: "DLNA Livingroom"
       entity_picture: https://www.sudo.is/img/icon-ZP90-Sonos-Connect.png
       <<: *common_attrs
     media_player.dlna_study:
+      friendly_name: "DLNA Study"
       entity_picture: https://www.sudo.is/img/icon-ZP120-Sonos-Connect-Amp.png
       <<: *common_attrs
 
     media_player.sonos_bedroom:
+      friendly_name: "Sonos Bedroom"
       entity_picture: https://www.sudo.is/img/icon-S38-Sonos-One-SL.png
       <<: *common_attrs
     media_player.sonos_hallway:
+      friendly_name: "Sonos Hallway"
       entity_picture: https://www.sudo.is/img/icon-S12-Sonos-Play-1.png
       <<: *common_attrs
     media_player.sonos_kitchen:
+      friendly_name: "Sonos Kitchen"
       entity_picture: https://www.sudo.is/img/icon-S21-Sonos-IKEA-SYMFONISK.png
       <<: *common_attrs
     media_player.sonos_livingroom:
+      friendly_name: "Sonos Livingroom"
       entity_picture: https://www.sudo.is/img/icon-ZP90-Sonos-Connect.png
       <<: *common_attrs
     media_player.sonos_study:
+      friendly_name: "Sonos Study"
       entity_picture: https://www.sudo.is/img/icon-ZP120-Sonos-Connect-Amp.png
       <<: *common_attrs
 
