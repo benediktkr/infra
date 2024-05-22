@@ -92,6 +92,13 @@ server {
        autoindex on;
        autoindex_exact_size off;
     }
+    location /_media/somafm/ {
+        proxy_pass https://ice6.somafm.com/;
+    }
+
+    location = /_media/owntone {
+        return 302 https://{{ hass_url }}/_media/owntone/{{ hass_nginx_owntone_stream }};
+    }
     location /_media/owntone/{{ hass_nginx_owntone_stream }} {
         proxy_pass https://{{ owntone_url }}/{{ hass_nginx_owntone_stream }};
     }
