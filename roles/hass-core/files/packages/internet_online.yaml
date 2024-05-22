@@ -2,179 +2,199 @@
 
 homeassistant:
   customize:
+    package.node_anchors:
+      package_name: &package_name "internet_online"
+      common_attrs: &common_attrs
+        package: *package_name
+      common_attrs_templated: &common_attrs_templated
+        templated: true
+        <<: *common_attrs
+
+
+  customize:
     binary_sensor.ping_internet_online_cloudflare_1:
       friendly_name: "Cloudflare 1.1.1.1"
-      package: internet_online
+      <<: *common_attrs
     binary_sensor.ping_internet_online_cloudflare_2:
       friendly_name: "Cloudflare: 1.0.0.1"
-      package: internet_online
+      <<: *common_attrs
     binary_sensor.ping_internet_online_google_1:
       friendly_name: "Google: 8.8.8.8"
-      package: internet_online
+      <<: *common_attrs
     binary_sensor.ping_internet_online_google_2:
       friendly_name: "Google: 8.8.4.4"
-      package: internet_online
+      <<: *common_attrs
     binary_sensor.ping_internet_online_hi_1:
       friendly_name: "Haskoli Islands: hi.is"
-      package: internet_online
+      <<: *common_attrs
+    binary_sensor.ping_s21_dns:
+      friendly_name: "S21 main DNS server"
+      <<: *common_attrs
+    binary_sensor.ping_vpn_ber1:
+      friendly_name: "ping to ber1"
+      <<: *common_attrs
+    binary_sensor.ping_vpn_ls54_edge:
+      friendly_name: "ping to ls54 edge router"
+      <<: *common_attrs
+    binary_sensor.ping_turris_wwan_lte_gateway:
+      friendly_name: "Ping to WWAN_LTE gateway (Alcatel)"
+      <<: *common_attrs
+    binary_sensor.ping_turris_wwan_lte_interface:
+      friendly_name: "Ping to WWAN_LTE interface br-wwan-lte"
+      <<: *common_attrs
+
 
     binary_sensor.internet_online:
       friendly_name: "Internet connection is up"
-      package: internet_online
+      <<: *common_attrs_templated
     binary_sensor.internet_offline:
       friendly_name: "Internet connection"
-      package: internet_online
+      <<: *common_attrs_templated
 
-    binary_sensor.vpn_sudo_is_offline:
-      friendly_name: "sudo.is vpn"
-      package: internet_online
+    ## VPN, Online
     binary_sensor.vpn_sudo_is_online:
       friendly_name: "sudo.is vpn"
-      package: internet_online
-    binary_sensor.vpn_sudo_is_ber1_offline:
-      friendly_name: "sudo.is vpn connection with ber1"
-      package: internet_online
-    binary_sensor.vpn_sudo_is_ls54_edge_offline:
-      friendly_name: "sudo.is vpn connection to LS54 edge router"
-      package: internet_online
+      entity_picture: "https://www.sudo.is/img/wireguard.png"
+      <<: *common_attrs_templated
     binary_sensor.vpn_sudo_is_ls54_online:
       friendly_name: "sudo.is vpn to LS54"
-      package: internet_online
+      entity_picture: "https://www.sudo.is/img/wireguard.png"
+      <<: *common_attrs_templated
+
+    ## VPN, Offline
+    binary_sensor.vpn_sudo_is_offline:
+      friendly_name: "sudo.is vpn"
+      <<: *common_attrs_templated
+    binary_sensor.vpn_sudo_is_ber1_offline:
+      friendly_name: "sudo.is vpn connection with ber1"
+      <<: *common_attrs_templated
+    binary_sensor.vpn_sudo_is_ls54_edge_offline:
+      friendly_name: "sudo.is vpn connection to LS54 edge router"
+      <<: *common_attrs_templated
     binary_sensor.vpn_sudo_is_ls54_offline:
       friendly_name: "sudo.is vpn to LS54"
-      package: "internet online"
+      <<: *common_attrs_templated
     binary_sensor.vpn_sudo_is_rvk0_offline:
       friendly_name: "sudo.is vpn to rvk0"
-      package: internet_online
       comment: "not part of binary_sensor.vpn_sudo_is"
+      <<: *common_attrs_templated
 
-    binary_sensor.ping_s21_dns:
-      friendly_name: "S21 main DNS server"
-      package: internet_online
-    binary_sensor.ping_vpn_ber1:
-      friendly_name: "ping to ber1"
-      package: internet_online
-    binary_sensor.ping_vpn_ls54_edge:
-      friendly_name: "ping to ls54 edge router"
-      package: internet_online
-    binary_sensor.ping_turris_wwan_lte_gateway:
-      friendly_name: "Ping to WWAN_LTE gateway (Alcatel)"
-      package: internet_online
-    binary_sensor.ping_turris_wwan_lte_interface:
-      friendly_name: "Ping to WWAN_LTE interface br-wwan-lte"
-      package: internet_online
+
     binary_sensor.internet_failover_mwan3_wwan_lte_up:
       friendly_name: "WWAN_LTE interface br-wwan-lte state"
-      package: internet_online
+      <<: *common_attrs_templated
     binary_sensor.internet_failover_mwan3_wwan_lte_down:
       friendly_name: "WWAN_LTE interface br-wwan-lte DOWN"
-      package: internet_online
+      <<: *common_attrs_templated
     binary_sensor.internet_failover_mwan3_wwan_lte_active:
       friendly_name: "WWAN_LTE mwan3 failover active"
-      package: internet_online
+      <<: *common_attrs_templated
     binary_sensor.cloudflare_ddns_home0157_sudo_is:
       friendly_name: "home0157.sudo.is is up to date"
-      package: internet_online
+      <<: *common_attrs_templated
 
     sensor.download_avg:
       friendly_name: "Internet download (averge)"
       sources: "speedtest.net, fast.com"
-      package: internet_online
       source_ids:
         - "sensor.fast_com_download"
         - "sensor.speedtest_download"
+      <<: *common_attrs_templated
 
     # WAN
     sensor.edge_wan_in:
       friendly_name: "Edge router WAN in"
       device: eth2.7
       interface: WAN
-      package: internet_online
+      <<: *common_attrs_templated
     sensor.edge_wan_out:
       friendly_name: "Edge router WAN out"
       device: eth2.7
       interface: WAN
-      package: internet_online
+      <<: *common_attrs_templated
     # WWAN_LTE
     sensor.edge_wwan_lte_in:
       friendly_name: "Edge router WWAN_LTE in"
       device: br-wwan-lte
       interface: WWAN_LTE
-      package: internet_online
+      <<: *common_attrs_templated
     sensor.edge_wwan_lte_out:
       friendly_name: "Edge router WWAN_LTE out"
       device: br-wwan-lte
       interface: WWAN_LTE
-      package: internet_online
+      <<: *common_attrs_templated
     # wg0
     sensor.edge_wg0_in:
       friendly_name: "Edge router wg0 in"
+      entity_picture: "https://www.sudo.is/img/wireguard.png"
       device: wg0
       interface: WG0
-      package: internet_online
+      <<: *common_attrs_templated
     sensor.edge_wg0_out:
       friendly_name: "Edge router wg0 out"
+      entity_picture: "https://www.sudo.is/img/wireguard.png"
       device: wg0
       interface: WG0
-      package: internet_online
+      <<: *common_attrs_templated
     sensor.edge_wg0_combined:
       friendly_name: "Edge router wg0 (combined)"
+      entity_picture: "https://www.sudo.is/img/wireguard.png"
       device: wg0
       interface: WG0
-      package: internet_online
+      <<: *common_attrs_templated
     # LAN
     sensor.edge_lan_in:
       friendly_name: "Edge router LAN in"
       device: br-lan
       interface: LAN
-      package: internet_online
+      <<: *common_attrs_templated
     sensor.edge_lan_out:
       friendly_name: "Edge router LAN out"
       device: br-lan
       interface: LAN
-      package: internet_online
+      <<: *common_attrs_templated
     sensor.edge_lan_combined:
       friendly_name: "Edge router LAN (combined)"
       device: br-lan
       interface: LAN
-      package: internet_online
+      <<: *common_attrs_templated
     # LAN_CARE
     sensor.edge_lan_care_in:
       friendly_name: "Edge router LAN_CARE in"
       device: br-lan-care
       interface: LAN_CARE
-      package: internet_online
+      <<: *common_attrs_templated
     sensor.edge_lan_care_out:
       friendly_name: "Edge router LAN_CARE out"
       device: br-lan-care
       interface: LAN_CARE
-      package: internet_online
+      <<: *common_attrs_templated
     sensor.edge_lan_care_combined:
       friendly_name: "Edge router LAN_CARE (combined)"
       device: br-lan-care
       interface: LAN_CARE
-      package: internet_online
+      <<: *common_attrs_templated
     # NVR
     sensor.edge_nvr_in:
       friendly_name: "Edge router NVR in"
       device: br-nvr
       interface: NVR
-      package: internet_online
+      <<: *common_attrs_templated
     sensor.edge_nvr_out:
       friendly_name: "Edge router NVR out"
       device: br-nvr
       interface: NVR
-      package: internet_online
+      <<: *common_attrs_templated
     sensor.edge_nvr_combined:
       friendly_name: "Edge router NVR (combined)"
       device: br-nvr
       interface: NVR
-      package: internet_online
+      <<: *common_attrs_templated
 
     # CPU
     sensor.edge_cpu:
       friendly_name: "Edge router CPU"
-      package: internet_online
+      <<: *common_attrs_templated
 
 sensor:
   - platform: netdata
@@ -321,7 +341,7 @@ template:
       state: |
         {% set kbits = states("sensor.netdata_turris_wan_out") %}
         {% set mbits = kbits|float / 1000 %}
-        {{ mbits|round(2)|abs }}
+        {{ mbits|abs|round(2) }}
 
       # WWAN_LTE
     - name: edge_wwan_lte_in
@@ -345,7 +365,7 @@ template:
       state: |
         {% set kbits = states("sensor.netdata_turris_wwan_lte_out") %}
         {% set mbits = kbits|float / 1000 %}
-        {{ mbits|round(2)|abs }}
+        {{ mbits|abs|round(2) }}
 
       # wg0
     - name: edge_wg0_in
@@ -369,7 +389,7 @@ template:
       state: |
         {% set kbits = states("sensor.netdata_turris_wg0_out") %}
         {% set mbits = kbits|float / 1000 %}
-        {{ mbits|round(2)|abs }}
+        {{ mbits|abs|round(2) }}
     - name: edge_wg0_combined
       icon: "mdi:network-outline"
       unit_of_measurement: "Mbit/s"
@@ -384,7 +404,7 @@ template:
         {% set in = states("sensor.edge_wg0_in") %}
         {% set out = states("sensor.edge_wg0_out") %}
         {% set total = in|float + out|float %}
-        {{ total|float|round(2) }}
+        {{ total|float(0.0)|round(2) }}
 
       # LAN
     - name: edge_lan_in
@@ -408,7 +428,7 @@ template:
       state: |
         {% set kbits = states("sensor.netdata_turris_br_lan_out") %}
         {% set mbits = kbits|float / 1000 %}
-        {{ mbits|round(2)|abs }}
+        {{ mbits|abs|round(2) }}
     - name: edge_lan_combined
       icon: "mdi:network-outline"
       unit_of_measurement: "Mbit/s"
@@ -423,7 +443,7 @@ template:
         {% set in = states("sensor.edge_lan_in") %}
         {% set out = states("sensor.edge_lan_out") %}
         {% set total = in|float + out|float %}
-        {{ total|float|round(2) }}
+        {{ total|float(0.0)|round(2) }}
 
       # LAN_CARE
     - name: edge_lan_care_in
@@ -447,7 +467,7 @@ template:
       state: |
         {% set kbits = states("sensor.netdata_turris_br_lan_care_out") %}
         {% set mbits = kbits|float / 1000 %}
-        {{ mbits|round(2)|abs }}
+        {{ mbits|abs|round(2) }}
     - name: edge_lan_care_combined
       icon: "mdi:network-outline"
       unit_of_measurement: "Mbit/s"
@@ -462,7 +482,7 @@ template:
         {% set in = states("sensor.edge_lan_care_in") %}
         {% set out = states("sensor.edge_lan_care_out") %}
         {% set total = in|float + out|float %}
-        {{ total|float|round(2) }}
+        {{ total|float(0.0)|round(2) }}
 
       # NVR
     - name: edge_nvr_in
@@ -486,7 +506,7 @@ template:
       state: |
         {% set kbits = states("sensor.netdata_turris_br_nvr_out") %}
         {% set mbits = kbits|float / 1000 %}
-        {{ mbits|round(2)|abs }}
+        {{ mbits|abs|round(2) }}
     - name: edge_nvr_combined
       icon: "mdi:network-outline"
       unit_of_measurement: "Mbit/s"
@@ -501,7 +521,7 @@ template:
         {% set in = states("sensor.edge_nvr_in") %}
         {% set out = states("sensor.edge_nvr_out") %}
         {% set total = in|float + out|float %}
-        {{ total|float|round(2) }}
+        {{ total|float(0.0)|round(2) }}
 
       # CPU
     - name: edge_cpu
@@ -524,12 +544,12 @@ template:
         {% set nice = states("sensor.netdata_turris_cpu_nice") %}
         {% set iowait = states("sensor.netdata_turris_cpu_iowait") %}
         {% set cpu = [softirq|float, user|float, system|float, nice|float, iowait|float] %}
-        {{ cpu | sum | float | round(2) }}
+        {{ cpu | sum | float(0.0) | round(2) }}
 
   - binary_sensor:
       - name: internet_online
         device_class: "connectivity"
-        icon: >-
+        icon: |
           {% if is_state(this.entity_id, "on") %}
           mdi:check-network
           {% else %}
