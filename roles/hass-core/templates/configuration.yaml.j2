@@ -324,18 +324,34 @@ recorder:
       - input_number.esphome_private_ble_*
       # Large sensors from android companion
       - sensor.*_active_notification_count
-      - sensor.*_last_reboot
+      - sensor.*_active_notifications
       - sensor.*_last_removed_notification
+      - sensor.*_last_notification
       - sensor.*_last_used_app
+      - sensor.*_last_reboot
       - sensor.*_app_tx_gb
       - sensor.*_app_rx_gb
+      - sensor.*_app_memory
       - sensor.*_becon_monitor
       - sensor.*_ble_transmitter
       - sensor.*_current_time_zone
       - sensor.*_external_storage
+      - sensor.*_battery_temperature
       - sensor.*_internal_storage
       - sensor.*_total_rx_gb
       - sensor.*_total_tx_gb
+      - sensor.*_high_accuracy_update_interval
+      - sensor.*_high_accuracy_update_interval
+      - sensor.nexus_7_internal_*
+      - sensor.oneplus_internal_*
+      - sensor.nexus_7_steps_*
+      - sensor.oneplus_steps_*
+      - sensor.nexus_7_wifi_*
+      - sensor.oneplus_wifi_*
+      - sensor.nexus_7_geocoded_*
+      - sensor.oneplus_geocoded_*
+      - sensor.nexus_7_detected_*
+      - sensor.oneplus_detected_*
       # Redundant ESPHome Private BLE sensors
       - sensor.esphome_*_private_ble_*_area
       - sensor.esphome_*_private_ble_device_tracker_*
@@ -368,6 +384,9 @@ recorder:
       - device_tracker.*_*_*_*_*_*
       - sensor.random_*
       - sensor.netdata_turris_*
+      - sensor.system_monitor_total_net_*
+      - sensor.system_monitor_network_in_*
+      - sensor.system_monitor_network_out_*
       - sensor.esphome_*_electric
       - sensor.esphome_*_electric_w
       - sensor.esphome_*_electric_w_*
