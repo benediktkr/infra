@@ -33,5 +33,31 @@ homeassistant:
 
     sensor.notflix_sudo_is:
       state_class: measurement
+      entity_picture: "https://www.sudo.is/img/logo-jellyfin.svg"
       <<: *common_attrs
+    sensor.github_authelia_authelia_latest_release:
+      friendly_name: "authelia"
+      entity_picture: "https://www.sudo.is/img/authelia.ico"
+      <<: *common_attrs
+    sensor.github_go_gitea_gitea_latest_release:
+      friendly_name: "gitea"
+      entity_picture: "https://www.sudo.is/img/gitea.svg"
+      <<: *common_attrs
+    sensor.github_matrix_org_synapse_latest_release:
+      friendly_name: "matrix-org/synapse"
+      entity_picture: "https://www.sudo.is/img/matrix.png"
+      <<: *common_attrs
+    sensor.github_advplyr_audiobookshelf_latest_release:
+      friendly_name: "audiobookshelf"
+      entity_picture: "https://www.sudo.is/img/abs_logo.png"
+      <<: *common_attrs
+    sensor.github_owntone_owntone_server_latest_release:
+      friendly_name: "owntone"
+      entity_picture: "https://www.sudo.is/img/owntone.svg"
+      <<: *common_attrs
+    sensor.github_jellyfin_jellyfin_latest_release:
+      friendly_name: "jellyfin"
+      entity_picture: "https://www.sudo.is/img/logo-jellyfin.svg"
+      <<: *common_attrs
+
 
