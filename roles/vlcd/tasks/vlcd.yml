@@ -15,8 +15,22 @@
       - pulseaudio-utils
       - pulseaudio-module-bluetooth
       - pulseaudio-module-raop
+      - pulseaudio-equalizer
       - pulseaudio-module-zeroconf
+      - python3-pulsectl
+      - mkchromecast
+      - mkchromecast-pulseaudio
+      - pamix
+      - pamixer
+      - pnmixer
+      - pulsemixer
+        # client libraries
+      - libpulse0
+      #- pipewire-pulse
       #- pulseaudio-module-jack
+      #  #cross platform audio output
+      #- libao4
+      #  # emulates squeezelite player
       #- squeezelite-pulseaudio
     state: latest
   notify:

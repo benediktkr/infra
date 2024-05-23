@@ -1,8 +1,5 @@
 ---
 
-- name: daemon reload
-  command: systemctl daemon-reload
-
 - name: restart vlcd
   systemd:
     name: vlcd
