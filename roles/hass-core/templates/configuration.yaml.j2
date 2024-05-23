@@ -257,26 +257,24 @@ panel_custom:
     require_admin: true
     config:
       ingress: core_configurator
-#  - name: sonos
-#    sidebar_title: Sonos
-#    sidebar_icon: mdi:speaker
-#    js_url: /api/hassio/app/entrypoint.js
-#    url_path: 'config/integrations/integration/sonos'
-#    embed_iframe: true
-#    require_admin: false
-#    config:
-#      ingress: core_configurator
-#  - name: apple_tv
-#    sidebar_title: Apple TV
-#    sidebar_icon: mdi:apple
-#    js_url: /api/hassio/app/entrypoint.js
-#    url_path: 'config/integrations/integration/apple_tv'
-#    embed_iframe: true
-#    require_admin: false
-#    config:
-#      ingress: core_configurator
-#
-
+  - name: sonos
+    sidebar_title: Sonos
+    sidebar_icon: mdi:speaker
+    js_url: /api/hassio/app/entrypoint.js
+    url_path: 'config/integrations/integration/sonos'
+    embed_iframe: true
+    require_admin: false
+    config:
+      ingress: core_configurator
+  - name: apple_tv
+    sidebar_title: Apple TV
+    sidebar_icon: mdi:apple
+    js_url: /api/hassio/app/entrypoint.js
+    url_path: 'config/integrations/integration/apple_tv'
+    embed_iframe: true
+    require_admin: false
+    config:
+      ingress: core_configurator
 
 recorder:
   db_url: mysql://{{ systemuserlist.hass.username }}:@localhost/{{ systemuserlist.hass.username }}?charset=utf8mb4&unix_socket=/run/mysqld/mysqld.sock

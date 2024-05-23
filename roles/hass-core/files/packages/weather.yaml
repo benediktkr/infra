@@ -21,6 +21,15 @@ homeassistant:
         templated: true
         <<: *common_attrs
 
+    sensor.blitzortung_lightning_distance:
+      # IDEA: currently using the attribute on 'binary_sensor.weather_lightning', but it
+      # might actually be easier to use an attribute on a different entity.
+      #
+      # This sensor already has state_class, device_class and unit_of_measurement set correctly
+      distance_threshold: 25.0
+      <<: *common_attrs
+
+
     binary_sensor.rain_balcony_bucket:
       friendly_name: Balcony tipping bucket rain sensor
       templated: false
@@ -92,6 +101,9 @@ homeassistant:
 
     binary_sensor.weather_lightning:
       friendly_name: "Lightning"
+      distance_threshold: 25.0
+      source_entity_id_counter: "sensor.blitzortung_lightning_counter"
+      source_entity_id_distance: "sensor.blitzortung_lightning_distance"
       <<: *common_attrs_templated
 
     binary_sensor.weather_precipitation:
@@ -281,6 +293,10 @@ template:
         attributes:
           source_entity_id: "sensor.current_precipitation"
 
+        # has_value("sensor.blitzortung_lightning_counter")
+        # and has_value("sensor.blitzortung_lightning_distance")
+        # and is_number(states("sensor.blitzortung_lightning_distance"))
+        # and is_number(states("sensor.blitzortung_lightning_counter"))
       - name: weather_lightning
         device_class: problem
         icon: |
@@ -290,22 +306,17 @@ template:
           mdi:weather-cloudy
           {% endif %}
         state: |
+          {% set cnt = states("sensor.blitzortung_lightning_counter")|int(0) -%}
+          {% set dist = states("sensor.blitzortung_lightning_distance")|float(0.0)|round(1) -%}
+          {% set dist_threshold = this.attributes.get("distance_threshold") -%}
           {{
-            has_value("sensor.blitzortung_lightning_counter")
-            and has_value("sensor.blitzortung_lightning_distance")
-            and is_number(states("sensor.blitzortung_lightning_distance"))
-            and is_number(states("sensor.blitzortung_lightning_counter"))
+            cnt > 0 and dist <= dist_threshold
             and (
-              states("sensor.blitzortung_lightning_counter")|int > 0
-              and states("sensor.blitzortung_lightning_distance")|int <= 100.0
-          )
+              is_number(cnt)
+              and is_number(dist)
+              and is_number(dist_threshold)
+            )
           }}
-        attributes:
-          source_entity_id: |
-            {{ [
-              "sensor.blitzortung_lightning_counter",
-              "sensor.blitzortung_lightning_distance"
-            ] }}
 
       - name: weather_precipitation_tomorrowio
         icon: |
