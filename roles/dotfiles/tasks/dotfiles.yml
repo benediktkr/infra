@@ -28,6 +28,7 @@
     clone: true
     update: true
     force: true
+  no_log: true
   become_user: "{{ myusername }}"
   register: gitpull
 
@@ -61,6 +62,7 @@
     clone: true
     update: false
     force: true
+  no_log: true
   become_user: "{{ myusername }}"
   when:
     - not (yadm_dotfiles.stat.exists or projects_dotfiles.stat.exists)
@@ -72,6 +74,7 @@
     dest: "/root/{{ item.dest }}"
     owner: root
     group: root
+  no_log: true
   loop_control:
     label: "{{ item.dest }}"
   with_items:
@@ -80,18 +83,7 @@
     - gitpull.changed
     - item.root|bool
 
-#- name: rm dotfiles that root should not have
-#  file:
-#    path: "/root/{{ item.dest }}"
-#    state: absent
-#  loop_control:
-#    label: "{{ item.dest }}"
-#  with_items:
-#   - "{{ dotfiles }}"
-# when:
-#    - not item.root|bool
-
-- name: rm outdate dotfile links
+- name: rm outdated dotfile links
   file:
     path: "~/{{ item }}"
     state: absent
