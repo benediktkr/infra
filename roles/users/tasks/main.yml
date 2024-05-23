@@ -17,15 +17,17 @@
     - users
     - whoami
 
-- name: whoami become user
+- name: whoami become {{ task_user }}
   command: whoami
   become: true
-  become_user: "{{ vlcd_user }}"
+  become_user: "{{ task_user }}"
   register: wbu
   changed_when: false
   tags:
     - users
     - whoami
+  vars:
+    task_user: "{{ ansible_user }}"
 
 - debug:
     var: item
