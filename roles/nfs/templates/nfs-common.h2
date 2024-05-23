@@ -1,8 +1,0 @@
-# ansible_managed
-
-# enable only NFSv4 or higher, does not need rpcbind
-
-STATDOPTS=
-NEED_STATD="no"
-NEED_IDMAPD="yes"
-NEED_GSSD=

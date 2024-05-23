@@ -2,7 +2,7 @@
 
 set -e
 
-echo "setting uid for _unbound user to same as pihole: {{ pihole_uid }}"
+echo "setting uid={{ pihole_uid }},gid={{ pihole_gid }} for user='_unbound' in container."
 
 groupmod -g {{ pihole_gid }} _unbound
 usermod -u {{ pihole_uid }} -g {{ pihole_gid }} _unbound

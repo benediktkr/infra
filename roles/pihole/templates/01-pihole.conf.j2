@@ -37,6 +37,11 @@ server {
        proxy_set_header   X-Forwarded-Host $server_name;
        proxy_set_header   X-Forwarded-Proto $scheme;
 
+       # Timeouts are in seconds, 300s == 5min
+       proxy_connect_timeout 300;
+       proxy_send_timeout    300;
+       proxy_read_timeout    300;
+       send_timeout          300;
    }
 
    access_log /var/log/nginx/access_{{ pihole_url }}.log main;
