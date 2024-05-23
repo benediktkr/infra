@@ -1,0 +1,4 @@
+---
+
+cmus_service_enabled: false
+cmus_user: nobody

@@ -1,0 +1,11 @@
+---
+
+- name: restart cmus
+  systemd:
+    name: cmus
+    state: restarted
+    scope: user
+  become: true
+  become_user: "{{ cmus_user }}"
+  when:
+    - cmus_service_enabled

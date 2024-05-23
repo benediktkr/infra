@@ -1,0 +1,6 @@
+---
+
+- import_tasks: cmus.yml
+  tags:
+    - cmus
+    - homeaudio
