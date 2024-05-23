@@ -1,78 +1,86 @@
 ---
 
 dependencies:
-    - role: mariadb
-      tags:
-        - mariadb
-        - hass-mariadb
+  - role: nfs
+    tags:
+      - nfs
 
-    - role: docker
-      tags:
-        - docker
+  - role: mariadb
+    tags:
+      - mariadb
+      - hass-mariadb
 
-    - role: hass-udev
-      tags:
-        - hass-udev
+  - role: docker
+    tags:
+      - docker
 
-    - role: hass-zwave
-      tags:
-        - hass-zwave
-        - hass-zwavejs
-        - zwave
-        - zwavejs
+  - role: hass-udev
+    tags:
+      - hass-udev
 
-    - role: hass-zigbee2mqtt
-      tags:
-        - hass-zigbee
-        - hass-zigbee2mqtt
-        - zigbee2mqtt
-        - zigbee
-      when: hass_zigbee == "zigbee2mqtt" or hass_zigbee2mqtt|default(false)
+  - role: hass-zwave
+    tags:
+      - hass-zwave
+      - hass-zwavejs
+      - zwave
+      - zwavejs
 
-    - role: hass-deconz
-      tags:
-        - hass-zigbee
-        - hass-deconz
-        - deconz
-        - zigbee
-      when: hass_zigbee == "deconz" or hass_deconz|default(false)
+  - role: hass-zigbee2mqtt
+    tags:
+      - hass-zigbee
+      - hass-zigbee2mqtt
+      - zigbee2mqtt
+      - zigbee
+    when: hass_zigbee == "zigbee2mqtt" or hass_zigbee2mqtt|default(false)
 
-    - role: hass-rtl433
-      tags:
-        - hass-rtl433
+  - role: hass-deconz
+    tags:
+      - hass-zigbee
+      - hass-deconz
+      - deconz
+      - zigbee
+    when: hass_zigbee == "deconz" or hass_deconz|default(false)
 
-    - role: hass-mqtt
-      tags:
-        - hass-mqtt
+  - role: hass-rtl433
+    tags:
+      - hass-rtl433
 
-    - role: hass-esphome
-      tags:
-        - hass-esphome
+  - role: hass-mqtt
+    tags:
+      - hass-mqtt
 
-    - role: hass-core
-      tags:
-        - hass-core
+  - role: hass-esphome
+    tags:
+      - hass-esphome
 
-    - role: hass-appdaemon
-      tags:
-        - hass-appdaemon
-        - hass-ad
-        - appdaemon
+  - role: hass-core
+    tags:
+      - hass-core
 
-    - role: hass-nginx
-      tags:
-        - hass-nignx
-        - nginx
+  - role: hass-appdaemon
+    tags:
+      - hass-appdaemon
+      - hass-ad
+      - appdaemon
 
-    - role: hass-utils
-      tags:
-        - hass-utils
+  - role: hass-nginx
+    tags:
+      - hass-nignx
+      - nginx
 
-    - role: mass
-      tags:
-        - mass
-        - hass-mass
+  - role: hass-utils
+    tags:
+      - hass-utils
 
-    #- role: hass-usbip
-    #  tags:
-    #    - hass-usbip
+  - role: mass
+    tags:
+      - mass
+      - hass-mass
+
+  - role: cmus
+    tags:
+      - cmus
+
+  #- role: hass-usbip
+  #  tags:
+  #    - hass-usbip
