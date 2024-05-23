@@ -14,7 +14,7 @@ server {
     include /etc/nginx/authelia_internal.conf;
     include /etc/nginx/sudo-known.conf;
 
-    server_name {{ hass_url }};
+    server_name {{ hass_url }} {{ hass_url.split('.')[0] }}2.{{hass_url.split('.')[1:] | join('.') }} {{ hass_url.split('.')[0] }}.{{ inventory_hostname.split('.')[1:] | join('.') }};
 
     location /glados/ {
         # TEMP: while glados hass integration is WIP
@@ -103,7 +103,6 @@ server {
         proxy_pass https://{{ owntone_url }}/{{ hass_nginx_owntone_stream }};
     }
 
-
     location {{ mass_baseurl }}/ {
 
         sub_filter_types text/xhtml text/xml text/css;
@@ -111,7 +110,20 @@ server {
         sub_filter 'url(/'  'url({{ mass_baseurl }}/';
         sub_filter_once off;
         sub_filter_last_modified on;
-        proxy_pass http://{{ bridgewithdns.mass }}:{{ mass_port }}/;
+
+        proxy_pass_request_headers on;
+
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        #proxy_set_header Host $host;
+        #proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        #proxy_set_header X-Forwarded-Proto "http";
+        #proxy_set_header Host "mass";
+
+        #proxy_pass http://localhost:{{ mass_port }}/;
+        proxy_pass http://{{ bridgewithdns.host }}:{{ mass_port }}/;
+        #proxy_pass http://{{ bridgewithdns.mass }}:{{ mass_port }}/;
+        #proxy_pass http://{{ bridgewithdns.mass }}:{{ mass_port }};
     }
 
     #location = {{ nginx_podgrab_path }} {
