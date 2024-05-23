@@ -1,5 +1,4 @@
 # ansible_managed
 # /etc/init.d/rpcbind
 
-{% set wg_ip = wg_clients[inventory_hostname]['ip'] -%}
-#OPTIONS="-w{% if wg_ip is defined %}-h {{ wg_ip }}{% endif %} -h 127.0.0.1 -l "
+#OPTIONS="-w -h {{ nfs_listen_ip }} -h 127.0.0.1 -l "

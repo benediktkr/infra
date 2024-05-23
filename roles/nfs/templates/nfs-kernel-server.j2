@@ -1,4 +1,4 @@
-# ansible_managed
+# {{ ansible_managed }}
 # Number of servers to start up
 RPCNFSDCOUNT=8
 
@@ -11,14 +11,8 @@ RPCNFSDPRIORITY=0
 # see rpc.mountd(8) or http://wiki.debian.org/SecuringNFS
 
 # disable NFS v2 and v3 (need rpcbind), and only listen on local ip
-{% if inventory_hostname in wg_clients -%}
-{% set listen_ip = wg_clients[inventory_hostname]['ip'] -%}
-{% elif ansible_default_ipv4.address is ansible.utils.in_network s21_cidr -%}
-{% set listen_ip = ansible_default_ipv4.address -%}
-{% else -%}
-{% set listen_ip = "127.0.0.1" -%}
-{% endif -%}
-RPCMOUNTDOPTS="--manage-gids -N 2 -N 3 -H {{ listen_ip }}"
+
+RPCMOUNTDOPTS="--manage-gids -N 2 -N 3 -H {{ nfs_listen_ip }}"
 
 # Do you want to start the svcgssd daemon? It is only required for Kerberos
 # exports. Valid alternatives are "yes" and "no"; the default is "no".

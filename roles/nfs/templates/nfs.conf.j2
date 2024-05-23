@@ -60,7 +60,7 @@ manage-gids=y
 # storagedir=/var/lib/nfs/nfsdcltrack
 #
 [nfsd]
-host={{ wg_clients[inventory_hostname]['ip'] }}
+host={{ nfs_listen_ip }}
 
 # debug=0
 # threads=8

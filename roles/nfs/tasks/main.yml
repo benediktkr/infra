@@ -68,6 +68,8 @@
   notify:
     - reload nfs-kernel-server
     #- reload idmap
+  tags:
+    - nfs-server-config
 
 - name: load kernel module
   modprobe:
@@ -77,6 +79,22 @@
     - nfsd
     - nfs
 
+- name: daemon reload
+  systemd:
+    daemon_reload: true
+  tags:
+    - systemd
+
+- name: mask rpcbind (since only NFSv4 or higher is enabled, which does need rpcbind)
+  service:
+    name: "{{ item }}"
+    masked: "{{ nfs_mask_rpc|default(true) }}"
+  loop_control:
+    label: "{{ item }} masked={{nfs_mask_rpc|default(true)}}"
+  with_items:
+    - rpcbind.service
+    - rpcbind.socket
+
 - name: enable nfs-kernel-server
   service:
     name: nfs-kernel-server
@@ -84,14 +102,6 @@
     state: started
   when:
     - nfs_exports | length > 0
-
-- name: mask rpcbind (since only NFSv4 or higher is enabled, which does need rpcbind)
-  service:
-    name: "{{ item }}"
-    masked: true
-  with_items:
-    - rpcbind.service
-    - rpcbind.socket
 
 - name: template systemd mounts
   template:
@@ -110,7 +120,6 @@
   tags:
     - nfs-mounts
   with_items: "{{ nfs_mounts }}"
-
 
 - name: start nfs mounts
   service:
