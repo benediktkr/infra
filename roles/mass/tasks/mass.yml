@@ -16,6 +16,7 @@
     - path: "{{ mass_root }}/data"
     - path: "{{ mass_root }}/playlists"
     - path: "{{ deadspace_root }}/audio"
+    - path: "{{ deadspace_root }}/local/music"
 
 #- name: template config
 #  template:
@@ -30,9 +31,9 @@
 #    - hass-config
 #    - mass-config
 #
-- name: start mass container
+- name: start music-assistant container
   docker_container:
-    name: mass
+    name: music-assistant
     image: ghcr.io/music-assistant/server
     detach: true
     pull: true
@@ -42,16 +43,20 @@
     container_default_behavior: compatibility
     user: "{{ systemuserlist[mass_user].uid }}:{{ systemuserlist[mass_user].gid }}"
     networks_cli_compatible: false
-    network_mode: bridgewithdns
-    networks:
-      - name: bridgewithdns
-        ipv4_address: "{{ bridgewithdns.mass }}"
-    #network_mode: host
+    #capabilities:
+    #  # for smb mount
+    #  - SYS_ADMIN
+    #  - DAC_READ_SEARCH
     #privileged: true
-    ports:
-      - "127.0.0.1:{{ mass_port }}:{{ mass_port }}"
-      - "8097:8097"
-      - "8098:8098"
+    network_mode: host
+    #network_mode: bridgewithdns
+    #networks:
+    #  - name: bridgewithdns
+    #    ipv4_address: "{{ bridgewithdns.mass }}"
+    #ports:
+    #  - "127.0.0.1:{{ mass_port }}:{{ mass_port }}"
+    #  - "8097:8097"
+    #  - "8098:8098"
     env:
       TZ: "Europe/Berlin"
     mounts:
@@ -60,10 +65,15 @@
         target: /data
       - type: bind
         source: "{{ deadspace_root }}/audio"
-        target: /audio
+        target: "{{ deadspace_root }}/audio"
+      - type: bind
+        source: "{{ deadspace_root }}/local/music"
+        target: "{{ deadspace_root }}/local/music"
   register: mass_container
   tags:
     - mass-container
+    - music-assistant-container
     - hass-mass-container
+    - hass-music-assistant-container
     - hass-container
     - docker-containers
