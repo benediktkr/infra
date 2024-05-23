@@ -1,6 +1,12 @@
 ---
 
 dependencies:
+  - role: nfs
+    tags:
+      - nfs
+  - role: cmus
+    tags:
+      - cmus
   - role: hass-ser2net
     tags:
       - hass-ser2net
@@ -13,9 +19,6 @@ dependencies:
   - role: deadspace
     tags:
       - deadspace
-  - role: nfs
-    tags:
-      - nfs
   - role: cups
     tags:
       - cups
