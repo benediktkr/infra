@@ -82,4 +82,6 @@
     - cmus.service
   tags:
     - systemd
+  when:
+    - cmus_service_enabled
 
