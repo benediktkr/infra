@@ -201,7 +201,7 @@ template:
             **Source**:
 
             ```text
-            {{ attr.get("source") }}
+            {{ attrs.get("source") }}
             ```
             {% endif -%}
 
