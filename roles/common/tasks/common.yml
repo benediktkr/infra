@@ -223,7 +223,6 @@
       - at
       - build-essential
       - ca-certificates
-      - cbm
       - cron
       - chrony
       - cryptsetup
@@ -238,7 +237,6 @@
       - htop
       - iotop
       - ipcalc
-      - iptraf
       - jq
       - lm-sensors
       - locales
@@ -252,29 +250,32 @@
       - mtr
       - nano
       - ncdu
-      - "{{ pkg_netcat_name |default('netcat') }}"
-      - nethogs
-      - ifstat
-      - nload
-      - bmon
-      - nmap
       - mergerfs
       - openssl
-      - iputils-ping
       - procmail
       - pciutils
       - rsync
       - smartmontools
       - sshfs
       - sudo
-      - tcpdump
       - tree
       - tmux
       - unzip
-      - vnstat
       - whois
       - zip
       - zsh
+      # Netwok monitoring
+      - bmon
+      - cbm
+      - ifstat
+      - iptraf
+      - iputils-ping
+      - "{{ pkg_netcat_name |default('netcat') }}"
+      - nethogs
+      - nload
+      - nmap
+      - tcpdump
+      - vnstat
   environment:
     PATH: "{{ ansible_env.PATH }}:/sbin:/usr/sbin"
   tags:
