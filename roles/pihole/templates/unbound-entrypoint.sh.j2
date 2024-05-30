@@ -1,7 +1,11 @@
 #!/bin/bash
 
 set -e
+{% set pihole_uid = systemuserlist.pihole.uid -%}
+{% set pihole_gid = systemuserlist.pihole.gid -%}
 
+echo
+echo "Start: $(date -Is)"
 echo "setting uid={{ pihole_uid }},gid={{ pihole_gid }} for user='_unbound' in container."
 
 groupmod -g {{ pihole_gid }} _unbound

@@ -1,0 +1,31 @@
+# {{ ansible_managed }}
+# Pi-hole: A black hole for Internet advertisements
+# (c) 2017 Pi-hole, LLC (https://pi-hole.net)
+# Network-wide ad blocking via your own hardware.
+#
+# Dnsmasq config for Pi-hole's FTLDNS
+#
+# This file is copyright under the latest version of the EUPL.
+# Please see LICENSE file for your rights under this license.
+
+
+addn-hosts=/etc/pihole/local.list
+addn-hosts=/etc/pihole/custom.list
+
+
+localise-queries
+
+
+no-resolv
+
+log-queries
+log-facility=/var/log/pihole/pihole.log
+
+log-async
+# Can be retrived from: https://{{ pihole_url }}/admin/api.php?getCacheInfo
+# and with `dig choas txt cachesize.bind'
+cache-size={{ pihole_dns_cache_size }}
+server={{ bridgewithdns.unbound0 }}
+server={{ bridgewithdns.unbound1 }}
+except-interface=nonexisting
+

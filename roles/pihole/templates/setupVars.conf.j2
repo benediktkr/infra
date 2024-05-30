@@ -1,0 +1,23 @@
+# {{ ansible_managed }}
+INSTALL_WEB_INTERFACE=true
+# Empty because nginx does the auth
+WEBPASSWORD=
+PIHOLE_INTERFACE=eth0
+DNSMASQ_LISTENING=all
+QUERY_LOGGING={{ pihole_query_logging | bool | lower }}
+BLOCKING_ENABLED=true
+DNS_FQDN_REQUIRED=false
+DNS_BOGUS_PRIV=false
+DNSSEC=false
+{% if pihole_rev_server is defined and pihole_rev_server != false -%}
+REV_SERVER={{ pihole_rev_server | lower }}
+REV_SERVER_CIDR={{ pihole_rev_server_cidr }}
+REV_SERVER_TARGET={{ pihole_rev_server_target }}
+REV_SERVER_DOMAIN={{ pihole_rev_server_domain }}
+{% endif %}
+API_EXCLUDE_DOMAINS=*.{{ domain }},{{ domain }}
+API_EXCLUDE_CLIENTS=
+API_QUERY_LOG_SHOW=all
+PIHOLE_DNS_1={{ bridgewithdns.unbound0 }}
+PIHOLE_DNS_2={{ bridgewithdns.unbound1 }}
+

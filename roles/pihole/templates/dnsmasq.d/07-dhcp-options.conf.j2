@@ -1,0 +1,3 @@
+{% if pihole_dhcp -%}
+dhcp-option=option:dns-server,{{ pihole_listen_addr }}
+{% endif %}

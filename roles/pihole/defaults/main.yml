@@ -2,15 +2,17 @@
 
 pihole_ssl: "{{ pihole_url }}"
 
-pihole_unifi_dns_discovery_enabled: false
 pihole_root: "/srv/pihole"
 pihole_static_a_records: []
 pihole_http_inet: 127.0.0.1
 pihole_http_port: 8081
 pihole_dhcp: false
 
-pihole_uid: '999'
-pihole_gid: '999'
+pihole_dns_cache_size: 10000
+pihole_ftl_port: 4711
+pihole_query_logging: true
+
+pihole_rev_server: pihole_rev_server_cidr is defined
 
 pihole_listen_addr: "{{ wg_clients[inventory_hostname]['ip'] | default(ansible_default_ipv4.address) }}"
 pihole_listen_addr_docker: "{{ pihole_listen_addr }}"

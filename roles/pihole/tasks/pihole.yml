@@ -34,8 +34,8 @@
 - name: template nginx vhost
   template:
     src: 01-pihole.conf.j2
-    dest: /etc/nginx/sites-enabled/01-pihole-vhost
-    #validate: /usr/sbin/nginx -t
+    dest: /etc/nginx/sites-enabled/01-pihole.conf
+    validate: /usr/sbin/nginx -t
   tags:
     - nginx-config
     - nginx-vhosts
@@ -44,38 +44,42 @@
 
 - name: create log dirs
   file:
-    path: /var/log/{{ item.name }}
+    path: /var/log/{{ item.dir }}
     state: directory
     mode: 0755
-    owner: "{{ item.owner }}"
-    group: "{{ item.owner }}"
+    owner: "{{ item.owner|default('pihole') }}"
+    group: "{{ item.group|default('pihole') }}"
+  loop_control:
+    label: "/var/log/{{ item.dir }}"
   with_items:
-    - name: pihole
-      owner: "{{ pihole_uid }}"
-    - name: unbound0
-      owner: "{{ pihole_uid }}"
-    - name: unbound1
-      owner: "{{ pihole_uid }}"
+    - dir: pihole
+    - dir: unbound0
+    - dir: unbound1
 
 - name: create dir structure
   file:
-    path: "{{ pihole_root }}/{{ item['dir'] }}"
+    path: "{{ pihole_root }}/{{ item.dir }}"
     state: directory
     mode: 0775
-    owner: "{{ item['owner'] | default('999') }}"
-    group: "{{ item['group'] | default('999') }}"
+    owner: "{{ item.owner | default(systemuserlist.pihole.uid) }}"
+    group: "{{ item.group | default(systemuserlist.pihole.gid) }}"
+  loop_control:
+    label: "{{ pihole_root }}/{{ item.dir }}"
   with_items:
-    - { dir: "etc/pihole", group: "1000" }
-    - { dir: "etc/dnsmasq.d" }
-    - { dir: "etc/unbound" }
-  tags: docker
+    - dir: "etc/pihole"
+    - dir: "etc/dnsmasq.d"
+    - dir: "etc/unbound"
+    - dir: "data"
+  tags:
+    - pihole-dirs
+    - docker
 
 - name: template files in {{ pihole_root }}/etc/pihole/
   template:
     src: "{{ item }}.j2"
     dest: "{{ pihole_root }}/etc/pihole/{{ item }}"
-    owner: root
-    group: root
+    owner: "{{ systemuserlist.pihole.uid }}"
+    group: "{{ systemuserlist.pihole.gid }}"
     mode: 0644
   loop_control:
     label: "{{ item }}"
@@ -98,41 +102,35 @@
   tags:
     - cron
 
-- name: template pihole-FTL.conf
+- name: template pihole config
   template:
-    src: pihole-FTL.conf.j2
-    dest: "{{ pihole_root }}/etc/pihole/pihole-FTL.conf"
-    owner: 999
-    group: 999
+    src: "{{ item }}.j2"
+    dest: "{{ pihole_root }}/etc/pihole/{{ item }}"
+    owner: "{{ systemuserlist.pihole.uid }}"
+    group: "{{ systemuserlist.pihole.gid }}"
     mode: 0644
   tags:
     - pihole-config
     - pihole-overrides
+  loop_control:
+    label: "{{ item }}"
+  with_items:
+    - pihole-FTL.conf
+    - setupVars.conf
   notify: restart pihole
 
-- name: template dhcp options if dhcp server
+- name: template dnsmasq config files
   template:
-    src: 07-dhcp-options.conf.j2
-    dest: "{{ pihole_root }}/etc/dnsmasq.d/07-dhcp-otions.conf"
-    owner: root
-    group: root
-    mode: 0644
-  tags:
-    - pihole-config
-  when: pihole_dhcp
-  notify: restart pihole
-
-- name: template other dnsmasq.d files
-  template:
-    src: "{{ item }}.j2"
+    src: "dnsmasq.d/{{ item }}.j2"
     dest: "{{ pihole_root }}/etc/dnsmasq.d/{{ item }}"
-    owner: root
-    group: root
+    owner: "{{ systemuserlist.pihole.uid }}"
+    group: "{{ systemuserlist.pihole.gid }}"
     mode: 0644
   tags:
     - pihole-config
     - pihole-dnsmasq-config
   with_items:
+    - "07-dhcp-options.conf"
     - "00-domain.conf"
     - "99-edns.conf"
     - "02-zone-forward.conf"
@@ -206,6 +204,7 @@
       - type: bind
         source: "{{ pihole_root }}/unbound-entrypoint.sh"
         target: /unbound-entrypoint.sh
+    # Sets the uid and gid
     entrypoint: /unbound-entrypoint.sh
     container_default_behavior: compatibility
     networks_cli_compatible: false
@@ -245,20 +244,24 @@
     state: started
     container_default_behavior: compatibility
     capabilities:
+      #- NET_RAW
+      #- NET_BIND_SERVICE
+      # Required if used as dhcp server
       - NET_ADMIN
-      - NET_RAW
-      - NET_BIND_SERVICE
     env:
+      PIHOLE_UID: "{{ systemuserlist.pihole.uid }}"
+      PIHOLE_GID: "{{ systemuserlist.pihole.gid }}"
       WEB_PORT: "{{ pihole_http_port|string }}"
       DNSMASQ_LISTENING: "all"
       VIRTUAL_HOST: "{{ pihole_url }}"
       TZ: "Europe/Berlin"
       PIHOLE_DNS_: "{{ bridgewithdns.unbound0 }};{{ bridgewithdns.unbound1 }}"
       DNSSEC: "{{ pihole_dnssec|default(false)|string|lower|trim }}"
-      REV_SERVER: "{{ pihole_rev_server|default(false)|string|lower|trim }}"
+      REV_SERVER: "{{ pihole_rev_server | lower | string }}"
       REV_SERVER_TARGET: "{{ pihole_rev_server_target|default('') }}"
       REV_SERVER_DOMAIN: "{{ pihole_rev_server_domain|default('') }}"
       REV_SERVER_CIDR: "{{ pihole_rev_server_cidr|default('') }}"
+      # Workaround for LOCAL_IPV4 in pihole-FTL.conf
       FTLCONF_LOCAL_IPV4: "{{ pihole_listen_addr }}"
       WEBLOGS_STDOUT: "0"
     dns_servers:
@@ -267,6 +270,7 @@
     ports:
       - 127.0.0.1:53:53/udp
       - 127.0.0.1:53:53/tcp
+      - 127.0.0.1:{{ pihole_ftl_port }}:{{ pihole_ftl_port }}/tcp
       #- "{{ pihole_nginx_interface }}:53:53/udp"
       - "{{pihole_listen_addr_docker}}:53:53/udp"
       - 127.0.0.1:{{pihole_http_port}}:{{pihole_http_port}}
@@ -286,6 +290,9 @@
       - type: bind
         source: "{{ pihole_root }}/etc/dnsmasq.d"
         target: /etc/dnsmasq.d
+      - type: bind
+        source: "{{ pihole_root }}/data"
+        target: "{{ pihole_root }}/data"
       - type: bind
         source: /var/log/pihole
         target: /var/log/pihole

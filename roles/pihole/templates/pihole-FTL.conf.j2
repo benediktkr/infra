@@ -7,7 +7,7 @@ BLOCKINGMODE=NULL
 LOGFILE=/var/log/pihole/pihole-FTL.log
 MACVENDORDB=/macvendor.db
 
-{% if pihole_ipv6|default(true)|bool -%}
+{% if pihole_ipv6|bool -%}
 RESOLVE_IPV6=yes
 {% else -%}
 RESOLVE_IPV6=no
@@ -15,32 +15,48 @@ RESOLVE_IPV6=no
 RESOLVE_IPV4=yes
 
 RATE_LIMIT=0/0
-BLOCK_ESNI=true
+
+{# Telnet API etc #}
+FTLPORT={{ pihole_ftl_port }}
 
 {#
- # Firefox DNS-over-HTTPS
- # reply with NXDOMAIN to queries of use-application-dns.net
- # default value: true
+ # Reply with NXDOMAIN
+ #
+ ## MOZILLA_CANARY: Firefox DNS-over-HTTPS
+ ##  NXDOMAIN: use-application-dns.net
+ ##  default value: true
+ ##
+ ## BLOCK_ICLOUD_PR: iCloud Private Relay:
+ ##  NXDOMAIN: mask.icloud.com and mask-h2.icloud.com
+ ##  default value: true
  #}
 MOZILLA_CANARY=true
-
-{#
- # iCloud Private Relay
- # reply with NXDOMAIN to mask.icloud.com and mask-h2.icloud.com
- # default value: true
- #}
 BLOCK_ICLOUD_PR=true
 
 {#
- # when the gravity database is locked/busy, allow all queries
+ # BLOCK_ESNI: ESNI encrypts the TLS SNI extension header
  #}
-REPLY_WHEN_BUSY=ALLOW
+BLOCK_ESNI=true
 
+{# Overwrites the query source when client info is provided through
+ # EDNS0 client subnet, allows pi-hole to obtain client IPs even if they
+ # are hidden behind a NAT
+ #}
+EDNS0_ECS=true
 
 {#
- # disables pihole trying to override the PTR record
+ # When the gravity database is locked/busy
+ # default: DROP
  #}
+REPLY_WHEN_BUSY=DROP
+
+{# TTL for blocked queries #}
+BLOCK_TTL=2
+
+{# disables pihole trying to override the PTR record #}
 PIHOLE_PTR=NONE
+
+PARSE_ARP_CACHE=true
 
 {#
  # pihole will overwrite LOCAL_IPV4 (when running in docker) to 0.0.0.0 by default
@@ -51,7 +67,17 @@ LOCAL_IPV4={{ pihole_listen_addr }}
 BLOCK_ADDR4={{ pihole_listen_addr }}
 
 
+{# Mounted in docker container #}
+LOGFILE=/var/log/pihole/FTL.log
+SETUPVARSFILE=/etc/pihole/setupVars.conf
+DBFILE={{ pihole_root }}/data/pihole-FTL.db
+GRAVITYDB={{ pihole_root }}/data/gravity.db
 
+{# Not mounted in docker container #}
+PIDFILE=/run/pihole-FTL.pid
+SOCKETFILE=/run/pihole/FTL.sock
 
+{# provided by the container image #}
+MACVENDORDB=/etc/macvendor.db
 
 
