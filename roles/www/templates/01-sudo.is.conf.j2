@@ -364,11 +364,13 @@ server {
             return 307 /api/glados/docs/;
         }
 
-        {% set glados_hostname = groups['glados'][0] -%}
+        {% if groups['glados']|length>0 -%}
+        {% set glados_hostname = groups['glados']|first -%}
         {% set glados_upstream = wg_clients[glados_hostname]['ip'] -%}
         location /api/glados/ {
             proxy_pass http://{{ glados_upstream }}:8125/;
         }
+        {% endif %}
 
         location = /api/whoami {
             include /etc/nginx/require_auth.conf;
