@@ -116,6 +116,8 @@
     mode: 0644
   #ignore_errors: ansible_check_mode|bool == true
   #when: settings_json.stat.exists
+  notify:
+    - restart zwavejs container
   tags:
     - hass-zwave-config
 
