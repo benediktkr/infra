@@ -10,8 +10,6 @@ homeassistant:
         templated: true
         <<: *common_attrs
 
-
-  customize:
     binary_sensor.ping_internet_online_cloudflare_1:
       friendly_name: "Cloudflare 1.1.1.1"
       <<: *common_attrs
@@ -284,33 +282,22 @@ template:
       unit_of_measurement: "Mbit/s"
       state_class: measurement
       device_class: data_rate
-      # avoid divison by zero with max(len, 1)
-      #  {% set fast_com = states("sensor.fast_com_download") | float(0.0) %}
-      #  {% set speedtest = states("sensor.speedtest_download") | float(0.0) %}
-      # has_value("sensor.fast_com_download") or has_value("sensor.speedtest_download")
-      #    has_value("sensor.fast_com_download") or has_value("sensor.speedtest_download")
-      #    states(this.attributes.get("fast_com"))|is_number
-      #    or states(this.attributes.get("speedtest"))|is_number
-      #
-      #    this.attributes.get("fast_com")|is_number
-      #    or this.attributes.get("speedtest")|is_number
-
-      # this would have been nice:
-      #   this.attributes.get('source_ids') | select("has_value") | list | length > 0
-      # but:
-      #   Invalid config for 'template' at packages/internet_online.yaml, line 232: template value should be a string for dictionary value 'sensor->0->attributes->source_ids', got ['sensor.fast_com_downloads', 'sensor.speedtest_downloads']
-      #
       # with a dict:
       # this.attributes.get("source_ids", {}).items() | map("last") | select("has_value") | list | length > 0
       availability: |
         {{
-          this.attributes.get('source_ids') | select("has_value") | map("states") | select("is_number") | list | length > 0
+          this.attributes.get('source_ids')
+          | select("has_value")
+          | map("states")
+          | select("is_number")
+          | list
+          | length > 0
         }}
       state: |
-        {% set fast_com = this.attributes.get("fast_com") | float(0.0) %}
-        {% set speedtest = this.attributes.get("speedtest") | float(0.0) %}
-        {% set down = [fast_com, speedtest] | select(">", 0.0) | list  %}
-        {% set down_avg = down|sum / max(down|length, 1) %}
+        {% set fast_com = this.attributes.get("fast_com") | float(0.0) -%}
+        {% set speedtest = this.attributes.get("speedtest") | float(0.0) -%}
+        {% set down = [fast_com, speedtest] | select(">", 0.0) | list  -%}
+        {% set down_avg = down|sum / max(down|length, 1) -%}
         {{ down_avg | float | round(0) }}
       attributes:
         fast_com: |

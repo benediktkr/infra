@@ -9,7 +9,6 @@ homeassistant:
       common_attrs_templated: &common_attrs_templated
         templated: true
         <<: *common_attrs
-  customize:
     media_player.owntone_server:
       friendly_name: "OwnTone server"
       #entity_picture: "https://www.sudo.is/img/owntone.svg"

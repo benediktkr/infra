@@ -167,7 +167,7 @@ template:
 
             {% if img -%}
             <div style="text-align: center; margin-right: auto">
-              <img src="{{ img }}" width="66%">
+              <img src="{{ img }}" {% if img.endswith(".svg") %}width="20%"{% endif %}>
               <p>
                <a href="https://hass.sudo.is{{ img }}">
                  <code>
@@ -206,7 +206,7 @@ template:
             {% endif -%}
 
 
-            **Source list**: {{ sl|length }}
+            **Source list**: {{ sl|length }} items
 
             {% for srcitem in sl[:3] -%}
             - `{{ srcitem }}`
