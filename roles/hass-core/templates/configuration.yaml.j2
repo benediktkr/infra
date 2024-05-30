@@ -350,12 +350,15 @@ recorder:
       - sensor.oneplus_geocoded_*
       - sensor.nexus_7_detected_*
       - sensor.oneplus_detected_*
+      # LD2410 / ESPHome radar
+      - binary_sensor.esphome_radar_*_has_target
       # Redundant ESPHome Private BLE sensors
       - sensor.esphome_*_private_ble_*_area
       - sensor.esphome_*_private_ble_device_tracker_*
       - sensor.esphome_*_private_ble_*_proxied
       - sensor.esphome_*_private_ble_*_distance
       - sensor.esphome_*_private_ble_*_max_signal
+      - sensor.esphome_*_private_ble_*_signal
       - sensor.esphome_*_private_ble_*_esphome_proxy
       - sensor.esphome_*_baseline_0xco2eq
       - sensor.esphome_*_baseline_0xtvoc
