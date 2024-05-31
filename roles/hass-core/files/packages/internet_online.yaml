@@ -89,6 +89,9 @@ homeassistant:
       <<: *common_attrs_templated
     binary_sensor.cloudflare_ddns_home0157_sudo_is:
       friendly_name: "home0157.sudo.is is up to date"
+      source_entity_ids:
+        - "sensor.dns_whoami_akamai_net"
+        - "sensor.sudo_is_api_myip"
       <<: *common_attrs_templated
 
     sensor.download_avg:
@@ -199,12 +202,14 @@ sensor:
     host: !secret s21_router_hostname
     resources:
       # WAN / eth2.7
+      # It's better to refer to eth2 (without the VLAN id) because if the interface is
+      # down, the vlan eth2.7 interface does not exist in netdata.
       turris_wan_in:
-        data_group: "net.eth2.7"
+        data_group: "net.eth2"
         element: "received"
         icon: "mdi:download-network-outline"
       turris_wan_out:
-        data_group: "net.eth2.7"
+        data_group: "net.eth2"
         element: "sent"
         icon: "mdi:upload-network-outline"
 
@@ -313,7 +318,7 @@ template:
       state_class: measurement
       device_class: data_rate
       availability: |
-        {{ states("sensor.netdata_turris_wan_in") | float(none) | is_number }}
+        {{ states("sensor.netdata_turris_wan_in") | is_number }}
       state: |
         {% set kbits = states("sensor.netdata_turris_wan_in") %}
         {% set mbits = kbits|float / 1000 %}
@@ -324,7 +329,7 @@ template:
       state_class: measurement
       device_class: data_rate
       availability: |
-        {{ states("sensor.netdata_turris_wan_out") | float(none) | is_number }}
+        {{ states("sensor.netdata_turris_wan_out") | is_number }}
       state: |
         {% set kbits = states("sensor.netdata_turris_wan_out") %}
         {% set mbits = kbits|float / 1000 %}
@@ -337,7 +342,7 @@ template:
       state_class: measurement
       device_class: data_rate
       availability: |
-        {{ states("sensor.netdata_turris_wwan_lte_in") | float(none) | is_number }}
+        {{ states("sensor.netdata_turris_wwan_lte_in") | is_number }}
       state: |
         {% set kbits = states("sensor.netdata_turris_wwan_lte_in") %}
         {% set mbits = kbits|float / 1000 %}
@@ -348,7 +353,7 @@ template:
       state_class: measurement
       device_class: data_rate
       availability: |
-        {{ states("sensor.netdata_turris_wwan_lte_out") | float(none) | is_number }}
+        {{ states("sensor.netdata_turris_wwan_lte_out") | is_number }}
       state: |
         {% set kbits = states("sensor.netdata_turris_wwan_lte_out") %}
         {% set mbits = kbits|float / 1000 %}
@@ -361,7 +366,7 @@ template:
       state_class: measurement
       device_class: data_rate
       availability: |
-        {{ states("sensor.netdata_turris_wg0_in") | float(none) | is_number }}
+        {{ states("sensor.netdata_turris_wg0_in") | is_number }}
       state: |
         {% set kbits = states("sensor.netdata_turris_wg0_in") %}
         {% set mbits = kbits|float / 1000 %}
@@ -372,7 +377,7 @@ template:
       state_class: measurement
       device_class: data_rate
       availability: |
-        {{ states("sensor.netdata_turris_wg0_out") | float(none) | is_number }}
+        {{ states("sensor.netdata_turris_wg0_out") | is_number }}
       state: |
         {% set kbits = states("sensor.netdata_turris_wg0_out") %}
         {% set mbits = kbits|float / 1000 %}
@@ -384,8 +389,8 @@ template:
       device_class: data_rate
       availability: |
         {{
-        states("sensor.edge_wg0_in") | float(none) | is_number
-        and states("sensor.edge_wg0_out") | float(none) | is_number
+        states("sensor.edge_wg0_in") | is_number
+        and states("sensor.edge_wg0_out") | is_number
         }}
       state: |
         {% set in = states("sensor.edge_wg0_in") %}
@@ -400,7 +405,7 @@ template:
       state_class: measurement
       device_class: data_rate
       availability: |
-        {{ states("sensor.netdata_turris_br_lan_in") | float(none) | is_number }}
+        {{ states("sensor.netdata_turris_br_lan_in") | is_number }}
       state: |
         {% set kbits = states("sensor.netdata_turris_br_lan_in") %}
         {% set mbits = kbits|float / 1000 %}
@@ -411,7 +416,7 @@ template:
       state_class: measurement
       device_class: data_rate
       availability: |
-        {{ states("sensor.netdata_turris_br_lan_out") | float(none) | is_number }}
+        {{ states("sensor.netdata_turris_br_lan_out") | is_number }}
       state: |
         {% set kbits = states("sensor.netdata_turris_br_lan_out") %}
         {% set mbits = kbits|float / 1000 %}
@@ -423,8 +428,8 @@ template:
       device_class: data_rate
       availability: |
         {{
-        states("sensor.edge_lan_in") | float(none) | is_number
-        and states("sensor.edge_lan_out") | float(none) | is_number
+        states("sensor.edge_lan_in") | is_number
+        and states("sensor.edge_lan_out") | is_number
         }}
       state: |
         {% set in = states("sensor.edge_lan_in") %}
@@ -439,7 +444,7 @@ template:
       state_class: measurement
       device_class: data_rate
       availability: |
-        {{ states("sensor.netdata_turris_br_lan_care_in") | float(none) | is_number }}
+        {{ states("sensor.netdata_turris_br_lan_care_in") | is_number }}
       state: |
         {% set kbits = states("sensor.netdata_turris_br_lan_care_in") %}
         {% set mbits = kbits|float / 1000 %}
@@ -450,7 +455,7 @@ template:
       state_class: measurement
       device_class: data_rate
       availability: |
-        {{ states("sensor.netdata_turris_br_lan_care_out") | float(none) | is_number }}
+        {{ states("sensor.netdata_turris_br_lan_care_out") | is_number }}
       state: |
         {% set kbits = states("sensor.netdata_turris_br_lan_care_out") %}
         {% set mbits = kbits|float / 1000 %}
@@ -462,8 +467,8 @@ template:
       device_class: data_rate
       availability: |
         {{
-        states("sensor.edge_lan_care_in") | float(none) | is_number
-        and states("sensor.edge_lan_care_out") | float(none) | is_number
+        states("sensor.edge_lan_care_in") | is_number
+        and states("sensor.edge_lan_care_out") | is_number
         }}
       state: |
         {% set in = states("sensor.edge_lan_care_in") %}
@@ -478,7 +483,7 @@ template:
       state_class: measurement
       device_class: data_rate
       availability: |
-        {{ states("sensor.netdata_turris_br_nvr_in") | float(none) | is_number }}
+        {{ states("sensor.netdata_turris_br_nvr_in") | is_number }}
       state: |
         {% set kbits = states("sensor.netdata_turris_br_nvr_in") %}
         {% set mbits = kbits|float / 1000 %}
@@ -489,7 +494,7 @@ template:
       state_class: measurement
       device_class: data_rate
       availability: |
-        {{ states("sensor.netdata_turris_br_nvr_out") | float(none) | is_number }}
+        {{ states("sensor.netdata_turris_br_nvr_out") | is_number }}
       state: |
         {% set kbits = states("sensor.netdata_turris_br_nvr_out") %}
         {% set mbits = kbits|float / 1000 %}
@@ -501,8 +506,8 @@ template:
       device_class: data_rate
       availability: |
         {{
-        states("sensor.edge_nvr_in") | float(none) | is_number
-        and states("sensor.edge_nvr_out") | float(none) | is_number
+        states("sensor.edge_nvr_in") | is_number
+        and states("sensor.edge_nvr_out") | is_number
         }}
       state: |
         {% set in = states("sensor.edge_nvr_in") %}
@@ -700,16 +705,15 @@ template:
           {% endif %}
         state: |
           {{
-            this.attributes.get("sudo_is_check", False)
-            or this.attributes.get("akamai_check", False)
+            this.attributes.get("sudo_is_check_failed", False)
+            or this.attributes.get("akamai_check_failed", False)
+            or states("sensor.edge_wwan_lte_in")|float(0.0) > states("sensor.edge_wan_in")|float(0.0)
           }}
         attributes:
-          akamai_check: |
+          akamai_check_failed: |
             {{ is_state("binary_sensor.internet_failover_akamai_check", "on") }}
-          sudo_is_check: |
+          sudo_is_check_failed: |
             {{ is_state("binary_sensor.sudo_is_api_myip_check", "on") }}
-
-
 
 
         # meant to be updated through restapi or appdaemon
@@ -741,20 +745,22 @@ template:
 
       - name: cloudflare_ddns_home0157_sudo_is
         device_class: "problem"
-        icon: >-
+        icon: |
           {% if is_state(this.entity_id, "on") %}
           mdi:web-off
           {% else %}
           mdi:web
           {% endif %}
-        availability: |
-          {{
-          has_value("sensor.myip")
-          and has_value("sensor.home0157_sudo_is")
-          }}
         state: |
-          {{ states("sensor.myip") != states("sensor.home0157_sudo_is") }}
-
+          {% set home0157 = states("sensor.dns_home0157_sudo_is") -%}
+          {{
+            this.attributes.source_entity_ids
+              | select("has_value")
+              | map("states")
+              | select("eq", home0157)
+              | list
+              | length != this.attributes.source_entity_ids|length
+          }}
 
 
 
