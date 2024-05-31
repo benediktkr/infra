@@ -12,6 +12,13 @@ homeassistant:
     sensor.vacuum_robot_segments:
       friendly_name: "vacuum-robot Segments"
       source_entity_id: "sensor.valetudo_vacuum_robot_map_segments"
+      comment: "Newer one with more jinja magic"
+      <<: *common_attrs
+
+    sensor.vacuum_robot_segments_2:
+      friendly_name: "vacuum-robot Segments 2"
+      source_entity_id: "sensor.valetudo_vacuum_robot_map_segments"
+      comment: "Older one I forgot I made, less jinja magic"
       <<: *common_attrs
 
     sensor.wifi_signal_vacuum_robot:
@@ -56,7 +63,50 @@ input_boolean:
 template:
   - sensor:
       - name: vacuum_robot_segments
-        unique_id: vacuum_robot_setments
+        unique_id: vacuum_robot_segments
+        icon: mdi:vector-selection
+        unit_of_measurement: areas
+        availability: |
+          {{ has_value(this.attributes.get("source_entity_id")|string) }}
+        state: |
+          {{ states(this.attributes.source_entity_id) }}
+        # Amazingly, this doesnt raise an error and instead returns an empty list:
+        #   {{ states['sensor.foobar'].attributes | items | list }}
+        # The 'states.' part is important, otherwise it does raise an error, works with
+        # any domain.
+        #
+        # Using 'states' as a dict seems to be syntactic sugar, since the same is true for
+        #   {{ states.sensor.foobar.attributes | items | list }}
+        #
+        # This seems to rely on the 'list' filter returning an empty list if there is an error,
+        # which is not standard jinja. So using the 'default' filter makes it more clear.
+        #
+        # Both of these work the same, and return '{}' as expected
+        #  {{ states.sensor.foobar.attribute|default({}) }}
+        #  {{ states['sensor.foobar].attributes|default({}) }}
+        #
+        # Since we have the source entity id in an attribute, we use the dict syntactic sugar.
+        #
+        # It's worh nothing that 'map("reverse")' returns a generator, and at that point we
+        # have a list of generators.
+        #
+        # Sidenote: I figured out experimenting with this is using 'map(attribute="0")', but
+        # I didnt get very far with that one.
+        attributes:
+          map: |
+            {% set attrs = states[this.attributes.source_entity_id].attributes|default({}) -%}
+            {%
+              set segments = attrs
+                 | items
+                 | selectattr("0", "is_number")
+                 | map("reverse")
+            %}
+            {{ dict(segments) }}
+
+
+        # This also works, I forgot I had made this
+      - name: vacuum_robot_segments_2
+        unique_id: vacuum_robot_segments_2
         icon: mdi:vector-selection
         unit_of_measurement: areas
         state: |
