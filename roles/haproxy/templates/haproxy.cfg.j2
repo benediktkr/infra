@@ -9,8 +9,10 @@ global
          # #stats socket /run/haproxy/admin.sock user haproxy group haproxy mode 660 level admin
          # #stats timeout 30s #}
 
+    {% if not haproxy_ip_forward|default(false) %}
 	user haproxy
 	group haproxy
+    {% endif %}
 	daemon
 
         {# # number of processes
@@ -133,12 +135,23 @@ backend {{ item.fqdn }}
 
 {% for item in lb_forward_ports|default([]) %}
 
+{% if item.mode == "nat" -%}
+director {{ item.frontend_name }} {{ item.src_ip|default('0.0.0.0') }}:{{ item.src_port }} {{ item.protocol|default('tcp')|upper }}
+    balance leastconn
+    mode nat
+    server {{ item.backend_name }} {{ item.dest_host }}:{{ item.dest_port }} weight 10 check
+
+{% else -%}
 frontend {{ item.frontend_name }}
-    bind {{ item.src_ip|default('*') }}:{{ item.src_port }}
+    bind {{ item.src_ip|default('*') }}:{{ item.src_port }} {% if item.transparent_mode|default(false) %}transparent{% endif +%}
     mode {{ item.mode }}
     default_backend {{ item.backend_name }}
 
 backend {{ item.backend_name }}
     mode {{ item.mode }}
+    {% if item.transparent_mode|default(false) -%}
+    source 0.0.0.0 usesrc clientip
+    {% endif -%}
     server {{ item.dest_host }} {{ item.dest_host }}:{{ item.dest_port }}
+{% endif %}
 {% endfor %}

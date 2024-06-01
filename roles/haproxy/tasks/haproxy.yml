@@ -6,8 +6,7 @@
     dest: /usr/local/etc/instance-id
     mode: '0755'
   ignore_errors: true
-  check_mode: false 
-
+  check_mode: false
 
 - name: make sure log dir exists
   file:
@@ -38,6 +37,22 @@
   when: not skip_apt|default(false)
   tags:
     - packages
+
+- name: allow ip forward if set
+  sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    state: present
+  with_items:
+    - name: net.ipv4.ip_forward
+      value: '1'
+    - name: net.ipv4.ip_nonlocal_bind
+      value: '1'
+  loop_control:
+    label: "{{ item.name }}"
+  tags:
+    - haproxy.cfg
+  when: haproxy_ip_forward|default(false)
 
 - name: tempalte letsencrypt keys with privkey+pubkey in one file
   template:
