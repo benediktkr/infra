@@ -32,7 +32,7 @@
   with_items:
     - fail2ban.conf
     - jail.conf
-    - jail.d/common.conf
+    - jail.d/sudois-defaults.conf
   tags:
     - fail2ban
   notify:
