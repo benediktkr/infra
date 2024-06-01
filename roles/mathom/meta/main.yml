@@ -1,6 +1,9 @@
 ---
 
 dependencies:
+  - role: sshd
+    tags:
+      - sshd
   - role: nfs
     tags:
       - nfs
