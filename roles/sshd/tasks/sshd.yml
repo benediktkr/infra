@@ -1,5 +1,15 @@
 ---
 
+- name: install fail2ban and ensure openssh-server is installed
+  apt:
+    name:
+      - openssh-server
+      - fail2ban
+    state: latest
+    update_cache: true
+  tags:
+    - packages
+
 - name: template sshd_config
   template:
     src: sshd_config.j2
@@ -7,4 +17,23 @@
     owner: root
     group: root
     mode: '0644'
-  notify: reload ssh
+  tags:
+    - sshd_config
+  notify:
+    - reload ssh
+
+- name: fail2ban config
+  template:
+    src: "{{ item }}.j2"
+    dest: /etc/fail2ban/{{ item }}
+    owner: root
+    group: root
+    mode: '0644'
+  with_items:
+    - fail2ban.conf
+    - jail.conf
+    - jail.d/common.conf
+  tags:
+    - fail2ban
+  notify:
+    - reload fail2ban

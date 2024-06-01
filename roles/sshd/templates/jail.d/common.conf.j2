@@ -1,0 +1,17 @@
+# {{ ansible_managed }}
+[DEFAULT]
+banaction = nftables
+banaction_allports = nftables[type=allports]
+bantime = 1d
+
+destemail = fail2ban@{{ matrix_smtp_url }}
+sender = fail2ban@{{ matrix_smtp_url }}
+# ban & send an e-mail with whois report to the destemail.
+action = %(action_mw)s
+# to also send relevant log lines
+#action = %(action_mwl)s
+
+[sshd]
+enabled = true
+maxretry = 3
+ignoreip = 127.0.0.1/8 {{ my_local_cidrs|join(" ") }} {{ my_egress_ips|join(" ") }}
