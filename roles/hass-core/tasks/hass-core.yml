@@ -355,6 +355,7 @@
     - morning_alarm.yaml
     - bathroom.yaml
     - tgtg.yaml
+    - tibber.yaml
     - private_package.yaml
     - persons.yaml
     #- air_quality.yaml

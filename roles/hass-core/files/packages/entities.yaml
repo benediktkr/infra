@@ -60,12 +60,3 @@ homeassistant:
       entity_picture: "https://www.sudo.is/img/logo-jellyfin.svg"
       <<: *common_attrs
 
-    sensor.daily_net_consumption_schreinerstr_21:
-      friendly_name: "Schreinerstr. 21 Daily net consumption"
-      icon: "mdi:lightning-bolt"
-      unit_of_measurement: "kWh"
-      state_class: measurement
-      device_class: energy
-      <<: *common_attrs
-
-

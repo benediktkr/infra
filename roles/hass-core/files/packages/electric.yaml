@@ -7,12 +7,6 @@ homeassistant:
         templated: true
         <<: *common_attrs
 
-    sensor.electricity_price_schreinerstr_21:
-      accuracy_demicals: 3
-      # already set by tibber integration
-      state_class: measurement
-      unit_of_measurement: "EUR/kWh"
-      <<: *common_attrs
     sensor.electric_w_switch_core_study_poe:
       friendly_name: "switch-core-study PoE output [W]"
       <<: *common_attrs_templated
