@@ -64,7 +64,7 @@ template:
         state_class: measurement
         unit_of_measurement: "W"
         icon: "mdi:flash"
-        state: >-
+        state: |
           {% set sum_w = states("sensor.electric_w_switch_study_desk_monitor")|float(0.0)
               + states("sensor.electric_w_light_study_ceiling")|float(0.0)
               + states("sensor.electric_w_outlet_study_1")|float(0.0)
@@ -78,10 +78,9 @@ template:
         device_class: power
         state_class: measurement
         unit_of_measurement: "W"
-        state: >-
+        state: |
           {{
             states("sensor.electric_w_outlet_livingroom_1")|float(0.0)|round(1)
-            + states("sensor.electric_w_switch_ber_nullspace0")|float(0.0)|round(1)
             + states("sensor.electric_w_socket_livingroom_gfci")|float(0.0)|round(1)
             + states("sensor.electric_w_switch_tv_livingroom")|float(0.0)|round(1)
             + states("sensor.esphome_plugb_livingroom_power")|float(0.0)|round(1)
