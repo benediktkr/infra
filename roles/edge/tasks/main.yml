@@ -1,0 +1,19 @@
+---
+
+- name: iptables port forwards - DNAT rules
+  iptables:
+    table: nat
+    chain: PREROUTING
+    destination: "{{ item.interface }}"
+    protocol: "{{ item.protocol }}"
+    match: "{{ item.protocol }}"
+    # --dport, the port that the traffic is directed at
+    destination_port: "{{ item.dport }}"
+    jump: DNAT
+    to_destination: "{{ item.dest_host }}:{{ item.dest_port }}"
+  with_items: "{{ lb_port_forward }}"
+  loop_control:
+    label: "{{ item.interface }}:{{ item.dport }} -> {{ item.dest_host }}:{{ item.dest_port }}"
+  tags:
+    - port-forwards
+

@@ -14,4 +14,6 @@ action = %(action_mw)s
 [sshd]
 enabled = true
 maxretry = 3
-ignoreip = 127.0.0.1/8 {{ my_local_cidrs|join(" ") }} {{ my_egress_ips|join(" ") }}
+bantime = {{ fail2ban_sshd_bantime | default("1d") }}
+ignoreip = 127.0.0.1/8 {{ fail2ban_sshd_ignoreip }}
+

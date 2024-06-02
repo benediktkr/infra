@@ -1,0 +1,5 @@
+---
+
+fail2ban_sshd_allowlist: []
+fail2ban_sshd_ignoreip: |
+  {{ fail2ban_sshd_allowlist | flatten | join(" ") }}

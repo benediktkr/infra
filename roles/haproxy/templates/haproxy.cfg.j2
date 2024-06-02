@@ -133,25 +133,14 @@ backend {{ item.fqdn }}
 {% endif %}
 {% endfor %}
 
-{% for item in lb_forward_ports|default([]) %}
+{% for item in lb_tcp_forwards %}
 
-{% if item.mode == "nat" -%}
-director {{ item.frontend_name }} {{ item.src_ip|default('0.0.0.0') }}:{{ item.src_port }} {{ item.protocol|default('tcp')|upper }}
-    balance leastconn
-    mode nat
-    server {{ item.backend_name }} {{ item.dest_host }}:{{ item.dest_port }} weight 10 check
-
-{% else -%}
 frontend {{ item.frontend_name }}
-    bind {{ item.src_ip|default('*') }}:{{ item.src_port }} {% if item.transparent_mode|default(false) %}transparent{% endif +%}
+    bind {{ item.src_ip|default('*') }}:{{ item.src_port }}
     mode {{ item.mode }}
     default_backend {{ item.backend_name }}
 
 backend {{ item.backend_name }}
     mode {{ item.mode }}
-    {% if item.transparent_mode|default(false) -%}
-    source 0.0.0.0 usesrc clientip
-    {% endif -%}
     server {{ item.dest_host }} {{ item.dest_host }}:{{ item.dest_port }}
-{% endif %}
 {% endfor %}

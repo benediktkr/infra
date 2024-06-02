@@ -35,5 +35,6 @@
     - jail.d/sudois-defaults.conf
   tags:
     - fail2ban
+    - fail2ban-config
   notify:
     - reload fail2ban
