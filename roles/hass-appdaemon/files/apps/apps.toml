@@ -2,31 +2,31 @@
 module = "base"
 global = true
 
-[helloworld]
-module = "helloworld"
-class = "HelloWorld"
-
+# [helloworld]
+# module = "helloworld"
+# class = "HelloWorld"
+#
 # [glados]
 # module = "glados"
 # class = "GLaDOS"
-
-[apple_tv]
-module = "apple_tv"
-class = "AppleTV"
-
-[blemon]
-module = "blemon"
-class = "BLEMonitor"
-ble_scanner.entity_id = "sensor.esphome_ble_scanner"
-
-[buttons]
-module = "buttons"
-class = "Buttons"
-
-[toothbrush_manager]
-module = "toothbrush"
-class = "ToothbrushManager"
-
+#
+# [apple_tv]
+# module = "apple_tv"
+# class = "AppleTV"
+#
+# [blemon]
+# module = "blemon"
+# class = "BLEMonitor"
+# ble_scanner.entity_id = "sensor.esphome_ble_scanner"
+#
+# [buttons]
+# module = "buttons"
+# class = "Buttons"
+#
+# [toothbrush_manager]
+# module = "toothbrush"
+# class = "ToothbrushManager"
+#
 [occupancy]
 module = "occupancy"
 class = "Occupancy"

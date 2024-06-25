@@ -1,8 +1,8 @@
 import json
 
-# from base import HassBase
+from base import HassBase
 
-from appdaemon.apps.base import HassBase
+# from appdaemon.apps.base import HassBase
 
 
 class Occupancy(HassBase):

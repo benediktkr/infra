@@ -67,17 +67,17 @@
     group: "{{ systemuserlist.hass.gid }}"
   notify: restart hass-ad container
   with_items:
-    - requirements/glados
-    - requirements/apple_tv
-    - requirements/buttons
+    #- requirements/glados
+    #- requirements/apple_tv
+    #- requirements/buttons
     - requirements/occupancy/
-    - apps/helloworld.py
-    - apps/glados.py
-    - apps/apple_tv.py
-    - apps/blemon.py
-    - apps/buttons.py
-    - apps/toothbrush.py
-    - apps/entity_ids.py
+    #- apps/helloworld.py
+    #- apps/glados.py
+    #- apps/apple_tv.py
+    #- apps/blemon.py
+    #- apps/buttons.py
+    #- apps/toothbrush.py
+    #- apps/entity_ids.py
     - apps/occupancy.py
     # should be last
     - apps/apps.toml
@@ -141,8 +141,6 @@
       - name: bridgewithdns
         ipv4_address: "{{ bridgewithdns.hass_ad }}"
     dns_servers: "{{ docker_container_dns_servers }}"
-    ports:
-      - "127.0.0.1:8001:8001"
     mounts:
       - type: bind
         source: "{{ systemuserlist.hass.home }}/appdaemon/etc"
