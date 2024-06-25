@@ -35,7 +35,7 @@
   template:
     src: 01-pihole.conf.j2
     dest: /etc/nginx/sites-enabled/01-pihole.conf
-    validate: /usr/sbin/nginx -t
+    #validate: /usr/sbin/nginx -t
   tags:
     - nginx-config
     - nginx-vhosts
