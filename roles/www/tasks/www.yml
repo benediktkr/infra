@@ -146,6 +146,8 @@
       - 3000
     env:
       FORWARDED_ALLOW_IPS: "{{ www_forwarded_allow_ips | default([]) | join(',') }}"
+      HASS_WEBHOOK: "{{ sudo_api_hass_webhook }}"
+      HASS_URL: "{{ hass_url }}"
       SUDO_ENV: "prod"
     mounts:
       - type: bind
