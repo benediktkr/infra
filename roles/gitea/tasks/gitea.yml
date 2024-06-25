@@ -166,10 +166,10 @@
     - gitea-container
     - docker-containers
 
-- name: start container
+- name: start container gitea:{{ gitea_docker_tag }}
   docker_container:
     name: gitea
-    image: gitea/gitea:latest
+    image: gitea/gitea:{{ gitea_docker_tag }}
     detach: true
     pull: true
     restart_policy: "unless-stopped"
