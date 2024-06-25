@@ -94,20 +94,18 @@
 
     <!-- setting this makes all relays on-demand unless overridden, this is
          useful for master relays which do not have <relay> definitions here.
+        proxy
          The default is 0 -->
     <!--<relays-on-demand>1</relays-on-demand>-->
 
-    <!--
     <relay>
         <server>127.0.0.1</server>
-        <port>8080</port>
-        <mount>/example.ogg</mount>
-        <local-mount>/different.ogg</local-mount>
-        <on-demand>0</on-demand>
-
-        <relay-shoutcast-metadata>0</relay-shoutcast-metadata>
+        <!-- <server>{{ owntone_url }}</server> -->
+        <port>{{ owntone_port_tcp }}</port>
+        <mount>/stream.mp3</mount>
+        <local-mount>/owntone</local-mount>
+        <!-- <on-demand>0</on-demand> -->
     </relay>
-    -->
 
 
     <!-- Mountpoints

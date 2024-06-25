@@ -80,19 +80,21 @@ server {
 
     location {{ icecast_baseurl }}/ {
         # https://stackoverflow.com/a/52284451
-        rewrite  ~*(ogg) https://{{ owntone_url }}{{ icecast_baseurl }}/ogg last;
-        rewrite  ~*([0-1][0-5]\d) https://{{ owntone_url }}{{ icecast_baseurl }}/128 last;
-        rewrite  ~*(?|([1][6-9]\d)|([2]\d\d)) https://{{ owntone_url }}{{ icecast_baseurl }}/192 last;
-        rewrite  ~*([3-9]\d\d) https://{{ owntone_url }}{{ icecast_baseurl }}/320 break;
+        #rewrite  ~*(ogg) https://{{ owntone_url }}{{ icecast_baseurl }}/ogg last;
+        #rewrite  ~*([0-1][0-5]\d) https://{{ owntone_url }}{{ icecast_baseurl }}/128 last;
+        #rewrite  ~*(?|([1][6-9]\d)|([2]\d\d)) https://{{ owntone_url }}{{ icecast_baseurl }}/192 last;
+        #rewrite  ~*([3-9]\d\d) https://{{ owntone_url }}{{ icecast_baseurl }}/320 break;
         #return  https://{{ owntone_url }}/320;
 
-        sub_filter_types text/xhtml text/xml text/css;
+        sub_filter_types text/xhtml text/xml text/css audio/x-mpegurl;
         sub_filter 'href="/'  'href="{{ icecast_baseurl }}/';
         sub_filter 'url(/'  'url({{ icecast_baseurl }}/';
+        sub_filter 'http://127.0.0.1:{{icecast_port}}/' 'https://{{ owntone_url }}{{ icecast_baseurl }}/';
         sub_filter_once off;
         sub_filter_last_modified on;
         proxy_pass http://127.0.0.1:{{ icecast_port }}/;
     }
+    # FIXM: the syream doesnt match this regex so this block isnt used
     location ~ ^{{ icecast_baseurl }}/(ogg|128|192|320)$ {
         #proxy_bind $remote_addr transparent;
         types        { }
