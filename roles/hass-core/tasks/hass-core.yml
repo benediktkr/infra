@@ -492,6 +492,22 @@
     - hass-sip
     - sip
 
+- name: template bluez config
+  template:
+    src: "bluez/{{ item }}.j2"
+    dest: "/etc/bluetooth/{{ item }}"
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - main.conf
+  loop_control:
+    label: "{{ item }}"
+  tags:
+    - hass-bluetooth
+  notify:
+    - restart bluetooth
+
 - name: ensure bluetooth service is started and enabled
   service:
     name: bluetooth
@@ -569,6 +585,9 @@
       - type: bind
         source: "{{ systemuserlist.hass.home }}/home-assistant/media"
         target: /usr/var/media
+      - type: bind
+        source: "{{ deadspace_root }}/audio"
+        target: "{{ deadspace_root }}/audio"
       - type: bind
         source: "{{ systemuserlist.hass.home }}/.ssh"
         target: /usr/local/etc/ssh/
