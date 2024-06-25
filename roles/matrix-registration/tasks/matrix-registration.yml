@@ -12,14 +12,14 @@
   docker_container:
     name: matrix-registration
     image: zeratax/matrix-registration:{{ matrix_registration_tag }}
-    auto_remove: no
-    detach: yes
-    pull: yes
+    auto_remove: false
+    detach: true
+    pull: true
     restart_policy: "unless-stopped"
     state: started
     container_default_behavior: compatibility
     user: "{{ systemuserlist.matrix.uid }}:{{ systemuserlist.matrix.gid }}"
-    networks_cli_compatible: no
+    networks_cli_compatible: false
     networks:
       - name: bridgewithdns
         ipv4_address: "{{ bridgewithdns.matrix_reg }}"
@@ -27,7 +27,7 @@
       - type: bind
         source: "{{ systemuserlist.matrix.home }}/registration"
         target: /data
-        read_only: no
+        read_only: false
     command: serve
   tags:
     - matrix-registration-container
