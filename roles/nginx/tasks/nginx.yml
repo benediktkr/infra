@@ -181,6 +181,7 @@
   notify:
     - restart telegraf
   tags:
+    - nginx-telegraf
     - telegraf
 
 - name: template filebeat config
