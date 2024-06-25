@@ -2,11 +2,14 @@
 
 - debug:
     var: ansible_lsb
+- debug:
+    var: ansible_architecture
 
-- name: set arch to armhf for raspi
+
+- name: set arch to armhf for raspi/armv7l
   set_fact:
     arch: armhf
-  when: ansible_lsb.id == "Raspbian"
+  when: ansible_lsb.id == "Raspbian" or ansible_architecture == "armv7l"
   tags: packages
 
 - name: set arch to amd64 if x86_64
