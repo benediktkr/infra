@@ -34,6 +34,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("domain", help="which rule in authelia to auth against")
     parser.add_argument("--username", help="overrides env var with the same name")
+    parser.add_argument("--meta", action="store_true", help="print Home Assistant formatted user info to stdout on success")
     args = parser.parse_args()
 
     try:
@@ -47,6 +48,10 @@ def main():
         sys.exit(2)
 
     if auth(args.domain, username, password):
+        if args.meta:
+            print(f"name = {username}")
+            print("group = system-admin")
+            print("local_only = false")
         sys.exit(0)
     else:
         sys.exit(1)
