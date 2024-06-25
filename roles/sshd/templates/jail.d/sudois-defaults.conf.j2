@@ -5,9 +5,9 @@ banaction_allports = nftables[type=allports]
 bantime = 1d
 
 destemail = fail2ban@{{ matrix_smtp_url }}
-sender = fail2ban@{{ matrix_smtp_url }}
+sender = fail2ban@{{ inventory_hostname }}
 # ban & send an e-mail with whois report to the destemail.
-action = %(action_mw)s
+#action = %(action_mw)s
 # to also send relevant log lines
 #action = %(action_mwl)s
 
