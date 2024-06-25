@@ -1,0 +1,8 @@
+---
+
+dependencies:
+  - cups
+  - nginx
+  #- samba
+  - saned
+
