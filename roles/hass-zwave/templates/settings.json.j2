@@ -1,4 +1,41 @@
 {
+  "zwave": {
+    "deviceConfigPriorityDir": "/usr/src/app/store/config",
+    "enableSoftReset": false,
+    "enabled": true,
+{% if hass_ser2net_zwave == true %}
+    "port": "tcp://{{ hass_ser2net_host.zwave }}:{{ hass_ser2net_port_zwave }}",
+{% else %}
+    "port": "/dev/zwave0",
+{% endif %}
+    "allowBootloaderOnly": false,
+    "commandsTimeout": 300,
+    "logLevel": "warn",
+    "rf": {
+      "txPower": {}
+    },
+    "securityKeys": {
+      "S0_Legacy": "{{ zwavejs_KEY_S0_Legacy }}",
+      "S2_Unauthenticated": "{{ zwavejs_KEY_S2_Unauthenticated }}",
+      "S2_Authenticated": "{{ zwavejs_KEY_S2_Authenticated }}",
+      "S2_AccessControl": "{{ zwavejs_KEY_S2_AccessControl }}"
+    },
+    "securityKeysLongRange": {
+      "S2_Authenticated": "{{ zwavejs_KEY_S2_Authenticated_LongRange }}",
+      "S2_AccessControl": "{{ zwavejs_KEY_S2_AccessControl_LongRange }}"
+    },
+    "logEnabled": true,
+    "logToFile": true,
+    "maxFiles": 7,
+    "serverEnabled": true,
+    "serverServiceDiscoveryDisabled": true,
+    "enableStatistics": false,
+    "serverPort": {{ hass_zwavejs_ws_port }},
+    "maxNodeEventsQueueSize": 100,
+    "higherReportsTimeout": false,
+    "disableControllerRecovery": false,
+    "disclaimerVersion": 1
+  },
   "mqtt": {
     "name": "Zwavejs2Mqtt",
     "host": "127.0.0.1",
@@ -34,43 +71,6 @@
     "notifyNewVersions": false,
     "https": false,
     "versions": {{ zwavejs_versions | default({}) | to_json(indent=2) | indent(4) }}
-  },
-  "zwave": {
-    "enabled": true,
-{% if hass_ser2net_zwave == true %}
-    "port": "tcp://{{ hass_ser2net_host.zwave }}:{{ hass_ser2net_port_zwave }}",
-{% else %}
-    "port": "/dev/zwave0",
-{% endif %}
-    "allowBootloaderOnly": false,
-    "commandsTimeout": 300,
-    "logLevel": "warn",
-    "rf": {
-      "txPower": {}
-    },
-    "securityKeys": {
-      "S0_Legacy": "{{ zwavejs_KEY_S0_Legacy }}",
-      "S2_Unauthenticated": "{{ zwavejs_KEY_S2_Unauthenticated }}",
-      "S2_Authenticated": "{{ zwavejs_KEY_S2_Authenticated }}",
-      "S2_AccessControl": "{{ zwavejs_KEY_S2_AccessControl }}"
-    },
-    "securityKeysLongRange": {
-      "S2_Authenticated": "{{ zwavejs_KEY_S2_Authenticated_LongRange }}",
-      "S2_AccessControl": "{{ zwavejs_KEY_S2_AccessControl_LongRange }}"
-    },
-    "deviceConfigPriorityDir": "/usr/src/app/store/config",
-    "logEnabled": true,
-    "logToFile": true,
-    "maxFiles": 7,
-    "serverEnabled": true,
-    "serverServiceDiscoveryDisabled": true,
-    "enableSoftReset": false,
-    "enableStatistics": false,
-    "serverPort": {{ hass_zwavejs_ws_port }},
-    "maxNodeEventsQueueSize": 100,
-    "higherReportsTimeout": false,
-    "disableControllerRecovery": false,
-    "disclaimerVersion": 1
   },
   "backup": {
     "storeBackup": true,
