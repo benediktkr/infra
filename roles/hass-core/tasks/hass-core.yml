@@ -22,27 +22,6 @@
     - mariadb-users
     - hass-mariadb
 
-- name: remove mariadb user with password (used for migration, hass doesnt use it)
-  mysql_user:
-    state: absent
-    name: "{{ systemuserlist.hass.username }}"
-    host: "{{ item }}"
-    priv: "{{ systemuserlist.hass.username }}.*:ALL"
-    password: "{{ systemuserlist.hass.mariadb_pass }}"
-    login_unix_socket: /run/mysqld/mysqld.sock
-    column_case_sensitive: false
-  loop_control:
-    label: "'{{ systemuserlist.hass.username }}'@'{{ item }}'"
-  when:
-    - false
-    - "item | ansible.utils.ipaddr('private') or item.endswith('%')"
-  with_items:
-    - "{{ ansible_default_ipv4.address }}"
-    - "{{ bridgewithdns_mariadb }}"
-  tags:
-    - mariadb-users
-    - hass-mariadb
-
 - name: copy ssh key
   template:
     src: "private/sshkeys/{{ item }}"
