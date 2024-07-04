@@ -31,6 +31,7 @@
              it also significantly increases latency between the source
              client and listening client.  For low-latency setups, you
              might want to disable this. -->
+
         <burst-on-connect>1</burst-on-connect>
         <!-- same as burst-on-connect, but this allows for being more
              specific on how much to burst. Most people won't need to
@@ -104,7 +105,8 @@
         <port>{{ owntone_port_tcp }}</port>
         <mount>/stream.mp3</mount>
         <local-mount>/owntone</local-mount>
-        <!-- <on-demand>0</on-demand> -->
+        <on-demand>0</on-demand>
+        <relay-shoutcast-metadata>1</relay-shoutcast-metadata>
     </relay>
 
 
@@ -132,10 +134,13 @@
     <!-- Normal mounts -->
     <!--
     <mount type="normal">
-        <mount-name>/example-complex.ogg</mount-name>
+        <mount-name>/owntone</mount-name>
+        <hidden>0</hidden>
+        <public>0/public>
+        <stream-name>{{ owntone_url }}</stream-name>
+        <stream-description>OwnTone stream from {{ owntone_url }}</stream-description>
 
-        <username>othersource</username>
-        <password>hackmemore</password>
+
 
         <max-listeners>1</max-listeners>
         <dump-file>/tmp/dump-example1.ogg</dump-file>
@@ -144,12 +149,6 @@
         <fallback-override>1</fallback-override>
         <fallback-when-full>1</fallback-when-full>
         <intro>/example_intro.ogg</intro>
-        <hidden>1</hidden>
-        <public>1</public>
-        <authentication type="htpasswd">
-                <option name="filename" value="myauth"/>
-                <option name="allow_duplicate_users" value="0"/>
-        </authentication>
         <http-headers>
                 <header name="Access-Control-Allow-Origin" value="http://webplayer.example.org" />
                 <header name="baz" value="quux" />
@@ -158,6 +157,7 @@
         <on-disconnect>/home/icecast/bin/stream-stop</on-disconnect>
     </mount>
     -->
+
 
     <!--
     <mount type="normal">
