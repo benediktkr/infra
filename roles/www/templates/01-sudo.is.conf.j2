@@ -82,6 +82,7 @@ map $request_uri $canonical_url {
     "/docs"                     "https://www.{{ domain }}/docs/";
     "/docs/"                    "https://www.{{ domain }}/docs/";
     "/docs/index.html"          "https://www.{{ domain }}/docs/";
+    "/docs/hass/building/(.*)$" "https://www.{{ domain }}/build/hass/";
     "/docs/Keys/index.html"     "https://www.{{ domain }}/docs/keys/";
     "~/docs/(.*)/index.html$"   "https://www.{{ domain }}/docs/$1/";
     "~/docs/(.*)/$"             "https://www.{{ domain }}/docs/$1/";
@@ -246,7 +247,7 @@ server {
         if ($canonical_url != "") {
             include conf.d/headers-{{ domain }}.conf;
             #add_header "Link" '<$canonical_url>; rel="canonical"; rel="preconnect"';
-            add_header "Link" '<$canonical_url>; rel="canonical"';
+            add_header "Link" '<$canonical_url>; rel="canonical"' always;
         }
 
         # results in redirect loop..?
@@ -311,6 +312,7 @@ server {
         rewrite ^/docs/infra/wwwsudois.html /docs/infra/ redirect;
         rewrite ^/docs/infra/nullspace.html /docs/infra/ redirect;
         rewrite ^/docs/infra/deadspace.html /docs/infra/ redirect;
+        rewrite ^/docs/hass/building/(.*)$ /docs/builds/hass/$1 redirect;
 
         rewrite ^/docs/LICENSE(.*)$ /LICENSE.txt redirect;
         rewrite ^/docs/.*/LICENSE(.*)$ /LICENSE.txt redirect;
