@@ -13,12 +13,12 @@ dependencies:
   - role: owntone
     tags:
       - owntone
-  - role: navidrome
-    tags:
-      - navidrome
   - role: icecast
     tags:
       - icecast
+  - role: navidrome
+    tags:
+      - navidrome
 
 #  - role: podgrab
 #    tags:
