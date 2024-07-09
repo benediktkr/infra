@@ -2,3 +2,4 @@
 
 mass_root: /srv/mass
 mass_baseurl: ""
+mass_container_state: "stopped"

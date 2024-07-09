@@ -31,7 +31,7 @@
 #    - hass-config
 #    - mass-config
 #
-- name: start music-assistant container
+- name: music-assistant container {{ mass_container_state }}
   docker_container:
     name: music-assistant
     image: ghcr.io/music-assistant/server
@@ -39,7 +39,7 @@
     pull: true
     auto_remove: false
     restart_policy: "unless-stopped"
-    state: "{{ hass_container_state | default('stopped') }}"
+    state: "{{ mass_container_state }}"
     container_default_behavior: compatibility
     user: "{{ systemuserlist[mass_user].uid }}:{{ systemuserlist[mass_user].gid }}"
     networks_cli_compatible: false
