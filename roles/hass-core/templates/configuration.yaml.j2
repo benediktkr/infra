@@ -97,22 +97,29 @@ homeassistant:
       command: /usr/local/bin/authelia-auth.py
       args:
         - {{ hass_url }}
-    - type: homeassistant
+        - "--meta"
+      meta: true
+    #- type: homeassistant
   name: Home
   currency: EUR
   unit_system: metric
   time_zone: "Europe/Berlin"
   country: DE
+  language: en
   external_url: https://{{ hass_url }}
   internal_url: https://{{ hass_url }}
   allowlist_external_dirs:
     - "{{ systemuserlist.hass.home }}/home-assistant/notify"
     - "{{ systemuserlist.hass.home }}/home-assistant/inputs"
+    - "{{ deadspace_root }}/audio"
     - "/usr/var/media"
     - "/config"
   allowlist_external_urls:
+    - "https://{{ hass_url }}"
     - "https://{{ static_url }}"
     - "https://{{ hass_notflix_url }}"
+    - "https://www.{{ domain }}"
+    - "https://{{ domain }}"
   media_dirs:
     media: "/usr/var/media"
   packages: !include_dir_named packages
@@ -122,17 +129,22 @@ http:
   server_port: 8123
   trusted_proxies:
     - 127.0.0.1
+    #- 127.0.0.1/32
   use_x_forwarded_for: true
+  use_x_frame_options: true
 
 api:
+
 websocket_api:
+
 wake_on_lan:
+
 # /api/prometheus
 # default: all entities are includessd
 #prometheus:
 
-system_log:
-  fire_event: true
+#system_log:
+#  fire_event: true
 
 {% set zones = {'zone': hass_zones.values() | list } -%}
 {% set zones_yaml = zones | to_nice_yaml(indent=2) -%}
@@ -180,15 +192,6 @@ panel_custom:
     sidebar_icon: mdi:car-esp
     js_url: /api/hassio/app/entrypoint.js
     url_path: 'config/integrations/integration/esphome'
-    embed_iframe: true
-    require_admin: true
-    config:
-      ingress: core_configurator
-  - name: ikea
-    sidebar_title: IKEA
-    sidebar_icon: mdi:sofa-single
-    js_url: /api/hassio/app/entrypoint.js
-    url_path: 'config/integrations/integration/tradfri'
     embed_iframe: true
     require_admin: true
     config:
@@ -257,6 +260,15 @@ panel_custom:
     require_admin: true
     config:
       ingress: core_configurator
+  - name: owntone
+    sidebar_title: OwnTone
+    sidebar_icon: mdi:cast-variant
+    js_url: /api/hassio/app/entrypoint.js
+    url_path: 'config/integrations/integration/forked_daapd'
+    embed_iframe: true
+    require_admin: false
+    config:
+      ingress: core_configurator
   - name: sonos
     sidebar_title: Sonos
     sidebar_icon: mdi:speaker
@@ -285,6 +297,8 @@ recorder:
   exclude:
     event_types:
       - imap_content
+      - opensky_entry
+      - opensky_exit
     entities:
       - sensor.esphmoe_ble_names
       - sensor.ble_proxy_json_ble_scanner
@@ -488,6 +502,7 @@ input_number:
 
 
 #influxdb:
+#  api_version: "1"
 #  host: "{{ influxdb_url }}"
 #  port: 443
 #  database: hass
@@ -495,13 +510,33 @@ input_number:
 #  password: !secret influxdb_pass
 #  ssl: true
 #  verify_ssl: true
-#  max_retries: 3
-#  default_measurement: state
+#  max_retries: 10
+#  precision: "s"
+#  # State object attrs to use as measurement name
+#  #   Possible values: unit_of_measurement, domain__device_class, entity_id
+#  #   Default: unit_of_measurement
+#  #measurement_attr: entity_id
+#  #
+#  # Name to use when the measurement_attr state attribute does not exist
+#  # defaults to: entity_id
+#  #default_measurement: state
+#  #
+#  # Measurement name to use instead of measurement_attr or default measurement (Stores all data points in a single measurement)
+#  #override_measurement:
 #  include:
-#    entities:
-#       - sensor.washing_machine_electric_consumption_w
-#       - sensor.washing_machine_electric_consumption_kwh
+#    entity_globs:
+#      - sensor.electric_v_*
+#      - sensor.electric_w_*
+#      - sensor.esphome_plugb_*_power
+#      - sensor.esphome_socket_*_power
+#    #entities:
+#    #  - sensor.washing_machine_electric_consumption_w
+#    #  - sensor.washing_machine_electric_consumption_kwh
+#  tags_attributes:
+#    - friendly_name
+#    #- entity_id
 #  tags:
+#    # docs say list but example shows dict
 #    instance: prod
 #    source: hass
 #    home: S21
@@ -556,15 +591,21 @@ logger:
     homeassistant.components.apple_tv: warning
 
 # https://www.home-assistant.io/integrations/browser/
-browser:
+#browser:
+
+{% if hass_rtl433_enabled|default(false) -%}
+mqtt:
+  sensor:
+    - state_topic: rtl_433/+/events
+{% endif %}
 
 # enable SVT play
 svt_play:
 
 battery_notes:
-
-#ifttt:
-#  key: !secret ifttt_token
+  enable_autodiscovery: true
+  default_battery_low_threshold: 20
+  battery_increase_threshold: 25
 
 sonos:
   # useful for not using docker host networking
@@ -585,6 +626,34 @@ media_player:
     port: 6600
     name: OwnTone MPD
 
-{# mqtt:
- #   sensor:
- #     - state_topic: rtl_433/+/events #}
+{% if hass_emulated_roku.enabled -%}
+emulated_roku:
+  {% for item in hass_emulated_roku.rokus|default([]) -%}
+  - name: {{ item.name }}
+    listen_port: {{ item.listen_port }}
+    advertise_port: {{ item.advertise_port | default(item.listen_port) }}
+    host_ip: {{ hass_emulated_roku.listen_ip | default(ansible_default_ipv4.address) }}
+    advertise_ip: {{ ansible_default_ipv4.address }}
+    upnp_bind_multicast: {{ hass_emulated_roku.upnp_bind_multicast | lower }}
+  {% endfor %}
+{% endif %}
+
+{% if hass_emulated_hue.enabled -%}
+emulated_hue:
+  host_ip: {{ hass_emulated_hue.listen_ip | default(ansible_default_ipv4.address) }}
+  listen_port: {{ hass_emulated_hue.listen_port }}
+  advertise_ip: {{ ansible_default_ipv4.address }}
+  advertise_port: {{ hass_emulated_hue.advertise_port | default(hass_emulated_hue.listen_port) }}
+  upnp_bind_multicast: {{ hass_emulated_hue.upnp_bind_multicast | lower }}
+  off_maps_to_on_domains:
+    - script
+    - scene
+  expose_by_default: false
+  exposed_domains:
+    {{ hass_emulated_hue.exposed_domains | to_nice_yaml(indent=2) | indent(4) | trim }}
+  entities:
+    {% for item in hass_emulated_hue.exposed_entities|default([]) -%}
+    {{ item }}:
+      hidden: false
+    {% endfor %}
+{% endif %}
