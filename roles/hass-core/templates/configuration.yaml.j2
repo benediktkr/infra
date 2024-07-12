@@ -143,8 +143,9 @@ wake_on_lan:
 # default: all entities are includessd
 #prometheus:
 
-#system_log:
-#  fire_event: true
+system_log:
+  # was for 'remote.apple_tv' reconnect automation
+  fire_event: false
 
 {% set zones = {'zone': hass_zones.values() | list } -%}
 {% set zones_yaml = zones | to_nice_yaml(indent=2) -%}
