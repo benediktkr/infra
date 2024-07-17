@@ -16,14 +16,6 @@ homeassistant:
         - media_player.owntone_output_living_room
       <<: *common_attrs
 
-    binary_sensor.tv_livingroom_power:
-      friendly_name: "Livingroom TV (power)"
-      source_plentity_id: "binary_sensor.esphome_plugb_livingroom_tv"
-      proto: "ESPHome"
-      source_switch_entity_id: "switch.esphome_plugb_livingroom_socket"
-      source_power_entity_id: "binary_sensor.esphome_plugb_livingroom_tv"
-      <<: *common_attrs_templated
-
     binary_sensor.tv_livingroom_samsung:
       friendly_name: "Livingroom TV (samsungtv)"
       comment: indicates if samsungtv integration reports on/off
@@ -33,11 +25,7 @@ homeassistant:
 
     binary_sensor.tv_livingroom:
       friendly_name: "Livingroom TV"
-      comment: combines apple_tv and esphome_plugb_livingroom
-      esphome_entity_id: binary_sensor.esphome_plugb_livingroom_tv
-      samsung_entity_id: binary_sensor.tv_livingroom_samsung
-      apple_tv_entity_id: binary_sensor.apple_tv
-      proto: "samsungtv, appletv"
+      proto: "ESPHome"
       <<: *common_attrs_templated
 
     binary_sensor.apple_tv:
@@ -95,7 +83,7 @@ script:
         target:
           entity_id: media_player.sonos_livingroom
       #- service: media_player.turn_off
-      #  data: {}
+      #  data: {
       #  target:
       #    entity_id: media_player.apple_tv
 
@@ -108,17 +96,17 @@ script:
     sequence:
       - if:
           - condition: state
-            entity_id: switch.esphome_plugb_livingroom_socket
+            entity_id: switch.esphome_plug_tv_socket
             state: "off"
         then:
           - service: switch.turn_on
             data: {}
             target:
-              entity_id: switch.esphome_plugb_livingroom_socket
+              entity_id: switch.esphome_plug_tv_socket
           - wait_for_trigger:
               - platform: state
                 entity_id:
-                  - switch.esphome_plugb_livingroom_socket
+                  - switch.esphome_plug_tv_socket
                 to: "on"
                 for:
                   seconds: 3
@@ -160,7 +148,7 @@ script:
 
   apple_tv_reconnect_remote_toggle:
     alias: apple_tv_reconnect_remote_toggle
-    description: >-
+    description: |
       forces reconnect by toggling the remote
     mode: restart
     icon: "mdi:apple"
@@ -174,7 +162,7 @@ script:
             data: {}
             target:
               entity_id: remote.apple_tv
-          - wait_template: >-
+          - wait_template: |
               {{ is_state("remote.apple_tv", "off") }}
             continue_on_timeout: true
             timeout: "00:20:00"
@@ -182,7 +170,7 @@ script:
         data: {}
         target:
           entity_id: remote.apple_tv
-      - wait_template: >-
+      - wait_template: |
           {{ is_state("remote.apple_tv", "on") }}
         continue_on_timeout: false
         timeout: "00:05:00"
@@ -191,7 +179,7 @@ script:
 template:
   - binary_sensor:
       - name: apple_tv
-        icon: >-
+        icon: |
           {% if is_state(this.entity_id, "on") %}
           mdi:cast-connected
           {% else %}
@@ -204,7 +192,7 @@ template:
         # inly seems to happen when the apple tv has just
         # turned on
         device_class: power
-        state: >-
+        state: |
           {{
           not (
             is_state("media_player.apple_tv", "standby")
@@ -220,7 +208,7 @@ template:
           {% else %}
           mdi:television-off
           {% endif %}
-        state: >-
+        state: |
           {% set source_id = state_attr(this.entity_id, "source_entity_id") or "" %}
           {% set state_media_player = is_state(source_id, "playing") %}
           {% set remote_id = state_attr(this.entity_id, "source_entity_id_remote") or "" %}
@@ -229,29 +217,10 @@ template:
         attributes:
           source_entity_id_remote: "remote.apple_tv"
           source_entity_id: "media_player.apple_tv"
-          area_id: >-
+          area_id: |
             {{ area_id(state_attr(this.entity_id, "source_entity_id")) }}
-          area_name: >-
+          area_name: |
             {{ area_id(state_attr(this.entity_id, "source_entity_id")) }}
-
-      - name: tv_livingroom_power
-        unique_id: tv_livingroom_power
-        icon: |
-          {% if is_state(this.entity_id, "on") %}
-          mdi:television
-          {% else %}
-          mdi:television-off
-          {% endif %}
-        device_class: power
-        delay_off: "00:00:00"
-        availability: |
-          {{
-            has_value('binary_sensor.esphome_plugb_livingroom_tv')
-          }}
-        state: |
-          {{
-            is_state("binary_sensor.esphome_plugb_livingroom_tv", "on")
-          }}
 
       - name: tv_livingroom_samsung
         icon: |
@@ -261,60 +230,43 @@ template:
           mdi:television-off
           {% endif %}
         device_class: power
-        availability: >-
+        availability: |
           {{
           states("media_player.livingroom_tv_samsung_43_dog") is defined
           and has_value("media_player.livingroom_tv_samsung_43_dog")
           }}
-        state: >-
+        state: |
           {{
           is_state("media_player.livingroom_tv_samsung_43_dog", "on")
           }}
 
-      - name: tv_livingroom
-        unique_id: tv_livingroom
-        icon: |
-          {% if is_state(this.entity_id, "on") %}
-          mdi:television
-          {% else %}
-          mdi:television-off
-          {% endif %}
-        device_class: power
-        state: |
-          {{
-           is_state("binary_sensor.esphome_plugb_livingroom_tv", "on")
-            and (
-              is_state("binary_sensor.apple_tv", "on")
-              or is_state("binary_sensor.tv_livingroom_samsung", "on")
-             )
-          }}
 
   - binary_sensor:
 
       - name: chromecast
-        icon: >-
+        icon: |
           {% if is_state(this.entity_id, "on") %}
           mdi:cast-connected
           {% else %}
           mdi:cast-off
           {% endif %}
-        availability: >-
+        availability: |
           {{ states("media_player.chromecast_den_tv") is defined }}
-        state: >-
+        state: |
           {{ has_value("media_player.chromecast_den_tv") }}
         attributes:
           source_entity_id: "media_player.chromecast_den_tv"
 
       - name: chromecast_2
-        icon: >-
+        icon: |
           {% if is_state(this.entity_id, "on") %}
           mdi:cast-connected
           {% else %}
           mdi:cast-off
           {% endif %}
-        availability: >-
+        availability: |
           {{ states("media_player.chromecast_den_tv") is defined }}
-        state: >-
+        state: |
           {{ not is_state("media_player.chromecast_den_tv", "unavailable") }}
         attributes:
           source_entity_id: "media_player.chromecast_den_tv"
@@ -327,25 +279,25 @@ template:
           {% else %}
           mdi:television-off
           {% endif %}
-        state: >-
+        state: |
           {{ states("media_player.tv_livingroom") }}
         attributes:
           source_entity_id: "media_player.tv_livingroom"
 
       - name: state_apple_tv
-        icon: >-
+        icon: |
           {% if is_state(this.entity_id, "on") %}
           mdi:apple
           {% else %}
           mdi:cast-off
           {% endif %}
-        state: >-
+        state: |
           {{ states("media_player.apple_tv") }}
         attributes:
           source_entity_id: "media_player.apple_tv"
 
       - name: state_media_player_tv_samsung_43_dog
-        icon: >-
+        icon: |
           {% if is_state(this.entity_id, "on") %}
           mdi:television
           {% else %}
@@ -357,7 +309,7 @@ template:
           source_entity_id: "media_player.livingroom_tv_samsung_43_dog"
 
       - name: state_remote_tv_samsung_43_dog
-        icon: >-
+        icon: |
           {% if is_state(this.entity_id, "on") %}
           mdi:remote
           {% else %}
@@ -399,7 +351,7 @@ media_player:
       playing
       {% elif is_state("media_player.apple_tv", "paused") %}
       paused
-      {% elif is_state("binary_sensor.esphome_plugb_livingroom_tv", "on") %}
+      {% elif is_state("binary_sensor.tv_livingroom", "on") %}
       idle
       {% else %}
       off
