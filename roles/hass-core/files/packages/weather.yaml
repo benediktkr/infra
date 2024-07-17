@@ -60,17 +60,24 @@ homeassistant:
     # sensor.weather_precipitation_met_no
     sensor.weather_precipitation_met_no:
       friendly_name: "Precipitation (met.no)"
+      source_entity_id: "weather.home"
       <<: *common_attrs_templated
-    # binary_sensor.weather_precipitation_me_no
-    binary_sensor.weather_precipitation_met_no:
-      friendly_name: "Precipitation (met.no)"
+    # sensor.weather_precipitation_owm
+    sensor.weather_precipitation_owm:
+      friendly_name: "Precipitation (OWM)"
+      source_entity_id: "weather.owm_home"
+      <<: *common_attrs_templated
+    # sensor.owm_precipitation_probability
+    sensor.owm_precipitation_probability:
+      friendly_name: "OWM Precipitation probability"
+      source_entity_id: "weather.owm_home"
       <<: *common_attrs_templated
 
     # sensor.chance_of_rain
     sensor.chance_of_rain:
       friendly_name: "Chance of rain"
       source_entity_ids:
-        - "sensor.owm_home_forecast_precipitation_probability"
+        - "sensor.owm_precipitation_probability"
         - "sensor.pirateweather_precip_probability"
       owm: "enabled"
       pirateweather: "enabled"
@@ -113,6 +120,11 @@ homeassistant:
       friendly_name: "Precipitation: PirateWeather"
       <<: *common_attrs_templated
 
+    # binary_sensor.weather_precipitation_me_no
+    binary_sensor.weather_precipitation_met_no:
+      friendly_name: "Precipitation (met.no)"
+      source_entity_id: "weather.home"
+      <<: *common_attrs_templated
 
     # binary_sensor.weather_precipitation_owm
     binary_sensor.weather_precipitation_owm:
@@ -223,6 +235,12 @@ template:
         target:
           entity_id: weather.home
         response_variable: hourly
+      - service: weather.get_forecasts
+        data:
+          type: hourly
+        target:
+          entity_id: weather.owm_home
+        response_variable: owm_hourly
     sensor:
       - name: weather_precipitation_met_no
         unit_of_measurement: "mm"
@@ -230,37 +248,19 @@ template:
         icon: "mdi:weather-rainy"
         state: |
           {{ hourly["weather.home"].forecast[0]["precipitation"] | float | round(1) }}
-        attributes:
-          source_entity_id: weather.home
-    binary_sensor:
-      - name: weather_precipitation_met_no
-        icon: |
-          {% if is_state(this.entity_id, "on") %}
-          mdi:weather-rainy
-          {% else %}
-          mdi:weather-cloudy
-          {% endif %}
-        device_class: problem
+      - name: weather_precipitation_owm
+        unit_of_measurement: "mm"
+        state_class: measurement
+        icon: "mdi:weather-rainy"
         state: |
-          {%
-            set conditions = [
-              "exceptional",
-              "hail",
-              "lightning",
-              "lighting-rainy",
-              "pouring",
-              "rainy",
-              "snowy",
-              "snowy-rainy"
-            ]
-          -%}
-          {{
-            states("sensor.weather_precipitation_met_no")|round(1) > 0.0
-            or states("weather.home") in conditions
-          }}
+          {{ owm_hourly["weather.owm_home"].forecast[0]["precipitation"] | float | round(1) }}
+      - name: "owm_precipitation_probability"
+        unit_of_measurement: "%"
+        state: |
+          {{ owm_hourly["weather.owm_home"].forecast[0]["precipitation_probability"] | float | round(2) }}
+
 
   - sensor:
-
       - name: "chance_of_rain"
         #unique_id: chance_of_rain
         unit_of_measurement: "%"
@@ -391,6 +391,32 @@ template:
           {{
             intens|float > 0.2
             or states("weather.pirateweather") in conditions
+          }}
+
+      - name: weather_precipitation_met_no
+        icon: |
+          {% if is_state(this.entity_id, "on") %}
+          mdi:weather-rainy
+          {% else %}
+          mdi:weather-cloudy
+          {% endif %}
+        device_class: problem
+        state: |
+          {%
+            set conditions = [
+              "exceptional",
+              "hail",
+              "lightning",
+              "lighting-rainy",
+              "pouring",
+              "rainy",
+              "snowy",
+              "snowy-rainy"
+            ]
+          -%}
+          {{
+            states("sensor.weather_precipitation_met_no")|float > 0.0
+            or states("weather.home") in conditions
           }}
 
       - name: weather_precipitation_owm
