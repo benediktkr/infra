@@ -10,7 +10,7 @@ homeassistant:
         <<: *common_attrs
       common_attrs_zwave: &common_attrs_zwave
         proto: "Z-Wave"
-        templated: true
+        templated: false
         <<: *common_attrs
 
     input_boolean.skylight_lock:
@@ -22,11 +22,11 @@ homeassistant:
       <<: *common_attrs_templated
 
     binary_sensor.skylight_close_weather:
-      friendly_name: "Skylight should be closed due to weather"
+      friendly_name: "Skylight should be closed due to weather (APIs)"
       <<: *common_attrs_templated
 
     binary_sensor.skylight_open_weather:
-      friendly_name: "Skylight weather conditions allow for open skylight"
+      friendly_name: "Skylight weather conditions allow for open skylight (APIs)"
       <<: *common_attrs_templated
 
     sensor.skylight_position:
@@ -50,6 +50,16 @@ homeassistant:
       friendly_name: Hallway Skylight Electrix [W] max over 24h
       <<: *common_attrs
 
+    input_boolean.skylight_close_weather_force_on:
+      friendly_name: "Force on: Skylight should be closed due to weather"
+      comment: "Not active, not use in binary_sensor state"
+      <<: *common_attrs
+
+    #input_boolean.skylight_open_weather_force_on:
+    #  friendly_name: "Force on: Skylight weather conditions allow for open skylight"
+    #  comment: "Not active, not use in binary_sensor state"
+    #  <<: *common_attrs_templated
+
 
 script:
   skylight_calibrate:
@@ -67,6 +77,10 @@ input_boolean:
   skylight_lock:
     name: skylight_lock
     icon: "mdi:home-roof"
+  skylight_close_weather_force_on:
+    name: skylight_close_weather_force_on
+    icon: "mdi:weather-pouring"
+    initial: false
 
 input_button:
   skylight_calibrate:
@@ -81,7 +95,8 @@ template:
       - name: skylight_close_weather
         unique_id: skylight_close_weather
         device_class: problem
-        state: >-
+        # or is_state("input_boolean.skylight_close_weather_force_on", "on")
+        state: |
           {{
           is_state("binary_sensor.weather_precipitation", "on")
           or is_state("binary_sensor.weather_rain", "on")
@@ -109,10 +124,6 @@ template:
 
 
   - sensor:
-      # {% set ipma_2h = state_attr('weather.ipma_hourly_home', 'forecast')[:2] | map(attribute='precipitation_probability') %} #}
-      # {% set ipma_1h = state_attr('weather.ipma_hourly_home', 'forecast')[0]['precipitation_probability'] | int %} #}
-
-
       - name: skylight_position
         unique_id: skylight_position
         icon: |
