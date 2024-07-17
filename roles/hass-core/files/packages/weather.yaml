@@ -59,12 +59,12 @@ homeassistant:
 
     # sensor.weather_precipitation_met_no
     sensor.weather_precipitation_met_no:
-      friendly_name: "Precipitation (met.no)"
+      friendly_name: "Precipitation: met.no"
       source_entity_id: "weather.home"
       <<: *common_attrs_templated
     # sensor.weather_precipitation_owm
     sensor.weather_precipitation_owm:
-      friendly_name: "Precipitation (OWM)"
+      friendly_name: "Precipitation: OWM"
       source_entity_id: "weather.owm_home"
       <<: *common_attrs_templated
     # sensor.owm_precipitation_probability
@@ -83,16 +83,16 @@ homeassistant:
       pirateweather: "enabled"
       <<: *common_attrs_templated
 
-    # sensor.weather_precipitation_owm
-    sensor.weather_precipitation_owm:
-      friendly_name: "Precipitation (OWM, rain + snow combined)"
+    # sensor.weather_precipitation_owm_rain_snow
+    sensor.weather_precipitation_owm_rain_snow:
+      friendly_name: "Precipitation: OWM (rain + snow combined)"
       source_rain: "sensor.owm_home_rain"
       source_snow: "sensor.owm_home_snow"
       <<: *common_attrs_templated
 
     # sensor.weather_precipitation
     sensor.weather_precipitation:
-      friendly_name: "Current precipitation (weather APIs)"
+      friendly_name: "Precipitation (weather APIs)"
       source_entity_ids:
         - "sensor.weather_precipitation_owm"
         - "sensor.weather_precipitation_met_no"
@@ -122,7 +122,7 @@ homeassistant:
 
     # binary_sensor.weather_precipitation_me_no
     binary_sensor.weather_precipitation_met_no:
-      friendly_name: "Precipitation (met.no)"
+      friendly_name: "Precipitation: met.no"
       source_entity_id: "weather.home"
       <<: *common_attrs_templated
 
@@ -286,7 +286,7 @@ template:
               | round(0)
           }}
 
-      - name: weather_precipitation_owm
+      - name: weather_precipitation_owm_rain_snow
         unit_of_measurement: "mm/h"
         state_class: measurement
         icon: "mdi:weather-rainy"
@@ -420,28 +420,29 @@ template:
           }}
 
       - name: weather_precipitation_owm
-        device_class: problem
         icon: |
           {% if is_state(this.entity_id, "on") %}
           mdi:weather-rainy
           {% else %}
           mdi:weather-cloudy
           {% endif %}
-        availability: |
-          {{
-            has_value("sensor.owm_home_condition")
-            and has_value("sensor.owm_home_precipitation_kind")
-            and has_value("sensor.owm_home_weather")
-            and has_value("sensor.weather_precipitation_owm")
-            and is_number(states("sensor.weather_precipitation_owm"))
-          }}
+        device_class: problem
         state: |
+          {%
+            set conditions = [
+              "exceptional",
+              "hail",
+              "lightning",
+              "lighting-rainy",
+              "pouring",
+              "rainy",
+              "snowy",
+              "snowy-rainy"
+            ]
+          -%}
           {{
-            not is_state("sensor.owm_home_precipitation_kind", "None")
-            or is_state("sensor.owm_home_condition", "rainy")
-            or "rain" in states("sensor.owm_home_condition")|lower
-            or "rain" in states("sensor.owm_home_weather")|lower
-            or states("sensor.weather_precipitation_owm")|float>0.0
+            states("sensor.weather_precipitation_owm")|float > 0.0
+            or states("weather.owm_home") in conditions
           }}
 
         # needs more data/research to see what values are in the event/category attributes
