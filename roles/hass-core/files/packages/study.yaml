@@ -14,15 +14,6 @@ homeassistant:
       templated: true
       <<: *common_attrs
 
-    binary_sensor.study_desk_monitor:
-      friendly_name: "Desk monitor"
-      <<: *common_attrs_templated
-
-    # binary_sensor.study_desk_monitor_standby:
-    #   friendly_name: "Desk monitor (Standby state)"
-    #   templated: true
-    #   package: "study"
-
     sensor.study_air_quality_voc_level:
       state_class: measurement
       device_class: "volatile_organic_compounds_parts"
@@ -81,31 +72,62 @@ homeassistant:
       proto: "Z-Wave"
       <<: *common_attrs
 
+    # might be renamed
     sensor.electric_w_switch_study_desk_monitor:
       friendly_name: "Study Desk monitor Electric [W]"
-      proto: "Z-Wave"
+      proto: "ESPHome"
       <<: *common_attrs
 
     sensor.electric_w_switch_study_desk_monitor_min_24h:
       friendly_name: Study Computer Monitor min power [W] over 24h
       <<: *common_attrs
 
-    # Z-Wave device entities
-    switch.study_desk_monitor:
-      friendly_name: Study desk monitor
-      icon: "mdi:monitor"
+    input_boolean.shortcuts_shokz_phone:
+      friendly_name: "iOS Shortcuts: Shokz connected to phone"
+      comment: |
+        Set with a service call from an iOS shortcuts automation when the phone
+        connects or disconnects from the headphones with Bluetooth
+      tags:
+        - Home Assistant
+        - Laptop
+        - Mobile/personal devices
+        - Presence
+        - Care.com
+      category:
+        - Apple shortcuts
+      <<: *common_attrs
+    binary_sensor.shortcuts_shokz_phone:
+      friendly_name: "Shokz connected to phone"
+      comment: |
+        Set with a service call from an iOS shortcuts automation when the phone
+        connects or disconnects from the headphones with Bluetooth
+      tags:
+        - Home Assistant
+        - Laptop
+        - Mobile/personal devices
+        - Presence
+        - Care.com
       <<: *common_attrs
 
-    sensor.ics_1_next_event:
-      friendly_name: "Next meeting"
-      <<: *common_attrs_templated
-
-    sensor.ics_1_next_event_start:
-      friendly_name: "Next meeting"
-      <<: *common_attrs_templated
+input_boolean:
+  shortcuts_shokz_phone:
+    name: shortcuts_shokz_phone
+    icon: "mdi:headset"
 
 
 template:
+  - binary_sensor:
+      - name: shortcuts_shokz_phone
+        unique_id: shortcuts_shokz_phone
+        device_class: connectivity
+        icon: |
+          {% if is_state(this.entity_id, "on") -%}
+          mdi:headset
+          {% else -%}
+          mdi:headset-off
+          {% endif %}
+        state: |
+          {{ is_state("input_boolean.shortcuts_shokz_phone", "on") }}
 
   - trigger:
       - platform: event
@@ -151,39 +173,6 @@ template:
             for use as signal for occupancy detection. briefly turns on while
             searching for bluetooth connection.
 
-      - name: study_desk_monitor
-        icon: >-
-          {% if is_state(this.entity_id, 'off') or false %}
-          mdi:monitor-off
-          {% else %}
-          mdi:monitor
-          {% endif %}
-        availability: >-
-          {{
-          states("sensor.electric_w_switch_study_desk_monitor") is defined
-          and has_value("sensor.electric_w_switch_study_desk_monitor")
-          and is_number(states("sensor.electric_w_switch_study_desk_monitor"))
-          and states("switch.study_desk_monitor") is defined
-          and has_value("switch.study_desk_monitor")
-          }}
-        state: >-
-          {% set power_w = states('sensor.electric_w_switch_study_desk_monitor')|float %}
-          {% set power_on = is_state('switch.study_desk_monitor', 'on') %}
-          {{
-          power_on
-          and power_w > 10.0
-          and power_w < 1000
-          }}
-        attributes:
-          source_power_entity_id: "sensor.electric_w_switch_study_desk_monitor"
-          source_switch_entity_id: "switch.study_desk_monitor"
-          source_proto: "zwave"
-          notes: >-
-            Uses ca 23.68 W when not powering/charging a laptop over usb-c
-            while charing a laptop, power usage fluctuates between ca 55-110W.
-          on_value: 10.0
-          former_on_value: 19.0
-
   - sensor:
       - name: battery_oxygen_time_left
         unit_of_measurement: min
@@ -207,76 +196,4 @@ template:
           source_value: |
             {{ state_attr("sensor.battery_level_oxygen", "Time to Empty") }}
 
-      - name: ics_1_next_event
-        icon: "mdi:calendar"
-        availability: |
-          {{
-            state_attr("sensor.ics_1", "description") is string
-            and state_attr("sensor.ics_1", "location") is string
-          }}
-        state: |
-            {{ state_attr("sensor.ics_1", "description") }}
-        attributes:
-          relevancy: |
-            {% set loc = state_attr("sensor.ics_1", "location") or "" %}
-            {% set zoom = loc.startswith("https") and "zoom" in loc %}
-            {% set d = state_attr("sensor.ics_1", "description") or "" %}
-            {% set time_off = "time off" in d|lower %}
-            {{ zoom and not time_off }}
-
-      - name: ics_1_next_event_duration
-        icon: "mdi:calendar"
-        availability: |
-          {{
-            state_attr("sensor.ics_1", "start") is datetime
-            and state_attr("sensor.ics_1", "end") is datetime
-          }}
-        state: |
-          {% set end = state_attr("sensor.ics_1", "end") %}
-          {% set start = state_attr("sensor.ics_1", "start") %}
-          {{ end - start }}
-
-
-      - name: ics_1_next_event_start
-        icon: "mdi:calendar"
-        device_class: timestamp
-        availability: |
-          {{ state_attr("sensor.ics_1", "start") is datetime }}
-        state: |
-          {% set start = state_attr("sensor.ics_1", "start") %}
-          {{ start.isoformat() }}
-
-
-  - binary_sensor:
-      - name: ics_1_zoom_call
-        icon: "mdi:calendar"
-        availability: |
-          {{
-            state_attr("sensor.ics_1_next_event", "relevancy") is boolean
-            and state_attr("sensor.ics_1", "start") is datetime
-            and state_attr("sensor.ics_1", "end") is datetime
-          }}
-        state: |
-          {{
-            is_state_attr("sensor.ics_1_next_event", "relevancy", true)
-            and now() >= state_attr("sensor.ics_1", "start")
-            and now() <= state_attr("sensor.ics_1", "end")
-          }}
-
-      - name: ics_1_5m_warning
-        icon: "mdi:calendar"
-        availability: |
-          {{
-            state_attr("sensor.ics_1_next_event", "relevancy") is boolean
-            and state_attr("sensor.ics_1", "start") is datetime
-          }}
-        state: |
-          {% set start = state_attr("sensor.ics_1", "start") %}
-          {% set warning_start = start - timedelta(minutes=5) %}
-          {% set warning_end = start + timedelta(minutes=5) %}
-          {{
-            is_state_attr("sensor.ics_1_next_event", "relevancy", true)
-            and now() >= warning_start
-            and now() <= warning_end
-          }}
 
