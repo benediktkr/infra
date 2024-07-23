@@ -35,7 +35,7 @@ input_boolean:
     #initial: false
 
 input_select:
-  halper_fan_preset_mode:
+  helper_fan_preset_mode:
     name: helper_fan_preset_mode
     options:
       # 12.5W
@@ -133,12 +133,22 @@ fan:
           off
           {% endif %}
         turn_on:
-          - service: switch.turn_on
-            target:
-              entity_id: switch.socket_fan_livingroom
-          - service: script.standing_fan_1_power_toggle_remote
+          - if:
+              - condition: template
+                value_template: |
+                  {{ is_state("this.entity_id", "on") }}
+            then:
+              - service: switch.turn_on
+                target:
+                  entity_id: switch.socket_fan_livingroom
+              - service: script.standing_fan_1_power_toggle_remote
         turn_off:
-          - service: script.standing_fan_1_power_toggle_remote
+          - if:
+              - condition: template
+                value_template: |
+                  {{ is_state("this.entity_id", "off") }}
+            then:
+              - service: script.standing_fan_1_power_toggle_remote
         set_preset_mode:
           - service: remote.send_command
             target:
