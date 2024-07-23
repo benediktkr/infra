@@ -1,27 +1,101 @@
+---
+
+homeassistant:
+  customize:
+    package.node_anchors:
+      package_name: &package_name "fans"
+      common_attrs: &common_attrs
+        package: *package_name
+      common_attrs_templated: &common_attrs_templated
+        templated: true
+        <<: *common_attrs
+
+    fan.helper_fan:
+      friendly_name: Helper fan
+      <<: *common_attrs
+
+    fan.livingroom:
+      friendly_name: "Livingroom fan"
+      <<: *common_attrs
+
+    fan.study:
+      friendly_name: "Study fan"
+      <<: *common_attrs
+
+    fan.bedroom:
+      friendly_name: "Bedroom fan"
+      <<: *common_attrs
+
+
 input_boolean:
-  standing_fan_1_state_power:
-    name: standing_fan_1_state_power
+  helper_fan_state_power:
+    name: helper_fan_state_power
     icon: mdi:fan
     # no 'initial' value: restores to previous state on restart
     #initial: false
 
 input_select:
-  standing_fan_1_preset_mode:
-    name: standing_fan_1_preset_mode
+  halper_fan_preset_mode:
+    name: helper_fan_preset_mode
     options:
+      # 12.5W
       - silent_night
+      # 73 W
       - turbo
+      # 45 W
       - normal
     # no 'initial' value: restores to previous state on restart
     #initial: normal
     icon: mdi:fan
 
 script:
-  fan_noop:
+  helper_fan_noop:
     mode: single
     sequence: []
 
-  standing_fan_1_power_toggle:
+  helper_fan_turn_on:
+    mode: single
+    sequence:
+      - if:
+          - condition: state
+            entity_id: input_boolean.helper_fan_state_power
+            state: "off"
+        then:
+          - service: input_boolean.turn_on
+            data: {}
+            target:
+              entity_id: input_boolean.helper_fan_state_power
+
+  helper_fan_turn_off:
+    mode: single
+    sequence:
+      - if:
+          - condition: state
+            entity_id: input_boolean.helper_fan_state_power
+            state: "on"
+        then:
+          - service: input_boolean.turn_off
+            data: {}
+            target:
+              entity_id: input_boolean.helper_fan_state_power
+
+  helper_fan_reset_power_state:
+    mode: single
+    sequence:
+      - service: input_boolean.toggle
+        target:
+          entity_id: input_boolean.helper_fan_state_power
+        data: {}
+
+  helper_fan_set_preset_mode:
+    sequence:
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.helper_fan_preset_mode
+        data:
+          option: "{{ preset_mode }}"
+
+  standing_fan_1_power_toggle_remote:
     mode: single
     sequence:
       - service: remote.send_command
@@ -31,100 +105,74 @@ script:
           device: standing_fan_1
           command: power_toggle
 
-  standing_fan_1_on:
-    mode: single
-    sequence:
-      - if:
-          - condition: state
-            entity_id: input_boolean.standing_fan_1_state_power
-            state: "off"
-        then:
-          - service: script.standing_fan_1_power_toggle
-          - service: input_boolean.turn_on
-            data: {}
-            target:
-              entity_id: input_boolean.standing_fan_1_state_power
-
-  standing_fan_1_off:
-    mode: single
-    sequence:
-      - if:
-          - condition: state
-            entity_id: input_boolean.standing_fan_1_state_power
-            state: "on"
-        then:
-          - service: script.standing_fan_1_power_toggle
-          - service: input_boolean.turn_off
-            data: {}
-            target:
-              entity_id: input_boolean.standing_fan_1_state_power
-
-  standing_fan_1_mode_silent_night:
-    mode: single
-    sequence:
-      - service: remote.send_command
-        target:
-          entity_id: remote.broadlink
-        data:
-          device: standing_fan_1
-          command: silent_night
-
-  standing_fan_1_mode_turbo:
-    mode: single
-    sequence:
-      - service: remote.send_command
-        target:
-          entity_id: remote.broadlink
-        data:
-          device: standing_fan_1
-          command: turbo
-
-  standing_fan_1_mode_normal:
-    mode: single
-    sequence:
-      # send the command for the active (if it is active) mode to turn it off (or back to 'normal')
-      - service: script.standing_fan_1_mode_{{ states('input_select.standing_fan_1_preset_mode') }}
-
-  standing_fan_1_reset_power_state:
-    mode: single
-    sequence:
-      - service: input_boolean.toggle
-        target:
-          entity_id: input_boolean.standing_fan_1_state_power
-        data: {}
-
-  standing_fan_1_set_preset_mode:
-    mode: single
-    sequence:
-      - service: script.standing_fan_1_mode_{{ preset_mode }}
-      - service: input_select.select_option
-        target:
-          entity_id: input_select.standing_fan_1_preset_mode
-        data:
-          option: "{{ preset_mode }}"
-
-# automation:
-#   - alias: standing_fan_1_hass_shutdown
-#     mode: single
-#     trigger:
-#       - platform: homeassistant
-#         event: shutdown
-#     condition: []
-#     action:
-#       - service: script.standing_fan_1_off
-
 fan:
   - platform: template
     fans:
       standing_fan_1:
         unique_id: standing_fan_1
         friendly_name: "Standing fan 1"
-        value_template: "{{ states('input_boolean.standing_fan_1_state_power') }}"
-        preset_mode_template: "{{ states('input_select.standing_fan_1_preset_mode') }}"
+        value_template: |
+          {{ not is_state("sensor.electric_w_switch_fan_livingroom", "0.0") }}
+          {{ sensor_state }}
+        preset_mode_template: |
+          {% if is_state("switch.socket_fan_livingroom", "on") -%}
+            {% set power = states("sensor.electric_w_switch_fan_livingroom")|round(1) -%}
+            {% if power > 65.0 -%}
+            {# 73W -#}
+            turbo
+            {% elif power > 40.0 -%}
+            {# 45W -#}
+            normal
+            {% elif power > 10.0 %}
+            {# 12.5W -#}
+            silent_night
+            {% else -%}
+            unknown
+            {% endif -%}
+          {% else -%}
+          off
+          {% endif %}
         turn_on:
-          service: script.standing_fan_1_on
+          - service: switch.turn_on
+            target:
+              entity_id: switch.socket_fan_livingroom
+          - service: script.standing_fan_1_power_toggle_remote
         turn_off:
-          service: script.standing_fan_1_off
+          - service: script.standing_fan_1_power_toggle_remote
+        set_preset_mode:
+          - service: remote.send_command
+            target:
+              entity_id: remote.broadlink
+            data:
+              device: standing_fan_1
+              command: |
+                {% if preset_mode == "normal" -%}
+                {{ state_attr(this.entity_id, "preset_mode") }}
+                {% else -%}
+                {{ preset_mode }}
+                {% endif %}
+        preset_modes:
+          # 12.5W
+          - silent_night
+          # 73 W
+          - turbo
+          # 45 W
+          - normal
+
+      helper_fan:
+        # Used in groups placeholder while Z-Wave outlets are used for other
+        # purposes when fans are not needed so that fan entities still exist
+        # as to not break automations/scripts/dashboards.
+        unique_id: helper_fan
+        friendly_name: "No-op placeholder fan using helpers for state"
+        value_template: |
+          {{ is_state("input_boolean.standing_fan_1_state_power", "on") }}
+        preset_mode_template: |
+          {{ states('input_select.helper_fan_preset_mode') }}
+        turn_on:
+          service: script.helper_fan_turn_on
+        turn_off:
+          service: script.helper_fan_turn_off
         set_preset_mode:
           service: script.standing_fan_1_set_preset_mode
           data:
@@ -134,34 +182,15 @@ fan:
           - turbo
           - normal
 
-      noop:
-        # Used in groups placeholder while Z-Wave outlets are used for other
-        # purposes when fans are not needed so that fan entities still exist
-        # as to not break automations/scripts/dashboards.
-        unique_id: noop
-        friendly_name: "No-op placeholder for fans"
-        value_template: |
-          {{ false }}
-        preset_mode_template: |
-          {{ "normal" }}
-        turn_on:
-          service: script.fan_noop
-        turn_off:
-          service: script.fan_noop
-        set_preset_mode:
-          service: script.fan_noop
-        preset_modes:
-          - normal
-
   - platform: group
     name: bedroom
     entities:
-      - fan.noop
+      - fan.helper_fan
       - fan.fan_bedroom
   - platform: group
     name: study
     entities:
-      - fan.noop
+      - fan.helper_fan
       - fan.fan_study
   - platform: group
     name: livingroom
