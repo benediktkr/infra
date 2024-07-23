@@ -136,7 +136,7 @@ fan:
           - if:
               - condition: template
                 value_template: |
-                  {{ is_state("this.entity_id", "on") }}
+                  {{ is_state("this.entity_id", "off") }}
             then:
               - service: switch.turn_on
                 target:
@@ -146,7 +146,7 @@ fan:
           - if:
               - condition: template
                 value_template: |
-                  {{ is_state("this.entity_id", "off") }}
+                  {{ is_state("this.entity_id", "on") }}
             then:
               - service: script.standing_fan_1_power_toggle_remote
         set_preset_mode:
