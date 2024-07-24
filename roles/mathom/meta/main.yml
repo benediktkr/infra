@@ -4,6 +4,9 @@ dependencies:
   - role: sshd
     tags:
       - sshd
+  - role: control
+    tags:
+      - control
   - role: nfs
     tags:
       - nfs
