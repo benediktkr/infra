@@ -1,0 +1,28 @@
+---
+
+- name: install packages for dealing with usb drive bay
+  apt:
+    name:
+      - fancontrol
+      - linux-cpupower
+      - ifupdown2
+      - rsnapshot
+      - hd-idle
+      - hdparm
+      - smartmontools
+    state: present
+  tags:
+    - packages
+    - control-packages
+
+#- name: install python package for controlling usb drive bay fan
+#  pip:
+#    name:
+#      - hddfancontrol
+#    state: present
+#  tags:
+#    - packages
+#    - pip-packages
+#    - hdd-packages
+
+
