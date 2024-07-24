@@ -44,7 +44,7 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
 
         location /admin/ldap {
-            proxy_pass http://{{ bridgewithdns.vaultwarden_ldap}}:{{ vaultwarden_ldap_port_http }}/;
+            proxy_pass http://127.0.0.1:{{ vaultwarden_ldap_port_http }}/;
         }
         proxy_pass http://{{ item.container_name }};
 

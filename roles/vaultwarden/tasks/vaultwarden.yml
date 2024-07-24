@@ -182,6 +182,8 @@
     networks:
       - name: bridgewithdns
         ipv4_address: "{{ bridgewithdns['vaultwarden_ldap'] }}"
+    ports:
+      - "127.0.0.1:{{ vaultwarden_ldap_port_http }}:{{ vaultwarden_ldap_port_http }}"
     mounts:
       - type: bind
         source: "{{ systemuserlist.vaultwarden.home }}/ldap/config.toml"
