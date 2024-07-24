@@ -1,8 +1,8 @@
 {% for item in vw_vaults -%}
 upstream {{ item.container_name }} {
-  zone vaultwarden-default 64k;
-  server {{ bridgewithdns[item.container_name] }}:80;
-  keepalive 2;
+    zone vaultwarden-default 64k;
+    server {{ bridgewithdns[item.container_name] }}:80;
+    keepalive 2;
 }
 server {
     listen 443 ssl http2;
@@ -19,16 +19,16 @@ server {
     client_max_body_size 525M;
 
     location / {
-      proxy_http_version 1.1;
-      proxy_set_header Upgrade $http_upgrade;
-      proxy_set_header Connection "upgrade";
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
 
-      proxy_set_header Host $host;
-      proxy_set_header X-Real-IP $remote_addr;
-      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-      proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
 
-      proxy_pass http://{{ item.container_name }};
+        proxy_pass http://{{ item.container_name }};
     }
 
     # block to include authelia auth
