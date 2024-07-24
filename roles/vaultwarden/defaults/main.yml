@@ -1,5 +1,6 @@
 ---
 
+vaultwarden_ldap_tls_verify: true
 vw_vaults:
   - name: vault
     shared: true

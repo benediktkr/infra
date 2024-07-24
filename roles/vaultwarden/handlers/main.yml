@@ -16,8 +16,8 @@
     state: started
     restart: true
 
-- name: restart vaultwarden_ldap
+- name: restart vaultwarden-ldap
   docker_container:
-    name: vaultwarden_ldap
+    name: vaultwarden-ldap
     state: started
     restart: true

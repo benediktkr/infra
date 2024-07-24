@@ -1,8 +1,11 @@
 vaultwarden_url = "{{ vaultwarden_ldap_vaultwarden_url}}"
 vaultwarden_admin_token = "{{ vw_admin_token }}"
 ldap_host = "{{ openldap_url }}"
+ldap_port = 636
 ldap_scheme = "ldaps"
 ldap_ssl = true
+{% set tls_verify = not vaultwarden_ldap_tls_verify -%}
+ldap_no_tls_verify = {{ tls_verify | string | lower }}
 ldap_bind_dn = "cn=readonly,{{ openldap_dc }}"
 ldap_bind_password = "{{ openldap_readonly_pass }}"
 ldap_search_base_dn = "{{ openldap_dc }}"
