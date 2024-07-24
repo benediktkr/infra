@@ -9,6 +9,33 @@
   tags:
     - packages
 
+# AirSane: https://github.com/SimulPiscator/AirSane
+# $ cd githu/
+# $ git clone https://github.com/SimulPiscator/AirSane
+# $ mkdir ~/tmp/airscan
+# $ cd ~/tmp/airscan
+# $ cmake ~/github/AirScan
+# $ make
+# $ sudo make install
+# $ sudo systemctl enable airsaned
+# $ sudo systemctl start airsaned
+#
+# Check http://${hostname}:8090/
+- name: install build dependencies for AirSane
+  apt:
+    name:
+      - libsane-dev
+      - libjpeg-dev
+      - libpng-dev
+      - libavahi-client-dev
+      - libusb-dev
+      - libusb-1.0-0-dev
+      - cmake
+      - g++
+    state: present
+  tags:
+    - packages
+
 - name: saned config files
   template:
     src: "{{ item }}.j2"
