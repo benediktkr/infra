@@ -46,7 +46,7 @@ server {
         location /admin/ldap {
             proxy_pass http://{{ bridgewithdns.vaultwarden_ldap}}:{{ vaultwarden_ldap_port_http }}/;
         }
-        proxy_pass http://{{ item.container_name }}-default;
+        proxy_pass http://{{ item.container_name }};
 
     }
 
