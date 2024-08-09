@@ -21,7 +21,9 @@ api:
     key: "{{ hass_esphome_api_key }}"
 
 ota:
-  password: "{{ hass_esphome_ota_password }}"
+  - platform: esphome
+    id: esphome_ota
+    password: "{{ hass_esphome_ota_password }}"
 
 wifi:
   ssid: "{{ hass_esphome_wifi_ssid }}"
