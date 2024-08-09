@@ -14,4 +14,7 @@
   become_user: "{{ systemuserlist.hass.username }}"
   when: false
 
-
+- name: restart bluetooth
+  service:
+    name: bluetooth
+    state: restarted
