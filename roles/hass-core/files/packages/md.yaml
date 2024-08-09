@@ -45,8 +45,6 @@ template:
         state: |
           audio_owntone_now_playing.md
         attributes:
-          length: |
-            {{ this.attributes.get("md", "")|length }}
           md: |
             {% set title = state_attr("media_player.owntone_server", "media_title") %}
             {% set name = state_attr("media_player.owntone_server", "media_album_name") %}
@@ -67,13 +65,11 @@ template:
         availability: |
           {{
             has_value(this.attributes.get("source_id_s1"))
-            or has_value(this.attributes.get("source_id_s2"))
+            and has_value(this.attributes.get("source_id_s2"))
           }}
         state: |
           {{ state_attr(this.entity_id, "friendly_name") }}
         attributes:
-          length: |
-            {{ this.attributes.get("md", "")|length }}
           md: |
             {% set s1 = state_attr(this.attributes.get("source_id_s1"), "items") %}
             {% set s2 = state_attr(this.attributes.get("source_id_s2"), "items") %}
@@ -86,13 +82,13 @@ template:
             {% for item in sonos -%}
             ## {{ item.name }}
 
-            {% if item.favs|length > 0 -%}
+            {%   if item.favs|length > 0 -%}
             | Name       | Value   |
             |:-----------|:--------|
-            {% for k, v in item.favs.items() -%}
+            {%     for k, v in item.favs.items() -%}
             | `{{ k }}`  | {{ v }} |
-            {% endfor %}
-            {% endif %}
+            {%     endfor %}
+            {%   endif %}
 
             {% endfor %}
 
@@ -104,8 +100,6 @@ template:
         state: |
           audio_owntone_media_player.md
         attributes:
-          length: |
-            {{ this.attributes.get("md", "")|length }}
           md: |
             # `media_player` attrs
 
@@ -223,8 +217,6 @@ template:
         state: |
           packages.md
         attributes:
-          length: |
-            {{ this.attributes.get("md", "")|length }}
           md: |
             {%
               set in_transit = states("sensor.seventeentrack_packages_in_transit")
@@ -293,8 +285,6 @@ template:
         state: |
           wwwsudois.md
         attributes:
-          length: |
-            {{ this.attributes.get("md", "")|length }}
           md: |
             # ![](https://www.sudo.is/favicon.ico)
 
@@ -323,8 +313,6 @@ template:
         state: |
           testing_media_players.yaml
         attributes:
-          length: |
-            {{ this.attributes.get("md", "")|length }}
           md: |
             # OwnTone `media_player`
 
