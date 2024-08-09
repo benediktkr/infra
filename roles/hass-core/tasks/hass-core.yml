@@ -73,15 +73,17 @@
     - name: home-assistant/zha/firmware
     - name: home-assistant/media
       mode: "0775"
-    - name: home-assistant/notify
-      mode: "0775"
-    - name: home-assistant/inputs
-      mode: "0775"
     - name: home-assistant/media/cameras
+      mode: "0775"
+    - name: home-assistant/media/silence
       mode: "0775"
     - name: home-assistant/media/cameras/recordings
       mode: "0775"
     - name: home-assistant/media/cameras/snapshots
+      mode: "0775"
+    - name: home-assistant/notify
+      mode: "0775"
+    - name: home-assistant/inputs
       mode: "0775"
     - name: git
     - name: git/hass-config
@@ -192,6 +194,7 @@
     - packages/potato.yaml
     - packages/apple_tv.yaml
     - packages/toothbrush.yaml
+    - packages/proxy_entities.yaml
     - packages/bvg.yaml
     - packages/zha.yaml
     - mini.yaml
@@ -297,7 +300,6 @@
     - nad_c370.yaml
     - internet_online.yaml
     - occupancy.yaml
-    - proxy_entities.yaml
     - remotes.yaml
     - smoke_detectors.yaml
     - sudo_is.yaml
