@@ -5,7 +5,7 @@
 # sync hass config to {{ hass_config_repo }}
 #*/15 * * * * {{ systemuserlist.hass.username }} /usr/local/bin/git-hass-config.sh
 
-0 14 * * * {{ systemuserlist.hass.username }} /usr/bin/find /srv/homeassistant_backups/ -name "*.tar" -mtime +30 -type f -delete
+10 12 * * * {{ systemuserlist.hass.username }} /usr/bin/find /srv/homeassistant_backups/ -name "*.tar" -mtime +30 -type f -delete
 
 #* * * * * root /usr/sbin/arp-scan --localnet > /tmp/arp-scan.txt
 #14 * * * *  root /usr/sbin/service bluetooth restart >/dev/null
