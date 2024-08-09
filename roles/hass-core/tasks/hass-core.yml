@@ -172,6 +172,7 @@
   tags:
     - cron
     - hass-cron
+    - hass-core-cron
     - hass-git
 
 - debug:
