@@ -11,15 +11,40 @@ homeassistant:
     binary_sensor.washing_machine:
       friendly_name: Washing Machine
       <<: *common_attrs_templated
-    binary_sensor.washing_machine_laundry:
-      friendly_name: Laundry in washing machine
-      <<: *common_attrs_templated
     binary_sensor.washing_machine_on:
       friendly_name: Washing Machine (legacy entity_id)
       comment: |
         A group entity to provide legacy name, has 1 member.
       icon: "mdi:washing-machine"
       <<: *common_attrs
+
+    binary_sensor.washing_machine_laundry:
+      friendly_name: Laundry in washing machine
+      labels:
+        - ADHD
+        - Appliances
+        - Z-Wave
+      <<: *common_attrs_templated
+    alert.laundry:
+      templated: false
+      labels:
+        - ADHD
+        - Appliances
+        - Z-Wave
+        - Home Assistant
+      <<: *common_attrs
+
+    binary_sensor.door_bathroom_washingmachine:
+      friendly_name: "Washing machine"
+      proto: Z-Wave
+      comment: Door/window sensor on the washing machine
+      templated: false
+      labels:
+        - ADHD
+        - Appliances
+        - Z-Wave
+      <<: *common_attrs
+
     sensor.electric_a_switch_washing_machine_max_24h:
       friendly_name: Washing Machine max current [A] over 24h
       <<: *common_attrs
@@ -82,15 +107,17 @@ template:
             has_value("binary_sensor.washing_machine")
             and has_value("binary_sensor.door_bathroom_washingmachine")
           }}
+        # The 'automation.washing_machine_finished' automation
+        # is UI-managed
         state: |
           {% set washing_machine_running = is_state("binary_sensor.washing_machine", "on") %}
-          {% set washing_machine_changed = states.binary_sensor.washing_machine.last_changed %}
+          {% set washing_machine_finished = states.automation.washing_machine_finished.last_triggered %}
           {% set door_closed = is_state("binary_sensor.door_bathroom_washingmachine", "off") %}
           {% set door_changed = states.binary_sensor.door_bathroom_washingmachine.last_changed %}
           {{
             not washing_machine_running
             and door_closed
-            and door_changed < washing_machine_changed
+            and door_changed < washing_machine_finished
           }}
 
 alert:
