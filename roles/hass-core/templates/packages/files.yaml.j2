@@ -35,7 +35,7 @@ homeassistant:
       docker_path: "/config/backups"
       <<: *common_attrs
     sensor.recordings:
-      friendly_name: "/srv/hass/home-assistant"
+      friendly_name: "/srv/hass/home-assistant/media/cameras/records"
       host_path: "/srv/hass/home-assistant/media/cameras/recordings"
       docker_path: "/usr/var/media/cameras/recordings"
       <<: *common_attrs
