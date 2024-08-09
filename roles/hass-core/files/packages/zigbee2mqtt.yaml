@@ -2,6 +2,35 @@
 
 # https://www.zigbee2mqtt.io/guide/usage/integrations/home_assistant.html#controlling-zigbee2mqtt-via-home-assistant
 
+homeassistant:
+  customize:
+    package.node_anchors:
+      package_name: &package_name "zigbee2mqtt"
+      common_attrs: &common_attrs
+        package: *package_name
+      common_attrs_templated: &common_attrs_templated
+        templated: true
+        <<: *common_attrs
+
+      input_number.zigbee2mqtt_join_minutes:
+        <<: *common_attrs
+      input_text.zigbee2mqtt_new_name:
+        <<: *common_attrs
+      input_select.zigbee2mqtt_old_name_select:
+        <<: *common_attrs
+      input_select.zigbee2mqtt_remove_select:
+        <<: *common_attrs
+      input_boolean.zigbee2mqtt_force_remove:
+        <<: *common_attrs
+      script.zigbee2mqtt_rename:
+        <<: *common_attrs
+      script.zigbee2mqtt_remove:
+        <<: *common_attrs
+      automation.zigbee2mqtt_create_notification_on_successful_interview:
+        <<: *common_attrs
+      automation.zigbee2mqtt_update_devices_list:
+        <<: *common_attrs
+
 # Input number for joining time remaining (in minutes)
 input_number:
   zigbee2mqtt_join_minutes:
@@ -128,4 +157,5 @@ automation:
         target:
           entity_id: input_text.zigbee2mqtt_new_name
     mode: single
+
 
