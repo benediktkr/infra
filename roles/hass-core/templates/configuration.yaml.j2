@@ -137,7 +137,17 @@ api:
 
 websocket_api:
 
+# https://www.home-assistant.io/integrations/wake_on_lan
 wake_on_lan:
+
+switch:
+  {% for item in hass_wake_on_lan -%}
+  - platform: wake_on_lan
+    name: "wol_{{ item.name }}"
+    mac: "{{ item.mac }}"
+    host: "{{ item.host }}"
+  {% endfor %}
+
 
 # /api/prometheus
 # default: all entities are includessd
@@ -528,8 +538,9 @@ input_number:
 #    entity_globs:
 #      - sensor.electric_v_*
 #      - sensor.electric_w_*
-#      - sensor.esphome_plugb_*_power
-#      - sensor.esphome_socket_*_power
+#      - sensor.esphome_*_power
+#      - sensor.esphome_*_voltage
+#      - sensor.esphome_*_current
 #    #entities:
 #    #  - sensor.washing_machine_electric_consumption_w
 #    #  - sensor.washing_machine_electric_consumption_kwh
