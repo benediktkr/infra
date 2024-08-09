@@ -562,6 +562,11 @@ matrix:
     - word: hass
       name: hass
 
+# https://www.home-assistant.io/integrations/twilio/
+twilio:
+  account_sid: "{{ hass_twilio.main.account_sid }}"
+  auth_token: "{{ hass_twilio.main.auth_token }}"
+
 digital_ocean:
   access_token: !secret do_token
 
@@ -569,6 +574,14 @@ notify:
   - name: matrix
     platform: matrix
     default_room: !secret matrix_default_room
+
+  - name: twilio_sms
+    platform: twilio_sms
+    from_number: "{{ hass_twilio.main.main_number }}"
+
+  - name: twilio_call
+    platform: twilio_call
+    from_number: "{{ hass_twilio.main.main_number }}"
 
   - name: file_notify
     platform: file
