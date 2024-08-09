@@ -34,17 +34,21 @@ homeassistant:
         But 'binary_sensor.tamper_smokealarm_bedroom' still works, and changes state
         if the cover is removed or put back.
       <<: *common_attrs
-
     binary_sensor.smoke_hallway:
       friendly_name: "Hallway Smoke alarm"
       device_class: smoke
       proto: "Z-Wave"
       <<: *common_attrs
-
     binary_sensor.smoke_bedroom:
       friendly_name: "smokealarm_bedroom Smoke state"
       device_class: smoke
       proto: "Z-Wave"
+      <<: *common_attrs
+
+    sensor.iss:
+      unit_of_measurement: persons
+      state_class: measurement
+      native_precision: 0
       <<: *common_attrs
 
     sensor.battery_level_system:

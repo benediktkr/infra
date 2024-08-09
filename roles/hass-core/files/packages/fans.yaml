@@ -119,7 +119,6 @@ fan:
         friendly_name: "Standing fan 1"
         value_template: |
           {{ not is_state("sensor.electric_w_switch_fan_livingroom", "0.0") }}
-          {{ sensor_state }}
         preset_mode_template: |
           {% if is_state("switch.socket_fan_livingroom", "on") -%}
             {% set power = states("sensor.electric_w_switch_fan_livingroom")|round(1) -%}
