@@ -10,6 +10,42 @@ homeassistant:
         templated: true
         <<: *common_attrs
 
+    binary_sensor.tamper_smokealarm_bedroom:
+      friendly_name: "smokealarm_bedroom Tamper"
+      device_class: tamper
+      proto: "Z-Wave"
+      note: |
+        Works correctly and updates state, despite group 2 (TMP button) is
+        not added.
+      <<: *common_attrs
+    light.smokealarm_bedroom_basic:
+      default_groups:
+        - 3 (Device status)
+      note: |
+        Added groups 1 (Fire status) and 2 (TMP Button), reinterviewed and this
+        entity showed up.
+
+        Would get updated if the value of "Basic v1" was updated in Z-Wave JS, and
+        the updated value would show there as well.
+
+        Removed groups 1 and 2 again. Now this entity does not update if the "Basic
+        v1" value is changed in Z-Wave JS and gets set back to "0".
+
+        But 'binary_sensor.tamper_smokealarm_bedroom' still works, and changes state
+        if the cover is removed or put back.
+      <<: *common_attrs
+
+    binary_sensor.smoke_hallway:
+      friendly_name: "Hallway Smoke alarm"
+      device_class: smoke
+      proto: "Z-Wave"
+      <<: *common_attrs
+
+    binary_sensor.smoke_bedroom:
+      friendly_name: "smokealarm_bedroom Smoke state"
+      device_class: smoke
+      proto: "Z-Wave"
+      <<: *common_attrs
 
     sensor.battery_level_system:
       friendly_name: "System battery"
@@ -17,6 +53,9 @@ homeassistant:
     sensor.battery_level_ben_phone:
       device_class: battery
       state_class: measurement
+      <<: *common_attrs
+    binary_sensor.ben_phone_low_power_mode:
+      friendly_name: "Low power mode on ben-phone"
       <<: *common_attrs
     sensor.battery_level_ben_phone_icloud:
       device_class: battery
@@ -43,6 +82,10 @@ homeassistant:
       friendly_name: "gitea"
       entity_picture: "https://www.sudo.is/img/gitea.svg"
       <<: *common_attrs
+    sensor.github_element_hq_synapse_latest_release:
+      friendly_name: "element-hq/synapse"
+      entity_picture: "https://www.sudo.is/img/matrix.png"
+      <<: *common_attrs
     sensor.github_matrix_org_synapse_latest_release:
       friendly_name: "matrix-org/synapse"
       entity_picture: "https://www.sudo.is/img/matrix.png"
@@ -60,3 +103,18 @@ homeassistant:
       entity_picture: "https://www.sudo.is/img/logo-jellyfin.svg"
       <<: *common_attrs
 
+    switch.socket_fan_livingroom:
+      icon: "mdi:fan"
+      <<: *common_attrs
+
+template:
+  - binary_sensor:
+      - name: ben_phone_low_power_mode
+        icon: |
+          {% if is_state(this.entity_id, "on") -%}
+          mdi:battery-minus-variant
+          {% else -%}
+          mdi:battery
+          {% endif %}
+        state: |
+          {{ is_state_attr("sensor.ben_phone_battery_state", "Low Power Mode", true) }}
