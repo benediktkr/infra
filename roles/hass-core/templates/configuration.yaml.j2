@@ -624,6 +624,10 @@ sonos:
       - sonos-{{ item }}.{{ inventory_hostname.split('.')[1:] | join(".") }}
       {% endfor %}
 
+# Buttons as a Service (BaaS)
+# https://www.home-assistant.io/integrations/keyboard/
+keyboard:
+
 media_player:
   - platform: mpd
     host: {{ owntone_url }}

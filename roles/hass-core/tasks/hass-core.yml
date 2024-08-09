@@ -556,6 +556,7 @@
       - NET_ADMIN
     env:
       TZ: "Etc/UTC"
+      DISPLAY: ":0"
     mounts:
       - type: bind
         source: "{{ systemuserlist.hass.home }}/home-assistant/config"
