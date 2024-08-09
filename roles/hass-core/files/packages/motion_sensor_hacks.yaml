@@ -75,7 +75,7 @@ template:
       - name: illuminance_study
         unit_of_measurement: "lx"
         state_class: measurement
-        device_class: illuminance 
+        device_class: illuminance
         availability: >-
           {{
           states("sensor.illuminance_study_motion_north") is defined
@@ -102,16 +102,16 @@ template:
       - name: illuminance_livingroom
         unit_of_measurement: "lx"
         state_class: measurement
-        device_class: illuminance 
+        device_class: illuminance
         state: >-
           {{ states("sensor.illuminance_livingroom_motion_east") }}
         attributes:
           source_entity_ids: "sensor.illuminance_livingroom_motion_east"
-          
+
       - name: illuminance_bedroom
         unit_of_measurement: "lx"
         state_class: "measurement"
-        device_class: illuminance 
+        device_class: illuminance
         availability: >-
           {{ has_value("sensor.illuminance_bedroom_motion_south") }}
         state: >-
@@ -122,7 +122,7 @@ template:
       - name: illuminance_hallway
         unit_of_measurement: "lx"
         state_class: measurement
-        device_class: illuminance 
+        device_class: illuminance
         availability: >-
           {{
           has_value("sensor.illuminance_hallway_motion_west")
@@ -218,7 +218,7 @@ template:
 #         target:
 #           entity_id:
 #             - button.idle_motion_bedroom_bed_left
-# 
+#
 binary_sensor:
 
   - platform: group
@@ -328,7 +328,7 @@ homeassistant:
       templated: true
       package: motion_sensor_hacks
     sensor.illuminance_livingroom:
-      friendly_name: Livingroom illuminance 
+      friendly_name: Livingroom illuminance
       templated: true
       package: motion_sensor_hacks
 
@@ -348,25 +348,16 @@ homeassistant:
       package: motion_sensor_hacks
 
     binary_sensor.motion_bedroom:
-      friendly_name: Bedroom
+      friendly_name: Bedroom motion
       group: true
       package: motion_sensor_hacks
       comment: includes the 'Moving Target' sensor from the mmwave radar
-    binary_sensor.motion_bed:
-      friendly_name: Bed
-      comment: >-
-        motion sensors under the bed, for detecting someone
-        going in/out of bed. radar sensors mainly used for bed
-        occupancy, this is for poviding redundancy and signals
-        for when someone enters/leaves the bed
-      group: true
-      package: motion_sensor_hacks
     binary_sensor.motion_hallway:
-      friendly_name: Hallway
+      friendly_name: Hallway motion
       group: true
       package: motion_sensor_hacks
     binary_sensor.motion_study:
-      friendly_name: Study
+      friendly_name: Study motion
       group: true
       package: motion_sensor_hacks
 
@@ -378,7 +369,7 @@ homeassistant:
     #  package: motion_sensor_hacks
 
     binary_sensor.motion_bathroom:
-      friendly_name: Bathroom
+      friendly_name: Bathroom motion
       location: "Above the door"
       wake_up_interval: 14400
       device_class: "motion"
@@ -398,20 +389,20 @@ homeassistant:
     # temp inteval: 15 # 1800?
     # led signal: off
     binary_sensor.motion_bedroom_east:
-      friendly_name: Bedroom (East, shelves)
+      friendly_name: Bedroom motion (East, shelves)
       location: "On the wall next to the bookshelf"
       wake_up_interval: 14400
       device_class: "motion"
       package: motion_sensor_hacks
     binary_sensor.motion_bedroom_south:
-      friendly_name: Bedroom (South, above door)
+      friendly_name: Bedroom motion (South, above door)
       location: "Above the door"
       wake_up_interval: 14400
       device_class: "motion"
       package: motion_sensor_hacks
 
     binary_sensor.motion_hallway_north:
-      friendly_name: Hallway (North, study door)
+      friendly_name: Hallway motion (North, study door)
       location: "Above the door to study"
       wake_up_interval: 7200
       device_class: "motion"
@@ -422,13 +413,13 @@ homeassistant:
       package: motion_sensor_hacks
 
     binary_sensor.motion_hallway_east:
-      friendly_name: Hallway (East, shoe rack)
+      friendly_name: Hallway motion (East, shoe rack)
       location: "Above the shoe rack"
       wake_up_interval: 7200
       device_class: "motion"
       package: motion_sensor_hacks
     binary_sensor.motion_hallway_west:
-      friendly_name: Hallway (West, livingroom door)
+      friendly_name: Hallway motion (West, livingroom door)
       location: "Above the living room door"
       wake_up_interval: 14400
       device_class: "motion"
@@ -437,7 +428,7 @@ homeassistant:
       package: motion_sensor_hacks
 
     binary_sensor.motion_kitchen:
-      friendly_name: Kitchen
+      friendly_name: Kitchen motion
       location: "Above the door, corner to the livingroom wall"
       wake_up_interval: 14400
       device_class: "motion"
@@ -449,7 +440,7 @@ homeassistant:
       package: motion_sensor_hacks
 
     binary_sensor.motion_livingroom:
-      friendly_name: Livingroom
+      friendly_name: Livingroom motion
       location: "On the wall under the Y-pillar on the right/east side"
       wake_up_interval: 14400
       device_class: "motion"
@@ -461,13 +452,13 @@ homeassistant:
       package: motion_sensor_hacks
 
     binary_sensor.motion_study_north:
-      friendly_name: Study (North, behind desk)
+      friendly_name: Study motion (North, behind desk)
       wake_up_interval: 14400
       location: "On the slanted ceiling behind Ben's desk, next to bookshelf"
       device_class: "motion"
       package: motion_sensor_hacks
     binary_sensor.motion_study_south:
-      friendly_name: Study (South, above door)
+      friendly_name: Study motion (South, above door)
       wake_up_interval: 14400
       location: "Above the door, inside the study"
       device_class: "motion"
