@@ -64,8 +64,8 @@ server {
         proxy_pass http://{{ bridgewithdns.audiobookshelf }}:80;
         proxy_redirect http:// https://;
 
-        proxy_hide_header "Content-Type";
-        add_header "Content-Type" "application/rss+xml";
+        #proxy_hide_header "Content-Type";
+        #add_header "Content-Type" "application/rss+xml";
 
     }
     location /socket.io/ {
