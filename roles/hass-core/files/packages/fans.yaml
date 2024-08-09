@@ -28,6 +28,12 @@ homeassistant:
 
 
 input_boolean:
+  auto_fans:
+    name: Fan automations
+    icon: mdi:fan
+  fan_livingroom_auto_turn_on:
+    name: Livingroom fan auto turn on
+    icon: mdi:fan
   helper_fan_state_power:
     name: helper_fan_state_power
     icon: mdi:fan
