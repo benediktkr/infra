@@ -1,0 +1,12 @@
+---
+
+turn_on_light:
+  name: Turn on light
+  description: Turn on a specific light and set its color.
+  fields:
+    entity_id:
+      description: The light that will be turned on.
+      example: light.bedroom
+    rgb_color:
+      description: The color to which the light will be set.
+      example: [255, 0, 0]

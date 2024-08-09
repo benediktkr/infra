@@ -269,6 +269,26 @@
   when:
     - (hass_package is not defined) or item.startswith(hass_package)
 
+- name: copy python_scripts
+  copy:
+    src: "python_scripts/{{ item }}"
+    dest: "{{ systemuserlist.hass.home }}/home-assistant/config/python_scripts/{{ item }}"
+    mode: 0644
+    owner: "{{ systemuserlist.hass.uid }}"
+    group: "{{ systemuserlist.hass.gid }}"
+  notify:
+    - restart hass container
+  with_items:
+    - turn_on_light.py
+    - services.yaml
+  tags:
+    - hass-config
+    - hass-python_scripts
+    - hass-core-config
+    - hass-core-packages
+  when:
+    - (hass_package is not defined) or item.startswith(hass_package)
+
 - name: copy config packages
   copy:
     src: "packages/{{ item }}"
