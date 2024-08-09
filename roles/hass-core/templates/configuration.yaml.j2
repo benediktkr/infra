@@ -633,6 +633,11 @@ media_player:
     host: {{ owntone_url }}
     port: 6600
     name: OwnTone MPD
+  - platform: emby
+    host: {{ jellyfin_url }}
+    api_key: {{ hass_jellyfin_api_key }}
+    port: 443
+    ssl: true
 
 {% if hass_emulated_roku.enabled -%}
 emulated_roku:
