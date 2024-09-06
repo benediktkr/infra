@@ -110,10 +110,11 @@
           - {{ invidious_admin }}
         full_refresh: false
         https_only: true
+        disable_proxy: false
         domain: {{ invidious_url }}
         external_port: 443
         statistics_enabled: true
-        registration_enabled: true
+        registration_enabled: {{ invidious_registration_enabled | bool | lower }}
         popular_enabled: false
         default_home: Subscriptions
         output: /var/log/invidious/invidious.log
