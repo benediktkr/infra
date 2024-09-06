@@ -1110,7 +1110,7 @@ turn_uris:
   {%   if not item_host.get('disabled', false) -%}
   {%   for item_transport in item_host.transports -%}
   {%     set turn_protocol = "turns" if item_host.tls else "turn" -%}
-  - {{ turn_protocol }}:{{ item_host.hostname }}?transport={{ item_transport }}
+  - {{ turn_protocol }}:{{ item_host.hostname }}:{{ item_host.port }}?transport={{ item_transport }}
   {%   endfor -%}
   {%   endif -%}
   {% endfor %}
