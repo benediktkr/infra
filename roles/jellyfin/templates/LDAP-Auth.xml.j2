@@ -1,5 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PluginConfiguration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <LdapUsers>
+    {% for item in jellyfin_ldap_users -%}
+    <LdapUser>
+      <LinkedJellyfinUserId>e8fac0b1-5474-4d09-b9b3-ecb1098b0912</LinkedJellyfinUserId>
+      <LdapUid>ben</LdapUid>
+      <ProfileImageHash />
+    </LdapUser>
+    <LdapUser>
+      <LinkedJellyfinUserId>38cd22e2-03a2-4ff3-af86-406a2a6ee530</LinkedJellyfinUserId>
+      <LdapUid>hass</LdapUid>
+      <ProfileImageHash />
+    </LdapUser>
+    <LdapUser>
+      <LinkedJellyfinUserId>f525e2dc-5fee-4593-915d-a6a0a7af54e9</LinkedJellyfinUserId>
+      <LdapUid>mirza</LdapUid>
+      <ProfileImageHash />
+    </LdapUser>
+    {% endfor -%}
+  </LdapUsers>
   <LdapServer>{{ openldap_url }}</LdapServer>
   <LdapBaseDn>{{ openldap_dc }}</LdapBaseDn>
   <LdapPort>389</LdapPort>
