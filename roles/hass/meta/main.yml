@@ -72,6 +72,10 @@ dependencies:
     tags:
       - hass-utils
 
+  - role: vlcd
+    tags:
+      - vlcd
+
   - role: mass
     tags:
       - mass
