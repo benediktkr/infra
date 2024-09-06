@@ -1,10 +1,10 @@
 #!/bin/bash
 #
 
-set +e
+set -e
 
 usage() {
-    echo "usage: $0 [--limit LIMIT|--help|--debug]"
+    echo "usage: $0 [--limit LIMIT|--dry-run|--debug|--help]"
 }
 
 for arg in "$@"; do
@@ -21,7 +21,13 @@ for arg in "$@"; do
             ;;
         --debug)
             shift
-            set -x
+            SHOW_ENV="true"
+            DEBUG="true"
+            ;;
+        --dry-run)
+            shift
+            SHOW_ENV="true"
+            DRY_RUN="true"
             ;;
         *)
             usage
@@ -43,6 +49,26 @@ else
     GROUPS_LIMIT=$(echo $CONVERGENCE_GROUPS | tr ' ' ',')
 fi
 
+echo    "Limit...: \"${GROUPS_LIMIT}\""
+echo    "Groups..: "
+for item in ${CONVERGENCE_GROUPS}; do
+    echo "  - ${item}"
+done
+
+if [[ "${SHOW_ENV}" == "true" ]]; then
+    echo "Env....: "
+    env | grep ANSIBLE | sed 's/^/  /g'
+fi
+
+if [[ "${DRY_RUN}" == "true" ]]; then
+    echo
+    echo "Exiting without running Ansible."
+    exit 0
+fi
+
+if [[ "${DEBUG}" == "true" ]]; then
+    set -x
+fi
 ansible-playbook common.yml --check --diff --limit ${GROUPS_LIMIT}
 for item in ${CONVERGENCE_GROUPS}; do
     ansible-playbook ${item}.yml --diff --check
