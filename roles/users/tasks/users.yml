@@ -88,15 +88,33 @@
   with_items: "{{ human_users }}"
   tags: human
 
-- name: create common groups
+- name: create common groups without GID
   group:
-    name: "{{ item.key }}"
-    gid: "{{ item.value.gid }}"
-  with_dict: "{{ grouplist | default({}) }}"
+    name: "{{ item.name }}"
+    # The numeric identifiers of new system groups are chosen in the SYS_GID_MIN-SYS_GID_MAX range
+    system: true
+    state: "{{ item.state|default('present') }}"
+  with_items: |
+    {{ grouplist.values() | rejectattr("gid", "defined") }}
   loop_control:
-    label: "{{ item.key }}"
-  tags: groups
+    label: "{{ item.name }}"
+  tags:
+    - groups
+    - common-groups
 
+- name: create common groups with GID
+  group:
+    name: "{{ item.name }}"
+    gid: "{{ item.gid }}"
+    system: true
+    state: "{{ item.state|default('present') }}"
+  with_items: |
+    {{ grouplist.values() | selectattr("gid", "defined") }}
+  loop_control:
+    label: "{{ item.name }} gid={{ item.gid }}"
+  tags:
+    - groups
+    - common-groups
 
 - name: set up system users
   tags:

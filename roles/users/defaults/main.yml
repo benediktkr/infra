@@ -2,3 +2,13 @@
 
 ephemeral_homes: false
 extra_users: []
+#grouplist:
+#  dialout:
+#    name: "dialout"
+#  docker:
+#    name: "docker"
+#  media:
+#    name: "media"
+#  users:
+#    name: "users"
+#    gid: 2001
