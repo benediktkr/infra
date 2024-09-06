@@ -224,7 +224,8 @@
       - build-essential
       - ca-certificates
       - cron
-      - chrony
+      # chrony is an alternative to ntpd/systemd-timesync
+      #- chrony
       - cryptsetup
       - cryptsetup-initramfs
       - curl
