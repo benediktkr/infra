@@ -5,6 +5,7 @@ mqtt:
   server: {{ hass_zigbee2mqtt_mqtt }}
   keepalive: 60
   include_device_information: true
+  client_id: zigbee2mqtt
 serial:
 {% if hass_ser2net_zigbee == true %}
   port: tcp://{{ hass_ser2net_host.zigbee2mqtt }}:{{ hass_ser2net_port_zigbee }}
@@ -28,6 +29,10 @@ advanced:
   {% set network_key =  hass_zigbee2mqtt_network_key | to_nice_yaml(indent=2) %}
   {{ network_key | indent(4) | trim }}
   log_level: warn
+  # Adds a _last_seen sensor for each device
+  last_seen: "ISO_8601"
+  # Time in ms since previous msg
+  elapsed: true
 {{ {'devices': hass_zigbee2mqtt_devices} | to_nice_yaml(indent=2, sort_keys=false) | trim }}
 {{ {'blocklist': hass_zigbee2mqtt_blocklist} | to_nice_yaml(indent=2) | indent(2) | trim }}
 {% else -%}

@@ -46,7 +46,7 @@
 - name: start hass-zigbee container
   docker_container:
     name: hass-zigbee2mqtt
-    image: koenkk/zigbee2mqtt
+    image: koenkk/zigbee2mqtt:latest
     detach: true
     pull: true
     auto_remove: false
