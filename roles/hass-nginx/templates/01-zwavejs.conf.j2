@@ -4,10 +4,15 @@ map $http_upgrade $connection_upgrade {
     ''      close;
 }
 server {
-    listen 443 ssl http2;
+    listen 443 ssl;
     {% if inventory_hostname in wg_clients -%}
-    listen {{ wg_clients[inventory_hostname].ip }}:443 ssl http2;
+    listen {{ wg_clients[inventory_hostname].ip }}:443 ssl;
     {% endif -%}
+    {% if nginx_http2 -%}
+    http2 on;
+    {% else -%}
+    http2 off;
+    {% endif %}
 
     # include listen-proxy-protocol.conf;
     include /etc/nginx/authelia_internal.conf;

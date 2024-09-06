@@ -1,5 +1,108 @@
 ---
- - import_tasks: hass-nginx.yml
-   tags:
-     - hass
-     - hass-nginx
+
+- name: install certs
+  copy:
+    src: "/usr/local/etc/letsencrypt/live/{{ item }}"
+    dest: "/usr/local/etc/certs/"
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - letsencrypt-certs
+  notify: reload nginx
+  vars:
+    prediff_cmd: echo
+  with_items:
+    - "{{ domain }}"
+    - "{{ inventory_hostname.split('.')[1:] | join('.') }}"
+
+- name: create dir structure
+  file:
+    path: "/var/www/{{ item }}"
+    state: directory
+    mode: 0755
+    owner: hass
+    group: hass
+  tags:
+    - hass-dirs
+    - hass-nginx-dirs
+  loop_control:
+    label: "{{ item }}"
+  with_items:
+    - hass
+    - hass/entity_pictures
+
+- name: copy entity picture files
+  copy:
+    src: "entity_pictures/{{ item }}"
+    dest: "/var/www/hass/entity_pictures/{{ item }}"
+    mode: 0644
+    owner: hass
+    group: hass
+  loop_control:
+    label: "{{ item }}"
+  with_items:
+    - sonos_dark.png
+  tags:
+    - hass-entity-pictures
+
+- name: copy static files
+  copy:
+    src: "{{ item }}"
+    dest: /var/www/hass/{{ item }}
+    mode: 0644
+    owner: www-data
+    group: www-data
+  loop_control:
+    label: "{{ item }}"
+  with_items:
+    - valetudo-api.json
+    - dev.png
+  no_log: false
+
+- name: template nginx vhosts for hass and friends
+  template:
+    src: "01-{{ item }}.conf.j2"
+    dest: /etc/nginx/sites-enabled/{{ item }}.conf
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - hass
+    - zwavejs
+    - valetudo
+  when:
+    - item in hass_nginx_vhosts
+  tags:
+    - nginx
+    - hass-nginx
+    - hass-vhosts
+    - hass-nginx-vhosts
+    - zwave-nginx
+    - hass-zwave
+    - hass-zwavejs
+    - hass-zigbee
+    - hass-zigbee2mqtt
+    - hass-deconz
+  notify: reload nginx
+
+# different task because its better for the hass config to restart nginx
+- name: template nginx vhost for grafana-proxy
+  template:
+    src: 01-grafana-proxy.j2
+    dest: /etc/nginx/sites-enabled/01-grafana
+    owner: root
+    group: root
+    mode: 0644
+  when:
+    - hass_grafana_proxy_vhost == true
+  tags:
+    - nginx
+    - grafana-proxy-nginx
+  notify: reload nginx
+
+- name: start and enable nginx
+  service:
+    name: nginx
+    state: started
+    enabled: true

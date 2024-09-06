@@ -1,5 +1,10 @@
 server {
-    listen 443 ssl http2;
+    listen 443 ssl;
+    {% if nginx_http2 -%}
+    http2 on;
+    {% else -%}
+    http2 off;
+    {% endif %}
 
     include /etc/nginx/sudo-known.conf;
 

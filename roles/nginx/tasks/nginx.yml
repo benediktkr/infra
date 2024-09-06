@@ -81,7 +81,7 @@
     - uploadsize.conf
   tags:
     - nginx-conf
-    - nginx-conf
+    - nginx.d
   notify: reload nginx
 
 - name: template config files
@@ -97,6 +97,7 @@
     - sudo-known.conf
     - well-known.conf
   tags:
+    - nginx.conf
     - nginx-conf
     - authelia-nginx
     - well-known

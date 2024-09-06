@@ -1,4 +1,9 @@
-listen 40443 ssl http2 proxy_protocol;
+listen 40443 ssl proxy_protocol;
+{% if nginx_http2 -%}
+#http2 on;
+{% else -%}
+#http2 off;
+{% endif %}
 
 real_ip_header proxy_protocol;
 

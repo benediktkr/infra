@@ -1,54 +1,58 @@
 {% for vhost in nginx_vhost_proxies %}
 server {
   {% if vhost.interface is defined %}
-  listen {{ vhost.interface }}:443 ssl http2;
+  listen {{ vhost.interface }}:443 ssl;
 
   {% else %}
 
-  listen 443 ssl http2;
+  listen 443 ssl;
   # listen   [::]:443 ssl; # listen for ipv6
   {% endif %}
 
-   server_name {{ vhost.name }} {{ vhost.aliases | default([]) | join(" ") }};
+  {% if nginx_http2 -%}
+  http2 on;
+  {% else -%}
+  http2 off;
+  {% endif %}
 
-   {% if 'ws' in vhost %}
-   location /{{ vhost.ws }}/ {
-       proxy_pass {{ vhost.upstream }};
-       proxy_http_version 1.1;
-       proxy_set_header Upgrade $http_upgrade;
-       proxy_set_header Connection "Upgrade";
-       proxy_set_header Host $host;
-   }
-   {% endif %}
+  server_name {{ vhost.name }} {{ vhost.aliases | default([]) | join(" ") }};
 
-   location / {
-        proxy_pass         {{ vhost.upstream }}/;
+  {% if 'ws' in vhost %}
+  location /{{ vhost.ws }}/ {
+      proxy_pass {{ vhost.upstream }};
+      proxy_http_version 1.1;
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection "Upgrade";
+      proxy_set_header Host $host;
+  }
+  {% endif %}
 
-        proxy_redirect     off;
-        proxy_set_header   Host $host;
-        proxy_set_header   X-Real-IP $remote_addr;
-        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header   X-Forwarded-Host $server_name;
-        proxy_set_header   X-Forwarded-Proto $scheme;
+  location / {
+      proxy_pass         {{ vhost.upstream }}/;
 
-   }
+      proxy_redirect     off;
+      proxy_set_header   Host $host;
+      proxy_set_header   X-Real-IP $remote_addr;
+      proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header   X-Forwarded-Host $server_name;
+      proxy_set_header   X-Forwarded-Proto $scheme;
+  }
 
-    access_log /var/log/nginx/access_{{ vhost.name }}.log main;
-    error_log /var/log/nginx/error_{{ vhost.name }}.log warn;
+  access_log /var/log/nginx/access_{{ vhost.name }}.log main;
+  error_log /var/log/nginx/error_{{ vhost.name }}.log warn;
 
-    ssl_session_timeout 5m;
+  ssl_session_timeout 5m;
+  ssl_certificate /usr/local/etc/certs/{{ inventory_hostname.split('.')[-2:] | join(".") }}/fullchain.pem;
+  ssl_certificate_key /usr/local/etc/certs/{{ inventory_hostname.split('.')[-2:] | join(".") }}/privkey.pem;
 
-    ssl_certificate /usr/local/etc/certs/{{ inventory_hostname.split('.')[-2:] | join(".") }}/fullchain.pem;
-    ssl_certificate_key /usr/local/etc/certs/{{ inventory_hostname.split('.')[-2:] | join(".") }}/privkey.pem;
+  add_header Referrer-Policy "no-referrer" always;
+  add_header X-Content-Type-Options "nosniff" always;
+  add_header X-Download-Options "noopen" always;
+  add_header X-Frame-Options "SAMEORIGIN" always;
+  add_header X-Permitted-Cross-Domain-Policies "none" always;
+  add_header X-Robots-Tag "none" always;
+  add_header X-XSS-Protection "1; mode=block" always;
 
-    add_header Referrer-Policy "no-referrer" always;
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header X-Download-Options "noopen" always;
-    add_header X-Frame-Options "SAMEORIGIN" always;
-    add_header X-Permitted-Cross-Domain-Policies "none" always;
-    add_header X-Robots-Tag "none" always;
-    add_header X-XSS-Protection "1; mode=block" always;
-
-    fastcgi_hide_header X-Powered-By;
+  fastcgi_hide_header X-Powered-By;
 }
 {% endfor %}

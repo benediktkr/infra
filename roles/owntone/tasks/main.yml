@@ -1,6 +1,325 @@
 ---
 
-- import_tasks: owntone.yml
+- name: create dir structure
+  file:
+    state: directory
+    path: "{{ owntone_path }}/{{ item.name }}"
+    mode: "{{ item.mode | default('0770') }}"
+    owner: "{{ owntone_user.uid }}"
+    group: "{{ owntone_group.gid }}"
   tags:
+    - owntone-dirs
+  loop_control:
+    label: "{{ owntone_path }}/{{ item.name }}"
+  with_items:
+    - name: ''
+      mode: '0750'
+    - name: config
+    - name: log
+    - name: fifo
+
+- name: create log dir (used when running as systemd service)
+  file:
+    state: directory
+    path: /var/log/owntone
+    mode: '0775'
+    owner: "{{ owntone_user.uid }}"
+    group: "{{ owntone_group.gid }}"
+  tags:
+    - owntone-log-dir
+    - owntone-dirs
+
+- name: create pulseaudio dirs
+  file:
+    state: directory
+    path: "{{ item }}"
+    mode: '0644'
+    owner: root
+    group: root
+  loop_control:
+    label: "{{ item }}"
+  tags:
+    - owntone-pulseaudio
+  with_items:
+    - /etc/pulse/system.pa.d
+
+
+- name: ensure podcast audiobooks, and database dirs exists in {{ deadspace_root }}
+  file:
+    state: directory
+    path: "{{ deadspace_root }}/{{ item.name }}"
+    mode:  "{{ item.mode | default('0750') }}"
+    owner: "{{ owntone_user.uid }}"
+    group: "{{ owntone_group.gid }}"
+  tags:
+    - owntone-dirs
+  ignore_errors: "{{ item.mounted|default(false) }}"
+  loop_control:
+    label: "{{ deadspace_root }}/{{ item.name }}"
+  with_items:
+    - name: audiobooks
+    - name: podcasts
+    - name: music
+    - name: playlists
+    - name: local
+    - name: local/music
+    - name: local/compilations
+    - name: local/owntone
+    - name: local/owntone/pipes
+    - name: owntone
+      mode: '0750'
+    - name: owntone/data
+    - name: owntone/data/db
+
+
+- name: create input pipe
+  command:
+    cmd: mkfifo "{{ deadspace_root }}/local/owntone/pipes/{{ item }}"
+    creates: "{{ deadspace_root }}/local/owntone/pipes/{{ item }}"
+  become_user: "{{ owntone_user.username }}"
+  loop_control:
+    label: "{{ item }}"
+  with_items:
+    - shairport-output.fifo
+    - shairport-metadata.fifo
+  tags:
+    - input.fifo
+  # disabled
+  when: false
+
+- name: install certs
+  copy:
+    src: "/usr/local/etc/letsencrypt/live/{{ item }}"
+    dest: "/usr/local/etc/certs/"
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - letsencrypt-certs
+  notify: reload nginx
+  vars:
+    prediff_cmd: echo
+  with_items:
+    - "{{ domain }}"
+
+- name: template nginx vhost
+  template:
+    src: 01-owntone.conf.j2
+    dest: /etc/nginx/sites-enabled/01-owntone.conf
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - nginx
+    - owntone-nginx
+  notify: reload nginx
+
+- name: template config file
+  template:
+    src: owntone.conf.j2
+    dest: "/etc/owntone.conf"
+    owner: "{{ owntone_user.uid }}"
+    group: "{{ owntone_group.gid }}"
+    mode: 0644
+  notify:
+    - restart owntone
+  tags:
+    - owntone.conf
+
+- name: rescan script for cronjob
+  template:
+    src: "{{ item }}.j2"
+    dest: /usr/local/bin/{{ item }}
+    owner: root
+    group: root
+    mode: 0755
+  tags:
+    - cron
+    - owntone-cron
+  with_items:
+    - owntone-trigger-rescan.sh
+
+- name: cron file
+  template:
+    src: owntone-cron.j2
+    dest: /etc/cron.d/owntone
+    owner: root
+    group: root
+    mode: 0600
+  tags:
+    - cron
+    - owntone-cron
+
+- name: copy radio playlists
+  copy:
+    src: playlists/
+    dest: "{{ deadspace_root }}/playlists/"
+    owner: "{{ owntone_user.uid }}"
+    group: "{{ owntone_group.gid }}"
+    directory_mode: "0755"
+    mode: "0644"
+  tags:
+    - owntone-playlists
+    - owntone-radio
+
+- name: fuse allow other
+  lineinfile:
+    path: /etc/fuse.conf
+    line: user_allow_other
+    state: present
+
+- name: install owntone and pulseaudio
+  when: not owntone_docker
+  apt:
+    name:
+      - owntone-server
+      - pulseaudio
+      - pulseaudio-dlna
+    update_cache: true
+    state: latest
+  tags:
+    - owntone-packages
+    - owntone-pulseaudio
+    - packages
+
+# may not be needed, pacakge already proides other systemd unit files
+# /etc/systemd/system/multi-user.target.wants/pulseaudio.service
+# /etc/systemd/user/default.target.wants/pulseaudio.service
+# /etc/systemd/user/sockets.target.wants/pulseaudio.socket
+- name: template systemd unit files for pulseaudio
+  when: not owntone_docker
+  template:
+    src: "{{ item }}.j2"
+    dest: /etc/systemd/system/{{ item }}
+    owner: root
+    group: root
+    mode: 0644
+  notify: systemctl daemon-reload
+  loop_control:
+    label: "{{ item }}"
+  with_items:
+    - pulseaudio.service
+    - pulseaudio-dlna.service
+  tags:
+    - owntone-pulseaudio
+    - systemd
+
+- name: start and enable pulseaudio services
+  when: not owntone_docker
+  service:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  loop_control:
+    label: "{{ item }}"
+  notify: restart dbus
+  with_items:
+    - pulseaudio
+    - pulseaudio-dlna
+  tags:
+    - owntone-pulseaudio
+    - systemd
+
+- name: start and enable owntone service
+  when: not owntone_docker
+  service:
+    name: owntone
+    state: started
+    enabled: true
+  tags:
+    - systemd
+  register: owntone_service
+
+- name: start owntone container
+  when: owntone_docker == true
+  docker_container:
+    name: owntone
+    #image: git.sudo.is/ben/owntone:latest
+    #image: git.sudo.is/ben/owntone:file-scan-dir-path
+    image: git.sudo.is/ben/owntone-server:latest
+    detach: true
+    pull: true
+    auto_remove: false
+    restart_policy: "unless-stopped"
+    state: "started"
+    container_default_behavior: compatibility
+    networks_cli_compatible: false
+    # not needed, owntone drop privileges to {{ owntone_user }}, set in owntone.conf
+    user: "{{ owntone_user.uid }}:{{ owntone_group.gid }}"
+    network_mode: host
+    privileged: false
+    security_opts: "apparmor=unconfined"
+    # network_mode: bridgewithdns
+    # networks:
+    #   - name: bridgewithdns
+    #     ipv4_address: "{{ bridgewithdns.owntone }}"
+    env:
+      VITE_OWNTONE_URL: "https://{{ owntone_url }}"
+    mounts:
+      - type: bind
+        source: /run/dbus
+        target: /run/dbus
+      - type: bind
+        source: /run/avahi-daemon/socket
+        target: /run/avahi-daemon/socket
+      - type: bind
+        source: "/etc/owntone.conf"
+        target: "/etc/owntone.conf"
+      - type: bind
+        source: "{{ owntone_path }}/config"
+        target: "/config"
+      - type: bind
+        source: "{{ owntone_path }}/fifo"
+        target: "/fifo"
+      - type: bind
+        source: "{{ owntone_path }}/log"
+        target: "/log"
+      - type: bind
+        source: "{{ deadspace_root }}/podcasts"
+        target: "{{ deadspace_root }}/podcasts"
+      - type: bind
+        source: "{{ deadspace_root }}/audiobooks"
+        target: "{{ deadspace_root }}/audiobooks"
+      - type: bind
+        source: "{{ deadspace_root }}/music"
+        target: "{{ deadspace_root }}/music"
+      - type: bind
+        source: "{{ deadspace_root }}/playlists"
+        target: "{{ deadspace_root }}/playlists"
+      - type: bind
+        source: "{{ deadspace_root }}/local"
+        target: "{{ deadspace_root }}/local"
+      - type: bind
+        source: "{{ deadspace_root }}/owntone"
+        target: "{{ deadspace_root }}/owntone"
+  tags:
+    - owntone-container
+    - docker-containers
+
+- name: stop and disable owntone and services
+  when: owntone_docker == true
+  service:
+    name: "{{ item }}"
+    state: stopped
+    enabled: false
+  loop_control:
+    label: "{{ item }}"
+  with_items:
     - owntone
-    - homeaudio
+    - pulseaudio
+    - pulseaudio-dlna
+  tags:
+    - owntone-pulseaudio
+    - systemd
+
+- name: stop owntone container
+  when: not owntone_docker
+  docker_container:
+    name: owntone
+    state: stopped
+  ignore_errors: true
+
+- name: clean up old config file
+  file:
+    state: absent
+    path: "{{ owntone_path }}/config/owntone.conf"

@@ -1,34 +1,17 @@
-{# server {
- #     server_name {%- for d in server_names %} {{ d }}{% endfor %};
- #
- #     {% if inventory_hostname in wg_clients -%}
- #     listen {{ wg_clients[inventory_hostname].ip }}:443 ssl http2;
- #     {% endif -%}
- #     listen 443 ssl http2;
- #
- #     include listen-proxy-protocol.conf;
- #
- #     # but still include /.well-known/ and /.sudo-known/ urls.
- #     include /etc/nginx/well-known.conf;
- #     include /etc/nginx/sudo-known.conf;
- #
- #     ssl_certificate /usr/local/etc/certs/www.{{ domain }}/fullchain.pem;
- #     ssl_certificate_key /usr/local/etc/certs/www.{{ domain }}/privkey.pem;
- #
- #     location / {
- #         return 301 https://www.$http_host$request_uri;
- #     }
- #
- #     access_log /var/log/nginx/access_{{ domain }}.log main;
- #     error_log /var/log/nginx/error_{{ domain }}.log warn;
- # } #}
+# {{ ansible_managed }}
 
 server {
     server_name docs.{{ domain }};
     {% if inventory_hostname in wg_clients -%}
-    listen {{ wg_clients[inventory_hostname].ip }}:443 ssl http2;
+    listen {{ wg_clients[inventory_hostname].ip }}:443 ssl;
     {% endif -%}
     listen 443 ssl http2;
+
+    {% if nginx_http2 -%}
+    #http2 on;
+    {% else -%}
+    #http2 off;
+    {% endif %}
 
     include listen-proxy-protocol.conf;
 
@@ -50,9 +33,15 @@ server {
 server {
     server_name {{ domain }} {%- for d in additional_server_names %} {{ d }} www.{{ d }}{% endfor %};
     {% if inventory_hostname in wg_clients -%}
-    listen {{ wg_clients[inventory_hostname].ip }}:443 ssl http2;
+    listen {{ wg_clients[inventory_hostname].ip }}:443 ssl;
     {% endif -%}
-    listen 443 ssl http2;
+    listen 443 ssl;
+
+    {% if nginx_http2 -%}
+    #http2 on;
+    {% else -%}
+    #http2 off;
+    {% endif %}
 
     include listen-proxy-protocol.conf;
 
@@ -243,12 +232,6 @@ server {
         sub_filter 'href="rain"' 'href="rain/"';
         sub_filter 'href="/docs/hass/rain"' 'href="/docs/hass/rain/"';
         sub_filter '/docs/hass/rain' '/docs/hass/rain/';
-        #rewrite ^/docs/(.*)/index\.html$ /docs/$1/ redirect;
-        if ($canonical_url != "") {
-            include conf.d/headers-{{ domain }}.conf;
-            #add_header "Link" '<$canonical_url>; rel="canonical"; rel="preconnect"';
-            add_header "Link" '<$canonical_url>; rel="canonical"' always;
-        }
 
         # results in redirect loop..?
         #rewrite ^/docs/index.html /docs/ redirect;
@@ -282,6 +265,7 @@ server {
         #rewrite ^/docs/esphome/boards/(.*)\.html$ /docs/esphome/boards/$1/ redirect;
         #rewrite ^/docs/esphome/boards/index(.*)$ /docs/esphome/boards/ redirect;
         rewrite ^/docs/homeautomation/appletv.html$ /docs/hass/appletv redirect;
+        rewrite ^/docs/homeautomation/rain/index.html /docs/hass/rain/ redirect;
         rewrite ^/docs/hass/appletv\.html$ /docs/hass/appletv/ redirect;
         rewrite ^/docs/notes/cmds\.html$ /docs/notes/cmds/ redirect;
         rewrite ^/docs/glossary/(.*)$ /docs/electronics/glossary/$1 redirect;
@@ -317,13 +301,19 @@ server {
         rewrite ^/docs/LICENSE(.*)$ /LICENSE.txt redirect;
         rewrite ^/docs/.*/LICENSE(.*)$ /LICENSE.txt redirect;
 
+        #rewrite ^/docs/(.*)/index\.html$ /docs/$1/ redirect;
+        if ($canonical_url != "") {
+            include conf.d/headers-{{ domain }}.conf;
+            #add_header "Link" '<$canonical_url>; rel="canonical"; rel="preconnect"';
+            add_header "Link" '<$canonical_url>; rel="canonical"' always;
+        }
         #rewrite ^/docs/LICENSE(.*)$ /LICENSE.txt redirect;
         #rewrite ^/docs/.*/LICENSE(.*)$ /LICENSE.txt redirect;
         include conf.d/headers-{{ domain }}.conf;
         add_header X-Sudo-Section "docs" always;
     }
 
-        location /cal/ {
+    location /cal/ {
         include /etc/nginx/require_auth.conf;
         include /etc/nginx/require_auth_proxy.conf;
 
@@ -341,6 +331,12 @@ server {
         include conf.d/headers-{{ domain }}.conf;
         add_header X-Sudo-Section "cal" always;
         add_header X-Remote-User $authelia_user always;
+    }
+
+    location /ls54/camera/ {
+        include /etc/nginx/require_auth.conf;
+        proxy_pass_request_headers on;
+        proxy_pass http://{{ ls54_camera_url }}/;
     }
 
     location /_media {

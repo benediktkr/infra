@@ -18,7 +18,12 @@ server {
 }
 
 server {
-  listen 443 ssl http2 default_server;
+  listen 443 ssl default_server;
+  {% if nginx_http2 -%}
+  http2 on;
+  {% else -%}
+  http2 off;
+  {% endif %}
 
   # listen   [::]:443 ssl; # listen for ipv6
 
