@@ -34,18 +34,7 @@ dependencies:
   - role: unifi
     tags:
       - unifi
-  #- role: homeaudio
-  #  tags:
-  #    - homeaudio
-  #
-  ## homeaudio/meta/main.yml dependencies:
-  #- role: airconnect
-  #  tags:
-  #    - airconnect
-  #- role: owntone
-  #  tags:
-  #    - owntone
-  #- role: navidrome
-  #  tags:
-  #    - navidrome
+  - role: homeaudio
+    tags:
+      - homeaudio
 
