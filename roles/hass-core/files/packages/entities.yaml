@@ -65,10 +65,18 @@ homeassistant:
       device_class: battery
       state_class: measurement
       <<: *common_attrs
+
     sensor.battery_level_oxygen:
       device_class: battery
       state_class: measurement
       <<: *common_attrs
+    binary_sensor.oxygen_low_power_mode:
+      friendly_name: "oxygen Low power mode"
+      <<: *common_attrs
+    binary_sensor.oxygen_ac_power:
+      friendly_name: "oxygen AC Power"
+      <<: *common_attrs
+
     sensor.battery_level_oxygen_icloud:
       device_class: battery
       state_class: measurement
@@ -114,6 +122,7 @@ homeassistant:
 template:
   - binary_sensor:
       - name: ben_phone_low_power_mode
+        unique_id: ben_phone_low_power_mode
         icon: |
           {% if is_state(this.entity_id, "on") -%}
           mdi:battery-minus-variant
@@ -122,3 +131,26 @@ template:
           {% endif %}
         state: |
           {{ is_state_attr("sensor.ben_phone_battery_state", "Low Power Mode", true) }}
+
+      - name: oxygen_low_power_mode
+        unique_id: oxygen_low_power_mode
+        icon: |
+          {% if is_state(this.entity_id, "on") -%}
+          mdi:battery-minus-variant
+          {% else -%}
+          mdi:battery
+          {% endif %}
+        state: |
+          {{ is_state_attr("sensor.oxygen_battery_state", "Low Power Mode", true) }}
+      - name: oxygen_ac_power
+        unique_id: oxygen_ac_power
+        icon: |
+          {% if is_state(this.entity_id, "on") -%}
+          mdi:power-plug-battery
+          {% else -%}
+          mdi:battery-90
+          {% endif %}
+        device_class: connectivity
+        state: |
+          {{ is_state_attr("sensor.battery_level_oxygen", "Power Source State", "AC Power") }}
+
