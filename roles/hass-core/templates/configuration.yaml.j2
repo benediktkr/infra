@@ -68,7 +68,7 @@ device_tracker:
   # using this one for now: https://github.com/andriilahuta/hass-dbus-bluetooth-tracker/
   # uses dbus, no autodiscovery (yay)
   - platform: dbus_bluetooth_tracker
-    interval_seconds: 15
+    interval_seconds: 300
     seen_interval_seconds: 60
     consider_home: 90
   #- platform: bluetooth_tracker
@@ -79,7 +79,7 @@ device_tracker:
   - platform: bluetooth_le_tracker
     # device tracker will only look for the following global settings
     # under the configuration of the first configured platform
-    interval_seconds: 12
+    interval_seconds: 300
     consider_home: 120
     # setting this to 'false' still results in new devices being added
     # to known_devices.yaml when they are discovered, but they wont be
@@ -129,6 +129,7 @@ http:
   server_port: 8123
   trusted_proxies:
     - 127.0.0.1
+    - ::1
     #- 127.0.0.1/32
   use_x_forwarded_for: true
   use_x_frame_options: true
