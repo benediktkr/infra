@@ -10,12 +10,20 @@ homeassistant:
 
     binary_sensor.washing_machine:
       friendly_name: Washing Machine
+      labels:
+        - Appliances
+        - Notifications
+        - Z-Wave
       <<: *common_attrs_templated
     binary_sensor.washing_machine_on:
       friendly_name: Washing Machine (legacy entity_id)
       comment: |
         A group entity to provide legacy name, has 1 member.
       icon: "mdi:washing-machine"
+      labels:
+        - Appliances
+        - Notifications
+        - Z-Wave
       <<: *common_attrs
 
     binary_sensor.washing_machine_laundry:
@@ -23,15 +31,18 @@ homeassistant:
       labels:
         - ADHD
         - Appliances
+        - Notifications
         - Z-Wave
       <<: *common_attrs_templated
     alert.laundry:
+      # friendly_name is set with 'name' in the 'alert' integration
       templated: false
       labels:
         - ADHD
         - Appliances
-        - Z-Wave
         - Home Assistant
+        - Notifications
+        - Z-Wave
       <<: *common_attrs
 
     binary_sensor.door_bathroom_washingmachine:
@@ -67,6 +78,7 @@ homeassistant:
 template:
   - binary_sensor:
       - name: washing_machine
+        unique_id: washing_machine
         icon: >-
           {% if is_state(this.entity_id, "on") %}
           mdi:washing-machine
@@ -93,8 +105,9 @@ template:
           delay_off: 1min
           threshold: 4.12WW
           comment: >-
-            drops down to ca 2.8W after finishing and releasing the lock on the door, uses ~3.9-4.0W until door lock is released.
+            Drops down to ca 2.8W after finishing and releasing the lock on the door, uses ~3.9-4.0W until door lock is released.
       - name: washing_machine_laundry
+        unique_id: washing_machine_laundry
         icon: |
           {% if is_state(this.entity_id, "on") %}
           mdi:washing-machine-alert
@@ -121,7 +134,9 @@ template:
           }}
 
 alert:
+  # entity_id set to the key ("laundry")
   laundry:
+    # friendly name
     name: "Take out laundry"
     entity_id: binary_sensor.washing_machine_laundry
     title: |
@@ -224,4 +239,3 @@ automation:
           title: "WATER detected: {{ trigger.entity_id[14:] }} @ {{ now().isoformat() }}"
           message: "WATER detected: {{ trigger.entity_id }}"
     mode: single
-
