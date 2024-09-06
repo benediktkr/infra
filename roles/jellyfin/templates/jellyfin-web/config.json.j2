@@ -46,19 +46,19 @@
     ],
     "menuLinks": [
         {
-            "name": "status page",
+            "name": "Status page",
             "url": "https://status-{{ jellyfin_url }}/"
         },
         {
-            "name": "change password",
+            "name": "Change password",
             "url": "https://{{ authelia_login_url }}/reset-password/step1"
         },
         {
-            "name": "tv calendar",
-            "url": "https://pirate.sudo.is/sonarr/feed/calendar/Sonarr.ics"
+            "name": "TV calendar",
+            "url": "https://{{ pirate_url }}/sonarr/feed/v3/calendar/sonarr.ics"
         },
         {
-            "name": "chatroom: #{{ jellyfin_url.replace('.', ':', 1) }}",
+            "name": "Chat: #{{ jellyfin_url.replace('.', ':', 1) }}",
             "url": "https://matrix.to/#/#{{ jellyfin_url.replace('.', ':', 1) }}"
         }
 

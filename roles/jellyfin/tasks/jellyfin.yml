@@ -84,7 +84,7 @@
 
 - name: template jellyfin-web/config.json
   template:
-    src: jellyfin-web-config.json.j2
+    src: jellyfin-web/config.json.j2
     dest: "{{ jellyfin_root }}/jellyfin-web/config.json"
     owner: www-data
     group: www-data
