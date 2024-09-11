@@ -16,3 +16,37 @@ pihole_rev_server: pihole_rev_server_cidr is defined
 
 pihole_listen_addr: "{{ wg_clients[inventory_hostname]['ip'] | default(ansible_default_ipv4.address) }}"
 pihole_listen_addr_docker: "{{ pihole_listen_addr }}"
+
+# "10.2.3.0/24"
+# -> ["10.2.3.0", "/24"]
+# -> "10.2.3.0"
+# -> ["10", "2", "3", "0"]
+# -> ["0", "3", "2", "10"]
+# -> ["0.3.2.10"]
+# -> ["0", "3.2.10"]
+# -> "3.2.10"
+# -> 3.2.10.in-addr.arpa"
+in_addr_my_cidrs: |-
+  {{ my_local_cidrs
+      | map("split", "/")
+      | map("first")
+      | map("split", ".")
+      | map("reverse")
+      | map("join", ".")
+      | map("split", ".", 1)
+      | map("last")
+      | map("regex_replace", "$", ".in-addr.arpa")
+  }}
+
+local_domain: |-
+  {{ inventory_hostname.split(".")[1:] | join(".") }}
+exclude_domains: |-
+  {{ [
+    domain,
+    "*." ~  domain,
+    local_domain,
+    "*." ~ local_domain,
+    "mask.icloud.com",
+    "metrics.icloud.com"
+  ] }}
+

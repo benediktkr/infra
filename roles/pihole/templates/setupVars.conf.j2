@@ -18,6 +18,8 @@ REV_SERVER_DOMAIN={{ pihole_rev_server_domain }}
 API_EXCLUDE_DOMAINS=*.{{ domain }},{{ domain }}
 API_EXCLUDE_CLIENTS=
 API_QUERY_LOG_SHOW=all
+API_EXCLUDE_DOMAINS={{ exclude_domains|join(",") }},{{ in_addr_my_cidrs|join(",") }}
+API_EXCLUDE_CLIENTS={{ inventory_hostname }}
 
 PIHOLE_DNS_1={{ bridgewithdns.unbound0 }}
 PIHOLE_DNS_2={{ bridgewithdns.unbound1 }}
