@@ -1,19 +1,23 @@
 ---
 
-- name: create airconnect dir
+- name: Ensure config dir exists
   file:
-    path: "{{ airconnect_dir }}"
+    path: "{{ item }}"
     state: directory
     mode: "0755"
     owner: "{{ owntone_user.uid }}"
     group: "{{ owntone_group.gid }}"
+  with_items:
+    - /etc/airconnect
+  loop_control:
+    label: "{{ item }}"
   tags:
     - airconnect-dirs
 
 - name: airconnect config files
   template:
     src: "{{ item.name }}.j2"
-    dest: "{{ airconnect_dir }}/{{ item.name }}"
+    dest: "/etc/airconnect/{{ item.name }}"
     owner: "{{ owntone_user.uid }}"
     group: "{{ owntone_group.gid }}"
     mode: "{{ item.mode | default('0644') }}"
@@ -43,7 +47,7 @@
       AIRCONNECT_ARGS: "{{ item.args|default() }}"
     mounts:
       - type: bind
-        source: "{{ airconnect_dir }}/airupnp.xml"
+        source: "/etc/airconnect/airupnp.xml"
         target: /etc/airupnp.xml
         read_only: true
   tags:

@@ -1,6 +1,5 @@
 ---
 
-airconnect_dir: "/srv/airconnect"
 airconnect_user:
   name: airconnect
   uid: 1337
