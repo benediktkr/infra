@@ -601,12 +601,19 @@
     - unatt2
 
 - name: add apt key for apt.sudo.is
-  apt_key:
+  get_url:
     url: https://{{ apt_url }}/KEY.gpg
-    state: present
+    # /usr/share/keyrings: needs [signed-by]
+    # /etc/apt/trusted.gpg.d/: trusted without [signed-by]
+    #dest: /usr/share/keyrings/apt.sudo.is.gpg.asc
+    dest: "{{ item }}/apt.sudo.is.gpg.asc"
+  with_items:
+    - /etc/apt/trusted.gpg.d
+    - /usr/share/keyrings
   tags:
     - packages
     - apt.sudo.is
+    - sudo-apt-key
 
 - name: add apt.sudo.is repo
   apt_repository:
