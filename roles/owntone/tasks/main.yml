@@ -4,7 +4,7 @@
   file:
     state: directory
     path: "{{ item.path }}"
-    mode: "{{ item.mode | default('0770') }}"
+    mode: "{{ item.mode | default('0750') }}"
     owner: "{{ owntone_user.uid }}"
     group: "{{ owntone_group.gid }}"
   tags:
