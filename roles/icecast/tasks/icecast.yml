@@ -41,7 +41,7 @@
     - icecast-config
 
 - name: start and enable service
-  service:
-    name: icecast2
+  systemd_service:
+    name: icecast2.service
     state: started
     enabled: true
