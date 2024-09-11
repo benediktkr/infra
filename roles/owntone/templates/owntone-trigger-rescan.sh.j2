@@ -11,4 +11,7 @@ fi
 {% endfor %}
 
 rescan_type=$1
-touch {{ audio_dir }}/local/trigger.${rescan_type}-rescan
+trigger_file={{ audio_dir }}/local/trigger.${rescan_type}-rescan
+touch $trigger_file
+sleep 10
+rm $trigger_file
