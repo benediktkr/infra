@@ -56,11 +56,17 @@
    - ansible_lsb.codename == "bullseye"
 
 - name: add apt key
-  apt_key:
+  get_url:
     url: https://download.docker.com/linux/debian/gpg
-    state: present
+    dest: "{{ item }}/download.docker.com.gpg.asc"
+  with_items:
+    # needs [signed-by]
+    - /usr/share/keyrings
+    # trusted
+    - /etc/apt/trusted.gpg.d
   tags:
     - packages
+    - docker-apt-key
   when: ansible_lsb.codename != "bullseye"
 
 - name: set codename to bookworm (stable) if trixie (testing)
@@ -142,7 +148,8 @@
   when: false
 
 - name: set up bridged network with dns
-  docker_network:
+  community.docker.docker_network:
+    docker_host: "unix:///var/run/docker.sock"
     name: bridgewithdns
     driver: bridge
     ipam_config:
