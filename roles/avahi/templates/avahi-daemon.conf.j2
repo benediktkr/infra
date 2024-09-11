@@ -29,11 +29,13 @@ use-ipv6=yes
 {% else %}
 use-ipv6=no
 {% endif %}
+{% if not avahi_allow_all_interfaces -%}
 {% set ifaces = ansible_interfaces | sort -%}
 {% set ifaces_allow = ifaces | select("match", '^(docker|en|eth|lo)') -%}
 {% set ifaces_deny = ifaces | select("match", '^(veth|wl)')  -%}
 allow-interfaces={{ ifaces_allow | join(",") }}
 #deny-interfaces=IGNORED
+{% endif %}
 #check-response-ttl=no
 #use-iff-running=no
 #enable-dbus=yes
@@ -66,7 +68,7 @@ publish-workstation=no
 
 [reflector]
 {% if avahi_daemon_reflector -%}
-#enable-reflector=yes
+enable-reflector=yes
 #reflect-ipv=no
 #reflect-filters=_airplay._tcp.local,_raop._tcp.local
 {% endif %}

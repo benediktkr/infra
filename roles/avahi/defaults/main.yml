@@ -1,4 +1,5 @@
 ---
 
 avahi_daemon_reflector: false
-avahi_ipv6: false
+avahi_ipv6: true
+avahi_allow_all_interfaces: true
