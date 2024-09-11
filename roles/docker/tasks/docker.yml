@@ -152,6 +152,8 @@
     docker_host: "unix:///var/run/docker.sock"
     name: bridgewithdns
     driver: bridge
+    driver_options:
+      com.docker.network.bridge.name: docker1
     ipam_config:
       - subnet: "{{ bridgewithdns_cidr }}"
         gateway: "{{ bridgewithdns.host }}"
