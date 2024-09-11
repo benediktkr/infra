@@ -1,0 +1,4 @@
+---
+
+avahi_daemon_reflector: false
+avahi_ipv6: false

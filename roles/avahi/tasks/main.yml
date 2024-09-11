@@ -1,0 +1,28 @@
+---
+
+- name: install avahi packages
+  package:
+    name:
+      - avahi-daemon
+      - avahi-utils
+    state: present
+  tags:
+    - packages
+
+- name: template config files
+  template:
+    src: "{{ item }}.j2"
+    dest: "/etc/avahi/{{ item }}"
+    owner: root
+    group: root
+    mode: "0644"
+  with_items:
+    - avahi-daemon.conf
+  loop_control:
+    label: "{{ item }}"
+  notify:
+    - restart avahi-daemon.socket
+    - restart avahi-daemon.service
+  tags:
+    - avahi-config
+

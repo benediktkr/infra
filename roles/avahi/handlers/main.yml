@@ -1,0 +1,11 @@
+---
+
+- name: restart avahi-daemon.service
+  systemd_service:
+    name: avahi-daemon.service
+    state: restarted
+
+- name: restart avahi-daemon.socket
+  systemd_service:
+    name: avahi-daemon.socket
+    state: restarted
