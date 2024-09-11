@@ -43,12 +43,13 @@ general {
       {% for item in owntone_networks -%}
       "{{ item.split(".")[:3] | join(".") | trim }}",
       {% endfor -%}
+      "127",
       "localhost",
       "fd"
     }
 
     # Enable/disable IPv6
-    ipv6 = no
+    ipv6 = false
 
     # Set this if you want the server to bind to a specific IP address. Can
     # be ipv6 or ipv4. Default (commented out or "::") is to listen on all
@@ -57,7 +58,7 @@ general {
     # but seems like this interferes with the damn mdns autodiscovery (that we dont event want)
     # see: https://github.com/owntone/owntone-server/issues/1546
     # long term solution: pulseaudio as system service + upnp/dlna
-    bind_address = "127.0.0.1"
+    #bind_address = "127.0.0.1"
 
     # Location of cache database
     cache_path = "/var/cache/owntone/cache.db"
@@ -68,12 +69,12 @@ general {
 
     # When starting playback, autoselect speaker (if none of the previously
     # selected speakers/outputs are available)
-    #speaker_autoselect = no
+    #speaker_autoselect = false
 
     # Most modern systems have a high-resolution clock, but if you are on an
     # unusual platform and experience audio drop-outs, you can try changing
     # this option
-    high_resolution_clock = yes
+    high_resolution_clock = true
 }
 
 # Library configuration
@@ -166,7 +167,7 @@ library {
     # If you want to exclude files on a more advanced basis you can enter
     # one or more POSIX regular expressions, and any file with a matching
     # path will be ignored.
-    #filepath_ignore = { "myregex" }
+    filepath_ignore = { "/video" }
 
     # Disable startup file scanning
     # When OwnTone starts it will do an initial file scan of your
@@ -244,7 +245,8 @@ audio {
     {% if not owntone_docker and owntone_pulseaudio-%}
     type = "pulseaudio"
     {% else -%}
-    type = "disabled"
+    #type = "disabled"
+    type = "dummy"
     {% endif %}
 
     # For pulseaudio output, an optional server hostname or IP can be
@@ -267,7 +269,7 @@ audio {
     # e.g. Airplay. This feature relies on accurate ALSA measurements of
     # delay, and some devices dont provide that. If that is the case you
     # are better off disabling the feature.
-    sync_disable = false
+    #sync_disable = false
 
     # Here you can adjust when local audio is started relative to other
     # speakers, e.g. Airplay. Negative values correspond to moving local
@@ -482,7 +484,7 @@ sqlite {
 
     # Should the database be vacuumed on startup? (increases startup time,
     # but may reduce database size). Default is yes.
-    vacuum = yes
+    vacuum = true
 }
 
 # Streaming audio settings for remote connections (ie stream.mp3)
