@@ -153,6 +153,7 @@
     - packages
     - python3
     - python3-packages
+    - common-python3-packages
   #when: ansible_distribution == "Ubuntu"
 
 # - name: install python3
@@ -211,6 +212,7 @@
 - name: install packages
   apt:
     state: latest
+    update_cache: true
     name:
       #- ntp
       #- python-netaddr
@@ -269,7 +271,6 @@
       - bmon
       - cbm
       - ifstat
-      - iptraf
       - iputils-ping
       - "{{ pkg_netcat_name |default('netcat') }}"
       - nethogs
@@ -282,6 +283,16 @@
   tags:
     - packages
     - common-packages
+
+- name: install packages (Ubuntu)
+  package:
+    name:
+      - iptraf
+    state: present
+  tags:
+    - packages
+    - common-packages
+  when: ansible_distribution|lower == "ubuntu"
 
 - name: install host specific packages
   apt:
