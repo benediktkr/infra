@@ -177,6 +177,7 @@
     state: latest
   tags:
     - owntone-packages
+    - owntone-apt
     - packages
 
 - name: enable owntone service and ensure '{{ owntone_state }}' state
