@@ -1,18 +1,18 @@
 ---
 
 dependencies:
-  - role: nfs
+  - role: docker
     tags:
-      - nfs
+      - docker
+
+  - role: homeaudio
+    tags:
+      - homeaudio
 
   - role: mariadb
     tags:
       - mariadb
       - hass-mariadb
-
-  - role: docker
-    tags:
-      - docker
 
   - role: hass-udev
     tags:
