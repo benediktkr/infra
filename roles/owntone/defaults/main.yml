@@ -1,5 +1,10 @@
 ---
+audio_dir: "/srv/audio"
 owntone_airplay: []
 owntone_fifo: []
+owntone_state: "running"
 owntone_docker: false
+owntone_pulseaudio: false
+owntone_log_dir: /var/log/owntone
+owntone_pipe_autostart: false
 bonob_port: 3005

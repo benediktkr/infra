@@ -5,30 +5,16 @@ server {
 }
 
 server {
-    #listen 444 ssl;
-
-    {# {% if ansible_default_ipv4.address is defined -%}
-     # listen {{ ansible_default_ipv4.address }}:443 ssl;
-     # {% endif %} #}
-
-
     add_header Server "";
     add_header Connection "";
 
-    #listen {{ ansible_default_ipv4.address }}:443 ssl;
     listen 443 ssl;
-    {% if nginx_http2 -%}
-    http2 on;
-    {% else -%}
     http2 off;
-    {% endif %}
-    # listen {{ owntone_port_tcp }};
 
     {% if inventory_hostname in wg_clients -%}
     listen {{ wg_clients[inventory_hostname].ip }}:443 ssl;
     {% endif -%}
 
-    # include listen-proxy-protocol.conf;
     include /etc/nginx/authelia_internal.conf;
     include /etc/nginx/sudo-known.conf;
 
@@ -172,10 +158,7 @@ server {
      # When turning ssl back on, also remember to uncomment proxy_set_header
      #listen {{ ansible_default_ipv4.address }}:{{ owntone_port_ws }};
      {% endif %}
-
-     #listen {{ ansible_default_ipv4.address }}:{{ owntone_port_ws }} ssl;
-     #listen {{ owntone_port_ws }} ssl;
-
+     http2 off;
 
      server_name {{ owntone_url }};
 

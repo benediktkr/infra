@@ -1,0 +1,8 @@
+---
+
+dependencies:
+  - role: owntone-pulseaudio
+    tags:
+      - owntone-pulseaudio
+    when:
+      - owntone_pulseaudio == true

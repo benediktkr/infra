@@ -11,20 +11,16 @@ general {
     uid = "{{ owntone_user.username }}"
     {% endif -%}
 
-    db_path = "{{ deadspace_root }}/owntone/data/db/songs3.db"
+    db_path = "/srv/owntone/db/songs3.db"
 
     # Database backup location
     # Uncomment and specify a full path to enable abilty to use REST endpoint
     # to initiate backup of songs3.db
-    #db_backup_path = "/var/cache/owntone/songs3.bak"
+    db_backup_path = "/var/cache/owntone/songs3.bak"
 
     # Log file and level
     # Available levels: fatal, log, warning, info, debug, spam
-    {% if owntone_docker -%}
-    logfile = "/log/owntone.log"
-    {% else -%}
-    logfile = "/var/log/owntone/owntone.log"
-    {% endif -%}
+    logfile = "{{ owntone_log_dir }}/owntone.log"
     loglevel = log
 
     # Admin password for the web interface
@@ -58,19 +54,14 @@ general {
     # Set this if you want the server to bind to a specific IP address. Can
     # be ipv6 or ipv4. Default (commented out or "::") is to listen on all
     # IP addresses.
-    {% if not owntone_docker -%}
     # ideally, we want to only listen on localhost and let the reverse proxy handle everything
     # but seems like this interferes with the damn mdns autodiscovery (that we dont event want)
     # see: https://github.com/owntone/owntone-server/issues/1546
     # long term solution: pulseaudio as system service + upnp/dlna
-    ##bind_address = "127.0.0.1"
-    #bind_address = "{{ ansible_default_ipv4.address }}"
-    {% else -%}
-    #bind_address = "127.0.0.1"
-    {% endif %}
+    bind_address = "127.0.0.1"
 
     # Location of cache database
-    cache_path = "{{ deadspace_root }}/owntone/data/db/cache.db"
+    cache_path = "/var/cache/owntone/cache.db"
 
     # DAAP requests that take longer than this threshold (in msec) get their
     # replies cached for next time. Set to 0 to disable caching.
@@ -99,7 +90,8 @@ library {
     #password = "{{ owntone_library_pass }}"
 
     # Directories to index
-    directories = { "{{ deadspace_root }}" }
+    #directories = { "{{ audio_dir }}" }
+    directories = { "/tmp/foo" }
 
     # Follow symlinks. Default: true.
     #follow_symlinks = true
@@ -170,7 +162,7 @@ library {
     # can prevent the scanner from even probing them. This might improve
     # scan time. By default .db, .ini, .db-journal, .pdf and .metadata are
     # ignored.
-    #filetypes_ignore = { ".db", ".ini", ".db-journal", ".pdf", ".metadata" }
+    filetypes_ignore = { ".db", ".ini", ".db-journal", ".pdf", ".metadata" }
 
     # File paths the scanner should ignore
     # If you want to exclude files on a more advanced basis you can enter
@@ -186,15 +178,14 @@ library {
     # may lead to OwnTones database coming out of sync with the
     # library. If that happens read the instructions in the README on how
     # to trigger a rescan.
-    {% set filescan_disabled = not owntone_filescan_enabled|default(true)|bool -%}
-    filescan_disable = {{ filescan_disabled | string | lower }}
+    filescan_disable = {{ not owntone_filescan_enabled | default(true) | bool | lower }}
 
     # Should metadata from m3u playlists, e.g. artist and title in EXTINF,
     # override the metadata we get from radio streams?
     #m3u_overrides = false
 
     # Should iTunes metadata override ours?
-    itunes_overrides = {{ owntone_itunes_metadata_override | default(false) | string | lower }}
+    itunes_overrides = {{ owntone_itunes_metadata_override | default(false) | lower }}
 
     # Should we import the content of iTunes smart playlists?
     #itunes_smartpl = false
@@ -215,7 +206,7 @@ library {
     # Watch named pipes in the library for data and autostart playback when
     # there is data to be read. To exclude specific pipes from watching,
     # consider using the above _ignore options.
-    pipe_autostart = false
+    pipe_autostart = {{ owntone_pipe_autostart | lower }}
 
     # Enable automatic rating updates
     # If enabled, rating is automatically updated after a song has either been
@@ -236,7 +227,7 @@ library {
     # A directory in one of the library directories that will be used as the default
     # playlist directory. OwnTone creates new playlists in this directory if only
     # a playlist name is provided (requires "allow_modify_stored_playlists" set to true).
-    default_playlist_directory = "{{ deadspace_root }}/playlists"
+    default_playlist_directory = "/srv/owntone/playlists"
 
     # By default OwnTone will - like iTunes - clear the playqueue if
     # playback stops. Setting clear_queue_on_stop_disable to true will keep
@@ -251,10 +242,10 @@ audio {
     nickname = "Computer"
 
     # Type of the output (alsa, pulseaudio, dummy or disabled)
-    {% if owntone_docker -%}
-    type = "disabled"
-    {% else -%}
+    {% if not owntone_docker and owntone_pulseaudio-%}
     type = "pulseaudio"
+    {% else -%}
+    type = "disabled"
     {% endif %}
 
     # For pulseaudio output, an optional server hostname or IP can be
@@ -316,12 +307,7 @@ audio {
 fifo {
     nickname = "{{ item.name }}"
     # placed outside of library
-    {% if owntone_docker -%}
-    path = "/fifo/output.fifo"
-    {% else -%}
-    path = "{{ owntone_path }}/fifo/{{ item.named_pipe }}"
-    {% endif %}
-
+    path = "/var/run/owntone/{{ item.named_pipe }}"
 }
 {% endfor %}
 

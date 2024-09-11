@@ -8,14 +8,31 @@
 - name: restart dbus
   service:
     name: dbus
-    state: restarted 
-
-- name: restart owntone
-  include_tasks: restart_owntone.yml
+    state: restarted
 
 - name: systemctl daemon-reload
   command: systemctl daemon-reload
   become: true
 
+- name: restart logrotate.service
+  systemd:
+    state: restarted
+    name: logrotate.service
 
+- name: restart owntone.service
+  systemd_service:
+    name: owntone.service
+    state: restarted
+  when:
+    - not owntone_service.changed|default(false)
+    - not owntone_docker
+    - owntone_restart_handler|default(true)
 
+- name: restart owntone container
+  docker_container:
+    name: owntone
+    state: started
+    restart: true
+  when:
+    - owntone_docker
+    - owntone_restart_handler|default(true)

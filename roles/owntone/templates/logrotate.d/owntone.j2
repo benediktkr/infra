@@ -1,0 +1,13 @@
+{{ owntone_log_dir }}/*.log {
+    daily
+    missingok
+    rotate 14
+    compress
+    delaycompress
+    notifempty
+    create 0640 {{ owntone_user.username }} root
+    sharedscripts
+    postrotate
+      echo > {{ owntone_log_dir }}/owntone.log
+    endscript
+}
