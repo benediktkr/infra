@@ -7,6 +7,6 @@ owntone_docker: false
 owntone_pulseaudio: false
 owntone_log_dir: /var/log/owntone
 owntone_pipe_autostart: false
-owntone_filescan_enabled: true
+owntone_filescan_disabled: false
 owntone_itunes_metadata_override: false
 bonob_port: 3005

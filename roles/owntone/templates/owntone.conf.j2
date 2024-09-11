@@ -177,8 +177,7 @@ library {
     # may lead to OwnTones database coming out of sync with the
     # library. If that happens read the instructions in the README on how
     # to trigger a rescan.
-    {% set filescan_disabled = not owntone_filescan_enabled -%}
-    filescan_disable = {{ owntone_filescan_enabled | bool | string | lower }}
+    filescan_disable = {{ owntone_filescan_disabled | bool | string | lower }}
 
     # Should metadata from m3u playlists, e.g. artist and title in EXTINF,
     # override the metadata we get from radio streams?
