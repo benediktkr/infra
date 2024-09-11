@@ -1,6 +1,5 @@
 # {{ ansible_managed }}
 
-
 general {
     # Username
     # Make sure the user has read access to the library directories you set
@@ -90,8 +89,7 @@ library {
     #password = "{{ owntone_library_pass }}"
 
     # Directories to index
-    #directories = { "{{ audio_dir }}" }
-    directories = { "/tmp/foo" }
+    directories = { "{{ audio_dir }}" }
 
     # Follow symlinks. Default: true.
     #follow_symlinks = true
@@ -178,14 +176,15 @@ library {
     # may lead to OwnTones database coming out of sync with the
     # library. If that happens read the instructions in the README on how
     # to trigger a rescan.
-    filescan_disable = {{ not owntone_filescan_enabled | default(true) | bool | lower }}
+    {% set filescan_disabled = not owntone_filescan_enabled -%}
+    filescan_disable = {{ owntone_filescan_enabled | bool | string | lower }}
 
     # Should metadata from m3u playlists, e.g. artist and title in EXTINF,
     # override the metadata we get from radio streams?
     #m3u_overrides = false
 
     # Should iTunes metadata override ours?
-    itunes_overrides = {{ owntone_itunes_metadata_override | default(false) | lower }}
+    itunes_overrides = {{ owntone_itunes_metadata_override | bool | string | lower }}
 
     # Should we import the content of iTunes smart playlists?
     #itunes_smartpl = false
@@ -305,9 +304,9 @@ audio {
 # Allows OwnTone to output audio data to a named pipe
 {% for item in owntone_fifo -%}
 fifo {
-    nickname = "{{ item.name }}"
+    nickname = "{{ item.nickname }}"
     # placed outside of library
-    path = "/var/run/owntone/{{ item.named_pipe }}"
+    path = "/srv/owntone/fifo/{{ item.filename }}"
 }
 {% endfor %}
 

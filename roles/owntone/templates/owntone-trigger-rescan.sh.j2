@@ -1,4 +1,5 @@
 #!/bin/bash
+# {{ ansible_managed }}
 
 set -e
 
@@ -10,4 +11,4 @@ fi
 {% endfor %}
 
 rescan_type=$1
-touch {{ audio_dir }}/local/owntone/trigger.${rescan_type}-rescan
+touch {{ audio_dir }}/local/trigger.${rescan_type}-rescan

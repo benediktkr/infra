@@ -19,6 +19,7 @@
     - path: /srv/owntone
     - path: /srv/owntone/db
     - path: /srv/owntone/playlists
+    - path: /srv/owntone/fifo
 
 - name: remove default log file
   file:
@@ -26,7 +27,17 @@
     path: /var/log/owntone.log
   when: owntone_log_dir != "/var/log"
 
-- name: ensure podcast audiobooks, and dirs exists in {{ audio_dir }}
+- name: ensure '{{ audio_dir }}' exists
+  file:
+    state: directory
+    path: "{{ audio_dir }}"
+    mode: "0750"
+    owner: "{{ owntone_user.uid }}"
+    group: "{{ owntone_group.gid }}"
+  tags:
+    - owntone-dirs
+
+- name: ensure subdirs exist in '{{ audio_dir }}'
   file:
     state: directory
     path: "{{ audio_dir }}/{{ item.name }}"
@@ -35,7 +46,6 @@
     group: "{{ owntone_group.gid }}"
   tags:
     - owntone-dirs
-  ignore_errors: "{{ item.mounted|default(false) }}"
   loop_control:
     label: "{{ audio_dir }}/{{ item.name }}"
   with_items:
@@ -43,22 +53,8 @@
     - name: podcasts
     - name: music
     - name: local
-
-- name: ensure {{ deadspace_root }}/local subdirs exist
-  file:
-    state: directory
-    path: "{{ deadspace_root }}/local/{{ item.name }}"
-    mode: "{{ item.mode | default('0750') }}"
-    owner: "{{ owntone_user.uid }}"
-    group: "{{ owntone_group.gid }}"
-  tags:
-    - owntone-dirs
-  ignore_errors: "{{ item.mounted|default(false) }}"
-  loop_control:
-    label: "{{ deadspace_root }}/local/{{ item.name }}"
-  with_items:
-    - name: music
-    - name: compilations
+    - name: local/music
+    - name: local/compilations
 
 - name: copy playlists
   copy:
@@ -78,18 +74,14 @@
 
 - name: create input pipe
   command:
-    cmd: mkfifo "/var/run/owntone/{{ item }}"
-    creates: "/var/run/owntone/{{ item }}"
+    cmd: mkfifo "/srv/owntone/fifo/{{ item.filename }}"
+    creates: "/srv/owntone/fifo/{{ item.filename }}"
   become_user: "{{ owntone_user.username }}"
   loop_control:
     label: "{{ item }}"
-  with_items:
-    - shairport-output.fifo
-    - shairport-metadata.fifo
+  with_items: "{{ owntone_fifo }}"
   tags:
-    - input.fifo
-  # disabled
-  when: false
+    - owntone-fifo
 
 - name: install certs
   copy:
@@ -259,9 +251,11 @@
     - systemd
 
 - name: stop owntone container if running as service
-  when: not owntone_docker
   docker_container:
     name: owntone
     state: stopped
   ignore_errors: true
+  when:
+    - not owntone_docker
+    - false
 

@@ -1,3 +1,10 @@
+# {{ ansible_managed }}
+
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    ''      close;
+}
+
 server {
    listen 80;
 
@@ -145,14 +152,6 @@ server {
     }
 }
 server {
-     #if ($scheme = "http") {
-     #    return 301 https://{{ owntone_url }}:{{ owntone_port_ws }}$request_uri;
-     #}
-
-     #if ($scheme = "ws") {
-     #    return 301 wss://{{ owntone_url }}:{{ owntone_port_ws }}$request_uri;
-     #}
-
      {% if ansible_default_ipv4.address is defined -%}
      listen {{ ansible_default_ipv4.address }}:{{ owntone_port_ws }} ssl;
      # When turning ssl back on, also remember to uncomment proxy_set_header
@@ -162,8 +161,8 @@ server {
 
      server_name {{ owntone_url }};
 
-     access_log /var/log/nginx/access_{{ owntone_url }}_{{ owntone_port_ws }}.log main;
-     error_log /var/log/nginx/error_{{ owntone_url }}_{{ owntone_port_ws }}.log warn;
+     access_log /var/log/nginx/access_{{ owntone_url }}_{{ owntone_port_ws }}_ws.log main;
+     error_log /var/log/nginx/error_{{ owntone_url }}_{{ owntone_port_ws }}_ws.log info;
 
      ssl_certificate /usr/local/etc/certs/{{ domain }}/fullchain.pem;
      ssl_certificate_key /usr/local/etc/certs/{{ domain }}/privkey.pem;
@@ -173,14 +172,15 @@ server {
      ssl_prefer_server_ciphers off;
 
      location / {
-         proxy_pass http://127.0.0.1:{{ owntone_port_ws }}/;
-         proxy_set_header Host $host;
-         proxy_set_header X-Real-IP $remote_addr;
-         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-         proxy_set_header X-Forwarded-Proto $scheme;
+         proxy_pass http://127.0.0.1:{{ owntone_port_ws }};
+         #proxy_set_header Host $host;
+         #proxy_set_header X-Real-IP $remote_addr;
+         #proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+         #proxy_set_header X-Forwarded-Proto $scheme;
          proxy_http_version 1.1;
          proxy_set_header Upgrade $http_upgrade;
          proxy_set_header Connection "upgrade";
+         #proxy_set_header Connection $connection_upgrade;
      }
 
 }
