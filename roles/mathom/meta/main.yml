@@ -34,7 +34,4 @@ dependencies:
   - role: unifi
     tags:
       - unifi
-  - role: homeaudio
-    tags:
-      - homeaudio
 
