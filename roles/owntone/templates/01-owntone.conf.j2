@@ -21,6 +21,12 @@ server {
     {% if inventory_hostname in wg_clients -%}
     listen {{ wg_clients[inventory_hostname].ip }}:443 ssl;
     {% endif -%}
+    {% if ansible_default_ipv4.address is defined -%}
+    # OwnTone won't read AirPlay advertisements or advertise an IP and connect to AirPlay
+    # unless it's allowed to bind to it for some reason
+    #  See: https://github.com/owntone/owntone-server/issues/1546
+    #listen {{ ansible_default_ipv4.address }}:{{ owntone_port_tcp }} ssl;
+    {% endif %}
 
     include /etc/nginx/authelia_internal.conf;
     include /etc/nginx/sudo-known.conf;
