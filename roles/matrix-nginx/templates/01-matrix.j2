@@ -1,8 +1,11 @@
 server {
-  listen 443 ssl http2;
+  listen 443 ssl;
+
+  # On newer nginx versions:
+  #http2 off;
 
   {% if inventory_hostname in wg_clients -%}
-  listen {{ wg_clients[inventory_hostname].ip }}:443 ssl http2;
+  listen {{ wg_clients[inventory_hostname].ip }}:443 ssl;
   {% endif -%}
 
   ## For the federation port (not needed according to logs)
@@ -45,16 +48,20 @@ server {
     proxy_set_header X-Forwarded-Proto $scheme;
     proxy_set_header Host $host;
   }
-  location ~* ^(\/_matrix|\/_synapse\/client) {
+  location ~* ^(/_matrix|/_synapse/client) {
       # working around this issue that seems to still be hapening
       # https://github.com/matrix-org/synapse/issues/2748
-      if ($args ~ (^|.*&)height=0(.*)) {
-          set $args $1height=400$2;
-      }
-      if ($args ~ (^|.*&)width=0(.*)) {
-          set $args $1width=400$2;
-      }
+      #
+      # Disabled: 2024-09-24
+      #if ($args ~ (^|.*&)height=0(.*)) {
+      #    set $args $1height=400$2;
+      #}
+      #if ($args ~ (^|.*&)width=0(.*)) {
+      #    set $args $1width=400$2;
+      #}
 
+      # no trailing / to `proxy_pass`, otherwise nginx with canonicalise the URI and cause
+      # signature verification errors
       proxy_pass http://{{ bridgewithdns.matrix }}:{{ matrix_synapse_port }};
       proxy_set_header X-Forwarded-For $remote_addr;
       proxy_set_header X-Forwarded-Proto $scheme;
