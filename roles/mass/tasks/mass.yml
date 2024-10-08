@@ -14,9 +14,7 @@
     label: "{{ item.path }}"
   with_items:
     - path: "{{ mass_root }}/data"
-    - path: "{{ mass_root }}/playlists"
     - path: "{{ deadspace_root }}/audio"
-    - path: "{{ deadspace_root }}/local/music"
 
 #- name: template config
 #  template:
@@ -66,10 +64,8 @@
       - type: bind
         source: "{{ deadspace_root }}/audio"
         target: "{{ deadspace_root }}/audio"
-      - type: bind
-        source: "{{ deadspace_root }}/local/music"
-        target: "{{ deadspace_root }}/local/music"
   register: mass_container
+  when: mass_container_state != "stopped"
   tags:
     - mass-container
     - music-assistant-container
