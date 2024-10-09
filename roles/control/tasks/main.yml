@@ -1,5 +1,13 @@
 ---
 
+- name: install shell utilities
+  apt:
+    name:
+      - exiftool
+    state: present
+  tags:
+    - packages
+    - control-packages
 - name: install packages for dealing with usb drive bay
   apt:
     name:
