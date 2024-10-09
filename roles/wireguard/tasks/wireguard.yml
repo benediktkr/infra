@@ -16,6 +16,7 @@
     path: /etc/sysctl.conf
     regexp: '^#net.ipv4.ip_forward.*$'
     replace: 'net.ipv4.ip_forward=1'
+  ignore_errors: true
   notify: systemctl daemon reload
 
 - name: enable ip_forward in proc

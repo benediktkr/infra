@@ -1,4 +1,6 @@
 ---
 
 wireguard_dns: true
+wg_iptables: true
+
 pihole_dns: 10.10.1.1

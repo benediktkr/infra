@@ -2,7 +2,7 @@
 
 set -e
 
-{% if wg_clients[inventory_hostname]['listen'] | default(false) %}
+{% if wg_clients[inventory_hostname]['listen'] | default(false) and wg_iptables %}
 iptables -t nat -D POSTROUTING -s {{ wireguard_cidr }} -o {{ ansible_default_ipv4.interface  }} -j MASQUERADE || true
 iptables -t nat -A POSTROUTING -s {{ wireguard_cidr }} -o {{ ansible_default_ipv4.interface  }} -j MASQUERADE
 {% endif %}
@@ -16,11 +16,13 @@ sleep 5
 
 dgw=$(ip r | grep default | awk '{print $3}' | head -n 1)
 
+{% if wg_iptables -%}
 ip route del 208.67.222.222/32 via $dgw metric 0 || true
 ip route del 208.67.220.220/32 via $dgw metric 0 || true
 
 ip route add 208.67.222.222/32 via $dgw metric 0
 ip route add 208.67.220.220/32 via $dgw metric 0
+{% endif -%}
 
 {% endif %}
 
