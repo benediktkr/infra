@@ -70,3 +70,11 @@ dependencies:
     tags: docker
     when: inventory_hostname in groups.docker
 
+  # group: deadspace
+  # This should probably move, but right now it doesnt make sense because of new host not ready
+  - role: deadspace
+    tags: deadspace
+    when: inventory_hostname in groups.deadspace
+  #- role: nfs
+  #  tags: nfs
+  #  when: inventory_hostname in groups.deadspace
