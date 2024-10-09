@@ -103,7 +103,8 @@
       - docker-compose
       - python3-docker
     update_cache: yes
-    state: latest
+    #state: latest
+    state: present
   environment:
     PATH: "{{ ansible_env.PATH }}:/sbin:/usr/sbin"
   notify: restart docker
