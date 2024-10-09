@@ -152,6 +152,7 @@
     owner: jellyfin
     group: jellyfin
     mode: 0644
+  when: false
   tags:
     - ldap
     - openldap
