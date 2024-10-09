@@ -30,14 +30,14 @@ dependencies:
     when: inventory_hostname in groups.wireguard
 
   # group: servers
-  - role: telegraf
-    tags: telegraf
+  - role: common-telegraf
+    tags: common-telegraf, telegraf
     when: inventory_hostname in groups.servers
   - role: filebeat
     tags: filebeat
     when: inventory_hostname in groups.servers
-  - role: rsyslog
-    tags: rsyslog
+  - role: common-rsyslog
+    tags: common-rsyslog, rsyslog
     when: inventory_hostname in groups.servers
 
   # group: kvm
