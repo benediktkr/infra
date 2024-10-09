@@ -8,17 +8,63 @@ dependencies:
     tags: common-letsencrypt
 
   - role: common-users
-    tags: common-users
+    tags: common-users, users
 
   - role: postfix
     tags: postfix
 
-  # questionable if this one should remain
+  # questionable if this one should remain (there is a group named "human")
   - role: dotfiles
     tags: dotfiles
 
   # condially common
+
+  # group: fde
   - role: fde-dropbear
     tags: fde
-    when: inventory_hostname in groups["fde"]
+    when: inventory_hostname in groups.fde
+
+  # group: wireguard
+  - role: wireguard
+    tags: wireguard
+    when: inventory_hostname in groups.wireguard
+
+  # group: servers
+  - role: telegraf
+    tags: telegraf
+    when: inventory_hostname in groups.servers
+  - role: filebeat
+    tags: filebeat
+    when: inventory_hostname in groups.servers
+  - role: rsyslog
+    tags: rsyslog
+    when: inventory_hostname in groups.servers
+
+  # group: kvm
+  - role: kvm
+    tags: kvm
+    when: inventory_hostname in groups.kvm
+
+  # group: laptop_tools
+  - role: laptop-tools
+    tags: laptop-tools
+    when: inventory_hostname in groups.laptop_tools
+
+  # group: pve_guest
+  - role: pve-guest
+    tags: pve-guest
+    when: inventory_hostname in groups.pve_guest
+
+  # group: nginx
+  - role: nginx
+    tags: nginx
+    when: inventory_hostname in groups.nginx
+  - role: nginx-websites
+    tags: nginx, nginx-websites
+    when: inventory_hostname in groups.nginx
+
+  # group: docker
+  - role: docker
+    tags: docker
+    when: inventory_hostname in groups.docker
 
