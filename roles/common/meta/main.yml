@@ -10,8 +10,8 @@ dependencies:
   - role: common-users
     tags: common-users, users
 
-  - role: postfix
-    tags: postfix
+  - role: common-postfix
+    tags: common-postfix, postfix
 
   # questionable if this one should remain (there is a group named "human")
   - role: dotfiles
@@ -33,9 +33,11 @@ dependencies:
   - role: common-telegraf
     tags: common-telegraf, telegraf
     when: inventory_hostname in groups.servers
-  - role: filebeat
-    tags: filebeat
+
+  - role: common-filebeat
+    tags: common-filebeat, filebeat
     when: inventory_hostname in groups.servers
+
   - role: common-rsyslog
     tags: common-rsyslog, rsyslog
     when: inventory_hostname in groups.servers
