@@ -12,16 +12,24 @@
   loop_control:
     label: "{{ item.path }}"
   with_items:
-    - path: /var/log/owntone
-      group: root
     - path: /var/cache/owntone
       mode: "0755"
     - path: /srv/owntone
     - path: /srv/owntone/db
-    - path: /srv/owntone/playlists
     - path: /srv/owntone/fifo
 
-- name: remove default log file
+- name: Create OwnTone log directory (if needed)
+  file:
+    state: directory
+    path: "{{ owntone_log_dir }}"
+    mode: "0750"
+    owner: "{{ owntone_user.uid }}"
+    group: "root"
+  tags:
+    - owntone-dirs
+  when: owntone_log_dir != "/var/log"
+
+- name: remove default log file (if it is not going to be used)
   file:
     state: absent
     path: /var/log/owntone.log
@@ -52,6 +60,7 @@
     - name: audiobooks
     - name: podcasts
     - name: music
+    - name: playlists
     - name: local
     - name: local/music
     - name: local/compilations
@@ -59,7 +68,7 @@
 - name: copy playlists
   copy:
     src: "playlists/{{ item }}/"
-    dest: "/srv/owntone/playlists/{{ item }}/"
+    dest: "{{ audio_dir }}//playlists/{{ item }}/"
     owner: "{{ owntone_user.uid }}"
     group: "{{ owntone_user.gid }}"
     directory_mode: "0750"
@@ -110,7 +119,7 @@
     - owntone-nginx
   notify: reload nginx
 
-- name: template logrotate config for '{{ owntone_log_dir }}'
+- name: template logrotate config for '{{ owntone_log_dir }}' (not /var/log)
   template:
     src: logrotate.d/owntone.j2
     dest: /etc/logrotate.d/owntone
@@ -124,6 +133,17 @@
     - restart logrotate.service
   when: owntone_log_dir != "/var/log"
 
+- name: ensure no logrotate config, since owntone is logging to '/var/log' (not a subdir)
+  file:
+    state: absent
+    path: /etc/logrotate.d/owntone
+  tags:
+    - logrotate
+    - owntone-logrotate
+  notify:
+    - restart logrotate.service
+  when: owntone_log_dir == "/var/log"
+
 - name: template config file
   template:
     src: owntone.conf.j2
@@ -136,6 +156,18 @@
     - restart owntone container
   tags:
     - owntone.conf
+
+- name: systemd unit file
+  template:
+    src: owntone.service.j2
+    dest: /etc/systemd/system/owntone.service
+    owner: root
+    group: root
+    mode: "0644"
+  tags:
+    - systemd
+    - owntone-systemd
+  notify: systemctl daemon-reload
 
 - name: rescan script for cronjob
   template:
@@ -185,7 +217,7 @@
   service:
     name: owntone
     state: "{{ owntone_state }}"
-    enabled: false
+    enabled: true
   tags:
     - systemd
     - owntone-systemd
