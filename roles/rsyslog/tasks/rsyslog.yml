@@ -3,7 +3,7 @@
 - name: install rsyslog
   apt:
     name: rsyslog
-    state: latest
+    state: present
   notify: restart rsyslog
 
 - name: template rsyslog.conf
