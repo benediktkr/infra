@@ -226,7 +226,7 @@ library {
     # A directory in one of the library directories that will be used as the default
     # playlist directory. OwnTone creates new playlists in this directory if only
     # a playlist name is provided (requires "allow_modify_stored_playlists" set to true).
-    default_playlist_directory = "/srv/owntone/playlists"
+    default_playlist_directory = "{{ audio_dir }}/playlists"
 
     # By default OwnTone will - like iTunes - clear the playqueue if
     # playback stops. Setting clear_queue_on_stop_disable to true will keep
@@ -241,10 +241,11 @@ audio {
     nickname = "Computer"
 
     # Type of the output (alsa, pulseaudio, dummy or disabled)
-    {% if not owntone_docker and owntone_pulseaudio-%}
+    {% if not owntone_docker and owntone_pulseaudio -%}
     type = "pulseaudio"
+    {% elif owntone_disable_local_output -%}
+    type = "disabled"
     {% else -%}
-    #type = "disabled"
     type = "dummy"
     {% endif %}
 
@@ -440,6 +441,7 @@ spotify {
 
 # MPD configuration (only have effect if MPD enabled - see README/INSTALL)
 mpd {
+    # https://jcorporation.github.io/myMPD/additional-topics/behind-a-reverse-proxy
     # TCP port to listen on for MPD client requests.
     # Default port is 6600, set to 0 to disable MPD support.
     port = {{ owntone_port_mpd|default('6600') }}
@@ -483,14 +485,17 @@ sqlite {
 
     # Should the database be vacuumed on startup? (increases startup time,
     # but may reduce database size). Default is yes.
-    vacuum = true
+    vacuum = {{ owntone_vacuum | bool | string | lower }}
 }
 
 # Streaming audio settings for remote connections (ie stream.mp3)
 streaming {
     # Sample rate, typically 44100 or 48000
-    #sample_rate = 44100
+    sample_rate = 44100
 
     # Set the MP3 streaming bit rate (in kbps), valid options: 64 / 96 / 128 / 192 / 320
     bit_rate = 320
+
+    # Number of bytes of media stream data between each metadata chunk.
+    icy_metaint = 16384
 }
