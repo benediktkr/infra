@@ -156,23 +156,6 @@
     - common-python3-packages
   #when: ansible_distribution == "Ubuntu"
 
-# - name: install python3
-#   apt:
-#     name:
-#       - python3.9
-#       - python3.9-pip
-#       - python3.9-apt
-#       - python3.9-setuptools
-#       - python3.9-venv
-#       - python3.9-dev
-#       - python-setuptools
-#     update_cache: true
-#     state: latest
-#   tags:
-#     - packages
-#     - python3
-#   when: ansible_distribution != "Ubuntu"
-
 # - name: correct python3 version selected on ubuntu
 #   alternatives:
 #     name: python3
