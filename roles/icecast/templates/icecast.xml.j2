@@ -104,10 +104,37 @@
         <!-- <server>{{ owntone_url }}</server> -->
         <port>{{ owntone_port_tcp }}</port>
         <mount>/stream.mp3</mount>
-        <local-mount>/owntone</local-mount>
+        <local-mount>/owntone.mp3</local-mount>
         <on-demand>0</on-demand>
         <relay-shoutcast-metadata>1</relay-shoutcast-metadata>
     </relay>
+
+    <relay>
+        <server>ice4.somafm.com</server>
+        <port>443</port>
+        <mount>/sf1033-128-mp3</mount>
+        <local-mount>/somafm/sf1033.mp3</local-mount>
+        <on-demand>0</on-demand>
+        <relay-shoutcast-metadata>1</relay-shoutcast-metadata>
+    </relay>
+    <!--
+    <relay>
+        <server>ice4.somafm.com</server>
+        <port>443</port>
+        <mount>/groovesalad-256-mp3</mount>
+        <local-mount>/somafm/groovesalad.mp3</local-mount>
+        <on-demand>0</on-demand>
+        <relay-shoutcast-metadata>1</relay-shoutcast-metadata>
+    </relay>
+    <relay>
+        <server>ice6.somafm.com</server>
+        <port>443</port>
+        <mount>/missioncontrol-128-aac</mount>
+        <local-mount>/somafm/missioncontrol</local-mount>
+        <on-demand>0</on-demand>
+        <relay-shoutcast-metadata>1</relay-shoutcast-metadata>
+    </relay>
+    -->
 
 
     <!-- Mountpoints
@@ -132,13 +159,19 @@
     -->
 
     <!-- Normal mounts -->
-    <!--
     <mount type="normal">
-        <mount-name>/owntone</mount-name>
+        <mount-name>/owntone.mp3</mount-name>
+        <!--<stream-name>{{ owntone_url }}</stream-name>-->
+        <stream-description>Streaming podcasts playing in Ben's home audio.</stream-description>
+        <fallback-mount>/somafm/sf1033.mp3</fallback-mount>
+        <fallback-override>1</fallback-override>
+        <charset>UTF-8</charset>
+        <bitrate>320</bitrate>
+        <mp3-metadata-interval>16384</mp3-metadata-interval>
+        <!--
         <hidden>0</hidden>
         <public>0/public>
         <stream-name>{{ owntone_url }}</stream-name>
-        <stream-description>OwnTone stream from {{ owntone_url }}</stream-description>
 
 
 
@@ -155,8 +188,8 @@
         </http-headers>
         <on-connect>/home/icecast/bin/stream-start</on-connect>
         <on-disconnect>/home/icecast/bin/stream-stop</on-disconnect>
+        -->
     </mount>
-    -->
 
 
     <!--
