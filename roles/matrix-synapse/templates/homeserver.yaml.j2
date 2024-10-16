@@ -398,6 +398,12 @@ limit_remote_rooms:
 #
 #redaction_retention_period: 28d
 
+
+# How long to keep locally forgotten rooms before purging them from the DB.
+#
+# Disabled by default
+forgotten_room_retention_period: 28d
+
 # How long to track users' last seen time and IPs in the database.
 #
 # Defaults to `28d`. Set to `null` to disable clearing out of old rows.
