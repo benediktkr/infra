@@ -81,6 +81,8 @@
   with_items:
     - nfsd
     - nfs
+  tags:
+    - nfs-module
 
 - name: daemon reload
   systemd:
