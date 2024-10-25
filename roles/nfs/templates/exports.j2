@@ -1,31 +1,20 @@
-
-# The value 0 has a special meaning when use with NFSv4. NFSv4 has a
-# concept of a root of the overall exported filesystem.
-#
-# The export point exported with fsid=0 will be used as this root.
-#
-#
+# {{ ansible_managed }}
+# The value 0 has a special meaning when use with NFSv4:
 # https://unix.stackexchange.com/questions/479968/stale-nfs-file-handle-why-does-fsid-resolve-it
 #
 # root_squash = changes/maps the uid for root on the client to the uid of an anonamous user
 # no_root_squash = disables that, and root on the client server isnt changed, so client root is the same as server root, in terms of fs privileges.
 
+{% set default_opts = "sync,subtree_check,root_squash" %}
 
-{% set opts3 = "no_subtree_check,sync" %}
-{# how fra2 has been set, and has worked without issues #}
-{% set opts_fra2 = "sync,subtree_check" %}
-{# this worked fine until jellyfin started reading from nfs #}
-{% set opts_previous_default = "no_root_squash,subtree_check" %}
-{# now this seems to work fine #}
-{% set opts = "sync,subtree_check,no_root_squash" %}
+/export    {{ wireguard_cidr }}(fsid=0,rw,{{default_opts}}) {{ s21_cidr }}(fsid=0,rw,{{default_opts}})
 
+{% for item in nfs_exports %}
+# {{ item.path }}
+{%   set fsid = "fsid=" + loop.index|string -%}
+{%   set nfs_opts = item.get("nfs_opts", default_opts) -%}
+{%   set opts = [fsid, nfs_opts] | join(",") -%}
+/export/{{ item.path.lstrip("/") }}   {% for c in item.nfs_clients %}{{ c }}({{ opts }}) {% endfor %}
 
-/export    {{ wireguard_cidr }}(fsid=0,rw,crossmnt,{{opts}}) {{ s21_cidr }}(fsid=0,rw,crossmnt,{{ opts}})
-{% for item in nfs_exports -%}
-/export/{{ item.nfs_name ~ "    " }}
-{%- set fsid = loop.index -%}
-{%-   for client in item.nfs_clients %}
-{{ client.cidr ~ "(fsid=" ~ fsid ~ "," ~ client.acl|default('rw') ~ "," ~ opts ~ ") " }}
-{%-   endfor %}
 
 {% endfor %}

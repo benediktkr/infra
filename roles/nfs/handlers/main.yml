@@ -7,6 +7,14 @@
   when:
     - nfs_exports | length > 0
 
+- name: exportfs -r
+  command: exportfs -r
+  become: true
+
+- name: exportfs -a
+  command: exportfs -a
+  become: true
+
 # - name: reload idmap
 #   service:
 #     name: idmap

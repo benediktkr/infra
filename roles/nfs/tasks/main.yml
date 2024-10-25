@@ -26,13 +26,14 @@
 
 - name: bind mount exported paths in /export
   mount:
-    path: /export/{{ item.nfs_name }}
+    path: /export/{{ item.path.lstrip("/") }}
     src: "{{ item.path }}"
     opts: bind
     state: mounted # adds to fstab
     fstype: none
   loop_control:
-    label: /export/{{ item.nfs_name }}
+    label: |-
+      {{ item.path }}
   when:
     - nfs_exports | length > 0
   with_items: "{{ nfs_exports }}"
@@ -66,6 +67,7 @@
     - rpcbind
     - nfs-common
   notify:
+    - exportfs -r
     - reload nfs-kernel-server
     #- reload idmap
   tags:

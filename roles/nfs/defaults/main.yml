@@ -1,6 +1,10 @@
 ---
 
-nfs_exports: "{{ deadspace[inventory_hostname] | default({}) | selectattr('nfs') | list | default([]) }}"
+#nfs_exports: "{{ deadspace[inventory_hostname] | default({}) | selectattr('nfs') | list | default([]) }}"
+nfs_exports:
+  - path: /srv
+    nfs_clients:
+      - "127.0.0.1"
 nfs_export_paths: "{{ nfs_exports | map(attribute='path') | list }}"
 
 nfs_mounts: []
@@ -21,6 +25,7 @@ nfs_private_ips: |
 
 # this doesnt trim the string correctly....
 nfs_listen_ip: |
+  {%- set wg_ips = [wg_clients[inventory_hostname].ip] -%}
   {%- if nfs_ip != "127.0.0.1" -%}
   {%- set listen_ip = nfs_ip|trim -%}
   {%- elif ansible_default_ipv4.address in nfs_private_ips -%}
@@ -30,5 +35,5 @@ nfs_listen_ip: |
   {%- else -%}
   {%- set listen_ip = "127.0.0.1" -%}
   {%- endif -%}
-  {{ listen_ip }}
+  {{ listen_ip | trim }}
 
