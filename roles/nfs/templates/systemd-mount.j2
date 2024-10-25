@@ -1,3 +1,5 @@
+# {{ ansible_managed }}
+
 [Unit]
 Description=deadspace nfs mounts
 {% if nfs_mounts_after_wg|default(true) %}

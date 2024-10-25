@@ -45,7 +45,6 @@
     owner: root
     group: root
   with_items:
-    - nfs.conf
     - exports
   tags:
     - nfs-export
@@ -53,21 +52,20 @@
   when:
     - nfs_exports | length > 0
   notify:
-    - reload nfs-kernel-server
-    #- reload idmap
+    - exportfs -r
 
 - name: template configs
   template:
     src: "{{ item }}.j2"
-    dest: /etc/default/{{ item }}
+    dest: /etc/{{ item }}
     owner: root
     group: root
   with_items:
-    - nfs-kernel-server
-    - rpcbind
-    - nfs-common
+    - nfs.conf
+    - default/nfs-kernel-server
+    - default/rpcbind
+    - default/nfs-common
   notify:
-    - exportfs -r
     - reload nfs-kernel-server
     #- reload idmap
   tags:
