@@ -13,7 +13,7 @@ RPCNFSDPRIORITY=0
 
 # disable NFS v2 and v3 (need rpcbind), and only listen on local ip
 
-RPCMOUNTDOPTS="--manage-gids -N 2 -N 3 -H {{ nfs_listen_ip }}"
+RPCMOUNTDOPTS="--manage-gids -N 2 -N 3"
 
 # Do you want to start the svcgssd daemon? It is only required for Kerberos
 # exports. Valid alternatives are "yes" and "no"; the default is "no".
@@ -23,4 +23,4 @@ NEED_SVCGSSD="no"
 RPCSVCGSSDOPTS=""
 
 # enable only NFSv4 or higher (does not need rpcbind)
-RPCNFSDOPTS="-N 2 -N 3"
+RPCNFSDOPTS="-N 2 -N 3 -H {{ nfs_listen_ip }}"

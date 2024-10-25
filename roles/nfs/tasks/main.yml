@@ -34,6 +34,9 @@
   loop_control:
     label: |-
       {{ item.path }}
+  tags:
+    - nfs-export
+    - nfs-exports
   when:
     - nfs_exports | length > 0
   with_items: "{{ nfs_exports }}"
@@ -85,6 +88,8 @@
   tags:
     - systemd
 
+  # rpcbind should not be needed
+  # https://wiki.debian.org/NFSServerSetup
 - name: mask rpcbind (since only NFSv4 or higher is enabled, which does need rpcbind)
   service:
     name: "{{ item }}"
