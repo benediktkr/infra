@@ -40,7 +40,7 @@ pid_file: /data/homeserver.pid
 # under the 'listeners' configuration, however this is a security risk:
 # https://github.com/matrix-org/synapse#security-note
 #
-#web_client_location: https://riot.example.com/
+web_client_location: https://{{ element_url }}/
 
 # The public-facing base URL that clients use to access this Homeserver (not
 # including _matrix/...). This is the same URL a user might enter into the
@@ -61,12 +61,15 @@ public_baseurl: "https://{{ matrix_url }}"
 #
 #use_presence: false
 
+# Defaults to: false
+allow_allow_device_name_lookup_over_federation: {{ matrix_allow_device_name_lookup_over_federation | default(false) | lower }}
+
 # Whether to require authentication to retrieve profile data (avatars,
 # display names) of other users through the client API. Defaults to
 # 'false'. Note that profile data is also available via the federation
 # API, unless allow_profile_lookup_over_federation is set to false.
 #
-#require_auth_for_profile_requests: true
+require_auth_for_profile_requests: {{ matrix_require_auth_for_profile_requests | default(false) | lower }}
 
 # Uncomment to require a user to share a room with another user in order
 # to retrieve their profile information. Only checked on Client-Server
@@ -701,7 +704,7 @@ acme:
 # Federation API allows other homeservers to obtain profile data of any user
 # on this homeserver. Defaults to 'true'.
 #
-#allow_profile_lookup_over_federation: false
+allow_profile_lookup_over_federation: {{ matrix_allow_profile_lookup_over_federation | default(true) | lower }}
 
 
 ## Caching ##
