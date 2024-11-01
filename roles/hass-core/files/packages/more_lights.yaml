@@ -1,4 +1,5 @@
 ---
+
 homeassistant:
   customize:
     package.node_anchors:
@@ -194,6 +195,55 @@ homeassistant:
     automation.bedroom_ceiling_light_turns_on_belid:
       icon: "mdi:ceiling-light-multiple-outline"
       <<: *common_attrs
+    automation.disable_light_bedroom_bed_occupancy:
+      labels:
+        - C
+        - ESPHome
+        - Lights
+        - Presence
+        - Z-Wave
+      area: Bedroom
+      ui_managed: true
+      <<: *common_attrs
+    automation.input_button_start_timer_allow_light_bedroom:
+      labels:
+        - C
+        - Lights
+        - Home Assistant
+      area: Bedroom
+      category: Home Assistant
+      <<: *common_attrs
+
+    # helpers
+    timer.allow_light_bedroom:
+      labels:
+        - C
+        - Lights
+        - Home Assistant
+      area: Bedroom
+      category: Lights
+      <<: *common_attrs
+    input_button.start_timer_allow_light_bedroom:
+      labels:
+        - C
+        - Lights
+        - Home Assistant
+      area: Bedroom
+      category: Lights
+      timer: timer.allow_light_bedroom
+      <<: *common_attrs
+
+
+input_button:
+  start_timer_allow_light_bedroom:
+    name: Allow Bedroom lights
+    icon: "mdi:lightbulb-alert"
+
+timer:
+  allow_light_bedroom:
+    name: Allow Bedroom lights
+    duration: "00:30:00"
+    restore: true
 
 switch:
   - platform: template
@@ -271,6 +321,16 @@ script:
 
 
 automation:
+  - alias: input_button_start_timer_allow_light_bedroom
+    id: input_button_start_timer_allow_light_bedroom
+    trigger:
+      - platform: state
+        entity_id: input_button.start_timer_allow_light_bedroom
+    action:
+      - action: timer.start
+        target:
+          entity_id: timer.allow_light_bedroom
+
   - alias: bedroom_ceiling_light_turns_on_belid
     # id enables traces
     id: bedroom_ceiling_light_turns_on_belid
