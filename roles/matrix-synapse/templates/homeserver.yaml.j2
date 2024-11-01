@@ -51,6 +51,14 @@ web_client_location: https://{{ element_url }}/
 #
 public_baseurl: "https://{{ matrix_url }}"
 
+# Provided https://<server_name>/ on port 443 is routed to Synapse, this option
+# configures Synapse to serve a file at
+# https://<server_name>/.well-known/matrix/server. This will tell other servers
+# to send traffic to port 443 instead.
+#
+# This option currently defaults to false.
+serve_server_wellknown: {{ matrix_serve_server_wellknown | default(false) | lower }}
+
 # Set the soft limit on the number of file descriptors synapse can use
 # Zero is used to indicate synapse should set the soft limit to the
 # hard limit.
