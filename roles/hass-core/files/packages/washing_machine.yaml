@@ -98,14 +98,21 @@ template:
         state: >-
           {% set current = states('sensor.electric_a_switch_washing_machine')|float %}
           {% set current_on = current > 0.2 %}
+          {% set state_on = is_state(this.entity_id, 'on') %}
           {% set power = states('sensor.electric_w_switch_washing_machine')|float %}
-          {{ power > 4.12 }}
+          {{
+            (not state_on and power > 10.0)
+            or (state_on and power > 4.12)
+          }}
         attributes:
           delay_on: 10s
           delay_off: 1min
+          threshold_on: 10.0W
           threshold: 4.12WW
           comment: >-
-            Drops down to ca 2.8W after finishing and releasing the lock on the door, uses ~3.9-4.0W until door lock is released.
+            Drops down to ca 2.8W after finishing and releasing the lock on the
+            door, uses ~3.9-4.0W until door lock is released.
+
       - name: washing_machine_laundry
         unique_id: washing_machine_laundry
         icon: |
@@ -123,15 +130,16 @@ template:
         # The 'automation.washing_machine_finished' automation
         # is UI-managed
         state: |
-          {% set washing_machine_running = is_state("binary_sensor.washing_machine", "on") %}
-          {% set washing_machine_finished = states.automation.washing_machine_finished.last_triggered %}
-          {% set door_closed = is_state("binary_sensor.door_bathroom_washingmachine", "off") %}
-          {% set door_changed = states.binary_sensor.door_bathroom_washingmachine.last_changed %}
+          {% set washing_machine_running = is_state("binary_sensor.washing_machine", "on") -%}
+          {% set washing_machine_finished = states.automation.washing_machine_finished.attributes.last_triggered -%}
+          {% set door_closed = is_state("binary_sensor.door_bathroom_washingmachine", "off") -%}
+          {% set door_changed = states.binary_sensor.door_bathroom_washingmachine.last_changed -%}
           {{
             not washing_machine_running
             and door_closed
             and door_changed < washing_machine_finished
           }}
+
 
 alert:
   # entity_id set to the key ("laundry")
