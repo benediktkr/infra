@@ -1,4 +1,6 @@
 ---
+
+hass_version: latest
 hass_config_repo_cp_files: []
 hass_config_repo_cp_dirs: []
 hass_config_repo_cp_globs: []

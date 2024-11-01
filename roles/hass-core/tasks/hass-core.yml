@@ -532,11 +532,11 @@
 # /home/ben/hass:/config --network=bridgewithdns
 # ghcr.io/home-assistant/home-assistant:stable
 
-- name: home-assistant container
+- name: Home Assistant {{ hass_version }} container
   docker_container:
     name: hass
     #image: ghcr.io/home-assistant/home-assistant:stable
-    image: git.sudo.is/ben/hass-upstream:latest
+    image: git.sudo.is/ben/hass-upstream:{{ hass_version }}
     detach: true
     pull: true
     auto_remove: false
@@ -588,9 +588,6 @@
       - type: bind
         source: "{{ systemuserlist.hass.home }}/home-assistant/media"
         target: /usr/var/media
-      - type: bind
-        source: "{{ deadspace_root }}/audio"
-        target: "{{ deadspace_root }}/audio"
       - type: bind
         source: "{{ systemuserlist.hass.home }}/.ssh"
         target: /usr/local/etc/ssh/
