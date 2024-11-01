@@ -108,6 +108,7 @@
     owner: root
     group: root
     mode: '0700'
+  no_log: true
   vars:
     prediff_cmd: echo
   tags:
