@@ -111,12 +111,12 @@ homeassistant:
   allowlist_external_dirs:
     - "{{ systemuserlist.hass.home }}/home-assistant/notify"
     - "{{ systemuserlist.hass.home }}/home-assistant/inputs"
-    - "{{ deadspace_root }}/audio"
     - "/usr/var/media"
     - "/config"
   allowlist_external_urls:
     - "https://{{ hass_url }}"
     - "https://{{ static_url }}"
+    - "https://{{ owntone_url }}"
     - "https://{{ hass_notflix_url }}"
     - "https://www.{{ domain }}"
     - "https://{{ domain }}"
@@ -561,7 +561,7 @@ matrix:
   rooms: !secret matrix_rooms
   commands:
     - word: hass
-      name: hass
+      name: matrix_hass
 
 # https://www.home-assistant.io/integrations/twilio/
 twilio:
@@ -589,14 +589,22 @@ notify:
     timestamp: true
     filename: {{ systemuserlist.hass.home }}/home-assistant/notify/file_notify.txt
 
-  {% for item in hass_notify_smtp -%}
-    {% set name = "email_" ~ item.name if item.name not in ["pagerduty"] else item.name -%}
+{% for item in hass_notify_smtp %}
+{%   set name = "email_" ~ item.name if item.name not in ["pagerduty"] else item.name %}
+{%   if "comment" in item.keys() %}
+  # {{ item.comment }}
+{%   endif %}
   - name: {{ name }}
     platform: smtp
     timeout: 60
     sender: hass@{{ domain }}
     recipient:
+{%  if "email" in item.keys() %}
       - {{ item.email }}
+{%   endif %}
+{%   for email in item.get("emails", []) %}
+      - {{ email }}
+{%   endfor %}
     server: !secret smtp_server
     port: {{ smtp_port_starttls }}
     username: !secret smtp_username
@@ -604,8 +612,19 @@ notify:
     encryption: starttls
     verify_ssl: {{ item.verify_ssl|default(true) | lower }}
     sender_name: "{{ hass_url }}"
-  {% endfor %}
+{% endfor %}
 
+{% for item in hass_notify_groups %}
+  - name: {{ item.name }}
+    platform: group
+    services:
+{%   for target in item.get("mobile_app_targets", []) %}
+      - action: mobile_app_{{ target.lower().replace("-", "_") }}
+{%   endfor %}
+{%   for target in item.get("notify_targets", []) %}
+      - action: {{ target.lower().replace("-", "_") }}
+{%    endfor %}
+{% endfor %}
 
 shell_command:
   matrixmsg: /usr/local/bin/matrixmsg.py
@@ -649,9 +668,9 @@ sonos:
       - sonos-{{ item }}.{{ inventory_hostname.split('.')[1:] | join(".") }}
       {% endfor %}
 
-# Buttons as a Service (BaaS)
-# https://www.home-assistant.io/integrations/keyboard/
-keyboard:
+## Buttons as a Service (BaaS)
+## https://www.home-assistant.io/integrations/keyboard/
+#keyboard:
 
 media_player:
   - platform: mpd
