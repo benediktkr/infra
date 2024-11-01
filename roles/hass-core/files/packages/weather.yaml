@@ -176,7 +176,7 @@ automation:
           message: |
             {% from 'formatting.jinja' import meteoalarm_message %}
             {{ meteoalarm_message() }}
-      - service: notify.notify
+      - service: notify.mobile_app_ben_phone
         data:
           title: |
             {% from 'formatting.jinja' import meteoalarm_title %}
@@ -210,7 +210,7 @@ automation:
             {% set nina = trigger.entity_id %}
             {% from 'formatting.jinja' import nina_title %}
             {{ nina_title(nina) }}
-      - service: notify.notify
+      - service: notify.mobile_app_ben_phone
         data:
           message: |
             {% from 'formatting.jinja' import nina_message %}
