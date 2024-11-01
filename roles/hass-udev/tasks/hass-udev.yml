@@ -8,6 +8,8 @@
     group: "{{ item.group | default('root') }}"
     mode: 0644
   notify: udevadm reload rules
+  loop_control:
+    label: "{{ item.name }}"
   with_items:
     - name: 10-zwave.rules
     - name: 11-zigbee.rules
