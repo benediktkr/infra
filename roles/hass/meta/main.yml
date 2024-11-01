@@ -4,24 +4,36 @@ dependencies:
   - role: docker
     tags: docker
   - role: mariadb
-    tags: mariadb, hass-mariadb
+    tags:
+      - mariadb
+      - hass-mariadb
 
   - role: avahi
     tags: avahi
   - role: nfs
-    tags: nfs
+    tags:
+      - nfs
+      - homeaudio
 
   - role: mass
-    tags: mass, hass-mass
+    tags:
+      - mass
+      - hass-mass
   - role: cmus
     tags: cmus
 
   - role: airconnect
-    tags: airconnect
+    tags:
+      - airconnect
+      - homeaudio
   - role: owntone
-    tags: owntone
+    tags:
+      - owntone
+      - homeaudio
   - role: icecast
-    tags: icecast
+    tags:
+      - icecast
+      - homeaudio
 
 
   - role: hass-udev
