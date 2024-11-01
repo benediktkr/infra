@@ -1,7 +1,7 @@
 
 location = /.well-known/matrix/support {
     default_type application/json;
-    return 200 '{"contacts":[{"matrix_id":"@{{myusername}}:{{matrix_domain}}","role":"m.role.admin"},{"email_address":"matrix@{{matrix_domain}}","role":"m.role.admin"}],"support_page":"https://www.{{domain}}/docs/support/"}';
+    return 200 '{"contacts":[{"matrix_id":"@{{myusername}}:{{matrix_domain}}","role":"m.role.admin"},{"email_address":"matrix@{{domain}}","role":"m.role.admin"}],"support_page":"https://www.{{domain}}/docs/support/"}';
 }
 location = /.well-known/matrix/server {
     default_type application/json;
