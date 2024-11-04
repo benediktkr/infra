@@ -241,8 +241,8 @@
 
 - name: template jellyfin nginx config
   template:
-    src: 01-jellyfin.j2
-    dest: /etc/nginx/sites-enabled/01-jellyfin
+    src: 01-jellyfin.conf.j2
+    dest: /etc/nginx/sites-enabled/01-jellyfin.conf
     owner: root
     group: root
     mode: 0775
