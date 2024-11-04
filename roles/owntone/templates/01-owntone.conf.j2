@@ -93,7 +93,6 @@ server {
             include /etc/nginx/require_auth.conf;
             {% set basic_cleartext = icecast_auth.admin.user ~ ":" ~ icecast_auth.admin.passwd -%}
             proxy_set_header Authorization "Basic {{ basic_cleartext | b64encode }}";
-            proxy_pass_header Authorization;
             proxy_pass http://127.0.0.1:{{ icecast_port }}/admin/;
         }
 
