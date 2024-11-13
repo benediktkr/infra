@@ -9,6 +9,9 @@ homeassistant:
       common_attrs_templated: &common_attrs_templated
         templated: true
         <<: *common_attrs
+      hass_logo: &hass_logo
+        entity_picture: "https://www.sudo.is/img/Home_Assistant_Logo.svg"
+        <<: *common_attrs
 
     binary_sensor.tamper_smokealarm_bedroom:
       friendly_name: "smokealarm_bedroom Tamper"
@@ -113,6 +116,28 @@ homeassistant:
     sensor.github_jellyfin_jellyfin_latest_release:
       friendly_name: "jellyfin"
       entity_picture: "https://www.sudo.is/img/logo-jellyfin.svg"
+      <<: *common_attrs
+    sensor.github_esphome_esphome_latest_release:
+      friendly_name: "ESPHome"
+      entity_picture: "https://www.sudo.is/img/esphome.svg"
+      <<: *common_attrs
+
+    sensor.github_home_assistant_core_latest_release:
+      friendly_name: "home-assistant/core"
+      <<: *hass_logo
+    sensor.github_home_assistant_ios_latest_release:
+      friendly_name: "home-assistant/iOS"
+      <<: *hass_logo
+
+    sensor.dns_hass_sudo_is:
+      <<: *hass_logo
+    sensor.current_version:
+      <<: *hass_logo
+    sensor.home_assistant_website:
+      friendly_name: "Home Assistant"
+      <<: *hass_logo
+    binary_sensor.home_assistant_versions_update_available:
+      friendly_name: "Home Assistant"
       <<: *common_attrs
 
     switch.socket_fan_livingroom:
