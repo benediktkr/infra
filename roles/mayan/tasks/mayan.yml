@@ -25,8 +25,8 @@
   docker_container:
     name: "mayan-postgresql"
     image: "postgres:10.15-alpine"
-    auto_remove: no
-    pull: yes
+    auto_remove: false
+    pull: true
     container_default_behavior: compatibility
     restart_policy: "unless-stopped"
     env:
@@ -35,7 +35,7 @@
       POSTGRES_PASSWORD: "{{ systemuserlist.mayan.postgres_pass }}"
     volumes:
       - "{{ systemuserlist.mayan.home }}/db:/var/lib/postgresql/data"
-    networks_cli_compatible: no
+    networks_cli_compatible: false
     networks:
       - name: bridgewithdns
   tags:
@@ -46,10 +46,10 @@
   docker_container:
     name: "mayan-redis"
     image: "redis:latest"
-    auto_remove: no
+    auto_remove: false
     restart_policy: "unless-stopped"
-    detach: yes
-    pull: yes
+    detach: true
+    pull: true
     state: started
     command: redis-server --appendonly "no" --databases "2"
     labels:
@@ -57,7 +57,7 @@
     env:
       REDIS_HOST: "mayan-redis"
     container_default_behavior: compatibility
-    networks_cli_compatible: no
+    networks_cli_compatible: false
     networks:
       - name: bridgewithdns
   tags:
@@ -69,9 +69,9 @@
   docker_container:
     name: mayan
     image: mayanedms/mayanedms:s4
-    detach: yes
-    pull: yes
-    auto_remove: no
+    detach: true
+    pull: true
+    auto_remove: false
     restart_policy: "unless-stopped"
     state: started
     user: root:root  # container starts as root, chowns and then switches to uid in env file
@@ -79,7 +79,7 @@
     volumes:
       - "{{ systemuserlist.mayan.home }}/media:/var/lib/mayan"
     container_default_behavior: compatibility
-    networks_cli_compatible: no
+    networks_cli_compatible: false
     networks:
       - name: bridgewithdns
         ipv4_address: "{{ bridgewithdns.mayan }}"
