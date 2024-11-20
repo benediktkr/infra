@@ -61,7 +61,7 @@
     name: grafana-image-renderer
     version: latest
     state: absent
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: template snapshot.py
   template:
