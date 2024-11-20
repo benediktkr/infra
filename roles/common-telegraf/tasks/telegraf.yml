@@ -15,10 +15,10 @@
     group: "{{ systemuserlist.telegraf.username }}"
     shell: "{{ systemuserlist.telegraf.shell }}"
     uid: "{{ systemuserlist.telegraf.uid }}"
-    create_home: yes
+    create_home: true
     home: "{{ systemuserlist.telegraf.home }}"
-    move_home: yes
-    system: yes
+    move_home: true
+    system: true
   tags: users
   notify: restart telegraf
 
@@ -60,7 +60,7 @@
 # - name: get list of existing groups
 #   shell: "/usr/bin/getent group | awk -F':' '{print $1}'"
 #   register: etc_groups
-#   check_mode: no
+#   check_mode: false
 #   changed_when: false
 #   tags: users
 #
@@ -195,7 +195,7 @@
   service:
     name: telegraf
     state: started
-    enabled: yes
+    enabled: true
   notify: restart telegraf
 
 - meta: flush_handlers
