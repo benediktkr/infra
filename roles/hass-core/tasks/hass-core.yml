@@ -360,6 +360,7 @@
     - tibber.yaml
     - private_package.yaml
     - persons.yaml
+    - night_mode.yaml
     #- air_quality.yaml
     #- trash_collection.yaml
   tags:
@@ -541,6 +542,7 @@
     pull: true
     auto_remove: false
     restart_policy: "unless-stopped"
+    image_name_mismatch: "recreate"
     state: "{{ hass_container_state | default('stopped') }}"
     container_default_behavior: compatibility
     user: "{{ systemuserlist.hass.uid }}:{{ systemuserlist.hass.gid }}"
