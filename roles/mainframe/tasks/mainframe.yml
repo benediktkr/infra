@@ -5,7 +5,7 @@
 # human used systems
 - name: install packages
   apt:
-    update_cache: yes
+    update_cache: true
     state: latest
     name:
       - autoconf # emacs-build
