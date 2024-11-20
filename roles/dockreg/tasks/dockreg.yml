@@ -15,13 +15,13 @@
   docker_container:
     name: dockreg
     image: registry:2
-    auto_remove: no
-    detach: yes
-    pull: yes
+    auto_remove: false
+    detach: true
+    pull: true
     restart_policy: "unless-stopped"
     state: started
     container_default_behavior: compatibility
-    networks_cli_compatible: no
+    networks_cli_compatible: false
     user: "{{ systemuserlist.dockreg.uid }}:{{ systemuserlist.dockreg.gid }}"
     env:
       REGISTRY_HTTP_ADDR: "{{ bridgewithdns.dockreg }}:{{ dockreg_port }}"
@@ -33,7 +33,7 @@
       - type: bind
         source: "{{ systemuserlist.dockreg.home }}/registry"
         target: /var/lib/registry
-        read_only: no
+        read_only: false
   tags:
     - dockreg-container
     - docker-containers
