@@ -116,9 +116,9 @@
     name: authentik-redis
     image: "redis:latest"
     restart_policy: "unless-stopped"
-    auto_remove: no
-    detach: yes
-    pull: yes
+    auto_remove: false
+    detach: true
+    pull: true
     state: started
     container_default_behavior: compatibility
     env:
@@ -146,9 +146,9 @@
     name: authentik-geoip
     image: "maxmindinc/geoipupdate:latest"
     restart_policy: "unless-stopped"
-    auto_remove: no
-    detach: yes
-    pull: yes
+    auto_remove: false
+    detach: true
+    pull: true
     state: stopped
     container_default_behavior: compatibility
     user: "{{ systemuserlist.authentik.uid }}:{{ systemuserlist.authentik.gid }}"
