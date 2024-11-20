@@ -13,15 +13,15 @@
   docker_container:
     name: sudoisytdl
     image: benediktkr/sudoisytdl:latest
-    pull: yes
-    detach: yes
-    auto_remove: no
+    pull: true
+    detach: true
+    auto_remove: false
     restart_policy: "unless-stopped"
     user: "{{ ytdl_user.uid }}"
     state: started
     container_default_behavior: compatibility
     network_mode: bridge
-    networks_cli_compatible: yes
+    networks_cli_compatible: true
     networks:
       - name: bridgewithdns
     env:
