@@ -42,7 +42,7 @@
 - name: start and enable authssh tunnels
   service:
     name: autossh-{{ item.hostname }}
-    enabled: yes
+    enabled: true
     state: started
   with_items: "{{ ssh_tunnels }}"
   when: not ansible_check_mode
