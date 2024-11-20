@@ -6,7 +6,7 @@
       - mailutils
       - libsasl2-modules
     state: latest
-    update_cache: yes
+    update_cache: true
   when: not skip_apt|default(false)|bool
   notify:
     - restart postfix
