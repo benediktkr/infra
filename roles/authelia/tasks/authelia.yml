@@ -85,7 +85,7 @@
     container_default_behavior: compatibility
     env:
       REDIS_HOST: authelia-redis
-    networks_cli_compatible: no
+    networks_cli_compatible: false
     network_mode: bridgewithdns
     networks:
       - name: bridgewithdns
@@ -124,7 +124,7 @@
       - type: bind
         source: "{{ systemuserlist.authelia.home }}/config"
         target: /config
-        read_only: no
+        read_only: false
     env:
       AUTHELIA_IDENTITY_PROVIDERS_OIDC_ISSUER_PRIVATE_KEY_FILE: /config/keys/key.pem
     healthcheck:
