@@ -43,14 +43,14 @@
     name: weblate_redis
     image: "redis:latest"
     restart_policy: "unless-stopped"
-    auto_remove: no
-    detach: yes
-    pull: yes
+    auto_remove: false
+    detach: true
+    pull: true
     state: started
     container_default_behavior: compatibility
     env:
       REDIS_HOST: weblate_redis
-    networks_cli_compatible: no
+    networks_cli_compatible: false
     network_mode: bridgewithdns
     networks:
       - name: bridgewithdns
@@ -65,7 +65,7 @@
     state: started
     container_default_behavior: compatibility
     restart_policy: "unless-stopped"
-    networks_cli_compatible: no
+    networks_cli_compatible: false
     networks:
       - name: bridgewithdns
     env:
@@ -142,14 +142,14 @@
   docker_container:
     name: weblate
     image: weblate/weblate:latest
-    auto_remove: no
-    detach: yes
-    pull: yes
+    auto_remove: false
+    detach: true
+    pull: true
     restart_policy: "unless-stopped"
     state: started
     user: "{{ systemuserlist.weblate.uid }}" # leaves GID as default
     container_default_behavior: compatibility
-    networks_cli_compatible: no
+    networks_cli_compatible: false
     networks:
       - name: bridgewithdns
         ipv4_address: "{{ bridgewithdns.weblate }}"
@@ -158,37 +158,37 @@
       - type: bind
         source: "{{ systemuserlist.weblate.home }}/data"
         target: /app/data
-        read_only: no
+        read_only: false
 
       - type: bind
         source: "{{ systemuserlist.weblate.home }}/etc/supervisor-web.conf"
         target: /etc/supervisor/conf.d/web.conf
-        read_only: yes
+        read_only: true
 
       - type: bind
         source: "{{ systemuserlist.weblate.home }}/etc/uwsgi-weblate.ini.j2"
         target: /etc/uwsgi/apps-enabled/weblate.ini
-        read_only: yes
+        read_only: true
 
       - type: bind
         source: "{{ systemuserlist.weblate.home }}/health_check"
         target: /app/bin/health_check
-        read_only: yes
+        read_only: true
 
       # entrypoint script needs to write here
       - type: bind
         source: "{{ systemuserlist.weblate.home }}/cache"
         target: /app/cache
-        read_only: no
+        read_only: false
       # - type: tmpfs
       #   target: /run
-      #   read_only: no
+      #   read_only: false
       # - type: tmpfs
       #    target: /var/log/nginx
-      #   read_only: no
+      #   read_only: false
       # - type: tmpfs
       #   target: /etc/nginx/sites-available
-      #   read_only: no
+      #   read_only: false
 
     env:
       WEBLATE_DEBUG: "0"
