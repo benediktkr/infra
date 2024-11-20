@@ -38,7 +38,7 @@
       - type: bind
         source: "{{ systemuserlist.zflux.home }}/data"
         target: /data
-    networks_cli_compatible: no
+    networks_cli_compatible: false
     networks:
       - name: bridgewithdns
         ipv4_address: "{{ bridgewithdns.zflux }}"
