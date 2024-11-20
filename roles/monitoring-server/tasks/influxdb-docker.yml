@@ -24,9 +24,9 @@
   docker_container:
     name: influxdb
     image: "influxdb:{{ influxdb_version }}"
-    auto_remove: no
-    detach: yes
-    pull: yes
+    auto_remove: false
+    detach: true
+    pull: true
     state: started
     env:
       INFLUXDB_ADMIN_USER: "{{ influxdb_admin_user }}"
@@ -42,7 +42,7 @@
       - "8088:8088"
     networks:
       - name: bridgewithdns
-    networks_cli_compatible: yes
+    networks_cli_compatible: true
     command: influxdb -config /etc/influxdb/influxdb.conf
     volumes:
       - "{{ influxdb_root }}/lib:/var/lib/influxdb"

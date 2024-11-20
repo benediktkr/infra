@@ -45,7 +45,7 @@
     user_password: "{{ influxdb_admin_password }}"
     login_username: "{{ influxdb_admin_user }}"
     login_password: "{{ influxdb_admin_password }}"
-    admin: yes
+    admin: true
   notify:
     - restart influxdb
   tags:
@@ -71,7 +71,7 @@
         privilege: ALL
     login_username: "{{ influxdb_admin_user }}"
     login_password: "{{ influxdb_admin_password }}"
-    admin: no
+    admin: false
   with_items: "{{ influxdb_user_database | dict2items }}"
   loop_control:
     label: "{{ item.key }}"
@@ -83,7 +83,7 @@
     database_name: "{{ item.key }}"
     policy_name: "{{ item.key }}-infinite"
     duration: INF
-    default: yes
+    default: true
     replication: 1
     login_username: "{{ influxdb_admin_user }}"
     login_password: "{{ influxdb_admin_password }}"
