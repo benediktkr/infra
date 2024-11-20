@@ -22,7 +22,7 @@
   apt_repository:
     repo: "deb [signed-by=/usr/share/keyrings/riot-im-archive-keyring.gpg] https://packages.riot.im/debian/ default main"
     state: present
-    update_cache: yes
+    update_cache: true
     filename: "riot-im"
   with_items:
     - all
@@ -68,7 +68,7 @@
       - dotnet-sdk-6.0
       #- yarn
     state: latest
-    update_cache: yes
+    update_cache: true
   tags:
     - packages
 
