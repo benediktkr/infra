@@ -66,7 +66,12 @@
 - name: nitter
   docker_container:
     name: nitter
+    # https://github.com/PrivacyDevel/nitter
+    # Create guest_accounts.jsonl with: https://github.com/PrivacyDevel/nitter/blob/master/twitter_oauth.sh
+    # Mount to: /src/guest_accounts.json
+    #image: ghcr.io/privacydevel/nitter:master
     image: zedeus/nitter:latest
+    image_name_mismatch: recreate
     restart_policy: "unless-stopped"
     auto_remove: false
     detach: true
