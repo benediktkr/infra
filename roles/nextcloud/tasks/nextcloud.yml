@@ -53,6 +53,10 @@
         owner: www-data
         group: www-data
         mode: "0750"
+      - dir: redis/data
+        owner: 999
+        group: 999
+        mode: "0755"
     - "{{ nextclouds }}"
 
 - name: copy our php-fpm.d/www.conf
@@ -142,7 +146,7 @@
     hostname: "redis_{{ item.name }}"
     auto_remove: false
     detach: true
-    pull: yes
+    pull: true
     state: "{{ item.state | default('started') }}"
     restart_policy: "unless-stopped"
     container_default_behavior: compatibility
@@ -156,6 +160,10 @@
       timeout: 60s
       start_period: 10s
       test: "redis-cli --raw incr ping"
+    mounts:
+      - type: bind
+        source: "{{ item.root }}/redis/data"
+        target: /data
   when: item.redis
   with_items: "{{ nextclouds }}"
   loop_control:
