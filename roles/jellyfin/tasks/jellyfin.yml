@@ -141,7 +141,7 @@
 # - name: get jellyfin container ip
 #   shell: "docker inspect jellyfin | jq -r '.[].NetworkSettings.IPAddress'"
 #   register: jellyfin_ip
-#   changed_when: no
+#   changed_when: false
 #   tags:
 #     - jellyfin-container
 
