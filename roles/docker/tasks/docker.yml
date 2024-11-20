@@ -102,7 +102,7 @@
       - containerd.io
       - docker-compose
       - python3-docker
-    update_cache: yes
+    update_cache: true
     #state: latest
     state: present
   environment:
@@ -175,9 +175,9 @@
 #     name: dockerlogs
 #     hostname: dockerlogs
 #     image: benediktkr/dockerlogs:latest
-#     auto_remove: no
-#     detach: yes
-#     pull: yes
+#     auto_remove: false
+#     detach: true
+#     pull: true
 #     restart_policy: "no"
 #     state: started
 #     container_default_behavior: compatibility
@@ -191,8 +191,8 @@
 #       - type: bind
 #         source: /var/lib/docker/containers
 #         target: /var/lib/docker/containers
-#         read_only: yes
-#     networks_cli_compatible: no
+#         read_only: true
+#     networks_cli_compatible: false
 #     networks:
 #       - name: bridgewithdns
 #         ipv4_address: "{{ bridgewithdns.dockerlogs }}"
