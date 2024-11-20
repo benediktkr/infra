@@ -12,7 +12,7 @@
 #   apt_repository:
 #     repo: "deb http://nginx.org/packages/mainline/debian {{ ansible_distribution_release }} nginx"
 #     state: present
-#     update_cache: yes
+#     update_cache: true
 #   when: ansible_lsb.id == "Debian" and ansible_lsb.codename != "bullseye"
 #   tags:
 #     - packages
