@@ -246,7 +246,7 @@
 - name: install fpm with gem
   gem:
     name: fpm
-    include_doc: no
+    include_doc: false
     state: latest
   when: dht_builder|default(False)
   tags: dht, fpm
@@ -256,7 +256,7 @@
   apt:
     name: sudoisdht
     state: latest
-    update_cache: yes
+    update_cache: true
   when:
     - "'temp' in sensors"
     - "'dht' in sensors.temp|map(attribute='kind')"
@@ -270,7 +270,7 @@
   find:
     paths: /dev
     patterns: 'hidraw*'
-    recurse: no
+    recurse: false
     file_type: any
   when:
     - "'temp' in sensors"
@@ -337,8 +337,8 @@
 - name: enable sudoisbot
   systemd:
     state: started
-    enabled: yes
-    daemon_reload: yes
+    enabled: true
+    daemon_reload: true
     name: "sudoisbot@{{ item.key }}_pub"
   loop_control:
     label: "sudoisbot@{{ item.key }}_pub"
