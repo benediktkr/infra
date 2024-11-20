@@ -114,7 +114,7 @@
     owner: "{{ myusername }}"
     group: "{{ myusername }}"
     mode: 0700
-    recurse: yes
+    recurse: true
   delegate_to: localhost
   become: true
   tags:
@@ -169,7 +169,7 @@
 # - name: remove packages that should only be on mainframe
 #   apt:
 #     state: absent
-#     purge: yes
+#     purge: true
 #     name:
 #       - autoconf # emacs-build
 #       - gnupg2
@@ -402,7 +402,7 @@
 #   lineinfile:
 #     path: /etc/systemd/timesyncd.conf
 #     line: "NTP=0.pool.ntp.org 1.pool.ntp.org 2.pool.ntp.org 3.pool.ntp.org"
-#     create: no
+#     create: false
 #   notify:
 #     - systemctl daemon reload
 #     - restart systemd-timesyncd
@@ -411,7 +411,7 @@
 # - name: enable systemd-timesyncd
 #   service:
 #     name: systemd-timesyncd
-#     enabled: yes
+#     enabled: true
 #     state: started
 #   tags: ntp
 
@@ -433,7 +433,7 @@
 #  lineinfile:
 #    path: /etc/hosts
 #    line: "127.0.0.1 {{ inventory_hostname }}"
-#    create: no
+#    create: false
 #  when: not grephosts.skipped|default(false) and grephosts.rc != 0
 #  tags:
 #    - etchosts

@@ -75,6 +75,9 @@ dependencies:
   - role: deadspace
     tags: deadspace
     when: inventory_hostname in groups.deadspace
-  #- role: nfs
-  #  tags: nfs
-  #  when: inventory_hostname in groups.deadspace
+  - role: nfs
+    tags: nfs
+    when: inventory_hostname in groups.fileserver
+  - role: samba
+    tags: samba
+    when: inventory_hostname in groups.fileserver
