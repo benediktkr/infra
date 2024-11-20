@@ -28,7 +28,7 @@
     mode: 0755
     owner: "{{ elk_uid }}"
     group: "{{ elk_gid }}"
-    recurse: no
+    recurse: false
   with_items:
     - elasticsearch
     - elasticsearch/config
