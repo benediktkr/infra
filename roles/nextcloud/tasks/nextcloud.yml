@@ -121,7 +121,7 @@
 
 - set_fact:
     nc_versions: "{{ cmdnextcloudversion.stdout | from_json }}"
-  check_mode: no
+  check_mode: false
 
 - debug:
     var:
