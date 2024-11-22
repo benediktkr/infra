@@ -1,36 +1,36 @@
- {
-     "Serilog": {
-        "MinimumLevel": {
-            "Default": "Information",
-            "Override": {
-                "Microsoft": "Information",
-                "System": "Information"
-            }
-        },
-        "WriteTo": [
+{
+  "Serilog": {
+    "MinimumLevel": {
+      "Default": "Information",
+      "Override": {
+        "Microsoft": "Information",
+        "System": "Information"
+      }
+    },
+    "WriteTo": [
+      {
+        "Name": "Async",
+        "Args": {
+          {# "bufferSize": 10000000, -#}
+          "configure": [
             {
-                "Name": "Async",
-                "Args": {
-                    {# "bufferSize": 10000000, -#}
-                    "configure": [
-                        {
-                            "Name": "File",
-                            "Args": {
-                                "path": "%JELLYFIN_LOG_DIR%//beats_.log",
-                                "rollingInterval": "Day",
-                                "retainedFileCountLimit": 3,
-                                "rollOnFileSizeLimit": true,
-                                "fileSizeLimitBytes": 100000000,
-                                {# "outputTemplate": "{\"@timestamp\":\"{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz}\",\"level\":\"{Level:u3}\",\"thread_id\":\"{ThreadId}\",\"logger_name\":\"{SourceContext}\",\"message\":\"{Message:lj}\",\"exception\":\"{Exception:lj}\"} {NewLine}" -#}
-                                {# "outputTemplate": "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz}] [{Level:u4}] [{ThreadId}] {SourceContext}: {Message}{NewLine}{Exception}" -#}
-                                "outputTemplate": "[{Level:u4}] - {SourceContext} - {Message}{NewLine}{Exception}"
-                            }
-                        }
-                    ]
-                }
+              "Name": "File",
+              "Args": {
+                "path": "%JELLYFIN_LOG_DIR%//beats_.log",
+                "rollingInterval": "Day",
+                "retainedFileCountLimit": 3,
+                "rollOnFileSizeLimit": true,
+                "fileSizeLimitBytes": 100000000,
+                {# "outputTemplate": "{\"@timestamp\":\"{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz}\",\"level\":\"{Level:u3}\",\"thread_id\":\"{ThreadId}\",\"logger_name\":\"{SourceContext}\",\"message\":\"{Message:lj}\",\"exception\":\"{Exception:lj}\"} {NewLine}" -#}
+                {# "outputTemplate": "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz}] [{Level:u4}] [{ThreadId}] {SourceContext}: {Message}{NewLine}{Exception}" -#}
+                "outputTemplate": "[{Level:u4}] - {SourceContext} - {Message}{NewLine}{Exception}"
+              }
             }
-        ],
-        "Enrich": [ "FromLogContext", "WithThreadId" ]
-     },
-     "AllowedHosts": "*"
+          ]
+        }
+      }
+    ],
+    "Enrich": [ "FromLogContext", "WithThreadId" ]
+   },
+   "AllowedHosts": "*"
 }
