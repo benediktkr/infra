@@ -84,7 +84,7 @@
     init: true
     pull: true
     user: "{{ systemuserlist['unifi']['uid'] }}:{{ systemuserlist['unifi']['gid'] }}"
-    memory: "1G"
+    memory: "1536M"
     env:
       TZ: "Europe/Berlin"
       RUNAS_UID0: "false"
