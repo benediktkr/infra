@@ -141,24 +141,6 @@
   tags:
     - nginx-default-vhost
 
-- name: cleanup
-  file:
-    path: "/etc/nginx/sites-enabled/{{ item }}"
-    state: absent
-  with_items:
-    - 00-default-http
-    - 00-default-https
-
-- name: cleanup for www role
-  file:
-    path: "{{ item }}"
-    state: absent
-  when: nginx_cleanup == true
-  with_items:
-    - /etc/nginx/sites-enabled/01-sudo.is.conf
-    - /usr/local/etc/certs/www.{{ domain }}
-  notify: reload nginx
-
 - name: template default proxy vhosts (if any)
   template:
     src: vhost-proxy.j2
