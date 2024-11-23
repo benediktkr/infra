@@ -18,6 +18,7 @@ server {
     # include listen-proxy-protocol.conf;
     include /etc/nginx/authelia_internal.conf;
     include /etc/nginx/sudo-known.conf;
+    include /etc/nginx/nginx-sec.conf;
 
     server_name {{ hass_url }} {{ hass_url.split('.')[0] }}2.{{hass_url.split('.')[1:] | join('.') }} {{ hass_url.split('.')[0] }}.{{ inventory_hostname.split('.')[1:] | join('.') }} {{ hass_url_2 }};
 

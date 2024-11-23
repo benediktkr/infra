@@ -1,6 +1,6 @@
 server {
 
-  listen 443 ssl http2;
+  listen 443 ssl;
   {% if inventory_hostname in wg_clients -%}
   listen {{ wg_clients[inventory_hostname].ip }}:443 ssl http2;
   {% endif -%}
@@ -9,7 +9,6 @@ server {
   include listen-proxy-protocol.conf;
   server_name {{ authelia_login_url }};
 
-  ssl_session_timeout 5m;
   ssl_certificate /usr/local/etc/certs/{{ authelia_login_url }}/fullchain.pem;
   ssl_certificate_key /usr/local/etc/certs/{{ authelia_login_url }}/privkey.pem;
 
@@ -18,6 +17,7 @@ server {
   }
 
   include /etc/nginx/sudo-known.conf;
+  #include /etc/nginx/sec.conf;
 
   location / {
 
@@ -99,7 +99,6 @@ server {
   include /etc/nginx/sudo-known.conf;
 
   # internal traffic only, does not go over lb for now, so wildcard is fine
-  ssl_session_timeout 5m;
   ssl_certificate /usr/local/etc/certs/{{ domain }}/fullchain.pem;
   ssl_certificate_key /usr/local/etc/certs/{{ domain }}/privkey.pem;
 

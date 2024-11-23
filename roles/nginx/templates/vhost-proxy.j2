@@ -12,7 +12,7 @@ server {
   {% if nginx_http2 -%}
   http2 on;
   {% else -%}
-  http2 off;
+  #http2 off;
   {% endif %}
 
   server_name {{ vhost.name }} {{ vhost.aliases | default([]) | join(" ") }};
@@ -41,7 +41,7 @@ server {
   access_log /var/log/nginx/access_{{ vhost.name }}.log main;
   error_log /var/log/nginx/error_{{ vhost.name }}.log warn;
 
-  ssl_session_timeout 5m;
+  #ssl_session_timeout 5m;
   ssl_certificate /usr/local/etc/certs/{{ inventory_hostname.split('.')[-2:] | join(".") }}/fullchain.pem;
   ssl_certificate_key /usr/local/etc/certs/{{ inventory_hostname.split('.')[-2:] | join(".") }}/privkey.pem;
 

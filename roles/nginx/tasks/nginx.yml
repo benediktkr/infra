@@ -67,6 +67,7 @@
   tags:
     - nginx-dhparam.pem
     - nginx-sec.conf
+    - www-nginx
 
 - name: make cache dir
   file:
@@ -98,11 +99,19 @@
   tags:
     - nginx-conf
     - nginx-conf.d
+    - nginx-sec.conf
     - nginx.d
     - www-nginx
-    - nginx-sec.conf
   notify:
     - reload nginx
+
+- name: template sec.conf
+  template:
+    src: conf.d/sec.conf.j2
+    dest: /etc/nginx/sec.conf
+  tags:
+    - nginx-sec.conf
+    - www-nginx
 
 - name: template config files
   template:

@@ -17,6 +17,7 @@ server {
     # include listen-proxy-protocol.conf;
     include /etc/nginx/authelia_internal.conf;
     include /etc/nginx/sudo-known.conf;
+    include /etc/nginx/sec.conf;
 
     server_name {{ zwavejs_url }};
 
