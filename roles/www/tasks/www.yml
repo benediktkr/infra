@@ -48,11 +48,15 @@
     - www.{{ domain }}
     - docs.{{ domain }}
 
-- name: template {{ domain }} headers
+- name: template conf.d files (used by all vhosts)
   template:
-    src: headers-{{ domain }}.conf.j2
-    dest: /etc/nginx/conf.d/headers-{{ domain }}.conf
+    src: conf.d/{{ item }}.j2
+    dest: /etc/nginx/conf.d/{{ item }}
   notify: reload nginx
+  loop_control:
+    label: ""
+  with_items:
+    - headers-{{ domain }}.conf
   tags:
     - www-nginx
     - nginx-config

@@ -75,7 +75,7 @@
 
 - name: template conf.d files
   template:
-    src: "{{ item }}.j2"
+    src: "conf.d/{{ item }}.j2"
     dest: /etc/nginx/conf.d/{{ item }}
   with_items:
     - uploadsize.conf
@@ -106,11 +106,14 @@
     - www-nginx
   notify: reload nginx
 
-- name: template default index.html
+- name: template html files
   template:
-    src: index.html.j2
-    dest: /var/www/html/index.html
-  notify: reload nginx
+    src: "html/{{ item }}.j2"
+    dest: "/var/www/html/{{ item }}"
+  loop_control:
+    label: "{{ item }}"
+  with_items:
+    - index.html
 
 - name: template default vhosts
   template:
@@ -177,7 +180,7 @@
 
 - name: telegraf file
   template:
-    src: telegraf-nginx.conf.j2
+    src: telegraf/nginx.conf.j2
     dest: /etc/telegraf/telegraf.d/nginx.conf
   notify:
     - restart telegraf
@@ -187,7 +190,7 @@
 
 - name: template filebeat config
   template:
-    src: filebeat-nginx.yml.j2
+    src: filebeat/nginx.yml.j2
     dest: "/etc/filebeat/inputs.d/nginx.yml"
     owner: root
     group: root
