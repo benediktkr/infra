@@ -54,7 +54,7 @@
     - haproxy.cfg
   when: haproxy_ip_forward|default(false)
 
-- name: tempalte letsencrypt keys with privkey+pubkey in one file
+- name: template letsencrypt keys with privkey+pubkey in one file
   template:
     src: ssl-letsencrypt.pem.j2
     dest: /etc/haproxy/ssl-{{ item }}.pem
@@ -70,7 +70,7 @@
   with_items: "{{ letsencrypt_domains }}"
   when: haproxy_letsencrypt|default(false)
 
-- name: tempalte haproxy config
+- name: template haproxy config
   template:
     src: haproxy.cfg.j2
     dest: /etc/haproxy/haproxy.cfg

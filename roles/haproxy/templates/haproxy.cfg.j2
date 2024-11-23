@@ -74,6 +74,8 @@ listen health
     option dontlognull
 
 
+# Using map files blue/green:
+# https://www.haproxy.com/documentation/haproxy-configuration-tutorials/core-concepts/map-files/#map-files-for-blue-green-deployments
 
 frontend {{ haproxy_url }}:80
     mode http
