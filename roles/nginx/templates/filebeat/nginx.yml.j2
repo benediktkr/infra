@@ -1,9 +1,10 @@
+# {{ansible_managed}}
+
 - type: filestream
   id: "nginx-access-glob"
   paths:
     - /var/log/nginx/access_*.log
     - /var/log/nginx/access.log
-
 
   {% if kibana_url is defined -%}
   prospector.scanner.exclude_files:
