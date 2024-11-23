@@ -22,7 +22,7 @@ server {
   {% if nginx_http2 -%}
   http2 on;
   {% else -%}
-  http2 off;
+  #http2 off;
   {% endif %}
 
   # listen   [::]:443 ssl; # listen for ipv6

@@ -1,10 +1,10 @@
 # {{ ansible_managed }}
 
 [[inputs.nginx]]
-  urls = [
-    {% if 'address' in ansible_default_ipv4 -%}
-    "http://{{ inventory_hostname }}/server_status"
-    {% else -%}
-    "http://localhost/server_status"
-    {% endif -%}
-  ]
+    urls = [
+{%      if false and 'address' in ansible_default_ipv4 %}
+        "http://{{ inventory_hostname }}/server_status"
+{%      else %}
+        "http://localhost/server_status"
+{%      endif %}
+    ]

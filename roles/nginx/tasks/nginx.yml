@@ -82,7 +82,8 @@
   tags:
     - nginx-conf
     - nginx.d
-  notify: reload nginx
+  notify:
+    - reload nginx
 
 - name: template config files
   template:
@@ -104,7 +105,8 @@
     - nginx-well-known
     - gitea-nginx
     - www-nginx
-  notify: reload nginx
+  notify:
+    - reload nginx
 
 - name: template html files
   template:
@@ -114,6 +116,9 @@
     label: "{{ item }}"
   with_items:
     - index.html
+  tags:
+    - www-nginx
+    - nginx-conf
 
 - name: template default vhosts
   template:
@@ -126,6 +131,7 @@
     - nginx-default-vhost
     - nginx-default-cert
     - nginx-cert
+    - www-nginx
 
 - name: remove default vhosts on systems that dont use it
   file:
@@ -186,6 +192,7 @@
     - restart telegraf
   tags:
     - nginx-telegraf
+    - www-nginx
     - telegraf
 
 - name: template filebeat config
@@ -198,4 +205,6 @@
   tags:
     - filebeat
     - filebeat-nginx
+    - nginx-filebeat
+    - www-nginx
   notify: restart filebeat

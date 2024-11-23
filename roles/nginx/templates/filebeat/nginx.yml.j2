@@ -5,34 +5,18 @@
   paths:
     - /var/log/nginx/access_*.log
     - /var/log/nginx/access.log
-
-  {% if kibana_url is defined -%}
+{% if kibana_url is defined %}
   prospector.scanner.exclude_files:
     - /var/log/nginx/access_{{ kibana_url }}.log
-  {% endif %}
-
+{% endif %}
   scan_frequency: 10s
   enabled: true
-
   parsers:
     - ndjson:
         keys_under_root: true
         add_error_key: true
-
   fields_under_root: true
   fields:
     service.type: nginx
-
   tags:
     - nginx
-
-{# - type: filestream
- #   id: "nginx-error-glob"
- #   paths:
- #     - /var/log/nginx/error_*.log
- #
- #   enabled: true
- #
- #   tags:
- #     - nginx
- #     - nginx-error #}
