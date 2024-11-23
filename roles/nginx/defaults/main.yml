@@ -4,5 +4,7 @@ letsencrypt_defaults: []
 nginx_vhosts: []
 nginx_subdirs: {}
 
-nginx_cleanup: true
+nginx_default_vhost: true
 nginx_http2: true
+
+nginx_cleanup: true

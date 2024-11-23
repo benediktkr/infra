@@ -125,7 +125,7 @@
     src: 00-default.j2
     dest: /etc/nginx/sites-enabled/00-default
   notify: reload nginx
-  when: nginx_default_vhost|default(true)
+  when: nginx_default_vhost
   tags:
     - nginx-config
     - nginx-default-vhost
