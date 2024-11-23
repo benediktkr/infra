@@ -53,10 +53,6 @@
         owner: www-data
         group: www-data
         mode: "0750"
-      - dir: redis/data
-        owner: 999
-        group: 999
-        mode: "0755"
     - "{{ nextclouds }}"
 
 - name: copy our php-fpm.d/www.conf
@@ -139,17 +135,29 @@
     label: "{{ item.name }}"
   when: false
 
+- name: crete redis dirs
+  file:
+    path: "/srv/redis/{{ item.name }}/data"
+    state: directory
+    mode: "0755"
+    owner: 999
+    group: 999
+  when: item.redis
+  with_items: "{{ nextclouds }}"
+  loop_control:
+    label: "/srv/redis/{{ item.name }}"
+
 - name: redis containers
   docker_container:
     name: "redis_{{ item.name }}"
     image: "redis:latest"
-    hostname: "redis_{{ item.name }}"
+    restart_policy: "unless-stopped"
     auto_remove: false
     detach: true
     pull: true
     state: "{{ item.state | default('started') }}"
-    restart_policy: "unless-stopped"
     container_default_behavior: compatibility
+    hostname: "redis_{{ item.name }}"
     env:
       REDIS_HOST: "redis_{{ item.name }}"
     networks_cli_compatible: false
@@ -162,7 +170,7 @@
       test: "redis-cli --raw incr ping"
     mounts:
       - type: bind
-        source: "{{ item.root }}/redis/data"
+        source: "/srv/redis/{{ item.name }}/data"
         target: /data
   when: item.redis
   with_items: "{{ nextclouds }}"
