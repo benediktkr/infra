@@ -75,12 +75,13 @@ listen health
 
 
 
-frontend https-redirect
+frontend {{ haproxy_url }}:80
     mode http
     bind :80
 
     http-request redirect code 301 location https://{{ domain }}%[capture.req.uri] if { req.hdr(host) -i {{ domain }} }
     http-request redirect code 301 location https://www.{{ domain }}%[capture.req.uri] if { req.hdr(host) -i www.{{ domain }} }
+    #use_backend health if { req.hdr(host) -i {{ haproxy_url }} }
     http-request redirect code 301 scheme https
 
 frontend {{ haproxy_url }}
