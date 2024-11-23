@@ -66,6 +66,7 @@
     - reload nginx
   tags:
     - nginx-dhparam.pem
+    - nginx-sec.conf
 
 - name: make cache dir
   file:
@@ -99,6 +100,7 @@
     - nginx-conf.d
     - nginx.d
     - www-nginx
+    - nginx-sec.conf
   notify:
     - reload nginx
 
