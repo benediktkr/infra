@@ -1,12 +1,14 @@
 
 add_header X-Sudo "true" always;
 
-add_header Referrer-Policy "no-referrer" always;
-add_header X-Content-Type-Options "nosniff" always;
-
 add_header Content-Security-Policy "default-src https: 'unsafe-eval' 'unsafe-inline'; img-src 'self' data: https://*.{{domain }}; script-src 'self' 'unsafe-inline' https://*.{{ domain }} https://cdnjs.cloudflare.com; frame-ancestors 'self' {{ cast_refer }} {%- for d in server_names %} https://*.{{ d }}{% endfor %}; style-src 'self' 'unsafe-inline' https://*.{{ domain }} https://cdnjs.cloudflare.com; object-src 'none'; form-action 'self'; base-uri 'self' *.{{ domain }};" always;
 add_header X-Permitted-Cross-Domain-Policies "none" always;
+add_header Referrer-Policy "no-referrer" always;
+
+# sec.conf
+add_header X-Content-Type-Options "nosniff" always;
 add_header X-XSS-Protection "1; mode=block" always;
+
 
 {#
  # Recomended: 2y

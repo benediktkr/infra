@@ -49,9 +49,23 @@
     - nginx-cert
     - nginx-default-vhost
     - nginx-default-cert
-  notify: reload nginx
+  notify:
+    - reload nginx
   vars:
     prediff_cmd: echo
+
+- name: copy dhparam.pem
+  copy:
+    src: private/nginx/dhparam.pem
+    dest: /etc/nginx/dhparam.pem
+    owner: root
+    group: root
+    mode: "0644"
+  no_log: true
+  notify:
+    - reload nginx
+  tags:
+    - nginx-dhparam.pem
 
 - name: make cache dir
   file:
@@ -78,10 +92,13 @@
     src: "conf.d/{{ item }}.j2"
     dest: /etc/nginx/conf.d/{{ item }}
   with_items:
+    #- sec.conf
     - uploadsize.conf
   tags:
     - nginx-conf
+    - nginx-conf.d
     - nginx.d
+    - www-nginx
   notify:
     - reload nginx
 

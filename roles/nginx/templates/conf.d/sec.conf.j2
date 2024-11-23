@@ -1,0 +1,32 @@
+# {{ansible_managed}}
+#
+# See: https://syslink.pl/cipherlist/
+
+ssl_protocols TLSv1.3;
+ssl_prefer_server_ciphers on;
+ssl_dhparam /etc/nginx/dhparam.pem;
+ssl_ciphers EECDH+AESGCM:EDH+AESGCM;
+ssl_ecdh_curve secp384r1;
+
+ssl_session_timeout  10m;
+ssl_session_cache shared:SSL:10m;
+ssl_session_tickets off;
+
+# "ssl_stapling" ignored, issuer certificate not found nginx_default_cert
+#ssl_stapling on;
+#ssl_stapling_verify on;
+
+resolver_timeout 5s;
+
+add_header X-Frame-Options "DENY" always;
+add_header X-Content-Type-Options "nosniff" always;
+add_header X-XSS-Protection "1; mode=block" always;
+
+{% set age_6m = "15768000" %}
+{% set age_2y = "63072000" %}
+{% set preload = false %}
+{% set subdomains = false %}
+# https://infosec.mozilla.org/guidelines/web_security#http-strict-transport-security
+add_header Strict-Transport-Security "max-age={{ age_6m }}{% if subdomains %}; includeSubDomains{% endif %}{% if preload %}; preload{% endif %}" always;
+
+
