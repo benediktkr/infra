@@ -918,6 +918,11 @@ log_config: "/data/log.config"
 
 ## Media Store ##
 
+# Defaults to 'true' as of v.1.120.0
+# Means that clients and remote (federated) homeservers need to use the authenticated
+# media endpoints to download media from this homeserver.
+enable_authenticated_media: true
+
 # Enable the media store service in the Synapse master. Uncomment the
 # following if you are using a separate media store worker.
 #
