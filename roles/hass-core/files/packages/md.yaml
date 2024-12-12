@@ -279,7 +279,7 @@ template:
                | **Location**         | {{ package.get("location") }}                   |
                {% endif -%}
                {% if package.origin_contry -%}
-               | **Origin**          | {{ package.get("origin_country") }}              |
+               | **Origin**           | {{ package.get("origin_country") }}              |
                {% endif %}
 
             {% endfor %}
