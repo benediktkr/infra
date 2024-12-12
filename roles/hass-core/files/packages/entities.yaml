@@ -12,6 +12,9 @@ homeassistant:
       hass_logo: &hass_logo
         entity_picture: "https://www.sudo.is/img/Home_Assistant_Logo.svg"
         <<: *common_attrs
+      zigbee: &zigbee
+        proto: Zigbee
+        <<: *common_attrs
 
     binary_sensor.tamper_smokealarm_bedroom:
       friendly_name: "smokealarm_bedroom Tamper"
@@ -143,6 +146,35 @@ homeassistant:
     switch.socket_fan_livingroom:
       icon: "mdi:fan"
       <<: *common_attrs
+
+    switch.sockets_study_1_l1:
+      area: Study
+      labels:
+        - Zigbee
+      <<: *zigbee
+    switch_sockets_study_1_l2:
+      area: Study
+      labels:
+        - Zigbee
+      <<: *zigbee
+    switch.sockets_study_1_l3:
+      friendly_name: "sockets_study_1 L3 Laptops"
+      icon: "mdi:laptop"
+      area: Study
+      labels:
+        - Desk
+        - Laptop
+        - Mobile/personal devices
+        - Systems
+        - Zigbere
+      <<: *zigbee
+
+    binary_sensor.audiobookshelf_connected:
+      labels:
+        - Media
+        - Systems
+      <<: *common_attrs
+
 
 template:
   - binary_sensor:
