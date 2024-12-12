@@ -170,6 +170,7 @@ homeassistant:
       <<: *zigbee
 
     binary_sensor.audiobookshelf_connected:
+      area: Home Assistant
       labels:
         - Media
         - Systems
