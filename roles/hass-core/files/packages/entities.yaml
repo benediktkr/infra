@@ -15,8 +15,14 @@ homeassistant:
       zigbee: &zigbee
         proto: Zigbee
         <<: *common_attrs
+      audiobookshelf: &audiobookshelf
+        area: Home Assistant
+        labels:
+          - Media
+          - Systems
+        <<: *common_attrs
 
-    binary_sensor.tamper_smokealarm_bedroom:
+    binary/_sensor.tamper_smokealarm_bedroom:
       friendly_name: "smokealarm_bedroom Tamper"
       device_class: tamper
       proto: "Z-Wave"
@@ -170,12 +176,13 @@ homeassistant:
       <<: *zigbee
 
     binary_sensor.audiobookshelf_connected:
-      area: Home Assistant
-      labels:
-        - Media
-        - Systems
-      <<: *common_attrs
-
+      comment: |-
+        After upgrading the HACS integration for Audiobookshelf, this
+        sensor went away. But it was very useful.
+      <<: *audiobookshelf
+    sensor.audiobookshelf_open_sessions:
+      icon: mdi:format-quote-close
+      <<: *audiobookshelf
 
 template:
   - binary_sensor:
