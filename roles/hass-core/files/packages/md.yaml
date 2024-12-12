@@ -247,7 +247,7 @@ template:
 
             # Packages
 
-            ## Overview
+            ## [Overview](/config/devices/device/04a21b55121aa62890675207008a578b)
 
             {% if total_pkgs > 0 %}
             | Status            | Number of packages                 |
@@ -256,7 +256,7 @@ template:
             | **Not found**     | {{ not_found }} pkgs               |
             {% endif -%}
             {% if in_transit > 0 -%}
-            | In transit         | {{ in_transit }} pkgs              |
+            | In transit         | {{ in_transit }} pkgs             |
             {% endif -%}
             {% if delivered > 0 -%}
             | Delivered         | {{ delivered }} pkgs               |
@@ -270,8 +270,17 @@ template:
             {% if in_transit > 0 -%}
             {% for package in states.sensor.seventeentrack_packages_in_transit.attributes.packages %}
 
-            1. **{{ package.friendly_name }}** ( `{{ package.tracking_number }}` )
-               {{ package.info_text }}
+            1. **{{ package.friendly_name }}**
+               _{{ package.info_text }}_
+               |                      |                                                 |
+               |:---------------------|:------------------------------------------------|
+               | **Tracking number**  | [`{{ package.tracking_number }}`](https://t.17track.net/en#nums={{package.tracking_number}})  |
+               {% if package.location -%}
+               | **Location**         | {{ package.get("location") }}                   |
+               {% endif -%}
+               {% if package.origin_contry -%}
+               | **Origin**          | {{ package.get("origin_country") }}              |
+               {% endif %}
 
             {% endfor %}
             {% else %}
