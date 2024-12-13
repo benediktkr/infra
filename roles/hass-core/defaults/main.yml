@@ -11,4 +11,4 @@ hass_emulated_hue:
   enabled: false
 hass_emulated_roku:
   enabled: false
-
+hass_bluez_host: false

@@ -9,6 +9,7 @@
   tags:
     - mariadb-users
     - hass-mariadb
+    - mariadb
 
 - name: mariadb user without password
   mysql_user:
@@ -21,6 +22,7 @@
   tags:
     - mariadb-users
     - hass-mariadb
+    - mariadb
 
 - name: copy ssh key
   template:
@@ -152,18 +154,6 @@
   tags:
     - hass-git
 
-- name: install git sync script
-  template:
-    src: git-hass-config.sh.j2
-    dest: /usr/local/bin/git-hass-config.sh
-    mode: 0775
-    owner: hass
-    group: hass
-  notify: git-hass-config.sh
-  tags:
-    - hass-git
-    - hass-git-script
-
 - name: cron file
   template:
     src: hass-cron.j2
@@ -204,7 +194,6 @@
     - custom_templates/buttons_zwave.jinja
   tags:
     - hass-config
-    - hass-package
     - hass-packages
     - hass-core-config
   when:
@@ -265,7 +254,6 @@
     - hass-package
     - hass-macros
     - hass-core-config
-    - hass-core-packages
   when:
     - (hass_package is not defined) or item.startswith(hass_package)
 
@@ -360,7 +348,7 @@
     - tibber.yaml
     - private_package.yaml
     - persons.yaml
-    - night_mode.yaml
+    #- night_mode.yaml
     #- air_quality.yaml
     #- trash_collection.yaml
   tags:
@@ -392,74 +380,34 @@
     - hass-config
     - hass-core-config
 
-- name: copy scripts
-  copy:
-    src: "{{ item }}"
+- name: template scripts
+  template:
+    src: "{{ item }}.j2"
     dest: /usr/local/bin/{{ item }}
     mode: 0755
     owner: root
     group: root
   with_items:
     - check-arp-scan.sh
+    - hass-check-config.sh
+    - git-hass-config.sh
   tags:
-    - hass-scripts
     - scripts
+    - hass-scripts
+    - hass-git
 
-# key source:
-# - http://download.ag-projects.com/agp-debian-gpg.key
-# - http://download.ag-projects.com/agp-debian-key.key
-# gpg --enarmor roles/hass/files/agp-debian-gpg.key
-# binary keys: .gpg
-# ascii armor: .asc (or .key?)
-- name: add apt key for sip tools
-  copy:
-    src: "{{ item }}"
-    dest: /etc/apt/trusted.gpg.d/{{ item }}
-    owner: root
-    group: root
-    mode: "0644"
-  with_items:
-    - agp-debian-gpg.asc
-    - agp-debian-key.asc
-  tags:
-    - packages
-    - hass-sip
-    - sip
-
-# - debug:
-#     msg: "deb [signed-by=/usr/share/keyrings/agp-debian-gpg.key] http://ag-projects.com/{{ ansible_lsb.id | lower }} {{ ansible_lsb.codename }} main"
-#   tags: hass-sip
-
-# [signed-by=/usr/share/keyrings/agp-debian-gpg.gpg]
-# [signed-by=/etc/apt/trusted.gpg.d/agp-debian-gpg.asc]
-- name: add repo for sip tools
-  apt_repository:
-    #repo: "{{ item }} [signed-by=/etc/apt/trusted.gpg.d/agp-debian-key.asc] http://ag-projects.com/{{ ansible_lsb.id | lower }} {{ ansible_lsb.codename }} main"
-    repo: "{{ item }} [signed-by=/etc/apt/trusted.gpg.d/agp-debian-key.asc] http://ag-projects.com/{{ ansible_lsb.id | lower }} sid main"
-    state: present
-    update_cache: false
-  with_items:
-    - "deb"
-    - "deb-src"
-  register: sip_repo
-  tags:
-    - packages
-    - hass-sip
-    - sip
-  when: false
-
-- name: update apt if new repo was added
+- name: install own packages
   apt:
+    name:
+      # git.sudo.is/ben/build-blink1
+      - blink1
     update_cache: true
+    state: latest
   tags:
     - packages
-    - hass-sip
-    - sip
-  when:
-    - sip_repo.changed
-    - false
+    - hass-apt
+    - hass-blink1
 
-  # the host needs to have bluez installed for the container to use bluetooth
 - name: install packages
   apt:
     name:
@@ -472,28 +420,30 @@
       - ustreamer
       - vlc
       - mplayer
-      - btscanner
-      - bluez
-      - bluetooth
       - espeak-ng     # for glados-tts
       - fapg
       - podget
       - sqlite3
-      - blink1  # git.sudo.is/ben/build-blink1
       - python3-netdisco # python3 -m netdisco
       #- mosquitto
-      # # sip tools
-      # - python3-sipsimple
-      # - sipclients3
-    state: latest
+    state: present
   tags:
     - packages
+    - hass-apt
+
+- name: install bluetooth packages
+  apt:
+    name:
+      - btscanner
+      - bluez
+      - bluetooth
+    state: present
+  when:
+    - hass_bluez_host
+  tags:
+    - packages
+    - hass-apt
     - hass-bluetooth
-    - hass-core-packages
-    - hass-core-apt-packages
-    - hass-packaiges
-    - hass-sip
-    - sip
 
 - name: template bluez config
   template:
@@ -504,6 +454,8 @@
     mode: 0644
   with_items:
     - main.conf
+  when:
+    - hass_bluez_host
   loop_control:
     label: "{{ item }}"
   tags:
@@ -516,15 +468,21 @@
     name: bluetooth
     state: started
     enabled: true
+  when:
+    - hass_bluez_host
   tags:
     - hass-bluetooth
 
-# needed on debian
-- name: stop apparmor
+# needed on debian, dont remember for what
+- name: stop and disable apparmor on Debian
   service:
     name: apparmor
     enabled: false
     state: stopped
+  when:
+    - ansible_lsb.id == "Debian"
+    - ansible_distribution == "Debian"
+    - false
   tags:
     - hass-apparmor
     - apparmor
