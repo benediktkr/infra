@@ -1,0 +1,6 @@
+#!/bin/bash
+# {{ ansible_managed }}
+
+set -e
+
+docker exec hass hass -c /config --script check_config
