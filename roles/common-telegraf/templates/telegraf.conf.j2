@@ -184,6 +184,11 @@
   ## Ignore mount points by filesystem type.
   ignore_fs = ["tmpfs", "devtmpfs", "devfs", "iso9660", "overlay", "aufs", "squashfs", "nsfs", "securityfs", "debugfs", "tracefs", "configfs"]
 
+  ## Ignore mount points by mount options.
+  ## The 'mount' command reports options of all mounts in parathesis.
+  ## Bind mounts can be ignored with the special 'bind' option.
+  ignore_mount_opts = ["bind"]
+
 
 [[inputs.diskio]]
   ## By default, telegraf will gather stats for all devices including

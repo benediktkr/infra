@@ -93,7 +93,7 @@
     - influx-repo
     - packages
 
-- name: set codename to bullseye (oldstable) if trixie or bookwork
+- name: set codename to bullseye (oldstable) if trixie or bookworm
   set_fact:
     codename: bullseye
   when: ansible_lsb.codename in ["bookworm", "trixie"]
@@ -101,12 +101,11 @@
     - influx-repo
     - packages
 
-- name: set codename to focal if hirsute
+- name: set codename to focal if needed
   set_fact:
     codename: focal
   when:
-   - false
-   - ansible_lsb.codename == "hirsute"
+   - ansible_lsb.codename in ["hirsute", "noble"]
   tags:
     - influx-repo
     - packages
@@ -117,7 +116,8 @@
   when:
     - ansible_lsb.codename != "bookworm"
     - ansible_lsb.codename != "trixie"
-    #- ansible_lsb.codename != "hirsute"
+    - ansible_lsb.codename != "hirsute"
+    - ansible_lsb.codename != "noble"
   tags:
     - influx-repo
     - packages
@@ -190,6 +190,7 @@
     - restart telegraf
   tags:
     - telegraf-config
+    - telegraf.conf
 
 - name: enable telegraf
   service:
