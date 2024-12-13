@@ -7,13 +7,22 @@
       #- tlp-rdw     # install network-manager, conflicts with proxmox
       #- linux-tools-common   # cpupower
       #- linux-tools-generic
-      - linux-cpupower
       - vbetool
       - x11-xserver-utils
       - upower
       - powertop
       - rfkill
     state: present
+  tags:
+    - packages
+
+- name: install packages on Debian
+  apt:
+    name:
+      - linux-cpupower
+    state: present
+  when:
+    - ansible_lsb.id == "Debian"
   tags:
     - packages
 
