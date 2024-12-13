@@ -126,7 +126,7 @@
     pull: true
     state: started
     container_default_behavior: compatibility
-    memory: "3G"
+    memory: "4G"
     mounts:
       - type: bind
         source: /usr/local/etc/certs/{{ domain }}
