@@ -11,7 +11,7 @@ server {
     {% if nginx_http2 -%}
     http2 on;
     {% else -%}
-    http2 off;
+    #http2 off;
     {% endif %}
 
     # include listen-proxy-protocol.conf;
@@ -70,8 +70,8 @@ server {
     location /_zigbee2mqtt/ {
         include /etc/nginx/require_auth.conf;
 
-        sub_filter '/assets/' '/_zigbee2mqtt/assets/';
-        sub_filter '/static/' '/_zigbee2mqtt/static/';
+        #sub_filter '/assets/' '/_zigbee2mqtt/assets/';
+        #sub_filter '/static/' '/_zigbee2mqtt/static/';
         sub_filter '.js">' '.js?id=$request_id">';
         #sub_filter_types '*';
         sub_filter_once off;
@@ -114,7 +114,7 @@ server {
     access_log /var/log/nginx/access_{{ zwavejs_url }}.log main;
     error_log /var/log/nginx/error_{{ zwavejs_url }}.log warn;
 
-    ssl_session_timeout 5m;
+    #ssl_session_timeout 5m;
     ssl_certificate /usr/local/etc/certs/{{ domain }}/fullchain.pem;
     ssl_certificate_key /usr/local/etc/certs/{{ domain }}/privkey.pem;
 
