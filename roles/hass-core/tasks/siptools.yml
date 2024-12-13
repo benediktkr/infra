@@ -1,0 +1,70 @@
+---
+
+# key source:
+# - http://download.ag-projects.com/agp-debian-gpg.key
+# - http://download.ag-projects.com/agp-debian-key.key
+# gpg --enarmor roles/hass/files/agp-debian-gpg.key
+# binary keys: .gpg
+# ascii armor: .asc (or .key?)
+- name: add apt key for sip tools
+  copy:
+    src: "{{ item }}"
+    dest: /etc/apt/trusted.gpg.d/{{ item }}
+    owner: root
+    group: root
+    mode: "0644"
+  with_items:
+    - agp-debian-gpg.asc
+    - agp-debian-key.asc
+  tags:
+    - packages
+    - hass-sip
+    - sip
+
+# - debug:
+#     msg: "deb [signed-by=/usr/share/keyrings/agp-debian-gpg.key] http://ag-projects.com/{{ ansible_lsb.id | lower }} {{ ansible_lsb.codename }} main"
+#   tags: hass-sip
+
+# [signed-by=/usr/share/keyrings/agp-debian-gpg.gpg]
+# [signed-by=/etc/apt/trusted.gpg.d/agp-debian-gpg.asc]
+- name: add repo for sip tools
+  apt_repository:
+    #repo: "{{ item }} [signed-by=/etc/apt/trusted.gpg.d/agp-debian-key.asc] http://ag-projects.com/{{ ansible_lsb.id | lower }} {{ ansible_lsb.codename }} main"
+    repo: "{{ item }} [signed-by=/etc/apt/trusted.gpg.d/agp-debian-key.asc] http://ag-projects.com/{{ ansible_lsb.id | lower }} sid main"
+    state: present
+    update_cache: false
+  with_items:
+    - "deb"
+    - "deb-src"
+  register: sip_repo
+  tags:
+    - packages
+    - hass-sip
+    - sip
+  when: false
+
+- name: update apt if new repo was added
+  apt:
+    update_cache: true
+  tags:
+    - packages
+    - hass-sip
+    - sip
+  when:
+    - sip_repo.changed
+    - false
+
+- name: install packages
+  apt:
+    name:
+      - python3-sipsimple
+      - sipclients3
+    state: present
+  tags:
+    - packages
+    - hass-bluetooth
+    - hass-core-packages
+    - hass-core-apt-packages
+    - hass-packaiges
+    - hass-sip
+    - sip
