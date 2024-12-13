@@ -16,7 +16,7 @@ server {
     add_header Connection "";
 
     listen 443 ssl;
-    http2 off;
+    #http2 off;
 
     {% if inventory_hostname in wg_clients -%}
     listen {{ wg_clients[inventory_hostname].ip }}:443 ssl;
@@ -173,7 +173,8 @@ server {
      # When turning ssl back on, also remember to uncomment proxy_set_header
      #listen {{ ansible_default_ipv4.address }}:{{ owntone_port_ws }};
      {% endif %}
-     http2 off;
+
+     #http2 off;
 
      server_name {{ owntone_url }};
 
