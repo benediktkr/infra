@@ -24,6 +24,5 @@
     - hass-rtl433-udev
     - hass-blink1-udev
 
-- meta: flush_handlers
-
-
+- name: trigger handlers
+  meta: flush_handlers
