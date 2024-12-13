@@ -68,19 +68,16 @@ homeassistant:
       <<: *common_attrs
     sensor.battery_level_ben_phone:
       device_class: battery
-      state_class: measurement
       <<: *common_attrs
     binary_sensor.ben_phone_low_power_mode:
       friendly_name: "Low power mode on ben-phone"
       <<: *common_attrs
     sensor.battery_level_ben_phone_icloud:
       device_class: battery
-      state_class: measurement
       <<: *common_attrs
 
     sensor.battery_level_oxygen:
       device_class: battery
-      state_class: measurement
       <<: *common_attrs
     binary_sensor.oxygen_low_power_mode:
       friendly_name: "oxygen Low power mode"
@@ -91,7 +88,6 @@ homeassistant:
 
     sensor.battery_level_oxygen_icloud:
       device_class: battery
-      state_class: measurement
       <<: *common_attrs
 
     sensor.notflix_sudo_is:
