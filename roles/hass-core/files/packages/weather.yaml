@@ -29,28 +29,12 @@ homeassistant:
       distance_threshold: 25.0
       <<: *common_attrs
 
-    binary_sensor.rain_balcony_bucket:
-      friendly_name: Balcony tipping bucket rain sensor
-      templated: false
-      helper: true
-      helper_kind: "threshold"
-      helper_ui: true
-      comment: "A threshold helper sensor set up i the UI (to get it on the device page...)"
-      <<: *common_attrs
-
     # binary_sensor.rain_balcony
     binary_sensor.rain_balcony:
       friendly_name: Rain detected on balcony
       templated: false
       group: true
-      comment: >-
-        Grouping rain detector sensors.
-
-        The sensor for the z-wave tipping bucket in the group is a helper set
-        up in the UI.
-
-        Neither the UI "threshold sensor" nor groups can set a 'delay_off', so
-        the group should be changed into a binary_sensor (template).
+      comment: "A group with one member, bucket sensor is gone"
 
     binary_sensor.meteoalarm:
       friendly_name: "MeteoAlarm (EUMETNET)"
@@ -593,7 +577,6 @@ binary_sensor:
     device_class: moisture
     all: false
     entities:
-      - binary_sensor.rain_balcony_bucket
       - binary_sensor.esphome_rainsensor_rain
 
 sensor:
