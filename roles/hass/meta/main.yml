@@ -15,10 +15,10 @@ dependencies:
       - nfs
       - homeaudio
 
-  - role: mass
-    tags:
-      - mass
-      - hass-mass
+  #- role: mass
+  #  tags:
+  #    - mass
+  #    - hass-mass
   - role: cmus
     tags: cmus
 
@@ -34,7 +34,6 @@ dependencies:
     tags:
       - icecast
       - homeaudio
-
 
   - role: hass-udev
     tags: hass-udev
@@ -61,6 +60,7 @@ dependencies:
     tags: hass-esphome
   - role: hass-rtl433
     tags: hass-rtl433
+    when: hass_rtl433|default(false)
 
   #- role: vlcd
   #  tags:
