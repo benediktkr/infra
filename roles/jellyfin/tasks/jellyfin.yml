@@ -99,6 +99,7 @@
     auto_remove: false
     detach: true
     pull: true
+    image_name_mismatch: "recreate"
     restart_policy: "unless-stopped"
     state: started
     user: "{{ systemuserlist.jellyfin.uid }}:{{ grouplist.media.gid }}"
