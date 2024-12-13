@@ -275,10 +275,10 @@ template:
                |                      |                                                 |
                |:---------------------|:------------------------------------------------|
                | **Tracking number**  | [`{{ package.tracking_number }}`](https://t.17track.net/en#nums={{package.tracking_number}})  |
-               {% if package.location -%}
+               {% if "location" in package -%}
                | **Location**         | {{ package.get("location") }}                   |
                {% endif -%}
-               {% if package.origin_contry -%}
+               {% if "origin_country" in package -%}
                | **Origin**           | {{ package.get("origin_country") }}              |
                {% endif %}
 
