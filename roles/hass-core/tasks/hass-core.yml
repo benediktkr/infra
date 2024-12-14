@@ -514,6 +514,14 @@
     capabilities:
       - SYS_ADMIN
       - NET_ADMIN
+    # Both `edns0` and `trust-ad` are in /etc/resolv.conf by default
+    dns_opts:
+      # Support for RFC 2671 (DNS extension).
+      - edns0
+      # The configuration file is considered a trusted source of DNS information
+      - trust-ad
+      # Used to prevent AAAA requests
+      - single-request
     env:
       TZ: "Etc/UTC"
       DISPLAY: ":0"
