@@ -391,11 +391,6 @@ recorder:
       - sensor.esphome_*_private_ble_*_esphome_proxy
       - sensor.esphome_*_baseline_0xco2eq
       - sensor.esphome_*_baseline_0xtvoc
-      #- sensor.*_rx
-      #- sensor.*_tx
-      #- sensor.unifi_rx_esphome_*
-      #- sensor.unifi_tx_esphome_*
-      #- sensor.unifi_uptime_*
       - sensor.ble_private_source_*
       - sensor.tile_*
       - device_tracker.tile_*
@@ -421,20 +416,6 @@ recorder:
       - sensor.esphome_*_electric_w
       - sensor.esphome_*_electric_w_*
       - sensor.esphome_electric_w_*
-
-
-# ping_motion_hallway_west
-# firmware_motion_hallway_west
-# idle_tamper_motion_hallway_west
-# idle_motion_hallway_west
-# battery_level_motion_hallway_west
-# node_status_motion_hallway_west
-# illuminance_motion_hallway_west
-# air_temparature_hallway_west_motion
-# basic_motion_hallway_north
-# sensor_status_motion_bedroom_east
-# tamper_motion_bedroom_east
-# seismic_intensity_motion_study_north
 
 sensor:
   - platform: websocket_api
@@ -463,6 +444,7 @@ sensor:
   - platform: worldclock
     time_zone: America/Chicago
     name: Austin
+
   - platform: linux_battery
     name: battery_level_system
     system: linux
@@ -530,7 +512,6 @@ input_select:
     initial: "off"
     icon: mdi:thermometer-lines
 
-
 input_number:
   heating_setpoint_test:
     name: Heating Setpoint Test
@@ -539,7 +520,6 @@ input_number:
     min: 0
     max: 35
     step: 0.5
-
 
 #influxdb:
 #  api_version: "1"
