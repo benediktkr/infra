@@ -31,6 +31,7 @@
     owner: root
     group: root
     mode: 0644
+  notify: update initramfs
   when: '"name" in luks_crypttab.root.keys()'
 
 - name: ensure luks volumes are open
@@ -52,6 +53,7 @@
     # present: add to fstab, mounted: mount and add to fstab
     state: mounted
     opts: nofail
+  notify: update initramfs
   with_items: "{{ luks_crypttab.disks }}"
   loop_control:
     label: "{{ item.name }}"
