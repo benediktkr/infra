@@ -1,6 +1,6 @@
 ---
 
-- name: install systemd-cryptsetup, busybox, cryptsetup and dropbear
+- name: install busybox, cryptsetup and dropbear
   apt:
     name:
       - busybox
@@ -8,12 +8,21 @@
       - dropbear-initramfs
       - cryptsetup
       - cryptsetup-initramfs
-      - systemd-cryptsetup
     state: latest
     update_cache: true
   tags:
     - packages
+
+- name: install systemd-cryptsetup
+  apt:
+    name:
+      - systemd-cryptsetup
+    state: latest
   notify: update initramfs
+  tags:
+    - packages
+  when:
+    - ansible_distribution == "Debian"
 
 - name: copy LUKS keyfile
   copy:
