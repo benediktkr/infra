@@ -36,7 +36,6 @@
     - packages
     # - wwwsudois
     # - www.sudo.is
-    - apt.sudo.is
 
 - name: copy nginx_default_cert
   copy:
