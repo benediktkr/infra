@@ -19,10 +19,13 @@ dependencies:
 
   # condially common
 
-  # group: fde
-  - role: fde-dropbear
-    tags: fde
-    when: inventory_hostname in groups.fde
+  # group: luks
+  - role: common-luks
+    tags:
+      - common-luks
+      - fde-dropbear
+      - fde
+    when: inventory_hostname in groups.luks
 
   # group: wireguard
   - role: wireguard
