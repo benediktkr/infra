@@ -5,6 +5,29 @@
 - debug:
     var: ansible_architecture
 
+- name: clean up keys and sources with invalid names and paths
+  file:
+    state: absent
+    path: "{{ item }}"
+  loop_control:
+    label: "{{ item }}"
+  with_items:
+    # needs [signed-by]
+    - /etc/apt/trusted.gpg.d/download.docker.com.gpg.asc
+    # trusted
+    - /usr/share/keyrings/download.docker.com.gpg.asc
+
+- name: clean up extra repos.d files with other files
+  file:
+    path: "/etc/apt/sources.list.d/{{ item }}"
+    state: absent
+  loop_control:
+    label: "{{ item }}"
+  with_items:
+    - download_docker_com_linux_debian.list
+    - download_docker_com_linux_ubuntu.list
+    - download_docker_com_linux_raspbian.list
+
 
 - name: set arch to armhf for raspi/armv7l
   set_fact:
@@ -56,43 +79,46 @@
    - ansible_lsb.codename == "bullseye"
 
 - name: add apt key
-  get_url:
-    url: https://download.docker.com/linux/debian/gpg
-    dest: "{{ item }}/download.docker.com.gpg.asc"
-  with_items:
-    # needs [signed-by]
-    - /usr/share/keyrings
-    # trusted
-    - /etc/apt/trusted.gpg.d
+  copy:
+    src: docker.asc
+    dest: /usr/share/keyrings/docker.asc
+    owner: root
+    group: root
+    mode: '0644'
+  tags:
+    - docker-repo
+    - packages
+
+- name: install key for docker repo
+  copy:
+    src: docker.asc
+    dest: /usr/share/keyrings/docker.asc
+    owner: root
+    group: root
+    mode: '0644'
+  tags:
+    - docker-repo
+    - packages
+
+- name: add repo
+  template:
+    src: docker.list.j2
+    dest: /etc/apt/sources.list.d/docker.list
+    mode: "0644"
+    owner: root
+    group: root
+  register: docker_repo
   tags:
     - packages
-    - docker-apt-key
-  when: ansible_lsb.codename != "bullseye"
+    - docker-repo
 
-- name: set codename to bookworm (stable) if trixie (testing)
-  set_fact:
-    codename: bookworm
+- name: update apt cache if docker repo changed
+  apt:
+    update_cache: true
   when:
-   - ansible_lsb.codename in ["trixie"]
+    - docker_repo.changed
   tags:
     - packages
-
-- name: "otherwise use lsb codename ('{{ ansible_lsb.codename }}')"
-  set_fact:
-    codename: "{{ ansible_lsb.codename }}"
-  when:
-    - ansible_lsb.codename != "trixie"
-  tags:
-    - influx-repo
-    - packages
-
-- name: "add repo (codename: '{{ codename }}')"
-  apt_repository:
-    repo: "deb [arch={{ arch }}] https://download.docker.com/linux/{{ ansible_lsb.id | lower }} {{ codename | lower }} stable"
-    state: present
-  tags:
-    - packages
-  when: ansible_lsb.codename != "bullseye"
 
 - name: install docker packages
   apt:

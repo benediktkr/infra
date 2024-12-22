@@ -1,0 +1,10 @@
+# {{ ansible_managed }}
+{% if ansible_lsb.codename in ["trixie"] -%}
+{% set codename = "bookworm" -%}
+{% else -%}
+{% set codename = ansible_lsb.codename -%}
+{% endif -%}
+# id: {{ ansible_lsb.id | lower }}
+# codename: {{ codename }}
+
+deb [arch={{ arch }} signed-by=/usr/share/keyrings/docker.asc] https://download.docker.com/linux/{{ ansible_lsb.id | lower }} {{ codename }} stable
