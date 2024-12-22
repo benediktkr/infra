@@ -1,5 +1,25 @@
 ---
 
+- name: clean up repo keys with invalid names or paths
+  file:
+    state: absent
+    path: "{{ item }}"
+  loop_control:
+    label: "{{ item }}"
+  with_items:
+    - /usr/share/keyrings/influxdb-archive-keyring.gpg
+
+- name: clean up extra repos.d files with other files
+  file:
+    path: "/etc/apt/sources.list.d/{{ item }}"
+    state: absent
+  loop_control:
+    label: "{{ item }}"
+  with_items:
+    - repos_influxdata_com_debian.list
+    - repos_influxdata_com_ubuntu.list
+    - repos_influxdata_com_raspbian.list
+
 - name: group for telegraf user
   group:
     state: present
@@ -91,15 +111,6 @@
     - influx-repo
     - packages
 
-- name: clean up repo keys with invalid names or paths
-  file:
-    state: absent
-    path: "{{ item }}"
-  loop_control:
-    label: "{{ item }}"
-  with_items:
-    - /usr/share/keyrings/influxdb-archive-keyring.gpg
-
 # There is currently a bug in the `python3-apt` package for
 # Debian testing/trixie, which the `apt_repository` module
 # uses on the host.
@@ -122,35 +133,6 @@
   tags:
     - packages
     - influx-repo
-
-- name: clean up extra repos.d files with other files
-  file:
-    path: "/etc/apt/sources.list.d/{{ item }}"
-    state: absent
-  loop_control:
-    label: "{{ item }}"
-  with_items:
-    - repos_influxdata_com_debian.list
-    - repos_influxdata_com_ubuntu.list
-    - repos_influxdata_com_raspbian.list
-
-# Commented out due to the bug on Debian testing/trixie
-#- name: ensure no wrong repo definitions
-#  apt_repository:
-#    repo: "{{ item }}"
-#    state: absent
-#    update_cache: false
-#    codename: "{{ ansible_distribution_release }}"
-#  loop_control:
-#    label: "{{ item }}"
-#  with_items:
-#   - "deb https://repos.influxdata.com/{{ distro | lower }} {{ codename }} stable"
-#   - "deb [signed-by=/usr/share/keyrings/influxdb-archive-keyring.gpg] https://repos.influxdata.com/{{ distro | lower }} {{ codename }} stable"
-#   - "deb [signed-by=/usr/share/keyrings/influxdb-archive-keyring.asc] https://repos.influxdata.com/{{ distro | lower }} {{ codename }} stable"
-#   - "deb [signed-by=/usr/share/keyrings/influxdb-archive-keyring.asc] https://repos.influxdata.com/{{ distro | lower }} {{ ansible_distribution_release }} stable"
-#  tags:
-#    - packages
-#    - influx-repo
 
 - name: update apt cache if influxdata repo changed
   apt:
