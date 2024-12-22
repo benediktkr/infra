@@ -17,24 +17,47 @@
   tags:
     - packages
 
-- name: remove repo definition without 'signed-by'
-  apt_repository:
-    repo: "deb https://artifacts.elastic.co/packages/7.x/apt stable main"
-    state: absent
-    update_cache: false
-  tags:
-    - packages
+# There is currently a bug in the `python3-apt` package for
+# Debian testing/trixie, which the `apt_repository` module
+# uses on the host.
+#
+# >>> import platform
+# >>> platform.freedesktop_os_release()["VERSION"]
+# KeyError: 'VERSION'
+#
+# So instead of using the `apt_repository` module, we just
+# template the file in place instead.
 
-- name: add elastic.co repo with 'signed-by'
-  apt_repository:
-    repo: "deb [signed-by=/usr/share/keyrings/elasticsearch-keyring.asc] https://artifacts.elastic.co/packages/7.x/apt stable main"
-    state: present
-    filename: elastic.co
-    update_cache: true
-  when:
-    - ansible_architecture != "armv7l"
+- name: add repo
+  template:
+    src: elastic.co.list.j2
+    dest: /etc/apt/sources.list.d/elastic.co.list
+    mode: "0644"
+    owner: root
+    group: root
   tags:
     - packages
+    - influx-repo
+
+# Commented out due to the bug on Debian testing/trixie
+#- name: remove repo definition without 'signed-by'
+#  apt_repository:
+#    repo: "deb https://artifacts.elastic.co/packages/7.x/apt stable main"
+#    state: absent
+#    update_cache: false
+#  tags:
+#    - packages
+#
+#- name: add elastic.co repo with 'signed-by'
+#  apt_repository:
+#    repo: "deb [signed-by=/usr/share/keyrings/elasticsearch-keyring.asc] https://artifacts.elastic.co/packages/7.x/apt stable main"
+#    state: present
+#    filename: elastic.co
+#    update_cache: true
+#  when:
+#    - ansible_architecture != "armv7l"
+#  tags:
+#    - packages
 
 - name: install filebeat
   apt:
