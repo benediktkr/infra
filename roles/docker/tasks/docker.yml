@@ -29,24 +29,6 @@
     - download_docker_com_linux_raspbian.list
 
 
-- name: set arch to armhf for raspi/armv7l
-  set_fact:
-    arch: armhf
-  when: ansible_lsb.id == "Raspbian" or ansible_architecture == "armv7l"
-  tags: packages
-
-- name: set arch to amd64 if x86_64
-  set_fact:
-    arch: amd64
-  when: ansible_architecture == "x86_64"
-  tags: packages
-
-- name: set arch to arm64 if aarch64
-  set_fact:
-    arch: arm64
-  when: ansible_architecture == "aarch64"
-  tags: packages
-
 - name: install docker dependencies for raspbian
   apt:
     name:
