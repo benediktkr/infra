@@ -3,6 +3,6 @@
 {% set root_opts = ["luks", root.options|default([])] | flatten -%}
 {{ root.name }} UUID={{ root.uuid }} none {{ root_opts|join(",") }}
 {% for item in luks_crypttab.disks|default([]) -%}
-{% set item_opts = ["luks", item.options|default([])] | flatten -%}
+{%   set item_opts = ["luks", item.options|default([])] | flatten -%}
 {{ item.name }} UUID={{ item.uuid }} {{ item.keyfile | default(luks_keyfile) }} {{ item_opts | join(",") }}
 {% endfor %}
