@@ -37,46 +37,58 @@
 
 - name: add luks volumes to fstab without mounting
   mount:
-    path: "{{ item.mountpoint }}"
+    path: |-
+      {{ item.mountpoint|default("/mnt/" ~ item.name) }}
     src: /dev/mapper/{{ item.name }}
-    fstype: "{{ item.fstype }}"
+    fstype: "{{ item.fstype|default('ext4') }}"
     # present: add to fstab, mounted: mount and add to fstab
     state: present
   with_items: "{{ deadspace_crypttab.disks }}"
-  when: '"mountpoint" in item '
   loop_control:
     label: "{{ item.name }}"
   tags:
     - crypttab
     - deadspace-mounts
 
-#- name: mount luks volumes
-#  mount:
-#    path: "{{ item.mountpoint }}"
-#    src: /dev/mapper/{{ item.name }}
-#    fstype: "{{ item.fstype }}"
-#    # present: add to fstab, mounted: mount and add to fstab
-#    #state: present
-#    state: mounted
-#  with_items: "{{ deadspace_crypttab.disks }}"
-#  when: '"mountpoint" in item '
-#  ignore_errors: true
-#  loop_control:
-#    label: "{{ item.name }}"
-#  tags:
-#    - crypttab
-#    - deadspace-mounts
-
-- name: mount luks volumes if they are unlocked
-  command: mount-if-exists.sh {{ item.name }} {{ item.mountpoint }}
+- name: ensure luks volumes are open
+  luks_device:
+    name: "{{ item.name }}"
+    uuid: "{{ item.uuid }}"
+    keyfile: "{{ deadspace_keyfile }}"
+    state: opened
   with_items: "{{ deadspace_crypttab.disks }}"
   loop_control:
     label: "{{ item.name }}"
-  when: '"mountpoint" in item'
-  register: mount_if_exists
-  changed_when: '"mounted "~item.name in mount_if_exists.stdout'
   tags:
+    - crypttab
     - deadspace-mounts
+
+
+- name: mount luks volumes
+  mount:
+    path: |-
+      {{ item.mountpoint|default("/mnt/" ~ item.name) }}
+    src: /dev/mapper/{{ item.name }}
+    fstype: "{{ item.fstype|default('ext4') }}"
+    # present: add to fstab, mounted: mount and add to fstab
+    state: mounted
+  with_items: "{{ deadspace_crypttab.disks }}"
+  loop_control:
+    label: "{{ item.name }}"
+  tags:
+    - crypttab
+    - deadspace-mounts
+
+#- name: mount luks volumes if they are unlocked
+#  command: mount-if-exists.sh {{ item.name }} {{ item.mountpoint }}
+#  with_items: "{{ deadspace_crypttab.disks }}"
+#  loop_control:
+#    label: "{{ item.name }}"
+#  when: '"mountpoint" in item'
+#  register: mount_if_exists
+#  changed_when: '"mounted "~item.name in mount_if_exists.stdout'
+#  tags:
+#    - deadspace-mounts
 
 - name: install packages
   apt:
