@@ -39,26 +39,6 @@
     - packages
     - influx-repo
 
-# Commented out due to the bug on Debian testing/trixie
-#- name: remove repo definition without 'signed-by'
-#  apt_repository:
-#    repo: "deb https://artifacts.elastic.co/packages/7.x/apt stable main"
-#    state: absent
-#    update_cache: false
-#  tags:
-#    - packages
-#
-#- name: add elastic.co repo with 'signed-by'
-#  apt_repository:
-#    repo: "deb [signed-by=/usr/share/keyrings/elasticsearch-keyring.asc] https://artifacts.elastic.co/packages/7.x/apt stable main"
-#    state: present
-#    filename: elastic.co
-#    update_cache: true
-#  when:
-#    - ansible_architecture != "armv7l"
-#  tags:
-#    - packages
-
 - name: install filebeat
   apt:
     name:
