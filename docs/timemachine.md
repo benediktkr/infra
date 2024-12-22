@@ -22,3 +22,6 @@ mount -t hfsplus /path/to/timemachine.img /timemachine -o rw,force,user
 ```
 
 This role doesn't add it to fstab, since for me it's an image file running on a LUKS volume, which isn't in `/etc/crypttab` for various reasons.
+
+
+https://blog.jhnr.ch/2023/01/09/setup-apple-time-machine-network-drive-with-samba-on-ubuntu-22.04/

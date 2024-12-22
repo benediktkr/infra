@@ -294,6 +294,7 @@
 - name: install common pip packages to the common-scripts venv
   pip:
     name:
+      - pip
       - influxdb
       - loguru
       - requests
