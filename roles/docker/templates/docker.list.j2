@@ -1,19 +1,19 @@
 # {{ ansible_managed }}
 # id: {{ ansible_lsb.id | lower }}
 {% if ansible_lsb.codename in ["trixie"] -%}
-{% set codename = "bookworm" -%}
+{%   set codename = "bookworm" -%}
 {% else -%}
-{% set codename = ansible_lsb.codename -%}
+{%   set codename = ansible_lsb.codename -%}
 {% endif -%}
 # codename: {{ codename }}
 {% if ansible_lsb.id == "Raspbian" or ansible_architecture == "armv7l" -%}
-{% set arch = "armhf" -%}
+{%   set arch = "armhf" -%}
 {% elif ansible_architecture == "x86_64" -%}
-{% set arch = "amd64" -%}
+{%   set arch = "amd64" -%}
 {% elif ansible_architecture == "aarch64" -%}
-{% set arch = "arm64" -%}
+{%   set arch = "arm64" -%}
 {% else -%}
-{% set arch = ansible_architecture -%}
+{%   set arch = ansible_architecture -%}
 {% endif -%}
 # arch: {{ arch }}
 
