@@ -72,63 +72,10 @@
 #  with_items: "{{ systemuserlist.telegraf.groups }}"
 #  when: 'item in etc_groups.stdout_lines'
 
-# sudo gpg --no-default-keyring --keyring /usr/share/keyrings/influxdb-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys D8FF8E1F7DF8B07E
-# - name: add apt key for influxdata to install telegraf
-#   apt_key:
-#     url: https://repos.influxdata.com/influxdb.key
-#     state: present
-#   tags:
-#     - packages
-
-- name: set distro to debian if raspbian
-  set_fact:
-    distro: debian
-  when: ansible_lsb.id == "Raspbian"
-  tags:
-    - influx-repo
-    - packages
-
-- name: otherwise use lsb id
-  set_fact:
-    distro: "{{ ansible_lsb.id }}"
-  when: ansible_lsb.id != "Raspbian"
-  tags:
-    - influx-repo
-    - packages
-
-- name: set codename to bullseye (oldstable) if trixie or bookworm
-  set_fact:
-    codename: bullseye
-  when: ansible_lsb.codename in ["bookworm", "trixie"]
-  tags:
-    - influx-repo
-    - packages
-
-- name: set codename to focal if needed
-  set_fact:
-    codename: focal
-  when:
-   - ansible_lsb.codename in ["hirsute", "noble"]
-  tags:
-    - influx-repo
-    - packages
-
-- name: otherwise use lsb codename
-  set_fact:
-    codename: "{{ ansible_lsb.codename }}"
-  when:
-    - ansible_lsb.codename != "bookworm"
-    - ansible_lsb.codename != "trixie"
-    - ansible_lsb.codename != "hirsute"
-    - ansible_lsb.codename != "noble"
-  tags:
-    - influx-repo
-    - packages
-
 #- name: get influxdb key
 #  get_url:
-#    url:  https://repos.influxdata.com/influxdb.key
-#    dest: /etc/apt/trusted.gpg.d/influxdb.asc
+#    url:  https://repos.influxdata.com/influxdb-archive.key
+#    dest: /etc/apt/trusted.gpg.d/influxdb-archive.asc
 #  tags:
 #    - influx-repo
 #    - packages
@@ -166,14 +113,26 @@
 
 - name: add repo
   template:
-    src: repos_influxdata_com_debian.list.j2
-    dest: /etc/apt/sources.list.d/repos_influxdata_com_debian.list
+    src: influxdata.list.j2
+    dest: /etc/apt/sources.list.d/influxdata.list
     mode: "0644"
     owner: root
     group: root
+  register: influxdata_repo
   tags:
     - packages
     - influx-repo
+
+- name: clean up extra repos.d files with other files
+  file:
+    path: "/etc/apt/sources.list.d/{{ item }}"
+    state: absent
+  loop_control:
+    label: "{{ item }}"
+  with_items:
+    - repos_influxdata_com_debian.list
+    - repos_influxdata_com_ubuntu.list
+    - repos_influxdata_com_raspbian.list
 
 # Commented out due to the bug on Debian testing/trixie
 #- name: ensure no wrong repo definitions
@@ -192,21 +151,20 @@
 #  tags:
 #    - packages
 #    - influx-repo
-#
-#- name: add repo for influxdata to install telegraf
-#  apt_repository:
-#    repo: "deb [signed-by=/usr/share/keyrings/influxdb-archive-keyring.asc] https://repos.influxdata.com/{{ distro | lower }} stable main"
-#    state: present
-#    update_cache: false
-#  tags:
-#    - packages
-#    - influx-repo
+
+- name: update apt cache if influxdata repo changed
+  apt:
+    update_cache: true
+  when:
+    - influxdata_repo.changed
+  tags:
+    - packages
 
 - name: install telegraf
   apt:
     name: telegraf
     state: latest
-    update_cache: true
+    update_cache: false
   tags:
     - packages
   notify: restart telegraf
