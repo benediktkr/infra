@@ -1,8 +1,8 @@
 # {{ ansible_managed }}
-{% set root = deadspace_crypttab.root -%}
+{% set root = luks_crypttab.root -%}
 {% set root_opts = ["luks", root.options|default([])] | flatten -%}
 {{ root.name }} UUID={{ root.uuid }} none {{ root_opts|join(",") }}
-{% for item in deadspace_crypttab.disks|default([]) -%}
+{% for item in luks_crypttab.disks|default([]) -%}
 {% set item_opts = ["luks", item.options|default([])] | flatten -%}
-{{ item.name }} UUID={{ item.uuid }} {{ item.keyfile | default(deadspace_keyfile) }} {{ item_opts | join(",") }}
+{{ item.name }} UUID={{ item.uuid }} {{ item.keyfile | default(luks_keyfile) }} {{ item_opts | join(",") }}
 {% endfor %}

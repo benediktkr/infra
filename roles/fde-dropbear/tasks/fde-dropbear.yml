@@ -1,6 +1,6 @@
 ---
 
-- name: install busybox, cryptsetup and dropbear
+- name: install systemd-cryptsetup, busybox, cryptsetup and dropbear
   apt:
     name:
       - busybox
@@ -8,11 +8,55 @@
       - dropbear-initramfs
       - cryptsetup
       - cryptsetup-initramfs
-    state: present
+      - systemd-cryptsetup
+    state: latest
     update_cache: true
   tags:
     - packages
   notify: update initramfs
+
+- name: copy LUKS keyfile
+  copy:
+    src: private/keyfile-deadspace
+    dest: /root/keyfile-deadspace
+    owner: root
+    group: root
+    mode: 0700
+  no_log: true
+
+- name: template crypttab
+  template:
+    src: crypttab.j2
+    dest: /etc/crypttab
+    owner: root
+    group: root
+    mode: 0644
+  when: '"name" in luks_crypttab.root.keys()'
+
+- name: ensure luks volumes are open
+  luks_device:
+    name: "{{ item.name }}"
+    uuid: "{{ item.uuid }}"
+    keyfile: "{{ luks_keyfile }}"
+    state: opened
+  with_items: "{{ luks_crypttab.disks }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: mount luks volumes
+  mount:
+    path: |-
+      {{ item.mountpoint|default("/mnt/" ~ item.name) }}
+    src: /dev/mapper/{{ item.name }}
+    fstype: "{{ item.fstype|default('ext4') }}"
+    # present: add to fstab, mounted: mount and add to fstab
+    state: mounted
+    opts: nofail
+  with_items: "{{ luks_crypttab.disks }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when:
+    - item.mount|default(true)
 
 - name: enable busybox in initramfs
   replace:

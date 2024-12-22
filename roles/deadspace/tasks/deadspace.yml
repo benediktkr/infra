@@ -7,7 +7,6 @@
       - mergerfs
       - btrfs-progs
       - rclone
-      - systemd-cryptsetup
       #- udisksctl
     state: latest
   when: not skip_apt|default(false)
@@ -22,62 +21,6 @@
     group: root
     mode: 0755
   tags:
-    - deadspace-mounts
-
-- name: copy LUKS keyfile
-  copy:
-    src: private/keyfile-deadspace
-    dest: /root/keyfile-deadspace
-    owner: root
-    group: root
-    mode: 0700
-  no_log: true
-  tags:
-    - keyfile-deadspace
-    - deadspace-keyfile
-    - deadspace-mounts
-
-- name: template crypttab
-  template:
-    src: crypttab.j2
-    dest: /etc/crypttab
-    owner: root
-    group: root
-    mode: 0644
-  when: '"name" in deadspace_crypttab.root.keys()'
-  tags:
-    - crypttab
-    - deadspace-mounts
-
-- name: ensure luks volumes are open
-  luks_device:
-    name: "{{ item.name }}"
-    uuid: "{{ item.uuid }}"
-    keyfile: "{{ deadspace_keyfile }}"
-    state: opened
-  with_items: "{{ deadspace_crypttab.disks }}"
-  loop_control:
-    label: "{{ item.name }}"
-  tags:
-    - crypttab
-    - deadspace-mounts
-
-- name: mount luks volumes
-  mount:
-    path: |-
-      {{ item.mountpoint|default("/mnt/" ~ item.name) }}
-    src: /dev/mapper/{{ item.name }}
-    fstype: "{{ item.fstype|default('ext4') }}"
-    # present: add to fstab, mounted: mount and add to fstab
-    state: mounted
-    opts: nofail
-  with_items: "{{ deadspace_crypttab.disks }}"
-  loop_control:
-    label: "{{ item.name }}"
-  when:
-    - item.mount|default(true)
-  tags:
-    - crypttab
     - deadspace-mounts
 
 - name: fail if path has trailing slash

@@ -1,0 +1,5 @@
+---
+
+luks_crypttab:
+    root: {}
+    disks: []
