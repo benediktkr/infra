@@ -33,15 +33,18 @@
   notify: restart telegraf
   tags: users
 
-- name: install humanize in virtualenv
+- name: install virtualenv with packages
   pip:
-    name: humanize
+    name: "{{ item }}"
     state: present
-    virtualenv: /var/lib/virtualens/telegraf-scripts
+    virtualenv: /var/lib/virtualenvs/telegraf-scripts
     virtualenv_site_packages: false
     virtualenv_command: python3 -m venv
   when: not ansible_check_mode
+  with_items:
+    - humanize
   tags:
+    - common-telegraf-virtualenv
     - venvs
     - virtualenvs
     - pip
@@ -132,8 +135,8 @@
 
 - name: install dearmored influxdb key
   copy:
-    src: influxdb-archive-keyring.gpg
-    dest: /usr/share/keyrings/influxdb-archive-keyring.gpg
+    src: influxdb-archive-keyring.asc
+    dest: /usr/share/keyrings/influxdb-archive-keyring.asc
     owner: root
     group: root
     mode: '0644'
@@ -141,32 +144,69 @@
     - influx-repo
     - packages
 
-- name: remove repo definition without signed-by
-  apt_repository:
-    repo: deb https://repos.influxdata.com/{{ distro | lower }} {{ codename }} stable
+- name: clean up repo keys with invalid names or paths
+  file:
     state: absent
-    update_cache: false
+    path: "{{ item }}"
+  loop_control:
+    label: "{{ item }}"
+  with_items:
+    - /usr/share/keyrings/influxdb-archive-keyring.gpg
+
+# There is currently a bug in the `python3-apt` package for
+# Debian testing/trixie, which the `apt_repository` module
+# uses on the host.
+#
+# >>> import platform
+# >>> platform.freedesktop_os_release()["VERSION"]
+# KeyError: 'VERSION'
+#
+# So instead of using the `apt_repository` module, we just
+# template the file in place instead.
+
+- name: add repo
+  template:
+    src: repos_influxdata_com_debian.list.j2
+    dest: /etc/apt/sources.list.d/repos_influxdata_com_debian.list
+    mode: "0644"
+    owner: root
+    group: root
   tags:
     - packages
     - influx-repo
 
-- name: add repo for influxdata to install telegraf
-  apt_repository:
-    repo: deb [signed-by=/usr/share/keyrings/influxdb-archive-keyring.gpg] https://repos.influxdata.com/{{ distro | lower }} {{ codename }} stable
-    #repo: deb [signed-by=/etc/apt/trusted.gpg.d/influxdb.asc] https://repos.influxdata.com/{{ distro | lower }} {{ codename }} stable
-    state: present
-    update_cache: false
-  when: not skip_apt|default(false)
-  tags:
-    - packages
-    - influx-repo
+# Commented out due to the bug on Debian testing/trixie
+#- name: ensure no wrong repo definitions
+#  apt_repository:
+#    repo: "{{ item }}"
+#    state: absent
+#    update_cache: false
+#    codename: "{{ ansible_distribution_release }}"
+#  loop_control:
+#    label: "{{ item }}"
+#  with_items:
+#   - "deb https://repos.influxdata.com/{{ distro | lower }} {{ codename }} stable"
+#   - "deb [signed-by=/usr/share/keyrings/influxdb-archive-keyring.gpg] https://repos.influxdata.com/{{ distro | lower }} {{ codename }} stable"
+#   - "deb [signed-by=/usr/share/keyrings/influxdb-archive-keyring.asc] https://repos.influxdata.com/{{ distro | lower }} {{ codename }} stable"
+#   - "deb [signed-by=/usr/share/keyrings/influxdb-archive-keyring.asc] https://repos.influxdata.com/{{ distro | lower }} {{ ansible_distribution_release }} stable"
+#  tags:
+#    - packages
+#    - influx-repo
+#
+#- name: add repo for influxdata to install telegraf
+#  apt_repository:
+#    repo: "deb [signed-by=/usr/share/keyrings/influxdb-archive-keyring.asc] https://repos.influxdata.com/{{ distro | lower }} stable main"
+#    state: present
+#    update_cache: false
+#  tags:
+#    - packages
+#    - influx-repo
 
 - name: install telegraf
   apt:
     name: telegraf
     state: latest
     update_cache: true
-  when: not skip_apt|default(false)
   tags:
     - packages
   notify: restart telegraf
