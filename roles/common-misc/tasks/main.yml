@@ -597,13 +597,26 @@
   tags:
     - unatt2
 
-- name: add apt key for apt.sudo.is
+- name: add apt source
+  template:
+    src: "{{ item }}.list.j2"
+    dest: "/etc/apt/sources.list.d/{{ item }}.list"
+    owner: root
+    group: root
+    mode: "0644"
+  with_items:
+    - "{{ apt_url }}"
+  tags:
+    - packages
+    - apt.sudo.is
+
+- name: download apt key
   get_url:
     url: https://{{ apt_url }}/KEY.gpg
     # /usr/share/keyrings: needs [signed-by]
     # /etc/apt/trusted.gpg.d/: trusted without [signed-by]
     #dest: /usr/share/keyrings/apt.sudo.is.gpg.asc
-    dest: "{{ item }}/apt.sudo.is.gpg.asc"
+    dest: "{{ item }}/{{ apt_url }}.gpg.asc"
   with_items:
     - /etc/apt/trusted.gpg.d
     - /usr/share/keyrings
@@ -612,17 +625,7 @@
     - apt.sudo.is
     - sudo-apt-key
 
-- name: add apt.sudo.is repo
-  apt_repository:
-    repo: "deb https://{{ apt_url }} /"
-    state: present
-    filename: "{{ apt_url }}"
-    update_cache: true
-  tags:
-    - packages
-    - apt.sudo.is
-
-- name: tempalte priorities for apt
+- name: template priorities for apt
   template:
     src: apt-sudois.j2
     dest: /etc/apt/preferences.d/sudois
