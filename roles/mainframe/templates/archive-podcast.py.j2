@@ -113,50 +113,64 @@ def download_episode(item, path):
     file_link = get_file_link(item['links'])
     file_url = file_link["href"]
 
-    if os.path.exists(podcastpath):
-        logger.debug(f"already downloaded: '{item['title']}'")
-        infopath = os.path.join(podcastpath, 'info.json')
-        with open(infopath, 'r') as f:
-            jstr = f.read()
+    os.makedirs(podcastpath, exist_ok=True)
+    try:
+        download_file(file_url, podcastpath)
+    except RuntimeError as f:
+        logger.error(f"{item['title']}: {e}")
+        # crash
+        raise
 
-        return json.loads(jstr)
+    logger.info(f"downloaded: '{item['title']}'")
 
+    published = datetime(*item['published_parsed'][0:7])
+    ctime = time.mktime(published.timetuple())
+
+    for f in os.listdir(podcastpath):
+        if '?' in f:
+            just_filename = f.split("?")[0]
+
+            old = os.path.join(podcastpath, f)
+            new = os.path.join(podcastpath, just_filename)
+            os.rename(old, new)
+            os.utime(new, (ctime, ctime))
+
+            logger.info(just_filename)
+            item['filename'] = just_filename
+        else:
+            os.utime(os.path.join(podcastpath, f), (ctime, ctime))
+            if f != "info.json":
+                logger.info(f)
+                item['filename'] = f
+
+    with open(os.path.join(podcastpath, 'info.json'), 'w') as f:
+        f.write(json.dumps(item, indent=2))
+
+    os.utime(podcastpath, (ctime, ctime))
+    return item
+
+def get_episode_info(item, path):
+    infopath = os.path.join(path, item['title'], 'info.json')
+    with open(infopath, 'r') as f:
+        return json.load(f)
+
+def episode_is_downloaded(item, path):
+    try:
+        info = get_episode_info(item, path)
+        filename = info['filename']
+        file_path = os.path.join(path, item['title'], filename)
+        return os.path.exists(file_path)
+    except (FileNotFoundError, KeyError):
+        return False
+
+def get_episode(item, path):
+    if not episode_is_downloaded(item, path):
+        logger.info(f"Downloading episode: '{item['title']}'")
+        return download_episode(item, path)
     else:
-        os.makedirs(podcastpath, exist_ok=False)
-        try:
-            download_file(file_url, podcastpath)
-        except RuntimeError as f:
-            logger.error(f"{item['title']}: {e}")
-            # crash
-            raise
+        logger.debug(f"Episode exists: '{item['title']}'")
+        return get_episode_info(item, path)
 
-        logger.info(f"downloaded: '{item['title']}'")
-
-        published = datetime(*item['published_parsed'][0:7])
-        ctime = time.mktime(published.timetuple())
-
-        for f in os.listdir(podcastpath):
-            if '?' in f:
-                just_filename = f.split("?")[0]
-
-                old = os.path.join(podcastpath, f)
-                new = os.path.join(podcastpath, just_filename)
-                os.rename(old, new)
-                os.utime(new, (ctime, ctime))
-
-                logger.info(just_filename)
-                item['filename'] = just_filename
-            else:
-                os.utime(os.path.join(podcastpath, f), (ctime, ctime))
-                if f != "info.json":
-                    logger.info(f)
-                    item['filename'] = f
-
-        with open(os.path.join(podcastpath, 'info.json'), 'w') as f:
-            f.write(json.dumps(item, indent=2))
-
-        os.utime(podcastpath, (ctime, ctime))
-        return item
 
 
 @logger.catch
@@ -194,7 +208,7 @@ def main():
     # with filenames!
     entries = []
     for item in rss['entries']:
-        info = download_episode(item, podcast_config['path'])
+        info = get_episode(item, podcast_config['path'])
         entries.append(info)
 
     generate_feed(rss, entries, args.name, podcast_config['path'])
