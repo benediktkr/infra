@@ -11,12 +11,15 @@ import sys
 import urllib.parse
 from datetime import datetime, timedelta
 import pytz
+import warnings
 
 from mutagen.mp3 import MP3
 from mutagen.mp4 import MP4
+from mutagen.wave import WAVE
 import requests
 import feedparser
 from podgen import Podcast, Person, Media, Category, htmlencode
+from podgen.warnings import NotSupportedByItunesWarning
 from loguru import logger
 
 def generate_feed(rss, entries, name, path):
@@ -34,7 +37,7 @@ def generate_feed(rss, entries, name, path):
     p.explicit = False
     p.complete = False
     #p.new_feed_url = 'http://example.com/new-feed.rss'
-    p.owner = Person("Ben K", 'icloud@sudo.is')
+    p.owner = Person("Ben K", 'icloud@{{ domain }}')
     p.withhold_from_itunes = True
 
     #p.xslt = "http://example.com/stylesheet.xsl"
@@ -58,27 +61,31 @@ def generate_feed(rss, entries, name, path):
         published = entry['published_parsed'][:6]
         e.publication_date = datetime(*published, tzinfo=pytz.utc)
 
-
         medialink = make_link_to_file(name, urltitle, filename)
         #medialink = make_link_to_file(name, entry['title'], filename)
 
+        file_ext = os.path.splitext(entry['filename'])[1].lower()
+        file_type = None
+
         full_path_file = os.path.join(path, entry['title'], entry['filename'])
 
-
-        length = os.stat(full_path_file).st_size
-
-        if os.path.splitext(entry['filename'])[1].lower() == ".m4a":
+        if file_ext == ".m4a":
             audio = MP4(full_path_file)
+        elif file_ext == ".wav":
+            audio = WAVE(full_path_file)
+            file_link = get_file_link(entry['links'])
+            file_type = file_link["type"]
         else:
             audio = MP3(full_path_file)
 
-        duration = audio.info.length
-        e.media = Media(
-            medialink,
-            length,
-            duration=timedelta(seconds=duration)
-        )
-
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", NotSupportedByItunesWarning)
+            e.media = Media(
+                medialink,
+                size=os.stat(full_path_file).st_size,
+                type=file_type,
+                duration=timedelta(seconds=audio.info.length)
+            )
 
         rss_file = os.path.join(path, 'podcast.rss')
         logger.debug(f"wrote '{rss_file}'")
@@ -89,10 +96,10 @@ def generate_feed(rss, entries, name, path):
 def make_link_to_file(name, title, filename):
     return f"https://{{ archives_url }}/{{ podcasts }}/{name}/{title}/{filename}"
 
-def get_file_url(links):
+def get_file_link(links):
     for item in links:
         if item['rel'] != "alternate" and item['type'] != "text/html":
-            return item['href']
+            return item
 
     else:
         logger.error("\n" + json.dumps(links, indent=2))
@@ -103,7 +110,8 @@ def download_file(url, dest):
 
 def download_episode(item, path):
     podcastpath = os.path.join(path, item['title'])
-    url = get_file_url(item['links'])
+    file_link = get_file_link(item['links'])
+    file_url = file_link["href"]
 
     if os.path.exists(podcastpath):
         logger.debug(f"already downloaded: '{item['title']}'")
@@ -116,7 +124,7 @@ def download_episode(item, path):
     else:
         os.makedirs(podcastpath, exist_ok=False)
         try:
-            download_file(get_file_url(item['links']), podcastpath)
+            download_file(file_url, podcastpath)
         except RuntimeError as f:
             logger.error(f"{item['title']}: {e}")
             # crash
