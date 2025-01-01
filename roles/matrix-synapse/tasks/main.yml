@@ -1,5 +1,205 @@
 ---
-- import_tasks: matrix-synapse.yml
+
+- name: make dirs
+  file:
+    path: "{{ systemuserlist.matrix.home }}/{{ item.name }}"
+    state: directory
+    mode: "{{ item.mode|default(750) }}"
+    owner: "{{ item.owner|default('matrix') }}"
+    group: "{{ item.group|default('matrix') }}"
+  with_items:
+    - name: log
+    - name: registration
+    - name: element
+    - name: redis
+      owner: 999
+      group: 999
+    - name: redis/data
+      owner: 999
+      group: 999
+
+- name: postgresql user
+  postgresql_user:
+    name: "{{ matrix_postgres_user }}"
+    password: "{{ matrix_postgres_passwd }}"
+    encrypted: true
+    state: present
+  become_user: postgres
   tags:
-    - matrix-synapse
-    - matrix
+    - users
+    - postgresql
+    - postgresql-users
+
+- name: postgresql database
+  postgresql_db:
+    name: "{{matrix_postgres_user }}"
+    encoding: UTF8
+    template: template0
+    state: present
+    lc_ctype: "C"
+    lc_collate: "C"
+  become_user: postgres
+  tags:
+    - users
+    - postgresql
+    - postgresql-users
+
+- name: template config
+  template:
+    src: "{{ item }}.j2"
+    dest: "{{ systemuserlist.matrix.home }}/data/{{ item }}"
+    mode: 0600
+    owner: matrix
+    group: matrix
+  with_items:
+    - log.config
+    - homeserver.yaml
+    - turnserver.conf
+    - synapse.env
+  tags:
+    - matrix-config
+    - homeserver.yaml
+
+- name: copy signing key
+  copy:
+    src: private/matrix/{{ matrix_domain }}.signing.key
+    dest: "{{ systemuserlist.matrix.home }}/data/"
+    mode: 0644
+    owner: matrix
+    group: matrix
+
+- name: redis container for matrix synapse
+  docker_container:
+    name: matrix-redis
+    image: "redis:latest"
+    restart_policy: "unless-stopped"
+    auto_remove: false
+    detach: true
+    pull: true
+    state: started
+    container_default_behavior: compatibility
+    env:
+      REDIS_HOST: matrix-redis
+    networks_cli_compatible: false
+    networks:
+      - name: bridgewithdns
+    healthcheck:
+      interval: 30s
+      timeout: 60s
+      start_period: 10s
+      test: "redis-cli --raw incr ping"
+    mounts:
+      - type: bind
+        source: "{{ systemuserlist.matrix.home }}/redis/data"
+        target: /data
+  tags:
+    - matrix-container
+    - docker-containers
+    - redis
+    - matrix-redis
+    - matrix-redis-container
+    - redis-container
+
+# register_new_matrix_user -u $username -t bot -c /data/homeserver.yaml http://localhost:8008
+
+- name: start synapse container
+  docker_container:
+    name: matrix
+    image: ghcr.io/element-hq/synapse:{{ matrix_synapse_version }}
+    auto_remove: false
+    detach: true
+    pull: true
+    image_name_mismatch: recreate
+    restart_policy: "unless-stopped"
+    state: "{{ matrix_synapse_container_state }}"
+    # The `ENTRYPOINT` in the Docker image runs `start.py` that uses `os.execve`
+    # to run `gosu` to execute Synase as the `$UID` environment variable: https://github.com/element-hq/synapse/blob/develop/docker/start.py#L276-L277
+    #user: "{{ systemuserlist.matrix.uid }}:{{ systemuserlist.matrix.gid }}"
+    env_file: "{{ systemuserlist.matrix.home }}/data/synapse.env"
+    container_default_behavior: compatibility
+    networks_cli_compatible: false
+    networks:
+      - name: bridgewithdns
+        ipv4_address: "{{ bridgewithdns.matrix }}"
+    mounts:
+      - type: bind
+        source: "{{ systemuserlist.matrix.home }}/data"
+        target: /data
+      - type: bind
+        source: "{{ systemuserlist.matrix.home }}/log"
+        target: /log
+    healthcheck:
+      interval: 15s
+      timeout: 5s
+      start_period: 5s
+      test: "curl -fSs http://localhost:{{ matrix_synapse_port }}/health"
+    # The `ENTRYPOINT` script `start.pu` assumes container runs as root:
+    #entrypoint: /usr/local/bin/python -m synapse.app.homeserver --config-path /data/homeserver.yaml
+  tags:
+    - matrix-container
+    - docker-containers
+
+- name: template scripts
+  template:
+    src: "{{ item }}.j2"
+    dest: /usr/local/bin/{{ item }}
+    mode: 0755
+    owner: root
+    group: root
+  tags:
+    - backup
+    - matrix-backup
+    - matrix-scripts
+  loop_control:
+    label: "{{ item }}"
+  with_items:
+    - synapse-postgres-backup.sh
+
+- name: template invite script
+  template:
+    src: "{{ item }}.j2"
+    dest: /usr/local/bin/{{ item }}
+    mode: 0755
+    owner: root
+    group: root
+  tags:
+    - matrix-scripts
+    - matrix-registration
+  loop_control:
+    label: "{{ item }}"
+  with_items:
+    - matrix-invite.py
+  when: matrix_registration_enabled
+
+- name: cron file
+  template:
+    src: matrix-cron.j2
+    dest: /etc/cron.d/matrix
+    mode: 0600
+    owner: root
+    group: root
+  tags:
+    - backup
+    - matrix-backup
+    - cron
+
+- name: telegraf file
+  template:
+    src: matrix-telegraf.conf.j2
+    dest: /etc/telegraf/telegraf.d/matrix.conf
+  notify:
+    - restart telegraf
+  tags:
+    - telegraf
+
+- name: template filebeat config
+  template:
+    src: filebeat-synapse.yml.j2
+    dest: "/etc/filebeat/inputs.d/synapse.yml"
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - filebeat
+    - filebeat-input
+  notify: restart filebeat
