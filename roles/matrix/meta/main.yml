@@ -1,13 +1,41 @@
 ---
 
 dependencies:
-  - postgresql
-  - matrix-fed-tester
-  - matrix-nginx
-  - matrix-synapse
-  - matrix-admin
+  - role: postgresql
+    tags:
+      - postgresql
+      - matrix-postgresql
 
-  - matrix-element
-  - matrix-hydrogen
-  - matrix-bridge-smtp
-  - matrix-registration
+  - role: matrix-fed-tester
+    tags:
+      - matrix-fed-tests
+
+  - role: matrix-nginx
+    tags:
+      - matrix-nginx
+
+  - role: matrix-synapse
+    tags:
+      - matrix-synapse
+      - synapse
+
+  - role: matrix-admin
+    tags:
+      - matrix-admin
+
+  - role: matrix-element
+    tags:
+      - matrix-element
+      - element
+
+  - role: matrix-hydrogen
+    tags:
+      - matrix-hydrogen
+
+  - role: matrix-bridge-smtp
+    tags:
+      - matrix-bridge-smtp
+
+  - role: matrix-registration
+    tags:
+      - matrix-registration

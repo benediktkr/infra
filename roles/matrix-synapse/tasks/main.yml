@@ -185,7 +185,7 @@
 
 - name: telegraf file
   template:
-    src: matrix-telegraf.conf.j2
+    src: telegraf.d/matrix.conf.j2
     dest: /etc/telegraf/telegraf.d/matrix.conf
   notify:
     - restart telegraf
