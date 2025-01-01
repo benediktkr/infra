@@ -181,14 +181,12 @@
       - "{{ jenkins_bind_addr | default('127.0.0.1') }}:50000:50000/tcp"
     mounts:
       - type: bind
+        # Mounts of /var/jenkins_home/.local so the pipx installed packages arent usable with this mount
         source: "{{ jenkins_root }}/jenkins_home"
         target: "/var/jenkins_home"
       - type: bind
         source: "{{ jenkins_root }}/etc/docker"
         target: "/etc/docker"
-      # - type: bind
-      #   source: "{{ jenkins_root }}/etc/pypoetry"
-      #   target: "/etc/pypoetry"
       - type: bind
         source: "/var/www/{{ apt_url }}"
         target: "/var/www/{{ apt_url }}"
@@ -197,6 +195,7 @@
         target: /var/run/docker.sock
     env:
       THIS_PROPAGATES: "TO THE JOBS"
+      TZ: "Europe/Berlin"
     networks_cli_compatible: false
     networks:
       - name: bridge
