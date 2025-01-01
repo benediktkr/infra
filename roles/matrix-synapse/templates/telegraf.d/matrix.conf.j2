@@ -1,6 +1,12 @@
 # {{ ansible_managed }}
 
 [[inputs.prometheus]]
-  urls = ["http://{{ bridgewithdns.matrix }}:{{ matrix_synapse_metrics_port }}/_synapse/metrics"]
+  urls = [
+    "http://{{ bridgewithdns.matrix }}:{{ matrix_synapse_metrics_port }}/_synapse/metrics"
+  ]
+
+  [inputs.prometheus.tags]
+  service = "matrix-synapse"
+  url = "{{ matrix_url }}"
 
 [[inputs.linux_sysctl_fs]]
