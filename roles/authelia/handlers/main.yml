@@ -15,3 +15,8 @@
   service:
     name: filebeat
     state: restarted
+
+- name: restart telegraf
+  service:
+    name: telegraf
+    state: restarted

@@ -1,0 +1,10 @@
+# {{ ansible_managed }}
+
+[[inputs.prometheus]]
+  urls = [
+    "http://{{ bridgewithdns.authelia }}:{{ authelia_port_metrics }}/metrics"
+  ]
+
+  [inputs.prometheus.tags]
+    service = "authelia"
+    url = "{{ authelia_login_url }}"

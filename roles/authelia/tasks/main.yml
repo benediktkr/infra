@@ -140,7 +140,7 @@
 
 - name: template filebeat config
   template:
-    src: filebeat-authelia.yml.j2
+    src: inputs.d/authelia.yml.j2
     dest: "/etc/filebeat/inputs.d/authelia.yml"
     owner: root
     group: root
@@ -148,4 +148,15 @@
   tags:
     - filebeat
     - filebeat-input
+    - authelia-filebeat
   notify: restart filebeat
+
+- name: telegraf file for prometheus metrics
+  template:
+    src: telegraf.d/authelia.conf.j2
+    dest: /etc/telegraf/telegraf.d/authelia.conf
+  notify:
+    - restart telegraf
+  tags:
+    - authelia-telegraf
+    - telegraf
