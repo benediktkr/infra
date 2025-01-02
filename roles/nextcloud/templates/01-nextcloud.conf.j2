@@ -1,5 +1,6 @@
 upstream php-handler {
-    server 127.0.0.1:{{ item.exposed_port }};
+    #server 127.0.0.1:{{ item.exposed_port }};
+    server {{ item.docker_ip }}:9000;
     #server unix:/var/run/php/php7.4-fpm.sock;
 }
 
