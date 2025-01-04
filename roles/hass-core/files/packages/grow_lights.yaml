@@ -12,8 +12,6 @@ homeassistant:
       <<: *common_attrs
 
     binary_sensor.grow_lights_1_schedule:
-      start_time: "09:00"
-      end_time: "18:00"
       icon: mdi:sprout
       <<: *common_attrs
 
@@ -219,9 +217,8 @@ binary_sensor:
   - platform: tod
     unique_id: grow_lights_1_schedule
     name: grow_lights_1_schedule
-    after: "09:00"
-    before: "18:00"
-
+    after: "06:00"
+    before: "23:59"
 
 light:
   - platform: template
