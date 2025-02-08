@@ -16,6 +16,33 @@
     - path: drivers
     - path: drivers/hp1010
 
+- name: ensure backups dir exists
+  file:
+    state: directory
+    path: "{{ item }}"
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - "{{ backups_root }}"
+  loop_control:
+    label: "{{ item }}"
+  tags:
+    - samba-timemachine
+
+- name: create dirs for timemachines
+  file:
+    state: directory
+    path: "{{ backups_root }}/{{ item.name }}"
+    owner: "{{ item.valid_users[0] }}"
+    group: "{{ item.valid_users[0] }}"
+    mode: 0750
+  loop_control:
+    label: "{{ item.name }}"
+  with_items: "{{ samba_timemachines }}"
+  tags:
+    - samba-timemachine
+
 - name: copy windows driver for hp1010
   copy:
     src: "{{ item }}"
@@ -52,6 +79,7 @@
   notify: restart samba
   tags:
     - smb.conf
+    - samba-timemachine
 
 - name: disable nmbd
   service:

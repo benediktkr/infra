@@ -4,3 +4,6 @@ samba_interfaces: []
 samba_cups: false
 samba_smbd: true
 samba_nmbd: false
+
+backups_root: "/var/backups"
+samba_timemachines: []

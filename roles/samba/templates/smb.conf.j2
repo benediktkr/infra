@@ -39,14 +39,28 @@
    {% if samba_allow_ntlmv1|default(false) -%}
    server min protocol = NT1
    ntlm auth = ntlmv1-permitted
+   {% else -%}
+   min protocol = SMB2
    {% endif %}
 
    log file = /var/log/samba/log.%m
    max log size = 1000
    logging = file
 
+   # Config for Apple clients (macOS and iOS)
+   # https://wiki.samba.org/index.php/Configure_Samba_to_Work_Better_with_Mac_OS_X
+   # https://www.samba.org/samba/docs/current/man-html/vfs_fruit.8.html
    streams_xattr:store_stream_type = yes
    streams_xattr:prefix = user.DosStream.
+
+   # 'streams_xattr' is needed to enable write on iOS clients
+   # https://wiki.samba.org/index.php/Using_the_streams_xattr_VFS_Module
+   # https://blog.fernvenue.com/archives/samba-read-only-issue-on-ios/
+   vfs objects = fruit streams_xattr
+
+   fruit:metadata = stream
+   # needed for Time Machine
+   fruit:posix_rename = yes
 
    ## time for inactive connections to-be closed in minutes
    ## 2880 mins = 2 days
@@ -257,6 +271,8 @@
 # user's home directory as \\server\username
 [homes]
     valid users = %S
+    #write list = %S
+    writable = yes
     comment = Home Directories
     browseable = no
     create mask = 0660
@@ -264,8 +280,26 @@
     read only = no
     guest ok = no
     inherit owner = yes
-{% for item in samba_shares %}
 
+{% for item in samba_timemachines|default([]) %}
+[{{ item.name }}]
+    # https://wiki.samba.org/index.php/Configure_Samba_to_Work_Better_with_Mac_OS_X
+    vfs objects = fruit streams_xattr
+    fruit:metadata = stream
+    fruit:veto_appledouble = no
+    fruit:nfs_aces = no
+    fruit:wipe_intentionally_left_blank_rfork = yes
+    fruit:delete_empty_adfiles = yes
+    fruit:posix_rename = yes
+    fruit:time machine = yes
+    path = {{ backups_root }}/{{ item.name }}
+    valid users = {{ item.valid_users | join(",") }}
+    writable = yes
+    guest_ok = no
+
+{% endfor %}
+
+{% for item in samba_shares %}
 [{{ item.name }}]
 {% set guest_ok = "yes" if item.guest_ok|default(false) else "no" %}
 {% set read_only = "yes" if item.read_only|default(false) else "no" %}
