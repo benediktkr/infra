@@ -1,5 +1,9 @@
 permit_join: false
-homeassistant: true
+homeassistant:
+  enabled: true
+  experimental_event_entities: true
+  # Get the "action sensor" entities back
+  legacy_action_sensor: true
 mqtt:
   base_topic: zigbee2mqtt
   server: {{ hass_zigbee2mqtt_mqtt }}
@@ -15,20 +19,25 @@ serial:
   adapter: deconz
 {% endif %}
 frontend:
+  enabled: true
   port: 8633
+  host: "{{ bridgewithdns.hass_zigbee2mqtt }}"
   url: https://{{ zwavejs_url }}/_zigbee/
+  #base_url: /_zigbee2mqtt
 {#
  # enable the availability feature.
- # each device defaults to 'availability: true' which should be enough to enable the feature, but it doesnt seem to work.
+ # each device defaults to 'true' which should be enough to enable the feature, but
+ # it doesnt seem to work.
  # https://www.zigbee2mqtt.io/guide/configuration/device-availability.html
  #}
-availability: true
+availability:
+  enabled: true
 {% if hass_zigbee2mqtt_network_key | length > 0 -%}
 advanced:
   network_key:
   {% set network_key =  hass_zigbee2mqtt_network_key | to_nice_yaml(indent=2) %}
   {{ network_key | indent(4) | trim }}
-  log_level: warn
+  log_level: warning
   # Adds a _last_seen sensor for each device
   last_seen: "ISO_8601"
   # Time in ms since previous msg
@@ -39,3 +48,4 @@ advanced:
 advanced:
   network_key: GENERATE
 {% endif %}
+version: 4
