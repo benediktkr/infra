@@ -1,4 +1,4 @@
-# Infra
+# `infra`
 
 [![Build Status](https://jenkins.sudo.is/buildStatus/icon?job=infra%2Fb&style=flat-square)](https://jenkins.sudo.is/job/infra/)
 [![Version](https://jenkins.sudo.is/buildStatus/icon?job=infra%2Fb&style=flat-square&status=${description}&subject=version&build=lastStable&color=blue)](https://git.sudo.is/ben/infra/packages)
