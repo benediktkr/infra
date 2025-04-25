@@ -4,3 +4,8 @@
   service:
     name: icecast2
     state: restarted
+
+- name: reload icecast
+  service:
+    name: icecast2
+    state: reloaded
