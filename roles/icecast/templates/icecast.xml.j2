@@ -20,7 +20,7 @@
 
     <limits>
         <clients>100</clients>
-        <sources>2</sources>
+        <sources>{{ 5 + icecast_mounts|length }}</sources>
         <queue-size>524288</queue-size>
         <client-timeout>30</client-timeout>
         <header-timeout>15</header-timeout>
@@ -99,43 +99,16 @@
          The default is 0 -->
     <!--<relays-on-demand>1</relays-on-demand>-->
 
+{% for item in icecast_mounts | selectattr("type", "==", "relay") | selectattr("relay_stream", "defined") %}
     <relay>
-        <server>127.0.0.1</server>
-        <!-- <server>{{ owntone_url }}</server> -->
-        <port>{{ owntone_port_tcp }}</port>
-        <mount>/stream.mp3</mount>
-        <local-mount>/owntone.mp3</local-mount>
-        <on-demand>0</on-demand>
-        <relay-shoutcast-metadata>1</relay-shoutcast-metadata>
+        <server>{{ item.relay_stream | urlsplit('hostname') }}</server>
+        <port>{{ item.relay_stream | urlsplit('port') | default(item.port, true) | default(443, true) }}</port>
+        <mount>{{ item.relay_stream | urlsplit('path') }}</mount>
+        <local-mount>{{ item.icecast_mount }}</local-mount>
+        <on-demand>{{ item.on_demand | default(false) | int }}</on-demand>
+        <relay-shoutcast-metadata>{{ item.relay_metadata | default(true) | int }}</relay-shoutcast-metadata>
     </relay>
-
-    <relay>
-        <server>ice4.somafm.com</server>
-        <port>443</port>
-        <mount>/sf1033-128-mp3</mount>
-        <local-mount>/somafm/sf1033.mp3</local-mount>
-        <on-demand>0</on-demand>
-        <relay-shoutcast-metadata>1</relay-shoutcast-metadata>
-    </relay>
-    <!--
-    <relay>
-        <server>ice4.somafm.com</server>
-        <port>443</port>
-        <mount>/groovesalad-256-mp3</mount>
-        <local-mount>/somafm/groovesalad.mp3</local-mount>
-        <on-demand>0</on-demand>
-        <relay-shoutcast-metadata>1</relay-shoutcast-metadata>
-    </relay>
-    <relay>
-        <server>ice6.somafm.com</server>
-        <port>443</port>
-        <mount>/missioncontrol-128-aac</mount>
-        <local-mount>/somafm/missioncontrol</local-mount>
-        <on-demand>0</on-demand>
-        <relay-shoutcast-metadata>1</relay-shoutcast-metadata>
-    </relay>
-    -->
-
+{% endfor %}
 
     <!-- Mountpoints
          Only define <mount> sections if you want to use advanced options,
@@ -159,38 +132,54 @@
     -->
 
     <!-- Normal mounts -->
+{% for item in icecast_mounts | selectattr("settings", "defined") %}
     <mount type="normal">
-        <mount-name>/owntone.mp3</mount-name>
-        <!--<stream-name>{{ owntone_url }}</stream-name>-->
-        <stream-description>Streaming podcasts playing in Ben's home audio.</stream-description>
-        <fallback-mount>/somafm/sf1033.mp3</fallback-mount>
+        <mount-name>{{ item.icecast_mount }}</mount-name>
+{%      set settings = item.settings %}
+{%      if "stream_name" in settings %}
+        <stream-name>{{ settings.stream_name }}</stream-name>
+{%      endif %}
+{%      if "stream_url" in settings %}
+        <stream-url>{{ settings.stream_url }}</stream-url>
+{% endif %}
+{%      if "description" in settings %}
+        <stream-description>{{ settings.description }}</stream-description>
+{%      endif %}
+{%      if "intro" in settings %}
+        <intro>{{ settings.intro }}</intro>
+{%      endif %}
+{%      if "dump_file" in settings %}
+        <dump-file>/tmp/dump-example1.ogg</dump-file>
+{%      endif %}
+{%      if "fallback_mount" in settings %}
+        <fallback-mount>{{ settings.fallback_mount }}</fallback-mount>
         <fallback-override>1</fallback-override>
-        <charset>UTF-8</charset>
-        <bitrate>320</bitrate>
-        <mp3-metadata-interval>16384</mp3-metadata-interval>
+        <fallback-when-full>{{ settings.fallback_when_full | default(false) | int }}</fallback-when-full>
+{%      endif %}
+        <charset>{{ settings.charset | default("UTF-8") }}</charset>
+{%      if "bitrate" in settings %}
+        <bitrate>{{ settings.bitrate }}</bitrate>
+{%      endif %}
+        <mp3-metadata-interval>{{ settings.metadata_interval | default(16384) }}</mp3-metadata-interval>
+{%      if "http_headers" in settings %}
+        <http-headers>
+{%      for header_name, header_value in settings.http_headers | default({})%}
+                <header name="{{ header_name }}" value="{{ header_value }}" />
+{%      endfor %}
+        </http-headers>
+{% endif %}
+{#
         <!--
         <hidden>0</hidden>
         <public>0/public>
-        <stream-name>{{ owntone_url }}</stream-name>
-
-
-
         <max-listeners>1</max-listeners>
-        <dump-file>/tmp/dump-example1.ogg</dump-file>
         <burst-size>65536</burst-size>
-        <fallback-mount>/example2.ogg</fallback-mount>
-        <fallback-override>1</fallback-override>
-        <fallback-when-full>1</fallback-when-full>
-        <intro>/example_intro.ogg</intro>
-        <http-headers>
-                <header name="Access-Control-Allow-Origin" value="http://webplayer.example.org" />
-                <header name="baz" value="quux" />
-        </http-headers>
         <on-connect>/home/icecast/bin/stream-start</on-connect>
         <on-disconnect>/home/icecast/bin/stream-stop</on-disconnect>
         -->
+#}
     </mount>
-
+{% endfor %}
 
     <!--
     <mount type="normal">

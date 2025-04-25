@@ -10,6 +10,7 @@ icecast_auth:
   admin:
     user: admin
     passwd: hackme
+icecast_mounts: []
 icecast_access_log_enabled: true
 icecast_playlist_log_enabled: true
 icecast_stdinpcm_enabled: false
