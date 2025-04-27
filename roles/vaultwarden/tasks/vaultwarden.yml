@@ -135,6 +135,7 @@
       SIGNUPS_VERIFY_RESEND_LIMIT: "2"
       SIGNUPS_DOMAINS_WHITELIST: "{{ domain }}"
       LOG_FILE: "/data/{{ item.container_name }}.log"
+      EXPERIMENTAL_CLIENT_FEATURE_FLAGS: "ssh-key-vault-item,ssh-agent"
       WEBSOCKET_ENABLED: "true"
       WEBSOCKET_ADDRESS: "0.0.0.0"
       WEBSOCKET_PORT: "3012"
