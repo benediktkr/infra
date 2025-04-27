@@ -143,10 +143,9 @@
       SMTP_HOST: "{{ smtp_server }}"
       SMTP_USERNAME: "{{ smtp_username }}"
       SMTP_PASSWORD: "{{ smtp_passwd }}"
-      SMTP_PORT: "{{ smtp_port_string }}"
+      SMTP_PORT: "{{ smtp_port | string }}"
       SMTP_SECURITY: "force_tls"
       SMTP_FROM: "{{ systems_email }}"
-
   loop_control:
     label: "{{ item.container_name }}"
   vars:
