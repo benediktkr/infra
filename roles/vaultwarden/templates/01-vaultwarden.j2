@@ -31,8 +31,13 @@ server {
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto $scheme;
 
+    # The 'Content-Security-Policy' header is (somewhat incorrectly) set in
+    # a 'conf.d' file that's imported for all vhosts. That will prevent
+    # vaultwarden from using the websocket.
+    # This adds Vaultwarden's 'Content-Security-Policy' header to the response
+    # so that browsers can use the websocket (the response has 2x CSP headers).
+    # This can be removed after the 'conf.d' file has been fixed.
     add_header Content-Security-Policy $upstream_http_content_security_policy always;
-
 
     location / {
         proxy_pass http://{{ item.container_name }};
