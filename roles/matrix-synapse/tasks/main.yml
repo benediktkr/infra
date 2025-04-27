@@ -59,6 +59,7 @@
   tags:
     - matrix-config
     - homeserver.yaml
+  notify: restart matrix-synapse container
 
 - name: copy signing key
   copy:
@@ -138,6 +139,7 @@
   tags:
     - matrix-container
     - docker-containers
+  register: matrix_synapse_container
 
 - name: template scripts
   template:

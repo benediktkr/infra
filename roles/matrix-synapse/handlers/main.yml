@@ -14,3 +14,13 @@
   service:
     name: filebeat
     state: restarted
+
+- name: restart matrix-synapse container
+  docker_container:
+    name: matrix
+    state: started
+    restart: true
+  when:
+    - matrix_synapse_container is not defined or not matrix_synapse_container.changed
+    - matrix_synapse_container_state|default("stopped") == "started"
+    - matrix_synapse_restart_handler|default(true)
