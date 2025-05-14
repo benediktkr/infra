@@ -10,6 +10,8 @@
     name: authelia
     state: started
     restart: true
+  when:
+    - authelia_container is not defined or not authelia_container.changed
 
 - name: restart filebeat
   service:

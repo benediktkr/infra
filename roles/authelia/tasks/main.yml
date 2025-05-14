@@ -32,14 +32,20 @@
 
 - name: copy jwt keys
   copy:
-    src: "private/authelia/keys/"
-    dest: "{{ systemuserlist.authelia.home }}/config/keys/"
+    src: "private/authelia/keys/{{ item }}"
+    dest: "{{ systemuserlist.authelia.home }}/config/keys/{{ item }}"
     owner: authelia
     group: authelia
     mode: 0600
+  with_items:
+    - key.pem
+    - key.pub
+  tags:
+    - authelia-logs
 
 - name: template authelia config
   template:
+    # WIP file for 4.37 is 'configuration.yml.j2'
     src: "private/authelia/config.yml.j2"
     dest: "{{ systemuserlist.authelia.home }}/config/config.yml"
     owner: authelia
@@ -47,7 +53,20 @@
     mode: 0750
   tags:
     - authelia-config
+    - authelia-logs
   notify: restart authelia container
+
+- name: ensure logfile permissions in /var/log
+  file:
+    path: /var/log/authelia.log
+    state: touch
+    owner: "{{ systemuserlist.authelia.uid }}"
+    group: "{{ systemuserlist.authelia.gid }}"
+    mode: 0600
+    modification_time: preserve
+    access_time: preserve
+  tags:
+    - authelia-logs
 
 - name: template robots.txt
   template:
@@ -106,7 +125,7 @@
 - name: start container
   docker_container:
     name: authelia
-    image: ghcr.io/authelia/authelia:{{ authelia_version }}
+    image: docker.io/authelia/authelia:{{ authelia_version }}
     #image: ghcr.io/authelia/authelia:master
     restart_policy: "unless-stopped"
     auto_remove: false
@@ -125,6 +144,10 @@
         source: "{{ systemuserlist.authelia.home }}/config"
         target: /config
         read_only: false
+      - type: bind
+        source: /var/log/authelia.log
+        target: /var/log/authelia.log
+        read_only: false
     env:
       AUTHELIA_IDENTITY_PROVIDERS_OIDC_ISSUER_PRIVATE_KEY_FILE: /config/keys/key.pem
     healthcheck:
@@ -134,9 +157,18 @@
       test: ["/app/healthcheck.sh"]
     # bypass entrypoint file to handle uid/gid
     entrypoint: ["authelia", "--config", "/config/config.yml"]
+  register: authelia_container
   tags:
     - authelia-container
     - docker-containers
+    - authelia-logs
+
+- name: ensure old log file does not exist
+  file:
+    path: "{{ systemuserlist.authelia.home }}/config/authelia.log"
+    state: absent
+  tags:
+    - authelia-logs
 
 - name: template filebeat config
   template:

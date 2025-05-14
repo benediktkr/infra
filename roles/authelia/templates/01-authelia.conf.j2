@@ -56,6 +56,9 @@ server {
   location /api/verify {
     return 403;
   }
+  location /api/authz {
+    return 403;
+  }
   # only returns {"status": "OK"}, which is also included in /api/state anyway, which clients
   # seem to access according to logs so cant deny those requests.
   # location /api/health {
@@ -128,6 +131,7 @@ server {
   }
 
   # https://www.authelia.com/docs/deployment/supported-proxies/nginx.html
+  #location ~* ^/api/(verify|authz) {
   location /api/verify {
     proxy_pass         http://{{ bridgewithdns.authelia }}:{{ authelia_port }};
 
