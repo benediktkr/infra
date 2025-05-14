@@ -17,7 +17,7 @@
 #   tags:
 #     - packages
 
-- name: install nginx
+- name: install latest version of nginx
   apt:
     name:
       - nginx
