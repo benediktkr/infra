@@ -82,53 +82,7 @@ homeassistant:
       friendly_name: Study Computer Monitor min power [W] over 24h
       <<: *common_attrs
 
-    input_boolean.shortcuts_shokz_phone:
-      friendly_name: "iOS Shortcuts: Shokz connected to phone"
-      comment: |
-        Set with a service call from an iOS shortcuts automation when the phone
-        connects or disconnects from the headphones with Bluetooth
-      tags:
-        - Home Assistant
-        - Laptop
-        - Mobile/personal devices
-        - Presence
-        - Care.com
-      category:
-        - Apple shortcuts
-      <<: *common_attrs
-    binary_sensor.shortcuts_shokz_phone:
-      friendly_name: "Shokz connected to phone"
-      comment: |
-        Set with a service call from an iOS shortcuts automation when the phone
-        connects or disconnects from the headphones with Bluetooth
-      tags:
-        - Home Assistant
-        - Laptop
-        - Mobile/personal devices
-        - Presence
-        - Care.com
-      <<: *common_attrs
-
-input_boolean:
-  shortcuts_shokz_phone:
-    name: shortcuts_shokz_phone
-    icon: "mdi:headset"
-
-
 template:
-  - binary_sensor:
-      - name: shortcuts_shokz_phone
-        unique_id: shortcuts_shokz_phone
-        device_class: connectivity
-        icon: |
-          {% if is_state(this.entity_id, "on") -%}
-          mdi:headset
-          {% else -%}
-          mdi:headset-off
-          {% endif %}
-        state: |
-          {{ is_state("input_boolean.shortcuts_shokz_phone", "on") }}
-
   - trigger:
       - platform: event
         event_type: event_template_reloaded
@@ -172,28 +126,5 @@ template:
           comment: >-
             for use as signal for occupancy detection. briefly turns on while
             searching for bluetooth connection.
-
-  - sensor:
-      - name: battery_oxygen_time_left
-        unit_of_measurement: min
-        device_class: duration
-        state_class: measurement
-        icon: |
-          {{ state_attr("sensor.battery_level_oxygen", "icon") }}
-        availability: |
-          {{
-            has_value("sensor.battery_level_oxygen")
-            and state_attr("sensor.battery_level_oxygen", "Time to Empty") is number
-          }}
-        state: |
-          {% set t = state_attr("sensor.battery_level_oxygen", "Time to Empty") | int(0) %}
-          {% if t > 0 %}
-          {{ t }}
-          {% else %}
-          {{ states(this.entity_id) | int(0) }}
-          {% endif %}
-        attributes:
-          source_value: |
-            {{ state_attr("sensor.battery_level_oxygen", "Time to Empty") }}
 
 

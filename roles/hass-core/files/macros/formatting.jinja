@@ -1,19 +1,19 @@
 {% macro nina_message(nina) %}
-  {{ state_attr(nina, "description") }}
-  from: {{ state_attr(nina, "sender") }}
+{{ state_attr(nina, "description") }}
+from: {{ state_attr(nina, "sender") }}
 {% endmacro %}
 
 {% macro nina_title(nina) %}
-  NINA ({{ state_attr(nina, "severity") }}): {{ state_attr(nina, "headline") }}
+[NINA] {{ state_attr(nina, "headline") }} ({{ state_attr(nina, "severity") }})
 {% endmacro %}
 
 {% macro meteoalarm_message(meteo) %}
-  {{state_attr('binary_sensor.meteoalarm', 'description')}}
-  
-  category: "{{state_attr('binary_sensor.meteoalarm', 'category')}}"
-  event: "{{state_attr('binary_sensor.meteoalarm', 'event')}}"
-  awareness_type: "{{state_attr('binary_sensor.meteoalarm', 'awareness_type')}}"
-  effective: "{{state_attr('binary_sensor.meteoalarm', 'effective')}}"
+{{state_attr('binary_sensor.meteoalarm', 'description')}}
+
+category: "{{state_attr('binary_sensor.meteoalarm', 'category')}}"
+event: "{{state_attr('binary_sensor.meteoalarm', 'event')}}"
+awareness_type: "{{state_attr('binary_sensor.meteoalarm', 'awareness_type')}}"
+effective: "{{state_attr('binary_sensor.meteoalarm', 'effective')}}"
 {% endmacro %}
 
 {% macro meteoalarm_title() %}

@@ -64,6 +64,9 @@ scene: !include scenes.yaml
 template: !include templates.yaml
 #climate: !include climate.yaml
 
+# https://www.home-assistant.io/integrations/bluetooth#configuration
+bluetooth:
+
 device_tracker:
   # using this one for now: https://github.com/andriilahuta/hass-dbus-bluetooth-tracker/
   # uses dbus, no autodiscovery (yay)
@@ -194,109 +197,119 @@ frontend:
 
 panel_custom:
   - name: zwave
-    sidebar_title: Z-Wave
-    sidebar_icon: mdi:z-wave
-    js_url: /api/hassio/app/entrypoint.js
+    sidebar_title: "Z-Wave"
+    sidebar_icon: "mdi:z-wave"
+    js_url: '/api/hassio/app/entrypoint.js'
     url_path: 'config/integrations/integration/zwave_js'
     embed_iframe: true
     require_admin: true
     config:
       ingress: core_configurator
   - name: esphome
-    sidebar_title: ESPHome
-    sidebar_icon: mdi:car-esp
-    js_url: /api/hassio/app/entrypoint.js
+    sidebar_title: "ESPHome"
+    sidebar_icon: "mdi:car-esp"
+    js_url: '/api/hassio/app/entrypoint.js'
     url_path: 'config/integrations/integration/esphome'
     embed_iframe: true
     require_admin: true
     config:
       ingress: core_configurator
   - name: mqtt
-    sidebar_title: MQTT
-    sidebar_icon: mdi:emoticon-poop
-    js_url: /api/hassio/app/entrypoint.js
+    sidebar_title: "MQTT"
+    sidebar_icon: "mdi:emoticon-poop"
+    js_url: '/api/hassio/app/entrypoint.js'
     url_path: 'config/integrations/integration/mqtt'
     embed_iframe: true
     require_admin: true
     config:
       ingress: core_configurator
   - name: mobile_app
-    sidebar_title: Mobile app
-    sidebar_icon: mdi:cellphone
-    js_url: /api/hassio/app/entrypoint.js
+    sidebar_title: "Companion"
+    sidebar_icon: "mdi:cellphone"
+    js_url: '/api/hassio/app/entrypoint.js'
+    url_path: 'config/integrations/integration/mobile_app'
+    embed_iframe: true
+    require_admin: true
+    config:
+      ingress: core_configurator
+  - name: icloud
+    sidebar_title: "iCloud"
+    sidebar_icon: "mdi:apple-icloud"
+    js_url: '/api/hassio/app/entrypoint.js'
     url_path: 'config/integrations/integration/mobile_app'
     embed_iframe: true
     require_admin: true
     config:
       ingress: core_configurator
 
+
   - name: logs
-    sidebar_title: Logs
-    sidebar_icon: mdi:file
-    js_url: /api/hassio/app/entrypoint.js
+    sidebar_title: "Logs"
+    sidebar_icon: "mdi:file"
+    js_url: '/api/hassio/app/entrypoint.js'
     url_path: 'config/logs'
     embed_iframe: true
     require_admin: true
     config:
       ingress: core_configurator
   - name: automations
-    sidebar_title: Automations
-    sidebar_icon: mdi:robot
-    js_url: /api/hassio/app/entrypoint.js
+    sidebar_title: "Automations"
+    sidebar_icon: "mdi:robot"
+    js_url: '/api/hassio/app/entrypoint.js'
     url_path: 'config/automation/dashboard'
     embed_iframe: true
     require_admin: true
     config:
       ingress: core_configurator
   - name: scripts
-    sidebar_title: Scripts
-    sidebar_icon: mdi:script
-    js_url: /api/hassio/app/entrypoint.js
+    sidebar_title: "Scripts"
+    sidebar_icon: "mdi:script"
+    js_url: '/api/hassio/app/entrypoint.js'
     url_path: 'config/script/dashboard'
     embed_iframe: true
     require_admin: true
     config:
       ingress: core_configurator
   - name: integrations
-    sidebar_title: Integrations
-    sidebar_icon: mdi:integrated-circuit-chip
-    js_url: /api/hassio/app/entrypoint.js
+    sidebar_title: "Integrations"
+    sidebar_icon: "mdi:integrated-circuit-chip"
+    js_url: '/api/hassio/app/entrypoint.js'
     url_path: 'config/integrations'
     embed_iframe: true
     require_admin: false
     config:
       ingress: core_configurator
   - name: entities
-    sidebar_title: Entities
-    sidebar_icon: mdi:clover
-    js_url: /api/hassio/app/entrypoint.js
+    sidebar_title: "Entities"
+    sidebar_icon: "mdi:clover"
+    js_url: '/api/hassio/app/entrypoint.js'
     url_path: 'config/entities'
     embed_iframe: true
     require_admin: true
     config:
       ingress: core_configurator
   - name: owntone
-    sidebar_title: OwnTone
-    sidebar_icon: mdi:cast-variant
-    js_url: /api/hassio/app/entrypoint.js
+    sidebar_title: "OwnTone"
+    sidebar_icon: "mdi:cast-variant"
+    js_url: '/api/hassio/app/entrypoint.js'
     url_path: 'config/integrations/integration/forked_daapd'
     embed_iframe: true
     require_admin: false
     config:
       ingress: core_configurator
   - name: sonos
-    sidebar_title: Sonos
-    sidebar_icon: mdi:speaker
-    js_url: /api/hassio/app/entrypoint.js
+    sidebar_title: "Sonos"
+    sidebar_icon: "mdi:speaker"
+    js_url: '/api/hassio/app/entrypoint.js'
     url_path: 'config/integrations/integration/sonos'
     embed_iframe: true
     require_admin: false
     config:
       ingress: core_configurator
   - name: apple_tv
-    sidebar_title: Apple TV
-    sidebar_icon: mdi:apple
-    js_url: /api/hassio/app/entrypoint.js
+    sidebar_title: "Apple TV"
+    sidebar_icon: "mdi:apple"
+    js_url: '/api/hassio/app/entrypoint.js'
     url_path: 'config/integrations/integration/apple_tv'
     embed_iframe: true
     require_admin: false
@@ -304,7 +317,7 @@ panel_custom:
       ingress: core_configurator
 
 recorder:
-  db_url: mysql://{{ systemuserlist.hass.username }}:@localhost/{{ systemuserlist.hass.username }}?charset=utf8mb4&unix_socket=/run/mysqld/mysqld.sock
+  db_url: "mysql://{{ systemuserlist.hass.username }}:@localhost/{{ systemuserlist.hass.username }}?charset=utf8mb4&unix_socket=/run/mysqld/mysqld.sock"
   auto_purge: true
   auto_repack: true
   # See 2023.12.0 release notes
@@ -453,24 +466,24 @@ sensor:
   - platform: bitcoin
     currency: EUR
     display_options:
-      - blocks_size
+      #- blocks_size
       - btc_mined
       - difficulty
-      - estimated_btc_sent
-      - estimated_transaction_volume_usd
+      #- estimated_btc_sent
+      #- estimated_transaction_volume_usd
       - exchangerate
       - hash_rate
       - market_price_usd
-      - mined_blocks
+      #- mined_blocks
       - miners_revenue_btc
       - miners_revenue_usd
       - minutes_between_blocks
       - next_retarget
       - number_of_transactions
-      - timestamp
-      - total_blocks
-      - total_btc
-      - total_btc_sent
+      #- timestamp
+      #- total_blocks
+      #- total_btc
+      #- total_btc_sent
       - total_fees_btc
       - trade_volume_btc
       - trade_volume_usd

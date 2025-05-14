@@ -1,0 +1,95 @@
+---
+
+homeassistant:
+  customize:
+    package.node_anchors:
+      package_name: &package_name "mobile_devices"
+      common_attrs: &common_attrs
+        package: *package_name
+      common_attrs_templated: &common_attrs_templated
+        templated: true
+        <<: *common_attrs
+
+    binary_sensor.phone_ben_low_power_mode:
+      friendly_name: "Low power mode on phone-ben"
+      <<: *common_attrs_templated
+    binary_sensor.nova_low_power_mode:
+      friendly_name: "nova Low power mode"
+      <<: *common_attrs_templated
+    binary_sensor.nova_ac_power:
+      friendly_name: "nova AC Power"
+      <<: *common_attrs_templated
+    binary_sensor.nova_sleeping:
+      friendly_name: "nova Sleeping"
+      <<: *common_attrs_templated
+
+template:
+  - binary_sensor:
+      - name: phone_ben_low_power_mode
+        unique_id: phone_ben_low_power_mode
+        icon: |
+          {% if is_state(this.entity_id, "on") -%}
+          mdi:battery-minus-variant
+          {% else -%}
+          mdi:battery
+          {% endif %}
+        state: |
+          {{ is_state_attr("sensor.phone_ben_battery_state", "Low Power Mode", true) }}
+
+      - name: nova_low_power_mode
+        unique_id: nova_low_power_mode
+        icon: |
+          {% if is_state(this.entity_id, "on") -%}
+          mdi:battery-minus-variant
+          {% else -%}
+          mdi:battery
+          {% endif %}
+        state: |
+          {{ is_state_attr("sensor.nova_internal_battery_state", "Low Power Mode", true) }}
+
+      - name: nova_ac_power
+        unique_id: nova_ac_power
+        icon: |
+          {% if is_state(this.entity_id, "on") -%}
+          mdi:power-plug-battery
+          {% else -%}
+          mdi:battery-90
+          {% endif %}
+        device_class: connectivity
+        state: |
+          {{ is_state_attr("sensor.nova_internal_battery_state", "Power Source State", "AC Power") }}
+
+      - name: nova_sleeping
+        unique_id: nova_sleeping
+        icon: |
+          {% if is_state(this.entity_id, "on") -%}
+          mdi:sleep
+          {% else -%}
+          mdi:laptop
+          {% endif %}
+        state: |
+          {{ is_state_attr("binary_sensor.nova_active", "Sleeping", true) }}
+
+  - sensor:
+      - name: battery_nova_time_left
+        unit_of_measurement: min
+        device_class: duration
+        state_class: measurement
+        icon: |
+          {{ state_attr("sensor.nova_internal_battery_level", "icon") }}
+        availability: |
+          {{
+            has_value("sensor.nova_internal_battery_level")
+            and state_attr("sensor.nova_internal_battery_level", "Time to Empty") is number
+          }}
+        state: |
+          {% set t = state_attr("sensor.nova_internal_battery_level", "Time to Empty") | int(0) %}
+          {% if t > 0 %}
+          {{ t }}
+          {% else %}
+          {{ states(this.entity_id) | int(0) }}
+          {% endif %}
+        attributes:
+          source_value: |
+            {{ state_attr("sensor.nova_internal_battery_state", "Time to Empty") }}
+

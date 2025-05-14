@@ -1,0 +1,57 @@
+---
+
+homeassistant:
+  customize:
+    package.node_anchors:
+      common_attrs: &common_attrs
+        package: "ios_shortcuts"
+      common_attrs_templated: &common_attrs_templated
+        templated: true
+        <<: *common_attrs
+
+    input_boolean.shortcuts_shokz_phone:
+      friendly_name: "iOS Shortcuts: Shokz connected to phone"
+      comment: |
+        Set with a service call from an iOS shortcuts automation when the phone
+        connects or disconnects from the headphones with Bluetooth
+      tags:
+        - Home Assistant
+        - Laptop
+        - Mobile/personal devices
+        - Presence
+        - Care.com
+      category:
+        - Apple shortcuts
+      <<: *common_attrs
+    binary_sensor.shortcuts_shokz_phone:
+      friendly_name: "Shokz connected to phone"
+      comment: |
+        Set with a service call from an iOS shortcuts automation when the phone
+        connects or disconnects from the headphones with Bluetooth
+      tags:
+        - Home Assistant
+        - Laptop
+        - Mobile/personal devices
+        - Presence
+        - Care.com
+      <<: *common_attrs
+
+input_boolean:
+  shortcuts_shokz_phone:
+    name: shortcuts_shokz_phone
+    icon: "mdi:headset"
+
+template:
+  - binary_sensor:
+      - name: shortcuts_shokz_phone
+        unique_id: shortcuts_shokz_phone
+        device_class: connectivity
+        icon: |
+          {% if is_state(this.entity_id, "on") -%}
+          mdi:headset
+          {% else -%}
+          mdi:headset-off
+          {% endif %}
+        state: |
+          {{ is_state("input_boolean.shortcuts_shokz_phone", "on") }}
+

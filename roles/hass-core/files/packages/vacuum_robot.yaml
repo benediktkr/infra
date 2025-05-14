@@ -218,6 +218,3 @@ template:
         device_class: timestamp
         state: |
           {{ now().isoformat() }}
-
-
-

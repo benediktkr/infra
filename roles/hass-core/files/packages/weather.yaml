@@ -154,18 +154,18 @@ automation:
     action:
       - service: notify.persistent_notification
         data:
-          title: |
+          title: |-
             {% from 'formatting.jinja' import meteoalarm_title %}
             {{ meteoalarm_title() }}
-          message: |
+          message: |-
             {% from 'formatting.jinja' import meteoalarm_message %}
             {{ meteoalarm_message() }}
-      - service: notify.mobile_app_ben_phone
+      - service: notify.ben
         data:
-          title: |
+          title: |-
             {% from 'formatting.jinja' import meteoalarm_title %}
             {{ meteoalarm_title() }}
-          message: |
+          message: |-
             {% from 'formatting.jinja' import meteoalarm_message %}
             {{ meteoalarm_message() }}
 
@@ -186,29 +186,26 @@ automation:
     action:
       - service: notify.persistent_notification
         data:
-          message: |
+          message: |-
             {% from 'formatting.jinja' import nina_message %}
             {% set nina = trigger.entity_id %}
             {{ nina_message(nina) }}
-          title: |
+          title: |-
             {% set nina = trigger.entity_id %}
             {% from 'formatting.jinja' import nina_title %}
             {{ nina_title(nina) }}
-      - service: notify.mobile_app_ben_phone
+      - service: notify.ben
         data:
-          message: |
+          message: |-
             {% from 'formatting.jinja' import nina_message %}
             {% set nina = trigger.entity_id %}
             {{ nina_message(nina) }}
-          title: |
+          title: |-
             {% set nina = trigger.entity_id %}
             {% from 'formatting.jinja' import nina_title %}
             {{ nina_title(nina) }}
-
-
 
 template:
-
   - trigger:
       - platform: time_pattern
         minutes: /1

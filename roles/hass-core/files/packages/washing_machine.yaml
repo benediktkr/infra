@@ -34,6 +34,9 @@ homeassistant:
         - Notifications
         - Z-Wave
       <<: *common_attrs_templated
+    sensor.laundry_was_last_done:
+      friendly_name: "Laundry was last done"
+      <<: *common_attrs_templated
     alert.laundry:
       # friendly_name is set with 'name' in the 'alert' integration
       templated: false
@@ -140,6 +143,19 @@ template:
             and door_changed < washing_machine_finished
           }}
 
+  - trigger:
+      - platform: state
+        entity_id:
+          - binary_sensor.washing_machine
+        from: "on"
+        to: "off"
+    sensor:
+      - name: laundry_was_last_done
+        unique_id: laundry_was_last_done
+        icon: "mdi:hanger"
+        device_class: timestamp
+        state: |
+          {{ now().isoformat() }}
 
 alert:
   # entity_id set to the key ("laundry")
@@ -147,20 +163,28 @@ alert:
     # friendly name
     name: "Take out laundry"
     entity_id: binary_sensor.washing_machine_laundry
-    title: |
-      Laundry
     state: "on"
-    repeat: 60
+    repeat:
+      - 30
+      - 60
     can_acknowledge: true
     skip_first: false
+    title: |
+      Laundry
     message: |
       Take out the laundry!
     done_message: clear_notification
     notifiers:
-      - mobile_app_ben_phone
-      - mobile_app_oxygen
+      - ben
     data:
+      push:
+        sound:
+          name: default
+          critical: 1
+          volume: 0.5
+      # not supported for critical
       tag: laundry
+      #group: laundry
 
 binary_sensor:
   - platform: group

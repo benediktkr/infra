@@ -254,6 +254,7 @@
     - hass-package
     - hass-macros
     - hass-core-config
+    - hass-core-macros
   when:
     - (hass_package is not defined) or item.startswith(hass_package)
 
@@ -302,11 +303,13 @@
     - home.yaml
     - heating.yaml
     - md.yaml
+    - mobile_devices.yaml
     - moosetv.yaml
     - more_lights.yaml
     - motion_sensor_hacks.yaml
     - nad_c370.yaml
     - internet_online.yaml
+    - ios_shortcuts.yaml
     - occupancy.yaml
     - remotes.yaml
     - smoke_detectors.yaml
@@ -522,6 +525,11 @@
       - trust-ad
       # Used to prevent AAAA requests
       - single-request
+      #- no-aaaa
+    dns_servers: []
+    # Not allowed when container has `network_mode: host` (the host should set it)
+    #sysctls:
+    #  net.ipv6.conf.all.disable_ipv6: "1"
     env:
       TZ: "Etc/UTC"
       DISPLAY: ":0"
@@ -586,6 +594,12 @@
       - type: bind
         source: /usr/local/bin/matrixmsg.py
         target: /usr/local/bin/matrixmsg.py
+      # ERROR (SyncWorker_18) [homeassistant.util.package] Unable to install package
+      # valetudo_map_parser==0.1.9.b41: error: failed to create
+      # file `/tmp/uv-1b696e695b7c17a7.lock`: Permission denied (os error 13)
+      #- type: bind
+      #  source: /tmp
+      #  target: /tmp
   tags:
     - hass-container
     - hass-core-container

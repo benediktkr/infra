@@ -45,7 +45,7 @@ homeassistant:
             )
           }}
         icon: >-
-          {% if this.state is true %}
+          {% if is_state(this.entity_id, "on") %}
           mdi:head-lightbulb
           {% else %}
           mdi:lightbulb-auto

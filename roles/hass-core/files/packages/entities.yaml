@@ -13,7 +13,10 @@ homeassistant:
         entity_picture: "https://www.sudo.is/img/Home_Assistant_Logo.svg"
         <<: *common_attrs
       zigbee: &zigbee
-        proto: Zigbee
+        proto: "Zigbee"
+        <<: *common_attrs
+      zwave: &zwave
+        proto: "Z-Wave"
         <<: *common_attrs
       audiobookshelf: &audiobookshelf
         area: Home Assistant
@@ -22,72 +25,40 @@ homeassistant:
           - Systems
         <<: *common_attrs
 
-    binary/_sensor.tamper_smokealarm_bedroom:
-      friendly_name: "smokealarm_bedroom Tamper"
-      device_class: tamper
-      proto: "Z-Wave"
-      note: |
-        Works correctly and updates state, despite group 2 (TMP button) is
-        not added.
+    device_tracker.unifi_nova:
+      icon: "mdi:apple"
       <<: *common_attrs
-    light.smokealarm_bedroom_basic:
-      default_groups:
-        - 3 (Device status)
-      note: |
-        Added groups 1 (Fire status) and 2 (TMP Button), reinterviewed and this
-        entity showed up.
+    device_tracker.unifi_s21_amine:
+      icon: "mdi:fedora"
+      <<: *common_attrs
+    device_tracker.unifi_m1mini:
+      icon: "mdi:fedora"
+      <<: *common_attrs
+    device_tracker.unifi_nook:
+      icon: "mdi:fedora"
+      <<: *common_attrs
 
-        Would get updated if the value of "Basic v1" was updated in Z-Wave JS, and
-        the updated value would show there as well.
-
-        Removed groups 1 and 2 again. Now this entity does not update if the "Basic
-        v1" value is changed in Z-Wave JS and gets set back to "0".
-
-        But 'binary_sensor.tamper_smokealarm_bedroom' still works, and changes state
-        if the cover is removed or put back.
-      <<: *common_attrs
-    binary_sensor.smoke_hallway:
-      friendly_name: "Hallway Smoke alarm"
-      device_class: smoke
-      proto: "Z-Wave"
-      <<: *common_attrs
-    binary_sensor.smoke_bedroom:
-      friendly_name: "smokealarm_bedroom Smoke state"
-      device_class: smoke
-      proto: "Z-Wave"
-      <<: *common_attrs
+    climate.bedroom:
+      icon: "mdi:bed-empty"
+      friendly_name: "Bedroom radiator"
+      tags:
+        - Heating
+        - Winter
+        - Z-Wave
+      area: "bedroom"
+      <<: *zwave
 
     sensor.iss:
-      unit_of_measurement: persons
+      #unit_of_measurement: astronauts
       state_class: measurement
-      native_precision: 0
+      suggested_unit_of_measurement: astronauts
+      suggested_display_precision: 0
+      #native_precision: 0
+      friendly_name: "International Space Station (ISS)"
       <<: *common_attrs
 
     sensor.battery_level_system:
       friendly_name: "System battery"
-      <<: *common_attrs
-    sensor.battery_level_ben_phone:
-      device_class: battery
-      <<: *common_attrs
-    binary_sensor.ben_phone_low_power_mode:
-      friendly_name: "Low power mode on ben-phone"
-      <<: *common_attrs
-    sensor.battery_level_ben_phone_icloud:
-      device_class: battery
-      <<: *common_attrs
-
-    sensor.battery_level_oxygen:
-      device_class: battery
-      <<: *common_attrs
-    binary_sensor.oxygen_low_power_mode:
-      friendly_name: "oxygen Low power mode"
-      <<: *common_attrs
-    binary_sensor.oxygen_ac_power:
-      friendly_name: "oxygen AC Power"
-      <<: *common_attrs
-
-    sensor.battery_level_oxygen_icloud:
-      device_class: battery
       <<: *common_attrs
 
     sensor.notflix_sudo_is:
@@ -180,38 +151,19 @@ homeassistant:
       icon: mdi:format-quote-close
       <<: *audiobookshelf
 
-template:
-  - binary_sensor:
-      - name: ben_phone_low_power_mode
-        unique_id: ben_phone_low_power_mode
-        icon: |
-          {% if is_state(this.entity_id, "on") -%}
-          mdi:battery-minus-variant
-          {% else -%}
-          mdi:battery
-          {% endif %}
-        state: |
-          {{ is_state_attr("sensor.ben_phone_battery_state", "Low Power Mode", true) }}
-
-      - name: oxygen_low_power_mode
-        unique_id: oxygen_low_power_mode
-        icon: |
-          {% if is_state(this.entity_id, "on") -%}
-          mdi:battery-minus-variant
-          {% else -%}
-          mdi:battery
-          {% endif %}
-        state: |
-          {{ is_state_attr("sensor.oxygen_battery_state", "Low Power Mode", true) }}
-      - name: oxygen_ac_power
-        unique_id: oxygen_ac_power
-        icon: |
-          {% if is_state(this.entity_id, "on") -%}
-          mdi:power-plug-battery
-          {% else -%}
-          mdi:battery-90
-          {% endif %}
-        device_class: connectivity
-        state: |
-          {{ is_state_attr("sensor.battery_level_oxygen", "Power Source State", "AC Power") }}
+#template:
+#  - sensor:
+#    - name:
+#      # "name" is template
+#      icon: mdi:home-assistant
+#      device_class:
+#      state_class: measurement
+#      unit_of_measurement:
+#      unique_id:
+#      availability: |-
+#        true
+#      state: |-
+#        {{ states(this.entity_id }}
+#      attributes:
+#        test: true
 

@@ -65,7 +65,7 @@ script:
     icon: "mdi:television-off"
     mode: single
     description: |
-      used for the turn_off service of media_player.tv_livingroom
+      Used for the turn_off service of media_player.tv_livingroom
       to be able to eecute more than one command.
     sequence:
       - service: media_player.turn_off
@@ -82,16 +82,12 @@ script:
         data: {}
         target:
           entity_id: media_player.sonos_livingroom
-      #- service: media_player.turn_off
-      #  data: {
-      #  target:
-      #    entity_id: media_player.apple_tv
 
   media_player_tv_livingroom_turn_on:
     icon: "mdi:television"
     mode: single
     description: |
-      used for the turn_on service of media_player.tv_livingroom
+      Used for the turn_on service of media_player.tv_livingroom
       to by able to execute more than one command.
     sequence:
       - if:
@@ -319,18 +315,6 @@ template:
           {{ states("remote.livingroom_tv_samsung_43_dog") }}
         attributes:
           source_entity_id: "remote.livingroom_tv_samsung_43_dog"
-
-      # turn_on:
-      #   service: media_player.turn_on
-      #    data: {}
-      #    target:
-      #      entity_id:
-      #        - media_player.apple_tv
-      #        - media_player.livingroom_tv_samsung_43_dog
-      # turn_off:
-      #   service: media_player.turn_off
-      #   target:
-      #     entity_id: media_player.livingroom_tv_samsung_43_dog
 
 media_player:
   - platform: universal
