@@ -1,6 +1,6 @@
 ---
 
-- name: install busybox, cryptsetup and dropbear
+- name: install latests versions of busybox, cryptsetup and dropbear
   apt:
     name:
       - busybox
@@ -69,6 +69,27 @@
     label: "{{ item.name }}"
   when:
     - item.mount|default(true)
+
+- name: install mergerfs
+  apt:
+    name:
+      - mergerfs
+    state: present
+  tags:
+    - packages
+
+- name: template systemd mounts
+  template:
+    src: mergerfs.mount.j2
+    dest: "/etc/systemd/system/{{ mergerfs.mountpoint[1:] | replace('/', '-') }}.mount"
+    owner: root
+    group: root
+    mode: 0644
+  loop_control:
+    label: "{{ mergerfs.mountpoint }}"
+  when:
+    - mergerfs.filesystems | default([]) | length > 0
+  notify: mergerfs daemon-reload
 
 - name: enable busybox in initramfs
   replace:

@@ -1,0 +1,26 @@
+# {{ ansible_managed }}
+
+{% if mergerfs.need_mmap|default(true) -%}
+{%   set cache_files = "auto-full" -%}
+{% else -%}
+{%   set cache_files = "off" -%}
+{% endif -%}
+
+[Unit]
+Description=mergerfs mount service
+Requires=cryptsetup.target
+After=cryptsetup.target
+
+[Service]
+Type=simple
+KillMode=none
+ExecStart=/usr/bin/mergerfs \
+  -f \
+  -o cache.files={{ cache_files }},dropcacheonclose=true,category.create={{ mergerfs.policy|default("mfs") }} \
+  {{ mergerfs.filesystems | join(":") }} \
+  {{ mergerfs.mountpoint }}
+ExecStop=/bin/fusermount -uz /mnt/mergerfs
+Restart=on-failure
+
+[Install]
+WantedBy=default.target
