@@ -10,7 +10,7 @@ Roles:
  * [`roles/hass-appdaemon`](../hass-appdaemon/): Automations written in pure python.
  * [`roles/hass-udev`](../hass-udev/): udev rules
  * [`roles/hass-zwave`](../hass-zwave/): Z-Wave JS for Z-Wave devices.
- * [`roles/hass-esphome`](../hass-esphome/): ESPhome configs and packages,
+ * [`roles/hass-esphome`](../hass-esphome/)
  * [`roles/hass-nginx`](../hass-nginx/): Configs for Nginx reverse proxy config, including for zwave-js.
  * [`roles/hass-deconz`](../hass-deconz): Zigbee controller that sensibly uses a Websocket intead of MQTT.
  * [`roles/hass-zigbee2mqtt`](../hass-zigbee2mqtt/): Unfortunate misfit requiring MQTT, but the IKEA devices are great. Considering
