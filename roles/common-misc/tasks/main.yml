@@ -127,7 +127,7 @@
   tags:
     - timezone
 
-- name: update apt cache and install vim
+- name: update apt cache and install latest version of vim
   apt:
     name:
       - vim
@@ -194,7 +194,7 @@
 #     - packages
 
 
-- name: install packages
+- name: install lastest version of common base packages
   apt:
     state: latest
     update_cache: true
@@ -238,7 +238,6 @@
       - mtr
       - nano
       - ncdu
-      - mergerfs
       - openssl
       - procmail
       - pciutils
@@ -610,13 +609,15 @@
     - packages
     - apt.sudo.is
 
-- name: download apt key
-  get_url:
-    url: https://{{ apt_url }}/KEY.gpg
-    # /usr/share/keyrings: needs [signed-by]
-    # /etc/apt/trusted.gpg.d/: trusted without [signed-by]
-    #dest: /usr/share/keyrings/apt.sudo.is.gpg.asc
+# /usr/share/keyrings:    needs [signed-by]
+# /etc/apt/trusted.gpg.d: trusted without [signed-by]
+- name: "copy key for {{ apt_url }}"
+  copy:
+    src: "{{ apt_url }}.gpg.asc"
     dest: "{{ item }}/{{ apt_url }}.gpg.asc"
+    owner: root
+    group: root
+    mode: "0644"
   with_items:
     - /etc/apt/trusted.gpg.d
     - /usr/share/keyrings
