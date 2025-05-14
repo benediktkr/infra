@@ -142,7 +142,7 @@
   tags:
     - packages
 
-- name: install telegraf
+- name: install latest version of telegraf
   apt:
     name: telegraf
     state: latest
