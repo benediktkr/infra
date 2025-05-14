@@ -177,7 +177,7 @@
     #user: "{{systemuserlist.jenkins.uid}}:{{systemuserlist.jenkins.gid}}"
     state: started
     ports:
-      - "{{ jenkins_bind_addr | default('127.0.0.1') }}:{{ jenkins_port }}:8080/tcp"
+      - "127.0.0.1:{{ jenkins_port }}:8080/tcp"
       - "{{ jenkins_bind_addr | default('127.0.0.1') }}:50000:50000/tcp"
     mounts:
       - type: bind
