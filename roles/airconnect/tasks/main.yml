@@ -58,3 +58,5 @@
   loop_control:
     label: airconnect-{{ item.prog }}
   with_items: "{{ airconnect_containers }}"
+  when:
+    - item.state|default('started') != 'stopped'
