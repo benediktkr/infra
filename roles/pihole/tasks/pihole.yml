@@ -129,11 +129,13 @@
   tags:
     - pihole-config
     - pihole-dnsmasq-config
+    - pihole-dnsmasq
   with_items:
-    - "07-dhcp-options.conf"
     - "00-domain.conf"
-    - "99-edns.conf"
+    - "01-pihole.conf"
     - "02-zone-forward.conf"
+    - "07-dhcp-options.conf"
+    - "99-edns.conf"
   notify: restart pihole
 
 - name: template unbound config

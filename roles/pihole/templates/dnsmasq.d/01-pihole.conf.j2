@@ -8,13 +8,18 @@
 # This file is copyright under the latest version of the EUPL.
 # Please see LICENSE file for your rights under this license.
 
-
 addn-hosts=/etc/pihole/local.list
 addn-hosts=/etc/pihole/custom.list
 
-
 localise-queries
 
+# Override TTL on responses
+#local-ttl=300
+
+{% if not pihole_ipv6|bool -%}
+filter-AAAA
+address=/*/::
+{% endif %}
 
 no-resolv
 
@@ -28,4 +33,8 @@ cache-size={{ pihole_dns_cache_size }}
 server={{ bridgewithdns.unbound0 }}
 server={{ bridgewithdns.unbound1 }}
 except-interface=nonexisting
+
+rev-server=192.168.21.0/24,192.168.21.1
+server=/s21.sudo.is/192.168.21.1
+server=//192.168.21.1
 
