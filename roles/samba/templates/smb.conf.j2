@@ -295,7 +295,7 @@
     path = {{ backups_root }}/{{ item.name }}
     valid users = {{ item.valid_users | join(",") }}
     writable = yes
-    guest_ok = no
+    guest ok = no
 
 {% endfor %}
 
