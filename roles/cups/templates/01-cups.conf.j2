@@ -40,7 +40,7 @@ server {
 
         proxy_pass_request_headers on;
 
-        proxy_pass https://127.0.0.1:631;
+        proxy_pass https://127.0.0.1:{{ cups_port }};
     }
     location /admin {
         include /etc/nginx/require_auth.conf;
@@ -52,7 +52,7 @@ server {
         proxy_ssl_verify off;
         proxy_pass_request_headers on;
 
-        proxy_pass https://127.0.0.1:631;
+        proxy_pass https://127.0.0.1:{{ cups_port }};
 
     }
     access_log /var/log/nginx/access_printer.{{ domain }}.log main;

@@ -39,8 +39,12 @@
     - pdf.ppd
   notify: restart cups
 
-# document runnign these commands, and adapt the templates (they change the templates, should not be run in ansible like this)
-# need to change Server name to go through nginx instead of port 631
+# Document running these commands, and then adapt the templates to accomplish the same. Running the
+# commands modifies the config files on the host, so they should just be templated correctly instead
+# of running these commands in Ansible tasks to modify the config.
+#
+# TODO: change server name so printers are advertised on port 443 instead, and the print jobs are
+# proxied through nginx instead of going to port 631 (and the port needing to be open).
 # https://www.cups.org/doc/sharing.html
 - name: enable share printers
   command: cupsctl --share-printers --remote-any
@@ -54,11 +58,12 @@
     src: "{{ item }}.j2"
     dest: /etc/cups/{{ item }}
     owner: root
-    group: root
-    mode: 0644
+    group: lp
+    mode: 0640
   tags:
    - cupsd.conf
    - printers.conf
+  notify: restart cups
   with_items:
     - cupsd.conf
 
