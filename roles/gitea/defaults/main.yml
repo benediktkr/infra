@@ -17,4 +17,6 @@ gitea_openid_enabled: false
 gitea_federation_enabled: false
 gitea_actions_enabled: false
 
+gitea_nginx_blocklist: []
+
 shieldsio_enabled: false

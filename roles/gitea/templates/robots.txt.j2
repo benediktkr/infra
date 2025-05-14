@@ -43,7 +43,6 @@ Disallow: /*/*/labels
 Disallow: /*/*/activity/*
 Disallow: /*/vendor
 
-
 # Language spam
 Disallow: /*?lang=
 
@@ -160,8 +159,10 @@ Disallow: /ops
 Disallow: /user/login
 Disallow: /*/-/
 
-Allow: /{{ myusername }}
 Disallow: /explore
 Disallow: /expore/repos
+Disallow: /shieldsio
+
+Allow: /{{ myusername }}
 
 Sitemap: https://{{ gitea_url }}/sitemap.xml

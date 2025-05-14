@@ -4,8 +4,41 @@ map $request_uri $x_robots_tag {
     "~*/mirrors/(.*)/projects(.*)$" "noindex";
     "~*/mirrors/(.*)/activity(.*)$" "noindex";
     "~*/mirrors/(.*)/releases(.*)$" "noindex";
-    "~*/mirrors/(.*)/issues/(.*)$" "noindex";
+    "~*/mirrors/(.*)/issues/(.*)$"  "noindex";
 }
+
+map $http_user_agent $bad_user_agent {
+    "~claudebot@anthropic\.com"  1;
+    "~ClaudeBot"                 1;
+    "~anthropic\.com"            1;
+    "~AmazonBot"                 1;
+    "~developer\.amazon\.com/support/amazonbot" 1;
+    "~amazon\.com"               1;
+    "~GPTBot"                    1;
+    "~OAI-SearchBot"             1;
+    "~ChatGPT-User"              1;
+    "~ChatGPT"                   1;
+    "~openai\.com/bot"           1;
+    "~openapi\.com/gptbot"       1;
+    "~openai\.com"               1;
+    "~developers\.facebook\.com" 1;
+    "~ImagesiftBot"              1;
+    "~imagesift\.com"            1;
+    "~PetalBot"                  1;
+    "~petalsearch\.com"          1;
+    "~Googlebot-Extended"        1;
+    "~Applebot-Extended"         1;
+    "~CCBot"                     1;
+    "~diffbot"                   1;
+    "~PerplexityBot"             1;
+    "~Omgili"                    1;
+    "~Omgilibot"                 1;
+    "~webzio-extended"           1;
+    "~Awario(?:[A-Za-z]*)Bot"    1;
+    "~DuckAssistBot"             1;
+    default                      0;
+}
+
 server {
 
   listen 443 ssl http2;
@@ -35,6 +68,19 @@ server {
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
   }
   {% endfor %}
+
+  {% for item in gitea_nginx_blocklist -%}
+  {% if "/" in item -%}
+  deny {{ item }};
+  {% else -%}
+  deny {{ item }}/32;
+  {% endif -%}
+  {% endfor %}
+
+  if ($bad_user_agent) {
+    #return 429;
+    return 404;
+  }
 
   location / {
 
