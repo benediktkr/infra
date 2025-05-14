@@ -148,6 +148,15 @@ server {
     }
 
     root /var/www/owntone/htdocs;
+
+    location /_audio {
+       include /etc/nginx/require_auth.conf;
+       alias {{ audio_dir }};
+
+       autoindex on;
+       autoindex_exact_size off;
+    }
+
     location /ws {
          proxy_pass http://127.0.0.1:{{ owntone_port_ws }}/;
          proxy_set_header Host $host;

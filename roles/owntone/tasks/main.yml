@@ -39,7 +39,7 @@
   file:
     state: directory
     path: "{{ audio_dir }}"
-    mode: "0750"
+    mode: "0755"
     owner: "{{ owntone_user.uid }}"
     group: "{{ owntone_group.gid }}"
   tags:
@@ -49,7 +49,7 @@
   file:
     state: directory
     path: "{{ audio_dir }}/{{ item.name }}"
-    mode:  "{{ item.mode | default('0750') }}"
+    mode:  "{{ item.mode | default('0755') }}"
     owner: "{{ owntone_user.uid }}"
     group: "{{ owntone_group.gid }}"
   tags:

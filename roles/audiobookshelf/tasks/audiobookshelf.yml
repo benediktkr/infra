@@ -22,12 +22,13 @@
 - name: ensure podcast and audiobooks dirs exists in {{ deadspace_root }}
   file:
     path: "{{ deadspace_root }}/{{ item }}"
-    mode:  0750
+    mode:  0755
     owner: "{{ audiobookshelf_user.uid }}"
     group: "{{ audiobookshelf_group.gid }}"
   tags:
     - audiobookshelf-dirs
     - abs-dirs
+    - abs-bk
   loop_control:
     label: "{{ deadspace_root }}/{{ item }}"
   with_items:
