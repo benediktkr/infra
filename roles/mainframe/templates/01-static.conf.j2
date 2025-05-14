@@ -22,6 +22,15 @@ server {
     }
     {% endfor %}
 
+    {% for item in ["ardrand.pdf", "tsense.pdf"] -%}
+    location = /{{ item }} {
+        add_header "Link" '<https://www.{{ domain }}/{{ item }}>; rel="canonical"' always;
+        add_header X-Robots-Tag "all" always;
+        #rewrite ^/{{ item }}$ https://www.{{ domain }}/{{ item }} redirect;
+        alias /var/www/www.{{ domain }}/{{ item }};
+    }
+    {% endfor %}
+
     location / {
         return 301 https://static.{{ domain }}$request_uri;
     }
@@ -61,18 +70,14 @@ server {
         rewrite ^/cv1.pdf$ https://www.{{ domain }}/cv1.pdf permanent;
     }
 
-    {% for item in ["ardrand.pdf", "tsense.pdf"] %}
+    {% for item in ["ardrand.pdf", "tsense.pdf"] -%}
     location = /{{ item }} {
         add_header "Link" '<https://www.{{ domain }}/{{ item }}>; rel="canonical"' always;
         add_header X-Robots-Tag "all" always;
-        rewrite ^/{{ item }}$ https://www.{{ domain }}/{{ item }} permanent;
+        #rewrite ^/{{ item }}$ https://www.{{ domain }}/{{ item }} redirect;
+        alias /var/www/www.{{ domain }}/{{ item }};
     }
     {% endfor %}
-
-    location = /ardrand.pdf. {
-        add_header "Link" '<https://www.{{ domain }}/ardrand.pdf>; rel="canonical"' always;
-        rewrite ^/ardrand.pdf\.$ https://www.{{ domain }}/ardrand.pdf permanent;
-    }
 
     {% for item in ["sitemap.xml", "keybase.txt", "Found_Reykjavik.pdf", "Found_Reykjavik_144dpi.pdf"] -%}
     location = /{{ item }} {
