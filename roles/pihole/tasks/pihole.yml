@@ -238,7 +238,8 @@
 - name: start docker container
   docker_container:
     name: "pihole"
-    image: "pihole/pihole:latest"
+    #image: "pihole/pihole:latest"
+    image: "pihole/pihole@sha256:0def896a596e8d45780b6359dbf82fc8c75ef05b97e095452e67a0a4ccc95377"
     auto_remove: false
     detach: true
     pull: true
