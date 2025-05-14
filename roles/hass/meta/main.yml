@@ -49,7 +49,7 @@ dependencies:
   - role: hass-appdaemon
     tags: hass-appdaemon, hass-ad, appdaemon
   - role: hass-nginx
-    tags: hass-nignx, nginx
+    tags: hass-nginx, nginx
 
   - role: hass-deconz
     tags: hass-zigbee, hass-deconz, deconz, zigbee
