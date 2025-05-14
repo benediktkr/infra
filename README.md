@@ -21,7 +21,6 @@ configs and not code).
 
 ## Related projects
 
-
 This repo also deploys/orchestrates a bunch of "projects":
 
 - [`zflux`](https://git.sudo.is/ben/zflux): A ZeroMQ queue in front of
@@ -38,7 +37,6 @@ This repo also deploys/orchestrates a bunch of "projects":
 
 And various `.deb` builds and docker images that needed some customizing:
 
-
 - [`build-owntone`](https://git.sudo.is/ben/build-owntone): Building [OwnTone](https://owntone.github.io/owntone-server/).
 - [`build-jellyfin-web`](https://git.sudo.is/ben/build-jellyfin-web)
 - [`emacs-docker`](https://git.sudo.is/ben/emacs-docker) (not maintained):
@@ -50,7 +48,6 @@ And various `.deb` builds and docker images that needed some customizing:
   Forwarding the DNS server of a Docker bridged network.
 - [`synapse-admin-docker`](https://git.sudo.is/ben/synapse-admin-docker)
 - [`xmrig-docker`](https://git.sudo.is/ben/xmrig-docker)
-
 
 ## Git mirrors
 
