@@ -313,6 +313,7 @@ server {
             include conf.d/headers-{{ domain }}.conf;
             #add_header "Link" '<$canonical_url>; rel="canonical"; rel="preconnect"';
             add_header "Link" '<$canonical_url>; rel="canonical"' always;
+            #add_header "X-Robots-Tag" "noindex" always;
         }
         #rewrite ^/docs/LICENSE(.*)$ /LICENSE.txt redirect;
         #rewrite ^/docs/.*/LICENSE(.*)$ /LICENSE.txt redirect;
