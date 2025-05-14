@@ -26,6 +26,7 @@
   tags:
     - hass-dirs
     - hass-nginx-dirs
+    - hass-nginx-static-files
   loop_control:
     label: "{{ item }}"
   with_items:
@@ -43,6 +44,7 @@
     label: "{{ item }}"
   with_items:
     - sonos_dark.png
+  diff: false
   tags:
     - hass-entity-pictures
 
@@ -58,7 +60,9 @@
   with_items:
     - valetudo-api.json
     - dev.png
-  no_log: false
+  diff: false
+  tags:
+    - hass-nginx-static-files
 
 - name: template nginx vhosts for hass and friends
   template:

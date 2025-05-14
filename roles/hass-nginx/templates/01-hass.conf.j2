@@ -1,3 +1,7 @@
+map $http_request_uri $cache_control {
+    ~"^/static/icons/" "no-store";
+}
+
 map $http_upgrade $connection_upgrade {
     default upgrade;
     ''      close;
@@ -29,7 +33,6 @@ server {
         proxy_pass {{ hass_glados_tts_url }}/;
 
     }
-
 
     location / {
         #proxy_set_header Host $host;
@@ -89,7 +92,8 @@ server {
         proxy_pass http://{{ bridgewithdns.hass_ad }}:8080/api/appdaemon/;
     }
 
-
+    add_header Cache-Control $cache_control always;
+    rewrite "^(/static/icons)?/favicon.ico$" "/favicon.png" redirect;
     location /favicon.png {
         alias /var/www/hass/dev.png;
         default_type image/png;
