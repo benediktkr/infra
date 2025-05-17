@@ -349,6 +349,7 @@
     - bathroom.yaml
     - tgtg.yaml
     - tibber.yaml
+    - lulu.yaml
     - private_package.yaml
     - persons.yaml
     #- night_mode.yaml
