@@ -29,6 +29,7 @@ server {
         #rewrite ^/{{ item }}$ https://www.{{ domain }}/{{ item }} redirect;
         alias /var/www/www.{{ domain }}/{{ item }};
     }
+    rewrite "^/{{ item }}\.$" "/{{ item }}" redirect;
     {% endfor %}
 
     location / {
