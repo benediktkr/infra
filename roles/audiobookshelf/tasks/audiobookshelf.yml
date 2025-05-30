@@ -28,7 +28,6 @@
   tags:
     - audiobookshelf-dirs
     - abs-dirs
-    - abs-bk
   loop_control:
     label: "{{ deadspace_root }}/{{ item }}"
   with_items:
