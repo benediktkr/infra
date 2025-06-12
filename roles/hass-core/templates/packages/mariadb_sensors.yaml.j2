@@ -55,6 +55,7 @@ sql:
       SELECT count(*) AS value
       FROM {{ systemuserlist.hass.username }}.states;
     column: "value"
+    unit_of_measurement: rows
 
 sensor:
   - platform: derivative
