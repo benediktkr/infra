@@ -45,15 +45,24 @@ sql:
     unit_of_measurement: MiB
   - name: mariadb_database_rows_states_meta
     query: |
-      SELECT count(*) AS value
-      FROM {{ systemuserlist.hass.username }}.states_meta;
+      SELECT TABLE_ROWS AS value
+      FROM information_schema.TABLES
+      WHERE TABLE_SCHEMA='{{ systemuserlist.hass.username }}' AND TABLE_NAME='states_meta';
     column: "value"
     unit_of_measurement: rows
-  # currently the 'states' table takes about 14 seconds
   - name: mariadb_database_rows_states
+    # This is slow, takes 10-20 secs
+    #  SELECT count(*) AS value
+    #  FROM {{ systemuserlist.hass.username }}.states;
+    #
+    # This returns an approximation on tables that use InnoDB as storage engine
+    # https://dev.mysql.com/doc/refman/8.4/en/show-table-status.html
+    # Equivalent to this 'SHOW' statement:
+    #  SHOW TABLE STATUS WHERE Name = 'states';
     query: |
-      SELECT count(*) AS value
-      FROM {{ systemuserlist.hass.username }}.states;
+      SELECT TABLE_ROWS AS value
+      FROM information_schema.TABLES
+      WHERE TABLE_SCHEMA='{{ systemuserlist.hass.username }}' AND TABLE_NAME='states';
     column: "value"
     unit_of_measurement: rows
 
