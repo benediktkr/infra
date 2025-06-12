@@ -14,6 +14,23 @@
   tags:
     - packages
 
+- name: Ensure /var/log directory exists
+  file:
+    state: directory
+    path: /var/log/mysql
+    owner: mysql
+    group: mysql
+    mode: 0755
+
+- name: Create dump destination directory
+  file:
+    state: directory
+    owner: root
+    group: root
+    mode: 0770
+    path: "{{ mariadb_dump_path }}"
+  when: mariadb_dump_path is defined
+
 - name: mariadb sever config
   template:
     src: 50-server.cnf.j2
@@ -25,15 +42,6 @@
     name: mariadb
     state: started
   #ignore_errors: ansible_check_mode == true
-
-- name: create dump destination
-  file:
-    state: directory
-    owner: root
-    group: root
-    mode: 0770
-    path: "{{ mariadb_dump_path }}"
-  when: mariadb_dump_path is defined
 
 - name: create dbs
   mysql_db:
