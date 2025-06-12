@@ -104,17 +104,19 @@ template:
           {% set state_on = is_state(this.entity_id, 'on') %}
           {% set power = states('sensor.electric_w_switch_washing_machine')|float %}
           {{
-            (not state_on and power > 10.0)
+            (not state_on and power > 13.0)
             or (state_on and power > 3.8)
           }}
         attributes:
           delay_on: 10s
           delay_off: 1min
-          threshold_on: 10.0W
+          threshold_on: 13.0W
           threshold: 3.8W
           comment: >-
             Drops down to ca 2.8W after finishing and releasing the lock on the
             door, uses ~3.9-4.0W until door lock is released.
+
+            Goes to 12W when timer is enabled.
 
       - name: washing_machine_laundry
         unique_id: washing_machine_laundry
