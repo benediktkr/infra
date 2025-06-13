@@ -222,10 +222,11 @@
     - unbound0
     - unbound1
 
+# Disable admin password:
 # docker exec pihole pihole -a -p
-# docker exec pihole sudo pihole -a -p
-
-#IPv6: "false"
+#
+# Fix db schema ('FOREIGN KEY constraint failed'):
+# docker exec pihole pihole -g -r recreate
 
 # notes on environent vars:
 # * docs: https://github.com/pi-hole/docker-pi-hole/#environment-variables
