@@ -104,13 +104,13 @@ template:
           {% set state_on = is_state(this.entity_id, 'on') %}
           {% set power = states('sensor.electric_w_switch_washing_machine')|float %}
           {{
-            (not state_on and power > 13.0)
+            (not state_on and power > 12.0)
             or (state_on and power > 3.8)
           }}
         attributes:
           delay_on: 10s
           delay_off: 1min
-          threshold_on: 13.0W
+          threshold_on: 12.0W
           threshold: 3.8W
           comment: >-
             Drops down to ca 2.8W after finishing and releasing the lock on the
