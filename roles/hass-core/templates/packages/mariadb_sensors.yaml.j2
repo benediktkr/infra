@@ -11,25 +11,33 @@ homeassistant:
         <<: *common_attrs
 
     sensor.mariadb_database_size:
-      friendly_name: MariaDB hass DB size
+      friendly_name: MariaDB schema size
       state_class: measurement
       device_class: data_size
       <<: *common_attrs
     sensor.mariadb_database_rows_states_meta:
-      friendly_name: MariaDB table hass.states_meta
+      friendly_name: MariaDB table states_meta
       state_class: measurement
       <<: *common_attrs
     sensor.mariadb_database_rows_states:
-      friendly_name: MariaDB table hass.states
+      friendly_name: MariaDB table states
       state_class: measurement
       <<: *common_attrs
 
     sensor.mariadb_database_size_hourly:
-      friendly_name: MariaDB hass DB size MiB/hour
+      friendly_name: MariaDB schema size MiB/hour
       state_class: measurement
       <<: *common_attrs
     sensor.mariadb_database_size_daily:
-      friendly_name: MariaDB hass DB size MiB/day
+      friendly_name: MariaDB schema size MiB/day
+      state_class: measurement
+      <<: *common_attrs
+    sensor.mariadb_database_rows_states_hourly:
+      friendly_name: MariaDB table states hourly
+      state_class: measurement
+      <<: *common_attrs
+    sensor.mariadb_database_rows_states_daily:
+      friendly_name: MariaDB table states daily
       state_class: measurement
       <<: *common_attrs
 
@@ -67,6 +75,7 @@ sql:
     unit_of_measurement: rows
 
 sensor:
+  # sensor.mariadb_database_size
   - platform: derivative
     source: sensor.mariadb_database_size
     name: mariadb_database_size_hourly
@@ -77,6 +86,20 @@ sensor:
     source: sensor.mariadb_database_size
     name: mariadb_database_size_daily
     round: 2
+    unit_time: d
+    time_window: "24:00:00"
+
+ # sensor.mariadb_database_rows_states
+  - platform: derivative
+    source: sensor.mariadb_database_rows_states
+    name: mariadb_database_rows_states_hourly
+    round: 0
+    unit_time: h
+    time_window: "01:00:00"
+  - platform: derivative
+    source: sensor.mariadb_database_rows_states
+    name: mariadb_database_rows_states_daily
+    round: 0
     unit_time: d
     time_window: "24:00:00"
 
