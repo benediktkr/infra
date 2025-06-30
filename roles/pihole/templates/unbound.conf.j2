@@ -81,7 +81,11 @@ server:
     # Level 3 gives query level information, output per query.
     # Level 4 gives algorithm level information.
     # Level 5 logs client identification for cache misses
+    {% if pihole_log_queries|default(false) -%}
     verbosity: 1
+    {% else -%}
+    verbosity: 0
+    {% endif -%}
     # At 0, off.
     #
     # At 1, for every user query that fails a line is printed to the
@@ -314,6 +318,22 @@ server:
     # try to set the SO_REUSEPORT socket option on each socket. May distribute
     # incoming queries to threads more evenly.
     so-reuseport: yes
+
+    # The number of seconds between printing statistics to the log for every
+    # thread. Disable with value 0 or "". The histogram statistics are only
+    # printed if replies were sent during the statistics interval, requestlist
+    # statistics are printed for every interval (but can be 0). This is because
+    # the median calculation requires data to be present.
+    statistics-interval: 900
+
+    # Make stats cumulative since starting Unbound, without clearing the
+    # statistics counters after logging the statistics
+    statistics-cumulative: yes
+
+    # If enabled, extended statistics are printed from unbound-control(8). The
+    # counters are listed in unbound-control(8). Keeping track of more
+    # statistics takes time.
+    extended-statistics: yes
 
     ###########################################################################
     # LOCAL ZONE
