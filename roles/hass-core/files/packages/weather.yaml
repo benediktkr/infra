@@ -272,15 +272,13 @@ weather:
     #ozone_template:
     #visibility_template:
     #wind_gust_speed_template:
+    #forecast_twice_daily_template:
     forecast_hourly_template: |
       {% set source = this.attributes.get("weather_id", "") -%}
-      {{ state_attr(source, "forecast_hourly") }}
+      {{ state_attr(source, "forecast_data") }}
     forecast_daily_template: |
       {% set source = this.attributes.get("weather_id", "") -%}
-      {{ state_attr(source, "forecast_daily") }}
-    forecast_twice_daily_template: |
-      {% set source = this.attributes.get("weather_id", "") -%}
-      {{ state_attr(source, "forecast_twice_daily") }}
+      {{ state_attr(source, "forecast_data") }}
     cloud_coverage_template: |
       {% set source = this.attributes.get("weather_id", "") -%}
       {{ state_attr(source, "cloud_coverage") }}
