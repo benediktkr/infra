@@ -28,10 +28,6 @@ homeassistant:
         <<: *common_attrs
 
     sensor.blitzortung_lightning_distance:
-      # IDEA: currently using the attribute on 'binary_sensor.weather_lightning', but it
-      # might actually be easier to use an attribute on a different entity.
-      #
-      # This sensor already has state_class, device_class and unit_of_measurement set correctly
       distance_threshold: 25.0
       <<: *common_attrs
 
