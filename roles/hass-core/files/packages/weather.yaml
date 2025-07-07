@@ -364,8 +364,7 @@ template:
           }}
       - name: weather_forecast_wind_bearing
         unit_of_measurement: "°"
-        # Not supported on 2024.12
-        #device_class: "wind_direction"
+        device_class: "wind_direction"
         state_class: measurement
         icon: "mdi:rotate-360"
         state: |
@@ -414,8 +413,7 @@ template:
           {{ state_attr("weather.home", "wind_speed") | round(1) }}
       - name: weather_wind_bearing
         unit_of_measurement: "°"
-        # Not supported on 2024.12
-        #device_class: "wind_direction"
+        device_class: "wind_direction"
         state_class: measurement
         icon: "mdi:rotate-360"
         availability: |
