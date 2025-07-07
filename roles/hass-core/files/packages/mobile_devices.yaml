@@ -10,9 +10,21 @@ homeassistant:
         templated: true
         <<: *common_attrs
 
+    # phone-ben
     binary_sensor.phone_ben_low_power_mode:
       friendly_name: "Low power mode on phone-ben"
       <<: *common_attrs_templated
+    sensor.phone_ben_icloud_last_updated:
+      friendly_name: "phone-ben iCloud Last updated"
+      <<: *common_attrs_templated
+    sensor.phone_ben_icloud_last_changed:
+      friendly_name: "phone-ben iCloud Last changed (test)"
+      <<: *common_attrs_templated
+    sensor.phone_ben_icloud_account_fetch_interval:
+      friendly_name: "phone-ben iCloud Account fetch interval"
+      <<: *common_attrs_templated
+
+    # nova
     binary_sensor.nova_low_power_mode:
       friendly_name: "nova Low power mode"
       <<: *common_attrs_templated
@@ -22,8 +34,18 @@ homeassistant:
     binary_sensor.nova_sleeping:
       friendly_name: "nova Sleeping"
       <<: *common_attrs_templated
+    sensor.battery_nova_time_left:
+      friendly_name: "nova Battery time left"
+      <<: *common_attrs_templated
+    sensor.nova_icloud_last_updated:
+      friendly_name: "nova iCloud Last updated"
+      <<: *common_attrs_templated
+    sensor.nova_icloud_account_fetch_interval:
+      friendly_name: "nova iCloud Account fetch interval"
+      <<: *common_attrs_templated
 
 template:
+  # phone-ben
   - binary_sensor:
       - name: phone_ben_low_power_mode
         unique_id: phone_ben_low_power_mode
@@ -36,6 +58,36 @@ template:
         state: |
           {{ is_state_attr("sensor.phone_ben_battery_state", "Low Power Mode", true) }}
 
+  # phone-ben
+  - sensor:
+      - name: phone_ben_icloud_last_updated
+        device_class: timestamp
+        icon: "mdi:account-clock"
+        availability: |
+          {{ states.device_tracker.icloud_phone_ben.last_updated is defined }}
+        state: |
+          {{ states.device_tracker.icloud_phone_ben.last_updated.isoformat() }}
+
+      - name: phone_ben_icloud_last_changed
+        device_class: timestamp
+        icon: "mdi:account-clock"
+        availability: |
+          {{ states.device_tracker.icloud_phone_ben.last_changed is defined }}
+        state: |
+          {{ states.device_tracker.icloud_phone_ben.last_changed.isoformat() }}
+
+      - name: phone_ben_icloud_account_fetch_interval
+        icon: "mdi:account-circle"
+        unit_of_measurement: "min"
+        device_class: "duration"
+        state_class: "measurement"
+        availability: |
+          {{ has_value("device_tracker.icloud_phone_ben") }}
+        state: |
+          {{ state_attr("device_tracker.icloud_phone_ben", "account_fetch_interval") }}
+
+  # nova
+  - binary_sensor:
       - name: nova_low_power_mode
         unique_id: nova_low_power_mode
         icon: |
@@ -70,6 +122,7 @@ template:
         state: |
           {{ is_state_attr("binary_sensor.nova_active", "Sleeping", true) }}
 
+  # nova
   - sensor:
       - name: battery_nova_time_left
         unit_of_measurement: min
@@ -93,3 +146,20 @@ template:
           source_value: |
             {{ state_attr("sensor.nova_internal_battery_state", "Time to Empty") }}
 
+      - name: nova_icloud_last_updated
+        device_class: timestamp
+        icon: "mdi:account-clock"
+        availability: |
+          {{ states.device_tracker.icloud_nova.last_updated is defined }}
+        state: |
+          {{ states.device_tracker.icloud_nova.last_updated.isoformat() }}
+
+      - name: nova_icloud_account_fetch_interval
+        icon: "mdi:account-circle"
+        unit_of_measurement: "min"
+        device_class: "duration"
+        state_class: "measurement"
+        availability: |
+          {{ has_value("device_tracker.icloud_nova") }}
+        state: |
+          {{ state_attr("device_tracker.icloud_nova", "account_fetch_interval") }}
