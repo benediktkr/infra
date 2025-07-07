@@ -214,7 +214,7 @@ sensor:
     device_class: temperature
     unit_of_measurement: '°C'
     entities:
-      - sensor.owm_home_temperature
+      - sensor.weather_temperature
 
 
 # renames:
