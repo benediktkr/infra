@@ -363,11 +363,23 @@ template:
           {{ state_attr(source, "cloud_coverage") }}
         condition_template: |
           {% set rain_id = this.attributes.get("rain_id", "") -%}
-          {% if rain_id|has_value and is_state(rain_id, "on") -%}
-          rainy
-          {% else -%}
+          {% set rainlevel = this.attributes.get("rainlevel_id", "") -%}
           {% set weather_id = this.attributes.get("weather_id", "") -%}
-          {{ states(weather_id) }}
+          {% set weather = states(weather_id) -%}
+          {% if rain_id|has_value and is_state(rain_id, "on") -%}
+          {%   if rainlevel == 7 -%}
+          exceptional
+          {%   elif rainlevel >= 4 -%}
+          pouring
+          {%   else -%}
+          rainy
+          {%   endif %}
+          {% else -%}
+          {%   if weather in ["pouring", "rainy"] -%}
+          cloudy
+          {%   else -%}
+          {{ weather }}
+          {%   endif %}
           {% endif %}
         dew_point_template: |
           {% set source = this.attributes.get("weather_id", "") -%}
