@@ -20,6 +20,17 @@ homeassistant:
       common_attrs_templated: &common_attrs_templated
         templated: true
         <<: *common_attrs
+      common_attrs_weather_home: &common_attrs_weather_home
+        templated: true
+        source_entity_id: "weather.home"
+        attribution: >-
+          Weather from met.no, delivered by the Norwegian Meteorological Institute.
+        attribution2: |
+          {{ state_attr("weather.home", "attribution") }}
+        attribution3: |
+          {% source_id = this.attributes.get("source_entity_id", "") -%}
+          {{ state_attr(source_id, "attribution") }}
+        <<: *common_attrs
 
     sensor.blitzortung_lightning_distance:
       # IDEA: currently using the attribute on 'binary_sensor.weather_lightning', but it
@@ -39,49 +50,63 @@ homeassistant:
     binary_sensor.meteoalarm:
       friendly_name: "MeteoAlarm (EUMETNET)"
       integration: true
-      <<: *common_attrs_templated
+      <<: *common_attrs
 
-    # sensor.weather_precipitation_met_no
-    sensor.weather_precipitation_met_no:
-      friendly_name: "Precipitation: met.no"
-      source_entity_id: "weather.home"
-      <<: *common_attrs_templated
-    # sensor.weather_precipitation_owm
-    sensor.weather_precipitation_owm:
-      friendly_name: "Precipitation: OWM"
-      source_entity_id: "weather.owm_home"
-      <<: *common_attrs_templated
-    # sensor.weather_precipitation_probability_owm
-    sensor.weather_precipitation_probability_owm:
-      friendly_name: "OWM Precipitation probability"
-      source_entity_id: "weather.owm_home"
-      <<: *common_attrs_templated
+    # Trigger-based sensors to read get_forecast for weather.hoome
+    sensor.weather_forecast_datetime:
+      friendly_name: "Weather Forecast Date and time"
+      <<: *common_attrs_weather_home
+    sensor.weather_forecast_precipitation:
+      friendly_name: "Weather Forecast Precipitation"
+      <<: *common_attrs_weather_home
+    sensor.weather_forecast_wind_speed:
+      friendly_name: "Weather Forecast Wind speed"
+      <<: *common_attrs_weather_home
+    sensor.weather_forecast_wind_bearing:
+      friendly_name: "Weather Forecast Wind bearing"
+      <<: *common_attrs_weather_home
+    sensor.weather_forecast_uv_index:
+      friendly_name: "Weather Forecast UV Index"
+      <<: *common_attrs_weather_home
+    sensor.weather_forecast_temperature:
+      friendly_name: "Weather Forecast Temperature"
+      <<: *common_attrs_weather_home
+    sensor.weather_forecast_cloud_coverage:
+      friendly_name: "Weather Forecast Cloud coverage"
+      <<: *common_attrs_weather_home
+
+    # Sensors to get attributes of weather.home
+    sensor.weather_wind_speed:
+      friendly_name: "Weather Wind speed"
+      <<: *common_attrs_weather_home
+    sensor.weather_wind_bearing:
+      friendly_name: "Weather Wind bearing"
+      <<: *common_attrs_weather_home
+    sensor.weather_uv_index:
+      friendly_name: "Weather UV Index"
+      <<: *common_attrs_weather_home
+    sensor.weather_temperature:
+      friendly_name: "Weather Temperature"
+      <<: *common_attrs_weather_home
+    sensor.weather_cloud_coverage:
+      friendly_name: "Weather Cloud coverage"
+      <<: *common_attrs_weather_home
 
     # sensor.chance_of_rain
     sensor.chance_of_rain:
       friendly_name: "Chance of rain"
       source_entity_ids:
-        - "sensor.weather_precipitation_probability_owm"
         - "sensor.pirateweather_precip_probability"
-      owm: "enabled"
       pirateweather: "enabled"
       <<: *common_attrs_templated
 
-    # sensor.weather_precipitation_owm_rain_snow
-    sensor.weather_precipitation_owm_rain_snow:
-      friendly_name: "Precipitation: OWM (rain + snow combined)"
-      source_rain: "sensor.owm_home_rain"
-      source_snow: "sensor.owm_home_snow"
-      <<: *common_attrs_templated
 
     # sensor.weather_precipitation
     sensor.weather_precipitation:
       friendly_name: "Precipitation (weather APIs)"
       source_entity_ids:
-        - "sensor.weather_precipitation_owm"
-        - "sensor.weather_precipitation_met_no"
+        - "sensor.weather_forecast_precipitation"
         - "sensor.pirateweather_precip_intensity"
-      owm: "enabled"
       pirateweather: "enabled"
       met_no: "enabled"
       <<: *common_attrs_templated
@@ -110,11 +135,6 @@ homeassistant:
       source_entity_id: "weather.home"
       <<: *common_attrs_templated
 
-    # binary_sensor.weather_precipitation_owm
-    binary_sensor.weather_precipitation_owm:
-      friendly_name: "Precipitation: OWM"
-      <<: *common_attrs_templated
-
     # binary_sensor.weather_precipitation_meteoalarm
     binary_sensor.weather_precipitation_meteoalarm:
       friendly_name: "Precipitation: MeteoAlarm (EUMETNET)"
@@ -124,10 +144,10 @@ homeassistant:
     binary_sensor.weather_precipitation:
       friendly_name: "Precipitation"
       source_entity_ids:
+        - "binary_sensor.esphome_rainsensor_rain"
         - "binary_sensor.weather_precipitation_pirateweather"
         - "binary_sensor.weather_precipitation_meteoalarm"
-        - "binary_sensor.weather_precipitation_met_no"
-        - "binary_sensor.weather_precipitation_owm"
+        - "binary_sensor.weather_forecast_precipitation"  # met.no (forecast)
         - "binary_sensor.weather_precipitation_tomorrowio"
       <<: *common_attrs_templated
 
@@ -181,6 +201,11 @@ automation:
           - binary_sensor.nina_warn_berlin_3
           - binary_sensor.nina_warn_berlin_4
           - binary_sensor.nina_warn_berlin_5
+          - binary_sensor.nina_warn_berlin_6
+          - binary_sensor.nina_warn_berlin_7
+          - binary_sensor.nina_warn_berlin_8
+          - binary_sensor.nina_warn_berlin_9
+          - binary_sensor.nina_warn_berlin_10
         to: "on"
     condition: []
     action:
@@ -215,31 +240,121 @@ template:
           type: hourly
         target:
           entity_id: weather.home
-        response_variable: hourly
-      - service: weather.get_forecasts
-        data:
-          type: hourly
-        target:
-          entity_id: weather.owm_home
-        response_variable: owm_hourly
+        response_variable: w
     sensor:
-      - name: weather_precipitation_met_no
+      - name: weather_forecast_datetime
+        device_class: timestamp
+        icon: "mdi:weather-cloudy-clock"
+        state: |
+          {{ w["weather.home"]["forecast"] | map(attribute="datetime") | first }}
+        attributes:
+          entities: |
+            {{ w.keys() | list }}
+      - name: weather_forecast_precipitation
         unit_of_measurement: "mm"
+        device_class: "precipitation"
         state_class: measurement
         icon: "mdi:weather-rainy"
         state: |
-          {{ hourly["weather.home"].forecast[0]["precipitation"] | float | round(1) }}
-      - name: weather_precipitation_owm
-        unit_of_measurement: "mm"
+          {{ w["weather.home"].forecast[0]["precipitation"] | float | round(1) }}
+      - name: weather_forecast_wind_speed
+        unit_of_measurement: "km/h"
+        device_class: "wind_speed"
         state_class: measurement
-        icon: "mdi:weather-rainy"
+        icon: |
+          {{
+            iif(this.state|float(0.0) > 20.0, "mdi:weather-dust", "mdi:weather-windy")
+          }}
         state: |
-          {{ owm_hourly["weather.owm_home"].forecast[0]["precipitation"] | float | round(1) }}
-      - name: "weather_precipitation_probability_owm"
+          {{
+            w["weather.home"]["forecast"] | map(attribute="wind_speed") | first | round(1)
+          }}
+      - name: weather_forecast_wind_bearing
+        unit_of_measurement: "°"
+        # Not supported on 2024.12
+        #device_class: "wind_direction"
+        state_class: measurement
+        icon: "mdi:rotate-360"
+        state: |
+          {{
+            w["weather.home"]["forecast"] | map(attribute="wind_bearing") | first | round(1)
+          }}
+      - name: weather_forecast_uv_index
+        unit_of_measurement: "UV index"
+        state_class: measurement
+        icon: "mdi:sunglasses"
+        state: |
+          {{
+            w["weather.home"]["forecast"] | map(attribute="uv_index") | first | round(1)
+          }}
+      - name: weather_forecast_temperature
+        unit_of_measurement: "°C"
+        device_class: "temperature"
+        state_class: measurement
+        icon: "mdi:thermometer"
+        state: |
+          {{
+            w["weather.home"]["forecast"] | map(attribute="temperature") | first | round(1)
+          }}
+      - name: weather_forecast_cloud_coverage
         unit_of_measurement: "%"
+        device_class: "power_factor"
+        state_class: measurement
+        icon: "mdi:weather-cloudy"
         state: |
-          {{ owm_hourly["weather.owm_home"].forecast[0]["precipitation_probability"] | float | round(2) }}
+          {{
+            w["weather.home"]["forecast"] | map(attribute="cloud_coverage") | first | round(1)
+          }}
 
+  - sensor:
+      - name: weather_wind_speed
+        unit_of_measurement: "km/h"
+        device_class: "wind_speed"
+        state_class: measurement
+        icon: |
+          {{
+            iif(this.state|float(0.0) > 20.0, "mdi:weather-dust", "mdi:weather-windy")
+          }}
+        availability: |
+          {{ this.attributes.get("source_entity_id", "") | has_value }}
+        state: |
+          {{ state_attr("weather.home", "wind_speed") | round(1) }}
+      - name: weather_wind_bearing
+        unit_of_measurement: "°"
+        # Not supported on 2024.12
+        #device_class: "wind_direction"
+        state_class: measurement
+        icon: "mdi:rotate-360"
+        availability: |
+          {{ this.attributes.get("source_entity_id", "") | has_value }}
+        state: |
+          {{ state_attr("weather.home", "wind_bearing") | round(1) }}
+      - name: weather_uv_index
+        unit_of_measurement: "UV index"
+        state_class: measurement
+        icon: "mdi:sunglasses"
+        availability: |
+          {{ this.attributes.get("source_entity_id", "") | has_value }}
+        state: |
+          {{ state_attr("weather.home", "uv_index") | round(1) }}
+      - name: weather_temperature
+        unit_of_measurement: "°C"
+        device_class: "temperature"
+        state_class: measurement
+        icon: "mdi:thermometer"
+        availability: |
+          {{ this.attributes.get("source_entity_id", "") | has_value }}
+        state: |
+          {{ state_attr("weather.home", "temperature") | round(1) }}
+      - name: weather_cloud_coverage
+        unit_of_measurement: "%"
+        device_class: "power_factor"
+        state_class: measurement
+        icon: "mdi:weather-cloudy"
+        availability: |
+          {{ this.attributes.get("source_entity_id", "") | has_value }}
+        state: |
+          {{ state_attr("weather.home", "cloud_coverage") | round(1) }}
 
   - sensor:
       - name: "chance_of_rain"
@@ -266,23 +381,6 @@ template:
               | median
               | round(0)
           }}
-
-      - name: weather_precipitation_owm_rain_snow
-        unit_of_measurement: "mm/h"
-        state_class: measurement
-        icon: "mdi:weather-rainy"
-        availability: |
-          {{
-            states("sensor.owm_home_rain") is defined
-            and states("sensor.owm_home_snow") is defined
-            and is_number(states("sensor.owm_home_rain"))
-            and is_number(states("sensor.owm_home_snow"))
-          }}
-        state: |
-          {% set rain = states("sensor.owm_home_rain") %}
-          {% set snow = states("sensor.owm_home_snow") %}
-          {% set combined = rain|float + snow|float %}
-          {{ combined|float | round(1) }}
 
       - name: weather_precipitation
         icon: "mdi:weather-rainy"
@@ -340,6 +438,8 @@ template:
         device_class: problem
         attributes:
           source_entity_id: "weather.tomorrow_io_s21_nowcast"
+        availability: |
+          {{ has_value("weather.tomorrow_io_s21_nowcast") }}
         state: |
           {% from 'weather.jinja' import precip %}
           {{ precip("weather.tomorrow_io_s21_nowcast")|bool }}
@@ -370,7 +470,7 @@ template:
           ] -%}
           {% set intens = states("sensor.pirateweather_precip_intensity") -%}
           {{
-            intens|float > 0.2
+            intens|round(1, default=0.0) > 0.2
             or states("weather.pirateweather") in conditions
           }}
 
@@ -382,32 +482,12 @@ template:
           mdi:weather-cloudy
           {% endif %}
         device_class: problem
-        state: |
-          {%
-            set conditions = [
-              "exceptional",
-              "hail",
-              "lightning",
-              "lighting-rainy",
-              "pouring",
-              "rainy",
-              "snowy",
-              "snowy-rainy"
-            ]
-          -%}
+        availability: |
           {{
-            states("sensor.weather_precipitation_met_no")|float > 0.0
-            or states("weather.home") in conditions
+            has_value("weather.home")
+            and has_value("sensor.weather_forecast_precipitation")
+            and is_number(states("sensor.weather_forecast_precipitation"))
           }}
-
-      - name: weather_precipitation_owm
-        icon: |
-          {% if is_state(this.entity_id, "on") %}
-          mdi:weather-rainy
-          {% else %}
-          mdi:weather-cloudy
-          {% endif %}
-        device_class: problem
         state: |
           {%
             set conditions = [
@@ -422,8 +502,8 @@ template:
             ]
           -%}
           {{
-            states("sensor.weather_precipitation_owm")|float(0.0) > 0.0
-            or states("weather.owm_home") in conditions
+            states("sensor.weather_forecast_precipitation")|round(1, default=0.0) > 0.0
+            or states("weather.home") in conditions
           }}
 
         # needs more data/research to see what values are in the event/category attributes
@@ -451,7 +531,6 @@ template:
           }}
         attributes:
           source_entity_id: binary_sensor.meteoalarm
-
 
       - name: weather_precipitation
         device_class: problem
