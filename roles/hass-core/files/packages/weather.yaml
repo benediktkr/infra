@@ -47,17 +47,16 @@ homeassistant:
       integration: true
       <<: *common_attrs
 
-    weather.home_template:
-      friendly_name: "Home (template)"
+    weather.home_custom:
+      friendly_name: "Weather"
       weather_id: "weather.home"
       rain_id: "binarysensor.esphome_rainsensor_rain"
       rainlevel_id: "sensor.esphome_rainsensor_rain_level"
-      #attribution: >-
-      #  Weather data from Norwegian Meteorological Institute, and RG-9 rain sensor.
+      forecast_id: "sensor.weather_forecast"
       <<: *common_attrs_templated
 
     # Trigger-based sensors to read get_forecast for weather.hoome
-    sensor.weather_forecast_datetime:
+    sensor.weather_forecast:
       friendly_name: "Weather Forecast Date and time"
       <<: *common_attrs_weather_home
     sensor.weather_forecast_precipitation:
@@ -103,7 +102,6 @@ homeassistant:
         - "sensor.pirateweather_precip_probability"
       pirateweather: "enabled"
       <<: *common_attrs_templated
-
 
     # sensor.weather_precipitation
     sensor.weather_precipitation:
@@ -234,95 +232,6 @@ automation:
             {% from 'formatting.jinja' import nina_title %}
             {{ nina_title(nina) }}
 
-# Legacy fromat needed while on 2024.12
-# https://www.home-assistant.io/integrations/template/#legacy-weather-configuration-format
-# https://web.archive.org/web/20241220115648/https://www.home-assistant.io/integrations/weather.template/
-# https://web.archive.org/web/20241220115641/https://www.home-assistant.io/integrations/template#weather
-weather:
-  - name: home_template
-    platform: template
-    #availability: |
-    #  {{
-    #    this.attributes.get("weather_id") | has_value
-    #    and this.attributes.get("rain_id") | has_value
-    #  }}
-    #
-    # Add entitites to list if 'has_value' is False
-    # Return True list is empty (all entities had values)
-    #
-    # The 'availability' option is not supported by weather templates
-    #
-    #availability: |
-    #  {{
-    #    [
-    #      this.attributes.get("weather_id", ""),
-    #      this.attributes.get("rain_id", "")
-    #    ] | reject("has_value")
-    #      | list
-    #      | length == 0
-    #  }}
-    #attribution: |
-    #  {% set source = this.attributes.get("weather_id", "") -%}
-    #  {{ state_attr(source, "attribution") }}
-    #
-    # https://www.home-assistant.io/integrations/template/#weather
-    #
-    # Unused options
-    #apparent_temperature_template:
-    #ozone_template:
-    #visibility_template:
-    #wind_gust_speed_template:
-    #forecast_twice_daily_template:
-    forecast_hourly_template: |
-      {% set source = this.attributes.get("weather_id", "") -%}
-      {{ state_attr(source, "forecast_data") }}
-    forecast_daily_template: |
-      {% set source = this.attributes.get("weather_id", "") -%}
-      {{ state_attr(source, "forecast_data") }}
-    cloud_coverage_template: |
-      {% set source = this.attributes.get("weather_id", "") -%}
-      {{ state_attr(source, "cloud_coverage") }}
-    condition_template: |
-      {% set rain_id = this.attributes.get("rain_id", "") -%}
-      {% if rain_id|has_value and is_state(rain_id, "on") -%}
-      rainy
-      {% else -%}
-      {% set weather_id = this.attributes.get("weather_id", "") -%}
-      {{ states(weather_id) }}
-      {% endif %}
-    dew_point_template: |
-      {% set source = this.attributes.get("weather_id", "") -%}
-      {{ state_attr(source, "dew_point") }}
-    humidity_template: |
-      {% set source = this.attributes.get("weather_id", "") -%}
-      {{ state_attr(source, "humidity") }}
-    pressure_template:  |
-      {% set source = this.attributes.get("weather_id", "") -%}
-      {{ state_attr(source, "pressure") }}
-    temperature_template: |
-      {% set source = this.attributes.get("weather_id", "") -%}
-      {{ state_attr(source, "temperature") }}
-    wind_speed_template: |
-      {% set source = this.attributes.get("weather_id", "") -%}
-      {{ state_attr(source, "wind_speed") }}
-    wind_bearing_template: |
-      {% set source = this.attributes.get("weather_id", "") -%}
-      {{ state_attr(source, "wind_bearing") }}
-    attribution_template: |
-      {% set rain_id = this.attributes.get("rain_id", "") -%}
-      Weather data from Norwegian Meteorological Institute, and
-      {% if is_state(rain_id, "on") -%}
-      rain is currently detected by
-      {% endif -%}
-      RG-9 rain sensor.
-
-    # From weather.home
-    precipitation_unit: "mm"
-    pressure_unit: "hPa"
-    temperature_unit: "°C"
-    visibility_unit: "km"
-    wind_speed_unit: "km/h"
-
 template:
   - trigger:
       - platform: time_pattern
@@ -333,23 +242,33 @@ template:
           type: hourly
         target:
           entity_id: weather.home
-        response_variable: w
+        response_variable: h
+      - service: weather.get_forecasts
+        data:
+          type: daily
+        target:
+          entity_id: weather.home
+        response_variable: d
     sensor:
-      - name: weather_forecast_datetime
+      - name: weather_forecast
         device_class: timestamp
         icon: "mdi:weather-cloudy-clock"
         state: |
-          {{ w["weather.home"]["forecast"] | map(attribute="datetime") | first }}
+          {{ h["weather.home"]["forecast"] | map(attribute="datetime") | first }}
         attributes:
+          forecast_hourly: |
+            {{ h["weather.home"].get("forecast", []) }}
+          forecast_daily: |
+            {{ d["weather.home"].get("forecast", []) }}
           entities: |
-            {{ w.keys() | list }}
+            {{ h.keys() | list }}
       - name: weather_forecast_precipitation
         unit_of_measurement: "mm"
         device_class: "precipitation"
         state_class: measurement
         icon: "mdi:weather-rainy"
         state: |
-          {{ w["weather.home"].forecast[0]["precipitation"] | float | round(1) }}
+          {{ h["weather.home"].forecast[0]["precipitation"] | float | round(1) }}
       - name: weather_forecast_wind_speed
         unit_of_measurement: "km/h"
         device_class: "wind_speed"
@@ -360,7 +279,7 @@ template:
           }}
         state: |
           {{
-            w["weather.home"]["forecast"] | map(attribute="wind_speed") | first | round(1)
+            h["weather.home"]["forecast"] | map(attribute="wind_speed") | first | round(1)
           }}
       - name: weather_forecast_wind_bearing
         unit_of_measurement: "°"
@@ -369,7 +288,7 @@ template:
         icon: "mdi:rotate-360"
         state: |
           {{
-            w["weather.home"]["forecast"] | map(attribute="wind_bearing") | first | round(1)
+            h["weather.home"]["forecast"] | map(attribute="wind_bearing") | first | round(1)
           }}
       - name: weather_forecast_uv_index
         unit_of_measurement: "UV index"
@@ -377,7 +296,7 @@ template:
         icon: "mdi:sunglasses"
         state: |
           {{
-            w["weather.home"]["forecast"] | map(attribute="uv_index") | first | round(1)
+            h["weather.home"]["forecast"] | map(attribute="uv_index") | first | round(1)
           }}
       - name: weather_forecast_temperature
         unit_of_measurement: "°C"
@@ -386,7 +305,7 @@ template:
         icon: "mdi:thermometer"
         state: |
           {{
-            w["weather.home"]["forecast"] | map(attribute="temperature") | first | round(1)
+            h["weather.home"]["forecast"] | map(attribute="temperature") | first | round(1)
           }}
       - name: weather_forecast_cloud_coverage
         unit_of_measurement: "%"
@@ -395,8 +314,93 @@ template:
         icon: "mdi:weather-cloudy"
         state: |
           {{
-            w["weather.home"]["forecast"] | map(attribute="cloud_coverage") | first | round(1)
+            h["weather.home"]["forecast"] | map(attribute="cloud_coverage") | first | round(1)
           }}
+  - weather:
+        # https://web.archive.org/web/20241220115648/https://www.home-assistant.io/integrations/weather.template/
+        # https://web.archive.org/web/20241220115641/https://www.home-assistant.io/integrations/template#weather
+      - name: home_custom
+        #availability: |
+        #  {{
+        #    this.attributes.get("weather_id") | has_value
+        #    and this.attributes.get("rain_id") | has_value
+        #  }}
+        #
+        # Add entitites to list if 'has_value' is False
+        # Return True list is empty (all entities had values)
+        #
+        # The 'availability' option is not supported by weather templates
+        #
+        #availability: |
+        #  {{
+        #    [
+        #      this.attributes.get("weather_id", ""),
+        #      this.attributes.get("rain_id", "")
+        #    ] | reject("has_value")
+        #      | list
+        #      | length == 0
+        #  }}
+        #attribution: |
+        #  {% set source = this.attributes.get("weather_id", "") -%}
+        #  {{ state_attr(source, "attribution") }}
+        #
+        # https://www.home-assistant.io/integrations/template/#weather
+        #
+        # Unused options
+        #apparent_temperature_template:
+        #ozone_template:
+        #visibility_template:
+        #wind_gust_speed_template:
+        #forecast_twice_daily_template:
+        forecast_hourly_template: |
+          {% set source = this.attributes.get("forecast_id", "") -%}
+          {{ state_attr(source, "forecast_hourly") }}
+        forecast_daily_template: |
+          {% set source = this.attributes.get("forecast_id", "") -%}
+          {{ state_attr(source, "forecast_daily") }}
+        cloud_coverage_template: |
+          {% set source = this.attributes.get("weather_id", "") -%}
+          {{ state_attr(source, "cloud_coverage") }}
+        condition_template: |
+          {% set rain_id = this.attributes.get("rain_id", "") -%}
+          {% if rain_id|has_value and is_state(rain_id, "on") -%}
+          rainy
+          {% else -%}
+          {% set weather_id = this.attributes.get("weather_id", "") -%}
+          {{ states(weather_id) }}
+          {% endif %}
+        dew_point_template: |
+          {% set source = this.attributes.get("weather_id", "") -%}
+          {{ state_attr(source, "dew_point") }}
+        humidity_template: |
+          {% set source = this.attributes.get("weather_id", "") -%}
+          {{ state_attr(source, "humidity") }}
+        pressure_template:  |
+          {% set source = this.attributes.get("weather_id", "") -%}
+          {{ state_attr(source, "pressure") }}
+        temperature_template: |
+          {% set source = this.attributes.get("weather_id", "") -%}
+          {{ state_attr(source, "temperature") }}
+        wind_speed_template: |
+          {% set source = this.attributes.get("weather_id", "") -%}
+          {{ state_attr(source, "wind_speed") }}
+        wind_bearing_template: |
+          {% set source = this.attributes.get("weather_id", "") -%}
+          {{ state_attr(source, "wind_bearing") }}
+        attribution_template: |
+          {% set rain_id = this.attributes.get("rain_id", "") -%}
+          Weather data from Norwegian Meteorological Institute, and
+          {% if is_state(rain_id, "on") -%}
+          rain is currently detected by
+          {% endif -%}
+          RG-9 rain sensor.
+
+        # From weather.home
+        precipitation_unit: "mm"
+        pressure_unit: "hPa"
+        temperature_unit: "°C"
+        visibility_unit: "km"
+        wind_speed_unit: "km/h"
 
   - sensor:
       - name: weather_wind_speed
@@ -660,7 +664,6 @@ template:
           #  {{ state_attr("binary_sensor.weather_precipitation", "chance_of_rain_threshold") }}
           sources: |
             {{ state_attr("binary_sensor.weather_precipitation", "sources") }}
-
 
 binary_sensor:
   - platform: meteoalarm
