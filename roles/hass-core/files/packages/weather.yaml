@@ -365,7 +365,7 @@ template:
       - name: weather_forecast_wind_bearing
         unit_of_measurement: "°"
         device_class: "wind_direction"
-        state_class: measurement
+        state_class: measurement_angle
         icon: "mdi:rotate-360"
         state: |
           {{
@@ -414,7 +414,7 @@ template:
       - name: weather_wind_bearing
         unit_of_measurement: "°"
         device_class: "wind_direction"
-        state_class: measurement
+        state_class: measurement_angle
         icon: "mdi:rotate-360"
         availability: |
           {{ this.attributes.get("source_entity_id", "") | has_value }}
