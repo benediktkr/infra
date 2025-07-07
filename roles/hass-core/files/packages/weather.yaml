@@ -22,7 +22,7 @@ homeassistant:
         <<: *common_attrs
       common_attrs_weather_home: &common_attrs_weather_home
         templated: true
-        source_entity_id: "weather.home"
+        weather_id: "weather.home"
         attribution: >-
           Weather from met.no, delivered by the Norwegian Meteorological Institute.
         <<: *common_attrs
@@ -412,7 +412,7 @@ template:
             iif(this.state|float(0.0) > 20.0, "mdi:weather-dust", "mdi:weather-windy")
           }}
         availability: |
-          {{ this.attributes.get("source_entity_id", "") | has_value }}
+          {{ this.attributes.get("weather_id", "") | has_value }}
         state: |
           {{ state_attr("weather.home", "wind_speed") | round(1) }}
       - name: weather_wind_bearing
@@ -421,7 +421,7 @@ template:
         state_class: measurement_angle
         icon: "mdi:rotate-360"
         availability: |
-          {{ this.attributes.get("source_entity_id", "") | has_value }}
+          {{ this.attributes.get("weather_id", "") | has_value }}
         state: |
           {{ state_attr("weather.home", "wind_bearing") | round(1) }}
       - name: weather_uv_index
@@ -429,7 +429,7 @@ template:
         state_class: measurement
         icon: "mdi:sunglasses"
         availability: |
-          {{ this.attributes.get("source_entity_id", "") | has_value }}
+          {{ this.attributes.get("weather_id", "") | has_value }}
         state: |
           {{ state_attr("weather.home", "uv_index") | round(1) }}
       - name: weather_temperature
@@ -438,7 +438,7 @@ template:
         state_class: measurement
         icon: "mdi:thermometer"
         availability: |
-          {{ this.attributes.get("source_entity_id", "") | has_value }}
+          {{ this.attributes.get("weather_id", "") | has_value }}
         state: |
           {{ state_attr("weather.home", "temperature") | round(1) }}
       - name: weather_cloud_coverage
@@ -447,7 +447,7 @@ template:
         state_class: measurement
         icon: "mdi:weather-cloudy"
         availability: |
-          {{ this.attributes.get("source_entity_id", "") | has_value }}
+          {{ this.attributes.get("weather_id", "") | has_value }}
         state: |
           {{ state_attr("weather.home", "cloud_coverage") | round(1) }}
 
