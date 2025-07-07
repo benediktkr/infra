@@ -64,18 +64,20 @@ template:
           mdi:star
         availability: |
           {{
-            has_value(this.attributes.get("source_id_s1"))
-            and has_value(this.attributes.get("source_id_s2"))
+            has_value(this.attributes.get("source_id_s1", ""))
+            and has_value(this.attributes.get("source_id_s2", ""))
           }}
         state: |
           {{ state_attr(this.entity_id, "friendly_name") }}
         attributes:
           md: |
-            {% set s1 = state_attr(this.attributes.get("source_id_s1"), "items") %}
-            {% set s2 = state_attr(this.attributes.get("source_id_s2"), "items") %}
+            {% set source_s1 = this.attributes.get("source_id_s1", "") %}
+            {% set source_s2 = this.attributes.get("source_id_s2", "") %}
+            {% set s1 = state_attr(source_s1, "items") %}
+            {% set s2 = state_attr(source_s2, "items") %}
             {% set sonos = [
-              {"name": "S1", "favs": s1},
-              {"name": "S2", "favs": s2},
+              {"name": "S1", "favs": s1 or {}},
+              {"name": "S2", "favs": s2 or {}},
             ] -%}
             # Sonos favorites
 

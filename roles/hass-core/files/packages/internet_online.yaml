@@ -754,20 +754,10 @@ template:
         state: |
           {% set home0157 = states("sensor.dns_home0157_sudo_is") -%}
           {{
-            this.attributes.source_entity_ids
+            this.attributes.get("source_entity_ids")
               | select("has_value")
               | map("states")
               | select("eq", home0157)
               | list
-              | length != this.attributes.source_entity_ids|length
+              | length != this.attributes.get("source_entity_ids", "")|length
           }}
-
-
-
-
-
-
-
-
-
-

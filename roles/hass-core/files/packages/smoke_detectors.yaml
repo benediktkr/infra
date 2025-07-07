@@ -65,6 +65,10 @@ homeassistant:
       friendly_name: "smokealarm_bedroom Smoke state"
       device_class: smoke
       <<: *zwave
+    binary_sensor.dead_smoke_detectors:
+      friendly_name: "Dead smoke detectors"
+      package: smoke_detectors
+      templated: true
 
 
 template:
@@ -80,10 +84,3 @@ template:
           failed areas: >-
             {% set ok_states = ["alive", "asleep"] %}
             {{ states | selectattr("entity_id", "match", "sensor.node_status_smoke") | map(attribute="entity_id") | reject("is_state", ok_states) | map("area_name") | list }}
-
-homeassistant:
-  customize:
-    binary_sensor.dead_smoke_detectors:
-      friendly_name: "Dead smoke detectors"
-      package: smoke_detectors
-      templated: true
