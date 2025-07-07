@@ -50,7 +50,7 @@ homeassistant:
     weather.home_custom:
       friendly_name: "Weather"
       weather_id: "weather.home"
-      rain_id: "binarysensor.esphome_rainsensor_rain"
+      rain_id: "binary_sensor.esphome_rainsensor_rain"
       rainlevel_id: "sensor.esphome_rainsensor_rain_level"
       forecast_id: "sensor.weather_forecast"
       <<: *common_attrs_templated
@@ -363,10 +363,12 @@ template:
           {{ state_attr(source, "cloud_coverage") }}
         condition_template: |
           {% set rain_id = this.attributes.get("rain_id", "") -%}
-          {% set rainlevel = this.attributes.get("rainlevel_id", "") -%}
+          {% set rainlevel_id = this.attributes.get("rainlevel_id", "") -%}
           {% set weather_id = this.attributes.get("weather_id", "") -%}
+          {% set rain = rain_id|has_value and is_state(rain_id, "on")|bool -%}
+          {% set rainlevel = states(rainlevel_id)|round(0, default=0.0) -%}
           {% set weather = states(weather_id) -%}
-          {% if rain_id|has_value and is_state(rain_id, "on") -%}
+          {% if rain -%}
           {%   if rainlevel == 7 -%}
           exceptional
           {%   elif rainlevel >= 4 -%}
