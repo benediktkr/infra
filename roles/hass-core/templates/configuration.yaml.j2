@@ -442,21 +442,22 @@ sensor:
       - 'date_time_utc'
       - 'date_time_iso'
 
-  - platform: worldclock
-    time_zone: UTC
-    name: UTC
-  - platform: worldclock
-    time_zone: Atlantic/Reykjavik
-    name: Iceland
-  - platform: worldclock
-    time_zone: Europe/Berlin
-    name: Berlin
-  - platform: worldclock
-    time_zone: America/New_York
-    name: Boston
-  - platform: worldclock
-    time_zone: America/Chicago
-    name: Austin
+  # Deprecated: 2025.2.0
+  #- platform: worldclock
+  #  time_zone: UTC
+  #  name: UTC
+  #- platform: worldclock
+  #  time_zone: Atlantic/Reykjavik
+  #  name: Iceland
+  #- platform: worldclock
+  #  time_zone: Europe/Berlin
+  #  name: Berlin
+  #- platform: worldclock
+  #  time_zone: America/New_York
+  #  name: Boston
+  #- platform: worldclock
+  #  time_zone: America/Chicago
+  #  name: Austin
 
   - platform: linux_battery
     name: battery_level_system
@@ -605,6 +606,7 @@ notify:
     platform: twilio_call
     from_number: "{{ hass_twilio.main.main_number }}"
 
+  # Deprecated: 'file' is deprecated for the 'sensor', seems fine for the 'notify' platform.
   - name: file_notify
     platform: file
     timestamp: true
@@ -694,10 +696,11 @@ sonos:
 #keyboard:
 
 media_player:
-  - platform: mpd
-    host: {{ owntone_url }}
-    port: 6600
-    name: OwnTone MPD
+  # Deprecated: 2025.1.0
+  #- platform: mpd
+  #  host: {{ owntone_url }}
+  #  port: 6600
+  #  name: OwnTone MPD
   - platform: emby
     host: {{ jellyfin_url }}
     api_key: {{ hass_jellyfin_api_key }}
