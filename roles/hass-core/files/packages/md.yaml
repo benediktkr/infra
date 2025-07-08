@@ -29,11 +29,18 @@ homeassistant:
       friendly_name: "wwwsudois.md"
       <<: *common_attrs
 
+    sensor.md_projects_table:
+      friendly_name: "projects_table.md"
+      <<: *common_attrs
+
+    sensor.md_overview_header:
+      friendly_name: "overview_header.md"
+      <<: *common_attrs
+
     sensor.template_md_testing_media_players:
       friendly_name: "testing_media_players.md"
       owntone_server: "owntone_server"
       <<: *common_attrs
-
 
 template:
   - unique_id: md_audio
@@ -305,6 +312,30 @@ template:
 
             ![](https://www.sudo.is/avatar/green_fade.png)
 
+      - name: md_projects_table
+        icon: "mdi:git"
+        state: "projects_table.md"
+        attributes:
+          md: |
+            |             | Prod released | Jenkins build|
+            |:------------|:-------------:|-------------:|
+            | [`wwwsudois`](https://git.sudo.is/ben/wwwsudois) | {{states("sensor.sudo_is_version_date")}} | ![](https://www.sudo.is/api/buildstatus.png)
+
+      - name: md_overview_header
+        icon: "mdi:dots-square"
+        state: "overview_header.md"
+        attributes:
+          md: |
+            {% set name = user|capitalize %}
+            #  Hello, {{ name }}!
+
+            {% if is_state("person.ben", "home") %}
+            {% set phone_area = state_attr("device_tracker.private_ble_phone_ben_bermuda_tracker", "area") %}
+            Your phone is _in **the {{ phone_area|lower }}**_.
+            {% endif %}
+            {% if is_state("calendar.caredotcom_oncall", "on") %}
+            You **are on-call** today 📟.
+            {% endif %}
 
   - unique_id: md_testing
     sensor:
