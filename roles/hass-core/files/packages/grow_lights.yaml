@@ -4,24 +4,39 @@ homeassistant:
   customize:
     package.node_anchors:
       common_attrs: &common_attrs
-        package: "more_lights"
+        package: "grow_lights"
 
     light.study_plants:
-      icon: mdi:sprout
+      icon: "mdi:sprout"
       proto: zigbee
       <<: *common_attrs
 
+    input_boolean.grow_lights_1_state:
+      <<: *common_attrs
+    input_boolean.grow_lights_1_on_set_max_brightness:
+      <<: *common_attrs
+    input_boolean.grow_lights_pause_schedule:
+      <<: *common_attrs
+
     binary_sensor.grow_lights_1_schedule:
-      icon: mdi:sprout
+      icon: "mdi:sprout"
+      <<: *common_attrs
+
+    light.grow_lights_1:
+      templated: true
+      proto: "433 MHz"
       <<: *common_attrs
 
 input_boolean:
   grow_lights_1_state:
     name: grow_lights_1_state
-    icon: mdi:sprout
+    icon: "mdi:sprout"
   grow_lights_1_on_set_max_brightness:
     name: input_boolean.grow_lights_1_on_set_max_brightness
-    icon: mdi:brightness-percent
+    icon: "mdi:brightness-percent"
+  grow_lights_pause_schedule:
+    name: grow_lights_pause_schedule
+    icon: "mdi:sprout"
 
 input_number:
   grow_lights_1_color_temp:
@@ -180,7 +195,10 @@ automation:
       - platform: state
         entity_id: binary_sensor.grow_lights_1_schedule
         to: "off"
-    condition: []
+    condition:
+      - condition: state
+        entity_id: input_boolean.grow_lights_pause_schedule
+        state: "off"
     action:
       - service: >-
           light.turn_{{ trigger.to_state.state }}
@@ -211,7 +229,6 @@ automation:
           - service: script.grow_lights_1_off
             data: {}
     mode: single
-
 
 binary_sensor:
   - platform: tod
