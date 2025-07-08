@@ -326,9 +326,6 @@ template:
         state: "overview_header.md"
         attributes:
           md: |
-            {% set name = user|capitalize %}
-            #  Hello, {{ name }}!
-
             {% if is_state("person.ben", "home") %}
             {% set phone_area = state_attr("device_tracker.private_ble_phone_ben_bermuda_tracker", "area") %}
             Your phone is _in **the {{ phone_area|lower }}**_.
