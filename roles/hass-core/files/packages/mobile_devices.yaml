@@ -14,6 +14,9 @@ homeassistant:
     binary_sensor.phone_ben_low_power_mode:
       friendly_name: "Low power mode on phone-ben"
       <<: *common_attrs_templated
+    binary_sensor.phone_ben_battery_charging:
+      friendly_name: "phone-ben Battery Charging"
+      <<: *common_attrs_templated
     sensor.phone_ben_icloud_last_updated:
       friendly_name: "phone-ben iCloud Last updated"
       <<: *common_attrs_templated
@@ -33,6 +36,9 @@ homeassistant:
       <<: *common_attrs_templated
     binary_sensor.nova_sleeping:
       friendly_name: "nova Sleeping"
+      <<: *common_attrs_templated
+    binary_sensor.nova_battery_charging:
+      friendly_name: "nova Battery Charging"
       <<: *common_attrs_templated
     sensor.battery_nova_time_left:
       friendly_name: "nova Battery time left"
@@ -57,6 +63,17 @@ template:
           {% endif %}
         state: |
           {{ is_state_attr("sensor.phone_ben_battery_state", "Low Power Mode", true) }}
+
+      - name: phone_ben_battery_charging
+        icon: |
+          {%- if is_state(this.entity_id, "on") %}
+          mdi:battery-charging
+          {%- else %}
+          mdi:battery
+          {%- endif %}
+        device_class: battery_charging
+        state: |
+          {{ is_state("sensor.phone_ben_battery_state", "Charging") }}
 
   # phone-ben
   - sensor:
@@ -121,6 +138,17 @@ template:
           {% endif %}
         state: |
           {{ is_state_attr("binary_sensor.nova_active", "Sleeping", true) }}
+
+      - name: nova_battery_charging
+        icon: |
+          {%- if is_state(this.entity_id, "on") %}
+          mdi:battery-charging
+          {%- else %}
+          mdi:battery
+          {%- endif %}
+        device_class: battery_charging
+        state: |
+          {{ is_state("sensor.nova_internal_battery_state", "Charging") }}
 
   # nova
   - sensor:
