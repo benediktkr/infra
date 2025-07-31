@@ -37,6 +37,10 @@ homeassistant:
       friendly_name: "overview_header.md"
       <<: *common_attrs
 
+    sensor.md_menubar_care:
+      friendly_name: "menubar_care.md"
+      <<: *common_attrs
+
     sensor.template_md_testing_media_players:
       friendly_name: "testing_media_players.md"
       owntone_server: "owntone_server"
@@ -333,6 +337,22 @@ template:
             {% if is_state("calendar.caredotcom_oncall", "on") %}
             You **are on-call** today 📟.
             {% endif %}
+
+  - sensor:
+      - name: md_menubar_care
+        icon: "md:apple"
+        state: "menubar_care.md"
+        # {{- states("sensor.time_at_work_today", rounded=False, with_unit=False) | default(0) | round(0) }} h
+        attributes:
+          md: |
+           {{ states("sensor.time_at_work_today", rounded=True, with_unit=False) | relative_time | round }} h
+           {%- if is_state("calendar.caredotcom_oncall", "on") %}
+           {{- " | " -}} On-call
+           {%- endif %}
+           {%- if is_state("binary_sensor.occupancy_study_desk", "on") %}
+           {{- " | " -}}
+           {{ states("sensor.electric_w_switch_study_desk_monitor", rounded=True, with_unit=True) }}
+           {%- endif %}
 
   - unique_id: md_testing
     sensor:
