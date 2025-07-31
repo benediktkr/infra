@@ -66,9 +66,12 @@ template:
 
       - name: phone_ben_battery_charging
         icon: |
-          {%- if is_state(this.entity_id, "on") %}
+          {% set batt_icon = state_attr("sensor.phone_ben_battery_level", "icon") -%}
+          {% if is_state(this.entity_id, "on") -%}
           mdi:battery-charging
-          {%- else %}
+          {%- elif batt_icon -%}
+          {{ batt_icon }}
+          {%- else -%}
           mdi:battery
           {%- endif %}
         device_class: battery_charging
@@ -141,9 +144,9 @@ template:
 
       - name: nova_battery_charging
         icon: |
-          {%- if is_state(this.entity_id, "on") %}
+          {% if is_state(this.entity_id, "on") -%}
           mdi:battery-charging
-          {%- else %}
+          {%- else -%}
           mdi:battery
           {%- endif %}
         device_class: battery_charging
