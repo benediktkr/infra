@@ -680,6 +680,36 @@ binary_sensor:
     country: "germany"
     province: "Berlin"
 
+    # Example: rain in 2025
+    # {
+    #   "language": "en",
+    #   "category": "Met",
+    #   "event": "heavy thunderstorms with heavy rain",
+    #   "responseType": "Prepare",
+    #   "urgency": "Immediate",
+    #   "severity": "Moderate",
+    #   "certainty": "Likely",
+    #   "effective": "2025-07-10T14:04:00+02:00",
+    #   "onset": "2025-07-10T14:15:00+02:00",
+    #   "expires": "2025-07-10T15:00:00+02:00",
+    #   "senderName": "Deutscher Wetterdienst",
+    #   "headline": "Official WARNING of HEAVY THUNDERSTORMS",
+    #   "description": "There is a risk of heavy thunderstorms with heavy rain (level 2 of 4).\nOccurrence: localised; Max. gusts: < 60 km/h; Precipitation amounts: 15-25 l/m²/1h",
+    #   "instruction": "Hazard(s) caused by: lightning (danger to life!); light objects flying through the air; isolated, rapid flooding of roads and subways; aquaplaning. \nRecommendations for what to do: \nAvoid staying outdoors and seek shelter (e.g. in buildings). Avoid being near lakes and rivers Secure loose objects. For example, fasten tents and coverings. Adapt your behaviour in road traffic. Avoid flooded areas and areas at risk (such as subways).",
+    #   "web": "https://dwd.de/warnungen",
+    #   "contact": "Deutscher Wetterdienst",
+    #   "gusts": "<60 [km/h]",
+    #   "precipitation": "15-25 [l/m² in 1h]",
+    #   "occurrence": "localised",
+    #   "awareness_level": "3; orange; Severe",
+    #   "awareness_type": "3; Thunderstorm",
+    #   "attribution": "Information provided by MeteoAlarm",
+    #   "device_class": "safety",
+    #   "friendly_name": "MeteoAlarm (EUMETNET)",
+    #   "package": "weather",
+    #   "integration": true
+    # }
+    #
     # example that should not affect the skylight
     # {
     # "language":"en",
