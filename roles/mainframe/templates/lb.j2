@@ -113,7 +113,7 @@ class LoadBalancer:
         failover_id = self.get_failover_id()
 
         url = f"floating_ips/{floating_ip_id}/actions/assign"
-        payload = {"server": failover_id}
+        payload = {"server": int(failover_id)}
         response = self.request("POST", url, json=payload)
         return failover_id
 
