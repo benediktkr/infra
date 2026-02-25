@@ -24,7 +24,7 @@ class LoadBalancer:
 
     def update_from_api(self):
         self.servers = self.get_lb_servers()
-        print(json.dumps(self.servers, indent=2))
+        #print(json.dumps(self.servers, indent=2))
         self.floating_ips = self.get_floating_ips()
 
 
@@ -59,8 +59,8 @@ class LoadBalancer:
         s = self.request("GET", "servers")
         d = dict()
         for item in s['servers']:
-            print(item['id'], end=": ")
-            print(item.get('labels'))
+            #print(item['id'], end=": ")
+            #print(item.get('labels'))
             if item['labels'].get("group", "") == self.lb_name:
                 server_id = str(item['id'])
                 d[server_id] = {
@@ -71,20 +71,20 @@ class LoadBalancer:
                     'private_ip': item['private_net'][0]['ip'],
                     'floating_ips': item['public_net']['floating_ips']
                 }
-        print(d.keys())
+        #print(d.keys())
         return d
 
     def get_floating_ips(self):
         ips = self.request("GET", "floating_ips")
         d = dict()
-        print("floating ip")
+        #print("floating ip")
         for item in ips['floating_ips']:
             if item['name'] == self.lb_name:
                 lb_id = str(item['id'])
                 lb_name = item['name']
                 server_id = str(item['server'])
-                print(lb_id, lb_name)
-                print("labels: ", item.get("labels"))
+                #print(lb_id, lb_name)
+                #print("labels: ", item.get("labels"))
                 d[lb_name] = {
                     'id': lb_id,
                     'name': lb_name,
