@@ -159,6 +159,7 @@
         read_only: false
         # PROBLEM: truncating the logfile on the system doesn't seem to work
         # correctly, because the file (not the dir) is bind mounted to the container
+        # Using 'truncate' instead of a 'echo >' seems to work
       - type: bind
         source: /var/log/authelia.log
         target: /var/log/authelia.log

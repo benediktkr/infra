@@ -9,5 +9,7 @@
     sharedscripts
     postrotate
       truncate -s 0 /var/log/authelia.log
+      ## workaround if needed:
+      #docker exec authelia killall -HUP authelia
     endscript
 }
