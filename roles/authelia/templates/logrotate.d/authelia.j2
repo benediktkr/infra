@@ -1,0 +1,13 @@
+/var/log/authelia.log {
+    daily
+    missingok
+    rotate 14
+    compress
+    delaycompress
+    notifempty
+    create 0640 {{systemuserlist.authelia.username}} {{systemuserlist.authelia.username}}
+    sharedscripts
+    postrotate
+      echo > /var/log/authelia.log
+    endscript
+}

@@ -22,3 +22,10 @@
   service:
     name: telegraf
     state: restarted
+
+- name: restart logrotate.service
+  systemd:
+    state: restarted
+    name: logrotate.service
+
+

@@ -68,6 +68,19 @@
   tags:
     - authelia-logs
 
+- name: template logrotate config
+  template:
+    src: logrotate.d/authelia.j2
+    dest: /etc/logrotate.d/authelia
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - logrotate
+    - authelia-logrotate
+  notify:
+    - restart logrotate.service
+
 - name: template robots.txt
   template:
     src: "robots.txt.j2"
