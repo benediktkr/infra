@@ -57,7 +57,9 @@
   ## Log target controls the destination for logs and can be one of "file",
   ## "stderr" or, on Windows, "eventlog".  When set to "file", the output file
   ## is determined by the "logfile" setting.
-  logtarget = "file"
+  ## DEPRECATED: Agent setting "logtarget" is deprecated, please just set
+  ## "logfile" and remove this setting! The setting will be removed in v1.40.0.
+  #logtarget = "file"
 
   ## Name of the file to be logged to when using the "file" logtarget.  If set to
   ## the empty string then logs are written to stderr.
@@ -77,12 +79,10 @@
   # logfile_rotation_max_archives = 5
 
   ## Override default hostname, if empty use os.Hostname()
+  #hostname = "{{inventory_hostname}}"
   hostname = ""
   ## If set to true, do no set the "host" tag in the telegraf agent.
   omit_hostname = false
-
-
-
 
 [[outputs.influxdb]]
   ## The full HTTP or UDP URL for your InfluxDB instance.
@@ -108,6 +108,11 @@
   ## Telegraf with a user without permissions to create databases or when the
   ## database already exists.
   skip_database_creation = true
+
+  ## The default value of 'skip_processors_after_aggregators' will change to
+  ## 'true' with Telegraf v1.40.0! If you need the current default behavior,
+  ## please explicitly set the option to 'false'!
+  #skip_processors_after_aggregators = false
 
   ## Name of existing retention policy to write to.  Empty string writes to
   ## the default retention policy.  Only takes effect when using HTTP.
@@ -187,6 +192,8 @@
   ## Ignore mount points by mount options.
   ## The 'mount' command reports options of all mounts in parathesis.
   ## Bind mounts can be ignored with the special 'bind' option.
+  ##
+  ## IF TELEGRAF CANT START, COMMENT OUT 'ignore_mount_opts'
   ignore_mount_opts = ["bind"]
 
 
@@ -263,7 +270,7 @@
     use_sudo = true
 [[processors.enum]]
   [[processors.enum.mapping]]
-    field = "health_ok"
+    fields = ["health_ok"]
     dest = "health_ok_int"
 
     [processors.enum.mapping.value_mappings]
@@ -332,6 +339,8 @@
  # {% endif %} #}
 
 [[inputs.exec]]
-  commands = ["/usr/local/bin/telegraf-vnstat.py"]
+  commands = [
+    "{{telegraf_venv_path}}/bin/python3 /usr/local/bin/telegraf-vnstat.py"
+  ]
   timeout = "2s"
   data_format = "influx"
