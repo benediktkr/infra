@@ -26,3 +26,9 @@
   with_items:
     - 01-json-format.conf
     - 60-output.conf
+
+# cleanup
+- name: ensure test.log does not exist
+  file:
+    path: /tmp/test.log
+    state: absent
