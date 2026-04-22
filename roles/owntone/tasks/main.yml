@@ -119,7 +119,7 @@
     - owntone-nginx
   notify: reload nginx
 
-- name: template logrotate config for '{{ owntone_log_dir }}' (not /var/log)
+- name: template logrotate config
   template:
     src: logrotate.d/owntone.j2
     dest: /etc/logrotate.d/owntone
@@ -131,18 +131,6 @@
     - owntone-logrotate
   notify:
     - restart logrotate.service
-  when: owntone_log_dir != "/var/log"
-
-- name: ensure no logrotate config, since owntone is logging to '/var/log' (not a subdir)
-  file:
-    state: absent
-    path: /etc/logrotate.d/owntone
-  tags:
-    - logrotate
-    - owntone-logrotate
-  notify:
-    - restart logrotate.service
-  when: owntone_log_dir == "/var/log"
 
 - name: template config file
   template:
