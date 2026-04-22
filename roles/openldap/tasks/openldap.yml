@@ -173,6 +173,8 @@
     name: python-ldap
     state: latest
     executable: pip3
+  # broken (something is outdated)
+  when: false
   tags:
     - pip
     - packages
