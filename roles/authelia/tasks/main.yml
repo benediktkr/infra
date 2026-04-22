@@ -157,6 +157,8 @@
         source: "{{ systemuserlist.authelia.home }}/config"
         target: /config
         read_only: false
+        # PROBLEM: truncating the logfile on the system doesn't seem to work
+        # correctly, because the file (not the dir) is bind mounted to the container
       - type: bind
         source: /var/log/authelia.log
         target: /var/log/authelia.log

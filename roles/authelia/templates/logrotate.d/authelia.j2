@@ -8,6 +8,6 @@
     create 0640 {{systemuserlist.authelia.username}} {{systemuserlist.authelia.username}}
     sharedscripts
     postrotate
-      echo > /var/log/authelia.log
+      truncate -s 0 /var/log/authelia.log
     endscript
 }
