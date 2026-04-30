@@ -1,6 +1,6 @@
 # {{ ansible_managed }}
 # id: {{ ansible_lsb.id | lower }}
-{% if ansible_lsb.codename in ["trixie"] -%}
+{% if ansible_lsb.codename in [] -%}
 {%   set codename = "bookworm" -%}
 {% else -%}
 {%   set codename = ansible_lsb.codename -%}

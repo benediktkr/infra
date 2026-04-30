@@ -28,7 +28,6 @@
     - download_docker_com_linux_ubuntu.list
     - download_docker_com_linux_raspbian.list
 
-
 - name: install docker dependencies for raspbian
   apt:
     name:
@@ -47,7 +46,7 @@
       - containerd
     state: absent
   tags: packages
-  when: ansible_lsb.codename != "bullseye"
+  when: not docker_use_system_repo
 
 - name: install debian packages
   apt:
@@ -58,20 +57,9 @@
   tags: packages
   when:
    - ansible_lsb.id != "Raspbian"
-   - ansible_lsb.codename == "bullseye"
+   - docker_use_system_repo
 
 - name: add apt key
-  copy:
-    src: docker.asc
-    dest: /usr/share/keyrings/docker.asc
-    owner: root
-    group: root
-    mode: '0644'
-  tags:
-    - docker-repo
-    - packages
-
-- name: install key for docker repo
   copy:
     src: docker.asc
     dest: /usr/share/keyrings/docker.asc
@@ -108,7 +96,7 @@
       - docker-ce
       - docker-ce-cli
       - containerd.io
-      - docker-compose
+      #- docker-compose
       - python3-docker
     update_cache: true
     #state: latest
@@ -118,7 +106,22 @@
   notify: restart docker
   tags:
     - packages
-  when: ansible_lsb.codename != "bullseye"
+  when: not docker_use_system_repo
+
+- name: install docker-compose separately (may not be correct anymore, but results in an error on trixie)
+  apt:
+    name:
+      - docker-compose
+    update_cache: true
+    state: present
+  environment:
+    PATH: "{{ ansible_env.PATH }}:/sbin:/usr/sbin"
+  notify: restart docker
+  tags:
+    - packages
+  when:
+    - ansible_lsb.codename != "trixie"
+    - not docker_use_system_repo
 
 - name: set docker gid
   group:

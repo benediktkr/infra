@@ -1,3 +1,6 @@
 ---
 
 macvlan: []
+
+# ansible_lsb.codename != "bullseye"
+docker_use_system_repo: false
