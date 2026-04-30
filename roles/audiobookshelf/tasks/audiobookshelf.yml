@@ -109,6 +109,7 @@
     name:
       - eyed3
       - python3-mutagen
+      - ffmpeg
     state: present
   tags:
     - packages
