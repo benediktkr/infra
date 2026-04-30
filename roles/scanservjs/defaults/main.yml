@@ -1,0 +1,8 @@
+---
+
+scanservjs_dir: "/srv/scanservjs"
+
+# the port can only be changed in the config file
+# https://github.com/sbs20/scanservjs/blob/6b582802cf4428f29f833eabb6a6bef52884ed80/app-server/config/config.default.js#L19
+scanservjs_port: 8080
+

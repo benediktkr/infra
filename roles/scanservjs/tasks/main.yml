@@ -1,0 +1,124 @@
+---
+
+- name: nginx config
+  template:
+    src: 01-scanservjs.conf.j2
+    dest: /etc/nginx/sites-enabled/01-scanservjs.conf
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+   - cups-nginx
+   - nginx
+  notify: reload nginx
+
+# Docs:
+# https://github.com/sbs20/scanservjs/tree/master/docs
+
+- name: create dir
+  file:
+    path: "{{scanservjs_dir}}"
+    state: directory
+    owner: saned
+    group: saned
+    mode: '0775'
+  tags:
+    - scanservjs-dirs
+
+- name: create subdirs dirs
+  file:
+    path: "{{scanservjs_dir}}/{{item}}"
+    state: directory
+    owner: saned
+    group: saned
+    mode: '0775'
+  loop:
+    - data/output
+    - data/preview
+    - data/thumbnail
+    - data/temp
+  tags:
+    - scanservjs-dirs
+
+- name: copy default preview image
+  copy:
+    src: "default.jpg"
+    dest: "{{scanservjs_dir}}/data/preview/default.jpg"
+    owner: saned
+    group: saned
+    mode: '0644'
+    # only copy file if the destination does not exist
+    force: false
+  tags:
+    - scanservjs-dirs
+
+# registers getent_passwd['saned'], which is a list:
+#   1: uid
+#   2: gid
+- name: get saned uid and gid from host
+  getent:
+    database: passwd
+    key: saned
+  tags:
+    - scanservjs-container
+    - docker-containers
+
+- name: config files
+  template:
+    src: "{{item}}.j2"
+    dest: "{{scanservjs_dir}}/{{item}}"
+    owner: saned
+    group: saned
+    mode: '664'
+  loop:
+    - airscan.conf
+  loop_control:
+    label: "{{item}}"
+
+- name: start docker container
+  docker_container:
+    name: scanservjs
+    image: sbs20/scanservjs:latest
+    restart_policy: "no"
+    auto_remove: false
+    detach: true
+    pull: true
+    state: started
+    container_default_behavior: compatibility
+    # 1: uid
+    # 2: gid
+    user: "{{getent_passwd['saned'][1]}}:{{getent_passwd['saned'][2]}}"
+    networks_cli_compatible: false
+    # https://github.com/sbs20/scanservjs/blob/master/docs/02-docker.md
+    privileged: true
+    # Interesting options in the Dockerfile:
+    # https://github.com/sbs20/scanservjs/blob/master/Dockerfile
+    #env:
+    #  SANED_NET_HOSTS:
+    #  AIRSCAN_DEVICES:
+    #  PIXMA_HOSTS:
+    #  SCANIMAGE_LIST_IGNORE:
+    #  DEVICES:
+    #  OCR_LANG:
+    network_mode: bridgewithdns
+    networks:
+      - name: bridgewithdns
+        ipv4_address: "{{ bridgewithdns.scanservjs }}"
+    mounts:
+      - type: bind
+        source: "/var/run/dbus"
+        target: "/var/run/dbus"
+        read_only: true
+      - type: bind
+        source: /etc/sane.d/net.conf
+        target: /etc/sane.d/net.conf
+        read_only: true
+      - type: bind
+        source: "{{scanservjs_dir}}/data"
+        target: "/usr/lib/scanservjs/data"
+        read_only: false
+  tags:
+    - scanservjs-container
+    - docker-containers
+
+

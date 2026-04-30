@@ -5,4 +5,7 @@ dependencies:
   - nginx
   #- samba
   - saned
+  - name: scanservjs
+    tags:
+      - scanservjs
 
