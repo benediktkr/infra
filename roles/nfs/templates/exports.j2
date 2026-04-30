@@ -12,10 +12,11 @@
 
 {% for item in nfs_exports %}
 # {{ item.path }}
-{%   set fsid = "fsid=" + loop.index|string -%}
-{%   set nfs_opts = item.get("nfs_opts", default_opts) -%}
-{%   set opts = [fsid, nfs_opts] | join(",") -%}
-/export/{{ item.path.lstrip("/") }}   {% for c in item.nfs_clients %}{{ c }}({{ opts }}) {% endfor %}
+{#   Need to set 'fsid' here, otherwise 'loop.index' refers to the index of the inner loop -#}
+{%   set fsid = loop.index|string -%}
+{%   set opts = item.get("nfs_opts", default_opts) -%}
+{%   set opt_rw = "rw" if item.get("nfs_rw", true) else "ro" -%}
+/export/{{ item.path.lstrip("/") }}   {% for c in item.nfs_clients %}{{ c }}(fsid={{fsid}},{{opt_rw}},{{opts}}) {% endfor %}
 
 
 {% endfor %}
