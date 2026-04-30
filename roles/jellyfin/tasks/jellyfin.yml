@@ -30,6 +30,16 @@
   when:
     - jellyfin_hardware_acceleration_available|default(false)
 
+# commandline tools, not required by jellyfin (docker container)
+- name: install ffmpeg
+  apt:
+    name:
+      - ffmpeg
+    state: present
+  tags:
+    - packages
+    - ffmpeg
+
 - name: create dir structure
   file:
     path: "{{ jellyfin_root }}/{{ item.name }}"
