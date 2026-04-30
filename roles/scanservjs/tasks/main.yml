@@ -74,6 +74,9 @@
     - airscan.conf
   loop_control:
     label: "{{item}}"
+  notify: restart scanservjs
+  tags:
+    - scanservjs-config
 
 - name: start docker container
   docker_container:
@@ -90,7 +93,7 @@
     user: "{{getent_passwd['saned'][1]}}:{{getent_passwd['saned'][2]}}"
     networks_cli_compatible: false
     # https://github.com/sbs20/scanservjs/blob/master/docs/02-docker.md
-    privileged: true
+    privileged: false
     # Interesting options in the Dockerfile:
     # https://github.com/sbs20/scanservjs/blob/master/Dockerfile
     #env:
@@ -114,9 +117,14 @@
         target: /etc/sane.d/net.conf
         read_only: true
       - type: bind
+        source: "{{scanservjs_dir}}/airscan.conf"
+        target: /etc/sane.d/airscan.conf
+        read_only: true
+      - type: bind
         source: "{{scanservjs_dir}}/data"
         target: "/usr/lib/scanservjs/data"
         read_only: false
+  register: scanservjs_container
   tags:
     - scanservjs-container
     - docker-containers

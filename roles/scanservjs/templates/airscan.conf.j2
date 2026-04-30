@@ -1,5 +1,6 @@
 [devices]
-HP = http://{{ansible_default_ipv4.address}}/eSCL, eSCL
+Canon 8800F = http://{{ansible_default_ipv4.address}}:{{airscan_port}}/eSCL, eSCL
+Canon 8800F (2) = http://{{ansible_default_ipv4.address}}:{{airscan_port}}/40202876-3a0e-5be1-848b-dbdfa33cdf22, eSCL
 
 [options]
 discovery = disable

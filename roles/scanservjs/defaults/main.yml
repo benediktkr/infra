@@ -1,5 +1,6 @@
 ---
 
+airscan_port: 8090
 scanservjs_dir: "/srv/scanservjs"
 
 # the port can only be changed in the config file

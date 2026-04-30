@@ -4,3 +4,7 @@
   service:
     name: nginx
     state: restarted
+
+- name: restart scanservjs
+  command: docker restart scanservjs
+  when: not scanservjs_container.changed|default(false)
