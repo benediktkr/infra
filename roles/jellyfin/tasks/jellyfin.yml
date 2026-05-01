@@ -264,7 +264,6 @@
     - jellyfin-nginx
   notify: reload nginx
 
-
 # - name: wait for jellyfin container on {{ jellyfin_ip.stdout }}
 #   wait_for:
 #     port: 8096
@@ -272,9 +271,9 @@
 #   tags:
 #     - jellyfin-container
 
-- name: telegraf file
+- name: telegraf input
   template:
-    src: jellyfin-telegraf.conf.j2
+    src: telegraf-jellyfin.conf.j2
     dest: /etc/telegraf/telegraf.d/jellyfin.conf
   notify:
     - restart telegraf
